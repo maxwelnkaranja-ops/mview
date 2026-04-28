@@ -384,7 +384,7 @@ tailwind.config = {
       <span class="material-symbols-outlined">settings</span>
       <div class="rail-tooltip">Settings</div>
     </div>
-    <div class="rail-item" onclick="doLogout()">
+    <div class="rail-item" id="rail-account" onclick="toggleDashUserPopover()">
       <span class="material-symbols-outlined">account_circle</span>
       <div class="rail-tooltip">Account</div>
     </div>
@@ -1704,7 +1704,7 @@ function showToast(msg, type='info') {
 }
 
 function updateName(n) { localStorage.setItem('sc-auth', JSON.stringify({ name: n })); }
-function doLogout() { localStorage.removeItem('sc-auth'); localStorage.removeItem('mview-auth-user'); showToast('Signed out', 'info'); setTimeout(() => { window.location.href = 'login.html'; }, 600); }
+function doLogout() { localStorage.removeItem('sc-auth'); localStorage.removeItem('mview-auth-user'); showToast('Signed out', 'info'); setTimeout(() => { window.location.href = '/'; }, 600); }
 
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1732,8 +1732,81 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
     document.getElementById('notif-panel')?.classList.remove('open');
+    const dup = document.getElementById('dash-user-popover');
+    if (dup) dup.style.display = 'none';
   }
 });
+
+/* ── Dashboard user popover ── */
+function toggleDashUserPopover() {
+  const pop = document.getElementById('dash-user-popover');
+  if (!pop) return;
+  const isOpen = pop.style.display === 'block';
+  pop.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const raw = localStorage.getItem('mview-auth-user') || localStorage.getItem('sc-auth');
+    try {
+      const user = JSON.parse(raw || '{}');
+      const inp = document.getElementById('dash-popover-name');
+      const lbl = document.getElementById('dash-popover-label');
+      if (inp) inp.value = user.name || '';
+      if (lbl) lbl.textContent = user.name || user.email || 'User';
+      setTimeout(() => inp && inp.focus(), 50);
+    } catch(e) {}
+  }
+}
+
+function saveDashPopoverName() {
+  const inp = document.getElementById('dash-popover-name');
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) return;
+  ['mview-auth-user','sc-auth'].forEach(key => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const u = JSON.parse(raw);
+        u.name = name;
+        localStorage.setItem(key, JSON.stringify(u));
+      }
+    } catch(e) {}
+  });
+  const lbl = document.getElementById('dash-popover-label');
+  if (lbl) lbl.textContent = name;
+  showToast('Name saved!', 'success');
+  document.getElementById('dash-user-popover').style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  const pop = document.getElementById('dash-user-popover');
+  const btn = document.getElementById('rail-account');
+  if (pop && pop.style.display === 'block' && !pop.contains(e.target) && !btn?.contains(e.target)) {
+    pop.style.display = 'none';
+  }
+}, true);
 </script>
+
+<!-- Dashboard User Popover -->
+<div id="dash-user-popover" style="display:none;position:fixed;bottom:80px;left:72px;z-index:400;background:#1f2021;border:1px solid #3d494a;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);width:220px;overflow:hidden">
+  <div style="padding:12px 14px;border-bottom:1px solid #3d494a">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+      <div style="width:32px;height:32px;border-radius:8px;background:#3bb2b8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#003739;flex-shrink:0">
+        <span class="material-symbols-outlined" style="font-size:18px">person</span>
+      </div>
+      <div id="dash-popover-label" style="font-size:13px;font-weight:600;color:#e3e2e3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">User</div>
+    </div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#879394;margin-bottom:6px">Display Name</div>
+    <div style="display:flex;gap:6px">
+      <input id="dash-popover-name" type="text" placeholder="Your name…"
+        style="flex:1;padding:6px 9px;border:1px solid #3d494a;border-radius:6px;font-size:12px;color:#e3e2e3;background:#121416;outline:none;font-family:var(--font)"
+        onfocus="this.style.borderColor='#3bb2b8'" onblur="this.style.borderColor='#3d494a'"
+        onkeydown="if(event.key==='Enter')saveDashPopoverName()"/>
+      <button onclick="saveDashPopoverName()" style="padding:6px 10px;border-radius:6px;background:#3bb2b8;color:#003739;font-size:12px;font-weight:700;font-family:var(--font)">Save</button>
+    </div>
+  </div>
+  <button onclick="doLogout()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;font-size:13px;font-weight:500;color:#f87171;font-family:var(--font);text-align:left;transition:background .12s" onmouseover="this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.background=''">
+    <span class="material-symbols-outlined" style="font-size:16px">logout</span>Sign Out
+  </button>
+</div>
 </body>
 </html>
