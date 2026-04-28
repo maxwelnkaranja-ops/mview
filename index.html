@@ -1602,15 +1602,13 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
       </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-chip" style="cursor:default">
-        <div class="user-avatar" id="sidebar-user-avatar" style="flex-shrink:0"></div>
-        <div class="user-info" style="flex:1;min-width:0">
-          <div class="user-name" id="sidebar-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ScreenConnect User</div>
+      <div class="user-chip" onclick="logOut()">
+        <div class="user-avatar" id="sidebar-user-avatar">MV</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">ScreenConnect User</div>
           <div class="user-role">Admin</div>
         </div>
-        <button onclick="logOut()" title="Sign out" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--r1);color:var(--text-3);transition:all .15s;flex-shrink:0" onmouseover="this.style.background='var(--red-soft)';this.style.color='var(--red-text)'" onmouseout="this.style.background='';this.style.color='var(--text-3)'">
-          <span class="material-symbols-outlined" style="font-size:16px!important">logout</span>
-        </button>
+        <span class="material-symbols-outlined" style="font-size:16px!important;color:var(--text-3)">logout</span>
       </div>
     </div>
   </aside>
@@ -1644,23 +1642,9 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
           <span class="material-symbols-outlined">notifications</span>
           <span class="notif-dot"></span>
         </button>
-        <div class="user-avatar sm" id="topbar-user-avatar" onclick="toggleUserPopover()" style="cursor:pointer" title="Account"></div>
+        <div class="user-avatar sm" id="topbar-user-avatar">MV</div>
       </div>
     </header>
-
-    <!-- User Popover -->
-    <div id="user-popover" style="display:none;position:fixed;top:54px;right:12px;z-index:300;background:var(--bg-2);border:1px solid var(--border-2);border-radius:var(--r3);box-shadow:var(--shadow-xl);width:220px;overflow:hidden;animation:modalIn 0.18s var(--ease-spring)">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px">Display Name</div>
-        <div style="display:flex;gap:7px">
-          <input id="popover-name-input" type="text" placeholder="Your name…" style="flex:1;padding:7px 10px;border:1px solid var(--border-2);border-radius:var(--r2);font-size:12px;color:var(--text-1);background:var(--bg-3);outline:none;font-family:var(--font)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor=''" onkeydown="if(event.key==='Enter')savePopoverName()"/>
-          <button onclick="savePopoverName()" style="padding:7px 10px;border-radius:var(--r2);background:var(--accent);color:#fff;font-size:12px;font-weight:600;font-family:var(--font)">Save</button>
-        </div>
-      </div>
-      <button onclick="logOut()" style="display:flex;align-items:center;gap:8px;width:100%;padding:11px 16px;font-size:13px;font-weight:500;color:var(--red-text);font-family:var(--font);text-align:left" onmouseover="this.style.background='var(--red-soft)'" onmouseout="this.style.background=''">
-        <span class="material-symbols-outlined" style="font-size:16px!important">logout</span>Sign Out
-      </button>
-    </div>
 
     <!-- ── SECTION: Dashboard Home ── -->
     <section class="dash-section active" id="section-dashboard-home">
@@ -2760,7 +2744,7 @@ function disconnectScreen() {
 
 /* ── Page & Section Navigation ──────────────────────── */
 
-function goToDashboard() { window.location.href = 'dashboard.html'; }
+function goToDashboard() { window.location.href = '/dashboard'; }
 
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2980,48 +2964,6 @@ function logOut() {
   showPage('landing');
 }
 
-/* ── User popover (topbar avatar) ────────────────────── */
-function toggleUserPopover() {
-  const pop = document.getElementById('user-popover');
-  if (!pop) return;
-  const isOpen = pop.style.display === 'block';
-  pop.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) {
-    const raw = localStorage.getItem('mview-auth-user');
-    try {
-      const user = JSON.parse(raw || '{}');
-      const inp = document.getElementById('popover-name-input');
-      if (inp) inp.value = user.name || '';
-      setTimeout(() => inp && inp.focus(), 50);
-    } catch(e) {}
-  }
-}
-
-function savePopoverName() {
-  const inp = document.getElementById('popover-name-input');
-  if (!inp) return;
-  const name = inp.value.trim();
-  if (!name) return;
-  const raw = localStorage.getItem('mview-auth-user');
-  try {
-    const user = JSON.parse(raw || '{}');
-    user.name = name;
-    localStorage.setItem('mview-auth-user', JSON.stringify(user));
-    hydrateUserInfo();
-    showToast('Name saved!', 'success');
-  } catch(e) {}
-  document.getElementById('user-popover').style.display = 'none';
-}
-
-// Close user popover on outside click
-document.addEventListener('click', e => {
-  const pop = document.getElementById('user-popover');
-  const avatar = document.getElementById('topbar-user-avatar');
-  if (pop && pop.style.display === 'block' && !pop.contains(e.target) && e.target !== avatar) {
-    pop.style.display = 'none';
-  }
-}, true);
-
 /* ── goToLogin ───────────────────────────────────────── */
 function goToLogin() {
   showPage('login');
@@ -3204,24 +3146,10 @@ document.addEventListener('click', e => {
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme(localStorage.getItem('mview-theme') || 'light');
 
-  const authRaw = localStorage.getItem('mview-auth-user');
-  let isLoggedIn = false;
-  if (authRaw) {
-    try { JSON.parse(authRaw); isLoggedIn = true; } catch(e) {}
-  }
-
-  if (isLoggedIn) {
-    // User is logged in — show the homepage (page-dashboard inside index)
-    if (!hydrateUserInfo()) { showPage('login'); return; }
-    showPage('dashboard');
-    showSection('dashboard-home');
-    updateConnectionState([]);
-    try { await refreshDashboardFromSupabase(); } catch(error) { showToast(`Load error: ${error.message}`, 'error'); }
-    setInterval(refreshDashboardFromSupabase, 15000);
-  } else {
-    // Not logged in — show the landing page
-    showPage('landing');
-  }
+  // Always start on the landing page — user must click a CTA then log in
+  // Clear any stale auth so the flow is always: landing → login → homepage
+  localStorage.removeItem('mview-auth-user');
+  showPage('landing');
 });
 </script>
 </body>
