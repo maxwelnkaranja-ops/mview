@@ -104,6 +104,19 @@ def require_admin(f):
         return f(*a, **k)
     return w
 
+@app.route("/")
+def root():
+    return send_from_directory(".", "index.html")
+
+@app.route("/dashboard")
+@app.route("/dashboard.html")
+def dashboard():
+    return send_from_directory(".", "dashboard.html")
+
+@app.route("/index.html")
+def index_html():
+    return send_from_directory(".", "index.html")
+
 @app.route("/status")
 @app.route("/health")
 @app.route("/api/server-info")
