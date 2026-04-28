@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScreenConnect — Remote Access & Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#67d7dd",
+        "primary-container": "#3bb2b8",
+        "on-primary": "#003739",
+        "surface": "#121314",
+        "surface-container": "#1f2021",
+        "surface-container-low": "#1b1c1d",
+        "surface-container-high": "#292a2b",
+        "surface-container-highest": "#343536",
+        "on-surface": "#e3e2e3",
+        "on-surface-variant": "#bcc9c9",
+        "outline": "#879394",
+        "outline-variant": "#3d494a",
+        "error": "#ffb4ab",
+        "teal": "#3bb2b8",
+      }
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --teal: #3bb2b8;
+    --teal-dim: #67d7dd;
+    --teal-soft: rgba(59,178,184,0.12);
+    --red: #f87171;
+    --red-soft: rgba(248,113,113,0.12);
+    --orange: #fb923c;
+    --orange-soft: rgba(251,146,60,0.12);
+    --green: #4ade80;
+    --green-soft: rgba(74,222,128,0.12);
+    --bg: #0d0e0f;
+    --bg-2: #121416;
+    --bg-3: #1a1c1e;
+    --bg-4: #292a2b;
+    --border: #1e293b;
+    --text-1: #e3e2e3;
+    --text-2: #bcc9c9;
+    --text-3: #879394;
+    --mono: 'JetBrains Mono', monospace;
+    --font: 'Inter', sans-serif;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    font-size: 20px;
+    vertical-align: middle;
+    user-select: none;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text-1);
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  a { text-decoration: none; color: inherit; }
+  button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
+  input, select { font-family: inherit; font-size: inherit; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 99px; }
+
+  /* ── ICON RAIL ── */
+  .icon-rail { width: 64px; min-width: 64px; height: 100vh; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 16px 0; z-index: 50; flex-shrink: 0; }
+  .rail-logo { color: var(--teal); font-size: 18px; font-weight: 900; letter-spacing: 0.1em; margin-bottom: 28px; }
+  .rail-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 10px 0; cursor: pointer; color: #6b7280; transition: all 0.15s; position: relative; }
+  .rail-item:hover { background: var(--bg-3); color: var(--text-1); }
+  .rail-item.active { border-left: 2px solid var(--teal); color: var(--teal); background: var(--bg-2); }
+  .rail-item .material-symbols-outlined { font-size: 22px; }
+  .rail-item .rail-tooltip { position: absolute; left: 70px; background: var(--bg-4); color: var(--text-1); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; border: 1px solid var(--border); z-index: 100; }
+  .rail-item:hover .rail-tooltip { opacity: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { width: 260px; min-width: 260px; height: 100vh; background: var(--bg-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; z-index: 40; }
+  .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-title { font-size: 22px; font-weight: 700; color: var(--teal); letter-spacing: -0.02em; margin-bottom: 12px; }
+  .build-card { background: var(--bg-3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .build-card p { font-size: 12px; color: var(--text-3); line-height: 1.5; margin-bottom: 10px; }
+  .build-btn { width: 100%; background: var(--teal); color: #0d0e0f; font-weight: 700; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; transition: opacity 0.15s; }
+  .build-btn:hover { opacity: 0.9; }
+  .build-btn .material-symbols-outlined { font-size: 18px; }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 8px; }
+  .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: #6b7280; border-radius: 6px; cursor: pointer; transition: all 0.12s; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--bg-3); color: var(--text-1); }
+  .nav-item.active { color: var(--teal); background: rgba(59,178,184,0.1); }
+  .nav-item-left { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; }
+  .nav-item-left .material-symbols-outlined { font-size: 18px; }
+  .nav-count { font-size: 10px; background: var(--bg-4); color: var(--text-3); padding: 1px 6px; border-radius: 99px; min-width: 18px; text-align: center; font-weight: 600; }
+  .nav-item.active .nav-count { background: rgba(59,178,184,0.2); color: var(--teal); }
+  .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); background: var(--bg); }
+  .trial-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .trial-card-title { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .trial-card-title span { font-size: 13px; font-weight: 700; color: var(--text-1); }
+  .trial-card-title .material-symbols-outlined { color: var(--teal); font-size: 16px; }
+  .trial-card p { font-size: 11px; color: var(--text-3); line-height: 1.5; margin-bottom: 10px; }
+  .buy-btn { width: 100%; background: #7c3aed; color: #fff; font-weight: 700; padding: 7px; border-radius: 6px; font-size: 13px; transition: opacity 0.15s; }
+  .buy-btn:hover { opacity: 0.9; }
+  .trial-expiry { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .topbar { height: 56px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0; }
+  .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: 10px; }
+  .topbar-title .material-symbols-outlined { font-size: 20px; color: #6b7280; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .topbar-search { position: relative; }
+  .topbar-search input { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px 7px 36px; color: var(--text-1); outline: none; font-size: 13px; width: 220px; transition: border 0.15s; }
+  .topbar-search input::placeholder { color: var(--text-3); }
+  .topbar-search input:focus { border-color: var(--teal); }
+  .topbar-search .material-symbols-outlined { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-3); }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; border: 1px solid transparent; }
+  .pill.online { background: var(--green-soft); color: var(--green); border-color: rgba(74,222,128,0.25); }
+  .pill.offline { background: var(--red-soft); color: var(--red); border-color: rgba(248,113,113,0.2); }
+  .pill.pending { background: var(--orange-soft); color: var(--orange); border-color: rgba(251,146,60,0.2); }
+  .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .pill.online .dot, .pill.pending .dot { animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.15s; cursor: pointer; position: relative; }
+  .icon-btn:hover { background: var(--bg-2); color: var(--text-1); }
+  .icon-btn .material-symbols-outlined { font-size: 18px; }
+  .notif-dot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--red); border: 1.5px solid var(--bg); }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .dash-section { display: none; }
+  .dash-section.active { /* display set by JS per section */ }
+  .sec-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+  .sec-title { font-size: 18px; font-weight: 700; color: var(--text-1); letter-spacing: -0.02em; }
+  .sec-sub { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .sec-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* ── BUTTONS ── */
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; transition: all 0.15s; cursor: pointer; border: 1px solid transparent; }
+  .btn-p { background: var(--teal); color: #0d0e0f; font-weight: 700; }
+  .btn-p:hover { opacity: 0.9; }
+  .btn-s { background: var(--bg-3); color: var(--text-1); border-color: var(--border); }
+  .btn-s:hover { background: var(--bg-4); }
+  .btn-g { background: var(--green-soft); color: var(--green); border-color: rgba(74,222,128,0.25); }
+  .btn-g:hover { background: rgba(74,222,128,0.2); }
+  .btn-d { background: var(--red-soft); color: var(--red); border-color: rgba(248,113,113,0.2); }
+  .btn-d:hover { background: rgba(248,113,113,0.22); }
+  .btn .material-symbols-outlined { font-size: 15px; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+  .kpi { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .kpi-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi-val { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin-bottom: 5px; }
+  .kpi-sub { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+  .kpi-sub .material-symbols-outlined { font-size: 12px; }
+  .kpi-ico { font-size: 18px !important; }
+  .kpi-ico.teal { color: var(--teal); }
+  .kpi-ico.green { color: var(--green); }
+  .kpi-ico.red { color: var(--red); }
+  .kpi-ico.orange { color: var(--orange); }
+
+  /* ── STATUS CARDS ── */
+  .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  @media(max-width:640px){.sc-grid{grid-template-columns:1fr}}
+  .sc-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .sc-card-left { display: flex; align-items: center; gap: 12px; }
+  .sc-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .sc-icon.teal { background: var(--teal-soft); color: var(--teal); }
+  .sc-icon.green { background: var(--green-soft); color: var(--green); }
+  .sc-icon.red { background: var(--red-soft); color: var(--red); }
+  .sc-icon .material-symbols-outlined { font-size: 18px; }
+  .sc-card-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .sc-card-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; font-family: var(--mono); }
+
+  /* ── PANEL / TABLE ── */
+  .panel { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+  .panel-hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+  .panel-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; color: var(--text-1); }
+  .panel-title .material-symbols-outlined { font-size: 15px; color: var(--text-3); }
+  .mtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .mtable th { text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); background: var(--bg-3); white-space: nowrap; }
+  .mtable td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .mtable tr:last-child td { border-bottom: none; }
+  .mtable tbody tr { transition: background 0.1s; }
+  .mtable tbody tr:hover { background: var(--bg-3); }
+  .mname { font-weight: 600; color: var(--text-1); font-size: 13px; }
+  .mid { font-size: 10px; color: var(--text-3); font-family: var(--mono); margin-top: 2px; }
+
+  /* ── BADGE ── */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; border: 1px solid transparent; }
+  .badge i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .badge.online { background: var(--green-soft); color: var(--green); border-color: rgba(74,222,128,0.2); }
+  .badge.offline { background: var(--red-soft); color: var(--red); border-color: rgba(248,113,113,0.2); }
+  .badge.pending { background: var(--orange-soft); color: var(--orange); border-color: rgba(251,146,60,0.2); }
+  .badge.warning { background: rgba(251,146,60,0.12); color: var(--orange); border-color: rgba(251,146,60,0.2); }
+
+  /* ── ACTION BUTTONS (table) ── */
+  .abtns { display: flex; gap: 5px; align-items: center; }
+  .tbtn { display: inline-flex; align-items: center; gap: 3px; padding: 4px 9px; border-radius: 5px; font-size: 11px; font-weight: 600; background: var(--bg-3); color: var(--text-2); border: 1px solid var(--border); cursor: pointer; transition: all 0.14s; white-space: nowrap; }
+  .tbtn:hover { background: var(--bg-4); color: var(--text-1); }
+  .tbtn .material-symbols-outlined { font-size: 13px; }
+  .tbtn.p { background: var(--teal-soft); color: var(--teal); border-color: rgba(59,178,184,0.25); }
+  .tbtn.p:hover { background: rgba(59,178,184,0.2); }
+  .tbtn.del { background: var(--red-soft); color: var(--red); border-color: rgba(248,113,113,0.2); }
+  .tbtn.del:hover { background: rgba(248,113,113,0.22); }
+
+  /* ── EMPTY STATE ── */
+  .empty-st { text-align: center; padding: 60px 24px; color: var(--text-3); }
+  .empty-ico { font-size: 48px !important; color: #374151; display: block; margin-bottom: 14px; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text-3); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; color: #6b7280; margin-bottom: 18px; max-width: 360px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+
+  /* ── REMOTE GRID ── */
+  .rgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+  .rcrd { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
+  .rcrd:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .rscreen { height: 140px; background: var(--bg); display: flex; align-items: center; justify-content: center; position: relative; }
+  .rscreen .material-symbols-outlined { font-size: 36px !important; color: #374151; }
+  .rlive { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.75); padding: 3px 8px; border-radius: 99px; font-size: 9px; font-weight: 700; color: var(--green); letter-spacing: 0.08em; display: flex; align-items: center; gap: 4px; }
+  .rcrd-body { padding: 10px 12px 0; }
+  .rcrd-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .rcrd-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .rcrd-foot { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin-top: 8px; border-top: 1px solid var(--border); }
+
+  /* ── LOGS TABLE ── */
+  .ltable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ltable th { text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+  .ltable td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+  .ltable tr:last-child td { border-bottom: none; }
+  .ltable tbody tr:hover { background: var(--bg-3); }
+  .lsev { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+  .lsev.ok { background: var(--green-soft); color: var(--green); }
+  .lsev.warn { background: var(--orange-soft); color: var(--orange); }
+  .lsev.info { background: var(--teal-soft); color: var(--teal); }
+  .lsev.critical { background: var(--red-soft); color: var(--red); }
+
+  /* ── DATA TABLE (Supabase) ── */
+  .dtable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dtable th { text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); background: var(--bg-3); white-space: nowrap; }
+  .dtable td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); font-family: var(--mono); font-size: 11px; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+  .dtable tr:last-child td { border-bottom: none; }
+  .dtable tbody tr:hover { background: var(--bg-3); }
+
+  /* ── FILE BROWSER ── */
+  .fbrow { display: grid; grid-template-columns: 200px 1fr; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; min-height: 300px; }
+  .ftree { border-right: 1px solid var(--border); padding: 8px 0; background: var(--bg-3); }
+  .ftree-item { display: flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 13px; color: var(--text-3); cursor: pointer; transition: all 0.1s; }
+  .ftree-item:hover { background: var(--bg-4); color: var(--text-1); }
+  .ftree-item.active { background: var(--teal-soft); color: var(--teal); }
+  .ftree-item .material-symbols-outlined { font-size: 15px; }
+  .fcontent { padding: 12px; overflow-x: auto; }
+  .ftable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ftable th { text-align: left; padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); }
+  .ftable td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+  .ftable tr:last-child td { border-bottom: none; }
+
+  /* ── SETTINGS ── */
+  .scard { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .scard-hdr { display: flex; align-items: center; gap: 8px; padding: 12px 16px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+  .scard-hdr .material-symbols-outlined { font-size: 16px; color: var(--text-3); }
+  .srow { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); gap: 16px; }
+  .srow:last-child { border-bottom: none; }
+  .skey { font-size: 13px; font-weight: 500; color: var(--text-1); }
+  .sval { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .sinput { background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; color: var(--text-1); outline: none; transition: border 0.15s; min-width: 240px; }
+  .sinput:focus { border-color: var(--teal); }
+
+  /* ── MODAL ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); animation: mIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
+  @keyframes mIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:none} }
+  .mhdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+  .mhdr-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .mhdr-title .material-symbols-outlined { font-size: 16px; color: var(--teal); }
+  .step-wrap { display: none; }
+  .step-wrap.active { display: block; }
+  .mbody { padding: 16px; }
+  .mfoot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-3); }
+  .fg { margin-bottom: 12px; }
+  .flbl { display: block; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .finput { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; color: var(--text-1); outline: none; transition: border 0.15s; font-size: 13px; }
+  .finput:focus { border-color: var(--teal); }
+  .fhint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+  .spinner { width: 36px; height: 36px; border: 2.5px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .token-dsp { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; font-family: var(--mono); font-size: 12px; margin-bottom: 12px; }
+  .lbox { display: flex; align-items: center; background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+  .lbox input { flex: 1; background: transparent; border: none; padding: 9px 12px; font-size: 12px; font-family: var(--mono); color: var(--text-1); outline: none; }
+  .lbox .tbtn { border-radius: 0; border: none; border-left: 1px solid var(--border); padding: 10px 12px; height: 100%; }
+  .poll-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-2); padding: 10px 12px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; }
+  .pdot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); animation: blink 1.4s infinite; flex-shrink: 0; }
+  .pdot.done { background: var(--green); animation: none; }
+
+  /* ── NOTIFICATION PANEL ── */
+  .notif-panel { position: fixed; top: 56px; right: 0; z-index: 150; width: 300px; background: var(--bg-2); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); box-shadow: -4px 4px 24px rgba(0,0,0,0.4); transform: translateX(110%); transition: transform 0.25s ease; max-height: calc(100vh - 56px); overflow-y: auto; }
+  .notif-panel.open { transform: translateX(0); }
+  .nhdr { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+  .nitem { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .nitem:hover { background: var(--bg-3); }
+  .nitem .material-symbols-outlined { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .nitem.ok .material-symbols-outlined { color: var(--green); }
+  .nitem.warn .material-symbols-outlined { color: var(--orange); }
+  .nitem.info .material-symbols-outlined { color: var(--teal); }
+  .nitem-title { font-size: 12px; font-weight: 500; color: var(--text-1); }
+  .nitem-time { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--bg-4); color: var(--text-1); border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; animation: tIn 0.25s ease; min-width: 200px; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  @keyframes tIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:none} }
+  .toast .material-symbols-outlined { font-size: 16px; flex-shrink: 0; }
+  .toast.success .material-symbols-outlined { color: var(--green); }
+  .toast.error .material-symbols-outlined { color: var(--red); }
+  .toast.info .material-symbols-outlined { color: var(--teal); }
+
+  /* ── WAITING ANIMATION ── */
+  .wait-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; text-align: center; }
+  .wait-pulse { width: 64px; height: 64px; border-radius: 50%; background: var(--teal-soft); display: flex; align-items: center; justify-content: center; animation: pulse 2s ease-in-out infinite; margin-bottom: 16px; }
+  @keyframes pulse { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(59,178,184,0.4)} 50%{transform:scale(1.05);box-shadow:0 0 0 14px rgba(59,178,184,0)} }
+  .wait-pulse .material-symbols-outlined { font-size: 28px; color: var(--teal); }
+  .wait-title { font-size: 14px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+  .wait-sub { font-size: 12px; color: var(--text-3); }
+
+  /* ── CONNECTION PROGRESS ── */
+  .conn-steps { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .conn-step { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+  .conn-step .step-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .conn-step .step-icon.done { background: var(--green-soft); color: var(--green); }
+  .conn-step .step-icon.active { background: var(--teal-soft); color: var(--teal); animation: blink 1.5s infinite; }
+  .conn-step .step-icon.wait { background: var(--bg-4); color: var(--text-3); }
+  .conn-step .step-icon .material-symbols-outlined { font-size: 13px; }
+</style>
+</head>
+<body style="display:flex;height:100vh;overflow:hidden">
+
+<!-- ── ICON RAIL ── -->
+<aside class="icon-rail">
+  <div class="rail-logo">SC</div>
+  <nav style="display:flex;flex-direction:column;align-items:center;width:100%;gap:2px;flex:1">
+    <div class="rail-item active" id="rail-access" onclick="showSection('access')">
+      <span class="material-symbols-outlined">support_agent</span>
+      <div class="rail-tooltip">Access</div>
+    </div>
+    <div class="rail-item" id="rail-remote-view" onclick="showSection('remote-view')">
+      <span class="material-symbols-outlined">videocam</span>
+      <div class="rail-tooltip">Remote View</div>
+    </div>
+    <div class="rail-item" id="rail-file-explorer" onclick="showSection('file-explorer')">
+      <span class="material-symbols-outlined">folder_open</span>
+      <div class="rail-tooltip">File Manager</div>
+    </div>
+    <div class="rail-item" id="rail-activity-logs" onclick="showSection('activity-logs')">
+      <span class="material-symbols-outlined">receipt_long</span>
+      <div class="rail-tooltip">Activity Log</div>
+    </div>
+    <div class="rail-item" id="rail-supabase-view" onclick="showSection('supabase-view')">
+      <span class="material-symbols-outlined">database</span>
+      <div class="rail-tooltip">Database</div>
+    </div>
+  </nav>
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;gap:2px">
+    <div class="rail-item" onclick="toggleNotif()" style="position:relative">
+      <span class="material-symbols-outlined">notifications</span>
+      <div class="rail-tooltip">Notifications</div>
+      <div class="notif-dot" id="notif-dot" style="display:none"></div>
+    </div>
+    <div class="rail-item" id="rail-settings" onclick="showSection('settings')">
+      <span class="material-symbols-outlined">settings</span>
+      <div class="rail-tooltip">Settings</div>
+    </div>
+    <div class="rail-item" onclick="doLogout()">
+      <span class="material-symbols-outlined">account_circle</span>
+      <div class="rail-tooltip">Account</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title" id="sidebar-section-title">Access</div>
+    <div class="build-card">
+      <p>Build an installer to deploy and install an agent for machine monitoring and management.</p>
+      <button class="build-btn" onclick="openModal()">
+        Build <span class="material-symbols-outlined">add</span>
+      </button>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-item active" id="nav-all" onclick="showSection('access');setFilter(null)">
+      <div class="nav-item-left"><span class="material-symbols-outlined">group</span>All Machines by Company</div>
+      <span class="nav-count" id="nc-all">0</span>
+    </div>
+    <div class="nav-item" id="nav-group" onclick="showSection('access');setFilter(null)">
+      <div class="nav-item-left"><span class="material-symbols-outlined">laptop_windows</span>All Machines by OS</div>
+      <span class="nav-count" id="nc-group">0</span>
+    </div>
+    <div class="nav-item" id="nav-outdated" onclick="showSection('access');setFilter('warning')">
+      <div class="nav-item-left"><span class="material-symbols-outlined">update_disabled</span>Outdated Clients</div>
+      <span class="nav-count" id="nc-outdated">0</span>
+    </div>
+    <div class="nav-item" id="nav-online" onclick="showSection('access');setFilter('online')">
+      <div class="nav-item-left"><span class="material-symbols-outlined">person_add</span>Host Connected</div>
+      <span class="nav-count" id="nc-online">0</span>
+    </div>
+    <div class="nav-item" id="nav-pending" onclick="showSection('access');setFilter('pending')">
+      <div class="nav-item-left"><span class="material-symbols-outlined">person</span>Guest Connected</div>
+      <span class="nav-count" id="nc-pending">0</span>
+    </div>
+    <div class="nav-item" id="nav-recent" onclick="showSection('access');setFilter(null)">
+      <div class="nav-item-left"><span class="material-symbols-outlined">history</span>Recently Accessed</div>
+      <span class="nav-count">0</span>
+    </div>
+    <div class="nav-item" id="nav-offline" onclick="showSection('access');setFilter('offline')">
+      <div class="nav-item-left"><span class="material-symbols-outlined">cloud_off</span>Offline</div>
+      <span class="nav-count" id="nc-offline">0</span>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;padding:10px 12px;color:var(--teal);font-size:12px;font-weight:600;width:100%;cursor:pointer;transition:color 0.15s" onclick="openModal()">
+      <span class="material-symbols-outlined" style="font-size:16px">add_circle</span>Create Session Group
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="trial-card">
+      <div class="trial-card-title">
+        <span class="material-symbols-outlined">dns</span>
+        <span>ScreenConnect</span>
+      </div>
+      <div class="trial-expiry">Your trial will expire in 13 days</div>
+      <p>You can continue to use ScreenConnect after your trial period by purchasing the software.</p>
+      <button class="buy-btn">Buy Now</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN AREA ── -->
+<main class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="material-symbols-outlined" id="topbar-icon">cloud_off</span>
+      <span id="topbar-label">Offline</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:16px">
+      <button class="icon-btn" onclick="showToast('Power cycle not available offline','info')"><span class="material-symbols-outlined">power_settings_new</span></button>
+      <button class="icon-btn" onclick="openModal()"><span class="material-symbols-outlined">edit</span></button>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-search">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" placeholder="Search machines…" oninput="filterScreens(this.value)" id="topbar-search-input"/>
+      </div>
+      <div class="pill pending" id="srv-badge"><span class="dot"></span><span id="srv-lbl">Connecting…</span></div>
+      <div class="pill pending" id="sb-badge"><span class="dot"></span><span id="sb-lbl">Supabase…</span></div>
+      <div class="icon-btn" onclick="toggleNotif()" style="position:relative">
+        <span class="material-symbols-outlined">notifications</span>
+        <div class="notif-dot" id="notif-dot-2" style="display:none"></div>
+      </div>
+      <div class="icon-btn" onclick="manualRefresh()"><span class="material-symbols-outlined" id="ref-ico">refresh</span></div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══ ACCESS / MACHINES ══ -->
+    <section class="dash-section active" id="section-access">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Access</div>
+          <div class="sec-sub" id="access-sub">Connecting to Supabase…</div>
+        </div>
+        <div class="sec-actions">
+          <div class="pill pending" id="srv-card-badge"><span class="dot"></span><span id="srv-card-lbl">Server…</span></div>
+          <button class="btn btn-d" onclick="bulkDeleteOffline()" title="Delete all offline/pending machines"><span class="material-symbols-outlined">delete_sweep</span>Delete Offline</button>
+          <button class="btn btn-p" onclick="openModal()"><span class="material-symbols-outlined">add</span>Build +</button>
+          <button class="btn btn-s" onclick="manualRefresh()"><span class="material-symbols-outlined">refresh</span>Refresh</button>
+        </div>
+      </div>
+
+      <!-- Status cards -->
+      <div class="sc-grid">
+        <div class="sc-card">
+          <div class="sc-card-left">
+            <div class="sc-icon teal" id="srv-ico"><span class="material-symbols-outlined">dns</span></div>
+            <div>
+              <div class="sc-card-title">Flask Server</div>
+              <div class="sc-card-sub" id="srv-url">http://192.168.0.100:5000</div>
+            </div>
+          </div>
+          <div class="pill offline" id="srv-card-badge2"><span class="dot"></span><span id="srv-card-lbl2">Offline</span></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-card-left">
+            <div class="sc-icon green"><span class="material-symbols-outlined">storage</span></div>
+            <div>
+              <div class="sc-card-title">Supabase Database</div>
+              <div class="sc-card-sub">iacdzpcoftxxcoigopun.supabase.co</div>
+            </div>
+          </div>
+          <div class="pill pending" id="sb-card-badge"><span class="dot"></span><span id="sb-card-lbl">Connecting…</span></div>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Total Machines</span><span class="material-symbols-outlined kpi-ico teal">computer</span></div>
+          <div class="kpi-val" id="kpi-total">0</div>
+          <div class="kpi-sub"><span class="material-symbols-outlined">database</span>from Supabase</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Online Now</span><span class="material-symbols-outlined kpi-ico green">wifi</span></div>
+          <div class="kpi-val" id="kpi-online">0</div>
+          <div class="kpi-sub" id="kpi-online-sub"><span class="material-symbols-outlined">wifi</span>0% connected</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Offline</span><span class="material-symbols-outlined kpi-ico red">power_off</span></div>
+          <div class="kpi-val" id="kpi-offline">0</div>
+          <div class="kpi-sub"><span class="material-symbols-outlined">error_outline</span>need attention</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Pending</span><span class="material-symbols-outlined kpi-ico orange">hourglass_empty</span></div>
+          <div class="kpi-val" id="kpi-pending">0</div>
+          <div class="kpi-sub"><span class="material-symbols-outlined">schedule</span>awaiting check-in</div>
+        </div>
+      </div>
+
+      <!-- Machine Table -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title">
+            <span class="material-symbols-outlined">devices</span>
+            All Machines
+            <span class="badge pending" id="mcount" style="margin-left:4px">0</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="tbtn" onclick="openModal()"><span class="material-symbols-outlined">add</span>Build +</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="mtable">
+            <thead>
+              <tr>
+                <th style="width:32px"><input type="checkbox" style="accent-color:var(--teal)"/></th>
+                <th>Machine Name</th>
+                <th>Status</th>
+                <th>IP Address</th>
+                <th>Last Seen</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="mtbody">
+              <tr><td colspan="7">
+                <div class="empty-st">
+                  <span class="material-symbols-outlined empty-ico">computer</span>
+                  <div class="empty-title">"Offline" is empty</div>
+                  <div class="empty-sub">Click the "Build +" button to get started, or select a different group.</div>
+                  <button class="btn btn-g" onclick="openModal()"><span class="material-symbols-outlined">add</span>Connect Screen</button>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ REMOTE VIEW ══ -->
+    <section class="dash-section" id="section-remote-view" style="padding:0;flex-direction:column;height:calc(100vh - 56px)">
+      <!-- Toolbar -->
+      <div style="height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0">
+        <button class="tbtn" onclick="showSection('access')"><span class="material-symbols-outlined">arrow_back</span>Back</button>
+        <div style="font-size:13px;font-weight:600;color:var(--text-1)" id="rv-title">Remote View</div>
+        <div id="rv-status-pill" class="pill pending" style="margin-left:4px"><span class="dot"></span><span id="rv-status-lbl">Connecting…</span></div>
+        <div style="flex:1"></div>
+        <div style="font-size:11px;color:var(--text-3)" id="rv-fps-label"></div>
+        <button class="tbtn" onclick="cycleQuality()"><span class="material-symbols-outlined">hd</span><span id="rv-quality-lbl">High</span></button>
+        <button class="tbtn" onclick="requestFullscreen()"><span class="material-symbols-outlined">fullscreen</span></button>
+        <button class="tbtn" id="rv-input-btn" onclick="toggleInput()"><span class="material-symbols-outlined">mouse</span><span id="rv-input-lbl">Input On</span></button>
+        <button class="tbtn" onclick="sendCtrlAltDel()"><span class="material-symbols-outlined">keyboard</span>Ctrl+Alt+Del</button>
+        <button class="tbtn del" onclick="disconnectRemote()"><span class="material-symbols-outlined">cancel</span>Disconnect</button>
+      </div>
+      <!-- Canvas area -->
+      <div id="rv-wrap" style="flex:1;overflow:hidden;position:relative;background:#000;display:flex;align-items:center;justify-content:center">
+        <div id="rv-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--text-3)">
+          <span class="material-symbols-outlined" style="font-size:56px;color:#374151">desktop_access_disabled</span>
+          <div style="font-size:15px;font-weight:600;color:var(--text-2)">No active session</div>
+          <div style="font-size:12px">Click <b style="color:var(--teal)">Connect</b> on an online machine to start</div>
+          <button class="btn btn-s" onclick="showSection('access')"><span class="material-symbols-outlined">arrow_back</span>Go to Machines</button>
+        </div>
+        <canvas id="rv-canvas" style="display:none;max-width:100%;max-height:100%;cursor:crosshair"
+          onmousedown="rvMouse(event,'down')" onmouseup="rvMouse(event,'up')" onmousemove="rvMouse(event,'move')"
+          oncontextmenu="rvMouse(event,'rclick');return false;" ondblclick="rvMouse(event,'dblclick')" onwheel="rvScroll(event)"></canvas>
+        <div id="rv-connecting" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);flex-direction:column;align-items:center;justify-content:center;gap:14px">
+          <div class="spinner" style="width:48px;height:48px;border-width:3px"></div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-1)" id="rv-conn-msg">Requesting screen…</div>
+          <div style="font-size:11px;color:var(--text-3)">Waiting for agent to send first frame</div>
+        </div>
+        <div id="rv-info-overlay" style="display:none;position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;font-family:var(--mono);color:var(--text-2);pointer-events:none">
+          <span id="rv-info-text">—</span>
+        </div>
+      </div>
+      <input id="rv-kb" style="position:fixed;opacity:0;width:1px;height:1px;top:-99px" autocomplete="off" spellcheck="false"
+        onkeydown="rvKey(event,'down')" onkeyup="rvKey(event,'up')"/>
+    </section>
+
+    <!-- ══ FILE MANAGER ══ -->
+    <section class="dash-section" id="section-file-explorer">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">File Manager</div>
+          <div class="sec-sub" id="file-sub">Connect a machine to browse remote files</div>
+        </div>
+        <button class="btn btn-s" onclick="showToast('File uploads activate when a machine is online','info')"><span class="material-symbols-outlined">upload</span>Upload</button>
+      </div>
+      <div class="fbrow">
+        <div class="ftree">
+          <div class="ftree-item active" onclick="selDir(this,'Root')"><span class="material-symbols-outlined">folder</span>Root</div>
+          <div class="ftree-item" onclick="selDir(this,'Documents')"><span class="material-symbols-outlined">description</span>Documents</div>
+          <div class="ftree-item" onclick="selDir(this,'Media')"><span class="material-symbols-outlined">perm_media</span>Media</div>
+          <div class="ftree-item" onclick="selDir(this,'Logs')"><span class="material-symbols-outlined">receipt_long</span>Logs</div>
+        </div>
+        <div class="fcontent">
+          <table class="ftable">
+            <thead><tr><th>Name</th><th>Size</th><th>Type</th><th>Modified</th><th></th></tr></thead>
+            <tbody id="ftbody">
+              <tr><td colspan="5" style="padding:24px;color:var(--text-3)">No files yet. Connect a machine to browse.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ ACTIVITY LOG ══ -->
+    <section class="dash-section" id="section-activity-logs">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Activity Log</div>
+          <div class="sec-sub">All connection and system events</div>
+        </div>
+        <button class="btn btn-s" onclick="activityLogs.length=0;renderLogs();showToast('Logs cleared','info')"><span class="material-symbols-outlined">delete_sweep</span>Clear</button>
+      </div>
+      <div class="panel">
+        <table class="ltable">
+          <thead><tr><th>Time</th><th>Event</th><th>Machine</th><th>User</th><th>Severity</th></tr></thead>
+          <tbody id="ltbody"><tr><td colspan="5" style="padding:18px;color:var(--text-3)">No events yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ SUPABASE ══ -->
+    <section class="dash-section" id="section-supabase-view">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Supabase Database</div>
+          <div class="sec-sub">Live table data · iacdzpcoftxxcoigopun.supabase.co</div>
+        </div>
+        <div class="sec-actions">
+          <div class="pill pending" id="sb-view-pill"><span class="dot"></span><span id="sb-view-lbl">Connecting…</span></div>
+          <button class="btn btn-s" onclick="manualRefresh()"><span class="material-symbols-outlined">refresh</span>Refresh</button>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Table</span><span class="material-symbols-outlined kpi-ico teal">table_chart</span></div><div class="kpi-val" style="font-size:16px;font-family:var(--mono)" id="sb-tname">—</div><div class="kpi-sub">active table</div></div>
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Rows</span><span class="material-symbols-outlined kpi-ico green">table_rows</span></div><div class="kpi-val" id="sb-rows">0</div><div class="kpi-sub">total records</div></div>
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Last Sync</span><span class="material-symbols-outlined kpi-ico">sync</span></div><div class="kpi-val" style="font-size:16px" id="sb-sync">Never</div><div class="kpi-sub">auto every 10s</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">database</span><span id="sb-panel-title">devices table</span></div>
+          <div class="pill online" id="sb-live-pill" style="display:none"><span class="dot"></span>Live</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="dtable">
+            <thead id="sbthead"><tr><th>Loading…</th></tr></thead>
+            <tbody id="sbtbody"><tr><td style="padding:20px;color:var(--text-3)">Fetching from Supabase…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SETTINGS ══ -->
+    <section class="dash-section" id="section-settings">
+      <div class="sec-header"><div class="sec-title">Administration</div></div>
+      <div class="scard">
+        <div class="scard-hdr"><span class="material-symbols-outlined">dns</span>Server Configuration</div>
+        <div class="srow">
+          <div><div class="skey">Server URL</div><div class="sval">Flask backend endpoint</div></div>
+          <input class="sinput" id="settings-server-url" value="http://192.168.0.100:5000" onchange="SC.SERVER_URL=this.value;updateBadges();checkServer()"/>
+        </div>
+        <div class="srow">
+          <div><div class="skey">Supabase Project</div><div class="sval">REST API endpoint</div></div>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text-3)">iacdzpcoftxxcoigopun.supabase.co</span>
+        </div>
+        <div class="srow">
+          <div><div class="skey">Auto-Refresh</div><div class="sval">Data sync frequency</div></div>
+          <span style="font-size:13px;color:var(--text-3)">Every 10 seconds</span>
+        </div>
+      </div>
+      <div class="scard">
+        <div class="scard-hdr"><span class="material-symbols-outlined">manage_accounts</span>Account</div>
+        <div class="srow">
+          <div><div class="skey">Display Name</div></div>
+          <input class="sinput" id="settings-full-name" value="Administrator" onchange="updateName(this.value)"/>
+        </div>
+        <div class="srow">
+          <div><div class="skey">Sign Out</div></div>
+          <button class="btn btn-d" onclick="doLogout()">Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ── BUILD / CONNECT MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhdr">
+      <div class="mhdr-title"><span class="material-symbols-outlined">cast_connected</span>Connect Screen — New Session</div>
+      <button class="icon-btn" onclick="closeModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+
+    <!-- Step 1: Configure -->
+    <div class="step-wrap active" id="step-1">
+      <div class="mbody">
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;color:var(--text-3);margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">
+          <span class="material-symbols-outlined" style="color:var(--teal);flex-shrink:0;font-size:16px;margin-top:1px">info</span>
+          A unique invite link will be generated. Share it with the target device — the agent will download and auto-install. The dashboard will detect connection automatically.
+        </div>
+        <div class="fg"><label class="flbl">Machine Label <span style="color:var(--red)">*</span></label><input class="finput" id="dev-label" placeholder="e.g. Reception Kiosk – Floor 1"/></div>
+        <div class="fg"><label class="flbl">Location / Site</label><input class="finput" id="dev-location" placeholder="e.g. Nairobi HQ · Lobby"/></div>
+        <div class="fg">
+          <label class="flbl">Device Type</label>
+          <select class="finput" id="dev-type">
+            <option value="Standard Display">Standard Display</option>
+            <option value="Interactive Kiosk">Interactive Kiosk</option>
+            <option value="Video Wall">Video Wall</option>
+            <option value="Digital Signage">Digital Signage</option>
+            <option value="Security Camera Node">Security Camera Node</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Link Expiry</label>
+          <select class="finput" id="dev-expiry">
+            <option value="3600">1 Hour</option>
+            <option value="86400" selected>24 Hours</option>
+            <option value="604800">7 Days</option>
+            <option value="0">Never</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Server URL <span style="color:var(--text-3)">(auto-detected)</span></label>
+          <input class="finput" id="dev-server-url" placeholder="http://192.168.0.100:5000"/>
+          <div class="fhint">Leave blank to use: <span id="srv-hint" style="font-family:var(--mono)">http://192.168.0.100:5000</span></div>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn btn-s" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-p" onclick="generateLink()"><span class="material-symbols-outlined">link</span>Build + Generate Invite</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Generating -->
+    <div class="step-wrap" id="step-2">
+      <div class="mbody">
+        <div class="wait-screen">
+          <div class="wait-pulse"><span class="material-symbols-outlined">hub</span></div>
+          <div class="wait-title" id="gen-status-title">Generating secure token…</div>
+          <div class="wait-sub" id="gen-status">Registering device session</div>
+        </div>
+        <div class="conn-steps">
+          <div class="conn-step"><div class="step-icon active" id="cstep-1"><span class="material-symbols-outlined">token</span></div><span id="cstep-1-lbl">Generating token…</span></div>
+          <div class="conn-step"><div class="step-icon wait" id="cstep-2"><span class="material-symbols-outlined">cloud_upload</span></div><span id="cstep-2-lbl">Saving to database</span></div>
+          <div class="conn-step"><div class="step-icon wait" id="cstep-3"><span class="material-symbols-outlined">link</span></div><span id="cstep-3-lbl">Building download link</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Link Ready -->
+    <div class="step-wrap" id="step-3">
+      <div class="mbody">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px;background:var(--green-soft);border:1px solid rgba(74,222,128,0.2);border-radius:8px">
+          <span class="material-symbols-outlined" style="color:var(--green);font-size:20px">check_circle</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--green)">Invite Link Ready</div>
+            <div style="font-size:11px;color:var(--text-3)">Share this link — the agent will download and auto-connect</div>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Session Token</label>
+          <div class="token-dsp"><span class="material-symbols-outlined" style="font-size:14px;color:var(--text-3)">key</span><span id="disp-token">—</span><span style="font-size:10px;color:var(--text-3);margin-left:auto" id="disp-expiry"></span></div>
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Invite Link</label>
+          <div class="lbox"><input id="link-input" readonly onclick="this.select()"/><button class="tbtn p" onclick="copyLink()"><span class="material-symbols-outlined" id="copy-ico">content_copy</span></button></div>
+        </div>
+
+        <!-- Download button — uses Supabase-hosted agent or a direct API endpoint -->
+        <a id="dl-btn" href="#" onclick="handleDownload(event)" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:var(--teal);color:#0d0e0f;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:12px;cursor:pointer;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+          <span class="material-symbols-outlined" style="font-size:16px">download</span>
+          Download Agent Installer (.exe)
+        </a>
+
+        <!-- Connection waiting animation -->
+        <div class="poll-row">
+          <div class="pdot" id="pdot"></div>
+          <div style="flex:1">
+            <div style="font-weight:600;color:var(--text-1);font-size:12px" id="poll-title">Waiting for agent…</div>
+            <div style="font-size:11px;color:var(--text-3)" id="poll-txt">Install the agent on the target machine to establish connection</div>
+          </div>
+        </div>
+
+        <!-- Connection steps -->
+        <div class="conn-steps" style="margin-top:12px">
+          <div class="conn-step" id="wstep-1"><div class="step-icon wait" id="wstep-1-icon"><span class="material-symbols-outlined">download</span></div><span id="wstep-1-lbl">Agent downloaded</span></div>
+          <div class="conn-step" id="wstep-2"><div class="step-icon wait" id="wstep-2-icon"><span class="material-symbols-outlined">settings</span></div><span id="wstep-2-lbl">Agent installed and running</span></div>
+          <div class="conn-step" id="wstep-3"><div class="step-icon wait" id="wstep-3-icon"><span class="material-symbols-outlined">wifi</span></div><span id="wstep-3-lbl">Connection established</span></div>
+          <div class="conn-step" id="wstep-4"><div class="step-icon wait" id="wstep-4-icon"><span class="material-symbols-outlined">desktop_windows</span></div><span id="wstep-4-lbl">Screen access activated</span></div>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn btn-s" onclick="resetModal()">Build New</button>
+        <button class="btn btn-s" onclick="closeModal()">Done</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── NOTIFICATION PANEL ── -->
+<div class="notif-panel" id="notif-panel">
+  <div class="nhdr">
+    Notifications
+    <button class="icon-btn" onclick="toggleNotif()"><span class="material-symbols-outlined">close</span></button>
+  </div>
+  <div id="nlist">
+    <div class="nitem info"><span class="material-symbols-outlined">info</span><div><div class="nitem-title">Dashboard loaded</div><div class="nitem-time">Connecting to Supabase…</div></div></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ══ Config ══ */
+const SC = {
+  SB_URL: 'https://iacdzpcoftxxcoigopun.supabase.co',
+  SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
+  SERVER_URL: 'http://192.168.0.100:5000',
+  socket: null, srvOnline: false, sbOnline: false, activeTable: null, lastSync: null,
+};
+
+let screens = [], activityLogs = [], _filter = null, _pollTimer = null, _currentToken = null;
+
+/* ══ Supabase API ══ */
+const SB = {
+  h: () => ({ apikey: SC.SB_KEY, Authorization: `Bearer ${SC.SB_KEY}`, 'Content-Type': 'application/json' }),
+  base: () => SC.SB_URL.replace(/\/+$/, ''),
+  async get(table, q = '?select=*') {
+    const r = await fetch(`${SB.base()}/rest/v1/${table}${q}`, { headers: SB.h() });
+    if (!r.ok) throw new Error(`${table}: ${r.status}`);
+    return r.json();
+  },
+  async post(table, data) {
+    const r = await fetch(`${SB.base()}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { ...SB.h(), Prefer: 'return=minimal' },
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error(`insert: ${r.status}`);
+  },
+  async del(table, deviceId) {
+    const r = await fetch(`${SB.base()}/rest/v1/${table}?device_id=eq.${encodeURIComponent(deviceId)}`, {
+      method: 'DELETE', headers: SB.h()
+    });
+    if (!r.ok) throw new Error(`delete: ${r.status}`);
+  },
+};
+
+async function loadSB() {
+  for (const t of ['devices', 'agent_invites']) {
+    try {
+      const rows = await SB.get(t);
+      if (Array.isArray(rows)) {
+        SC.activeTable = t; SC.sbOnline = true; SC.lastSync = new Date();
+        return rows;
+      }
+    } catch(e) { console.warn(e.message); }
+  }
+  SC.sbOnline = false; return [];
+}
+
+async function checkServer() {
+  const url = (document.getElementById('settings-server-url')?.value?.trim() || SC.SERVER_URL).replace(/\/+$/, '');
+  SC.SERVER_URL = url;
+  // Try multiple health endpoints — Flask server may expose any of these
+  const paths = ['/status', '/health', '/api/status', '/'];
+  for (const path of paths) {
+    try {
+      const r = await fetch(`${url}${path}`, {
+        signal: AbortSignal.timeout(4000),
+        mode: 'no-cors'   // avoids CORS preflight; we just need to know the server is alive
+      });
+      // With no-cors, a response (even opaque) means the server is reachable
+      SC.srvOnline = true;
+      updateBadges();
+      return;
+    } catch(e) { /* try next */ }
+  }
+  SC.srvOnline = false;
+  updateBadges();
+}
+
+function connectSocket() {
+  if (SC.socket || typeof io === 'undefined') return;
+  try {
+    SC.socket = io(SC.SERVER_URL, { transports: ['websocket','polling'], timeout: 4000, reconnectionAttempts: 6 });
+    SC.socket.on('connect', () => {
+      SC.srvOnline = true; updateBadges();
+      showToast('Server connected', 'success');
+      addLog('WebSocket connected', 'Server', 'System', 'ok');
+      addNotif('Server connected', 'ok');
+      refresh();
+    });
+    SC.socket.on('disconnect', () => { SC.srvOnline = false; updateBadges(); addNotif('Server disconnected', 'warn'); });
+    SC.socket.on('agent_online', d => {
+      showToast(`Online: ${d.name||d.device_id}`, 'success');
+      addLog(`Agent online: ${d.name||d.device_id}`, d.name||'Device', 'System', 'ok');
+      addNotif(`Machine connected: ${d.name||d.device_id}`, 'ok');
+      // Activate tabs now that a screen is online
+      activateScreenTabs(d.name||d.device_id);
+      refresh();
+    });
+    SC.socket.on('agent_offline', d => {
+      addLog(`Agent offline: ${d.name||d.device_id}`, d.name||'Device', 'System', 'warn');
+      addNotif(`Machine offline: ${d.name||d.device_id}`, 'warn');
+      refresh();
+    });
+    SC.socket.on('device_update', () => refresh());
+    SC.socket.on('screenshot',      d => displayRemoteFrame(d));
+    SC.socket.on('screen_frame',    d => displayRemoteFrame(d));
+    SC.socket.on('frame',           d => displayRemoteFrame(d));
+    SC.socket.on('stream_to_dash',  d => displayRemoteFrame(d));
+    SC.socket.on('pong_agent', d => {
+      if (d.device_id===RV.deviceId) RV.latency = Date.now()-RV.pingSent;
+    });
+  } catch(e) { console.warn('Socket N/A'); }
+}
+
+function activateScreenTabs(deviceName) {
+  showToast(`${deviceName} is now online — Remote View & Screen tabs activated!`, 'success');
+  addNotif(`${deviceName} connected — tabs activated`, 'ok');
+}
+
+/* ══ Main refresh ══ */
+let _busy = false;
+async function refresh() {
+  if (_busy) return;
+  _busy = true;
+  try {
+    const rows = await loadSB();
+    hydrateScreens(rows);
+    renderAll(rows);
+    updateBadges();
+    renderSBRaw(rows);
+  } catch(e) { console.warn(e.message); }
+  _busy = false;
+}
+
+function manualRefresh() {
+  const ico = document.getElementById('ref-ico');
+  if (ico) {
+    ico.style.transition = 'transform .65s'; ico.style.transform = 'rotate(360deg)';
+    setTimeout(() => { ico.style.transition = 'none'; ico.style.transform = ''; }, 700);
+  }
+  refresh();
+}
+
+/* ══ Data helpers ══ */
+function statusFrom(r) {
+  const s = String(r.status||'pending').toLowerCase();
+  if (['connected','online','active','live','running'].includes(s)) return 'online';
+  if (['warning','warn'].includes(s)) return 'warning';
+  if (['offline','disconnected','inactive'].includes(s)) return 'offline';
+  // "pending" only if truly new/uninstalled — once an agent has checked in, treat as online
+  if (s === 'pending' && r.connected_at) return 'online';
+  return 'pending';
+}
+function fmtT(v) {
+  if (!v) return 'Just now';
+  const d = new Date(v); if (isNaN(d)) return 'Just now';
+  const m = Math.max(1, Math.floor((Date.now()-d)/60000));
+  if (m<60) return `${m} min ago`;
+  const h = Math.floor(m/60);
+  if (h<24) return `${h} hr ago`;
+  return `${Math.floor(h/24)} day ago`;
+}
+const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : '';
+
+function hydrateScreens(rows) {
+  // Filter out permanently deleted tokens
+  const filtered = rows.filter(r => {
+    const tok = r.device_id || r.token;
+    return !tok || !_deletedTokens.has(tok);
+  });
+  screens = filtered.map((r,i) => ({
+    id: i,
+    name: r.label||r.device_name||r.device_id||r.token||`Machine-${i+1}`,
+    status: statusFrom(r),
+    location: r.location||r.ip_address||'Unknown',
+    lastActive: fmtT(r.connected_at||r.last_seen||r.created_at),
+    storage: r.storage_gb ? `${Number(r.storage_gb).toFixed(1)} GB` : '0.0 GB',
+    type: r.device_type||'Standard Display',
+    ip: r.ip_address||'—',
+    token: r.device_id||r.token||null,
+    raw: r,
+  }));
+}
+
+/* ══ Delete screen ══ */
+const _deletedTokens = new Set(); // track permanently deleted tokens so refresh doesn't restore them
+
+async function deleteScreen(idx, e) {
+  if (e) e.stopPropagation();
+  const s = screens[idx]; if (!s) return;
+  if (!confirm(`Permanently delete "${s.name}"?\n\nThis will remove it from the database and cannot be undone.`)) return;
+
+  const token = s.token;
+  if (token) _deletedTokens.add(token);
+
+  // Remove from local array immediately
+  screens.splice(idx, 1);
+  screens.forEach((sc, i) => sc.id = i);
+  renderMachines();
+  renderRemote();
+  renderKpis(screens.map(sc => sc.raw));
+
+  try {
+    // Try server delete endpoint first (revokes + DB delete)
+    let deleted = false;
+    if (token && SC.srvOnline) {
+      try {
+        const r = await fetch(`${SC.SERVER_URL}/api/session/${token}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': 'mview-admin-secret' },
+          signal: AbortSignal.timeout(5000)
+        });
+        if (r.ok) { deleted = true; log.info?.(`Server deleted: ${token}`); }
+      } catch(e) { console.warn('Server delete failed:', e.message); }
+    }
+
+    // Also delete directly from Supabase
+    if (token && SC.activeTable) {
+      try {
+        await SB.del(SC.activeTable, token);
+        deleted = true;
+      } catch(e) { console.warn('Supabase delete failed:', e.message); }
+    }
+
+    showToast(`"${s.name}" permanently deleted`, deleted ? 'success' : 'info');
+    addLog(`Deleted: ${s.name}`, s.name, 'Admin', 'warn');
+    addNotif(`Screen deleted: ${s.name}`, 'warn');
+  } catch(e) {
+    showToast(`Removed from view`, 'info');
+  }
+}
+
+/* ══ Bulk delete all offline/pending ══ */
+async function bulkDeleteOffline() {
+  const targets = screens.filter(s => s.status !== 'online');
+  if (!targets.length) { showToast('No offline/pending machines to delete', 'info'); return; }
+  if (!confirm(`Delete ${targets.length} offline/pending machine(s)?\n\nThis cannot be undone.`)) return;
+  for (const s of targets) {
+    if (s.token) _deletedTokens.add(s.token);
+    try {
+      if (s.token && SC.srvOnline) {
+        await fetch(`${SC.SERVER_URL}/api/session/${s.token}`, { method:'DELETE', headers:{'X-Admin-Key':'mview-admin-secret'}, signal:AbortSignal.timeout(4000) });
+      }
+      if (s.token && SC.activeTable) await SB.del(SC.activeTable, s.token);
+    } catch(e) { console.warn(e); }
+  }
+  showToast(`Deleted ${targets.length} machines`, 'success');
+  addLog(`Bulk delete: ${targets.length} machines`, 'System', 'Admin', 'warn');
+  await refresh();
+}
+
+/* ══ Render ══ */
+function renderAll(rows) {
+  renderKpis(rows);
+  renderMachines();
+  renderRemote();
+  renderLogs();
+  updateAccessSub(rows);
+}
+
+function renderKpis(rows) {
+  const total = rows.length;
+  const online = rows.filter(r => ['connected','online'].includes(String(r.status||'').toLowerCase())).length;
+  const offline = rows.filter(r => ['offline'].includes(String(r.status||'').toLowerCase())).length;
+  const pending = rows.filter(r => ['pending','downloading'].includes(String(r.status||'').toLowerCase())).length;
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  set('kpi-total', total); set('kpi-online', online); set('kpi-offline', offline); set('kpi-pending', pending);
+  set('nc-all', total); set('nc-group', total); set('nc-online', online);
+  set('nc-pending', pending); set('nc-offline', offline); set('nc-outdated', 0); set('mcount', total);
+  const sub = document.getElementById('kpi-online-sub');
+  if (sub) sub.innerHTML = `<span class="material-symbols-outlined">wifi</span>${Math.round((online/Math.max(total,1))*100)}% connected`;
+}
+
+function updateAccessSub(rows) {
+  const online = rows.filter(r => ['connected','online'].includes(String(r.status||'').toLowerCase())).length;
+  const sub = document.getElementById('access-sub');
+  if (sub) sub.textContent = SC.sbOnline
+    ? `${rows.length} machines · ${online} online · Last synced ${SC.lastSync ? SC.lastSync.toLocaleTimeString() : 'never'}`
+    : 'Connecting to Supabase…';
+}
+
+function renderMachines() {
+  const data = _filter ? screens.filter(s => s.status === _filter) : screens;
+  const tbody = document.getElementById('mtbody'); if (!tbody) return;
+  if (!data.length) {
+    const label = _filter ? cap(_filter) : 'All Machines';
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-st">
+      <span class="material-symbols-outlined empty-ico">computer</span>
+      <div class="empty-title">"${label}" is empty</div>
+      <div class="empty-sub">Click the "Build +" button to get started, or select a different group.</div>
+      <button class="btn btn-g" onclick="openModal()"><span class="material-symbols-outlined">add</span>Connect Screen</button>
+    </div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td><input type="checkbox" style="accent-color:var(--teal)" onclick="event.stopPropagation()"/></td>
+      <td><div class="mname">${escHtml(s.name)}</div><div class="mid">${escHtml(s.token||'—')}</div></td>
+      <td><span class="badge ${s.status}"><i></i>${cap(s.status)}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3)">${escHtml(s.ip)}</td>
+      <td style="font-size:12px;color:var(--text-3)">${s.lastActive}</td>
+      <td style="font-size:12px;color:var(--text-3)">${escHtml(s.type)}</td>
+      <td><div class="abtns">
+        ${s.status==='online'
+          ? `<button class="tbtn p" onclick="event.stopPropagation();connectScreen(${s.id})"><span class="material-symbols-outlined">cast</span>Connect</button>`
+          : `<button class="tbtn" style="opacity:.45" disabled><span class="material-symbols-outlined">hourglass_empty</span>Pending</button>`}
+        <button class="tbtn" onclick="event.stopPropagation();showToast('${escHtml(s.name)} · ${s.status}','info')"><span class="material-symbols-outlined">info</span></button>
+        <button class="tbtn del" onclick="deleteScreen(${s.id},event)" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function renderRemote() {
+  const grid = document.getElementById('rgrid'); if (!grid) return;
+  if (!screens.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-st" style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:60px">
+      <span class="material-symbols-outlined empty-ico">videocam_off</span>
+      <div class="empty-title">No screens connected yet</div>
+      <div class="empty-sub">Generate an invite link and install the agent on a target computer to see live streams here.</div>
+      <button class="btn btn-p" onclick="openModal()"><span class="material-symbols-outlined">link</span>Generate Invite Link</button>
+    </div></div>`;
+    return;
+  }
+  grid.innerHTML = screens.map(s => `
+    <div class="rcrd" onclick="connectScreen(${s.id})">
+      <div class="rscreen">
+        ${s.status==='online'
+          ? `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d0e0f,#121a2e)">
+              <span class="material-symbols-outlined" style="font-size:32px;color:var(--green)">cast_connected</span>
+              <div style="font-size:10px;color:var(--green);font-weight:700;margin-top:6px;letter-spacing:0.06em">LIVE</div>
+             </div>
+             <div class="rlive"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1s infinite"></span>LIVE</div>`
+          : `<span class="material-symbols-outlined">monitor</span>`}
+      </div>
+      <div class="rcrd-body">
+        <div class="rcrd-name">${escHtml(s.name)}</div>
+        <div class="rcrd-sub">${escHtml(s.location)}</div>
+      </div>
+      <div class="rcrd-foot">
+        <span class="badge ${s.status}"><i></i>${cap(s.status)}</span>
+        <div style="display:flex;gap:6px">
+          ${s.status==='online'
+            ? `<button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="event.stopPropagation();connectScreen(${s.id})"><span class="material-symbols-outlined" style="font-size:13px">cast</span>Connect</button>`
+            : `<button class="btn btn-s" style="font-size:11px;padding:4px 10px;opacity:.5" disabled>Pending</button>`}
+          <button class="btn btn-d" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();deleteScreen(${s.id},event)" title="Delete screen">
+            <span class="material-symbols-outlined" style="font-size:13px">delete</span>
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderLogs() {
+  const tbody = document.getElementById('ltbody'); if (!tbody) return;
+  tbody.innerHTML = activityLogs.length
+    ? activityLogs.map(l => `<tr>
+        <td style="color:var(--text-3)">${l.time}</td>
+        <td style="color:var(--text-1);font-weight:500">${escHtml(l.event)}</td>
+        <td>${escHtml(l.screen)}</td>
+        <td>${l.user}</td>
+        <td><span class="lsev ${l.sev}">${cap(l.sev)}</span></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="padding:18px;color:var(--text-3)">No events yet.</td></tr>';
+}
+
+function renderSBRaw(rows) {
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  set('sb-tname', SC.activeTable||'—');
+  set('sb-rows', rows.length);
+  set('sb-sync', SC.lastSync ? SC.lastSync.toLocaleTimeString() : 'Never');
+  set('sb-panel-title', `${SC.activeTable||'—'} table`);
+  const thead = document.getElementById('sbthead');
+  const tbody = document.getElementById('sbtbody');
+  const pill = document.getElementById('sb-live-pill');
+  if (!rows.length) {
+    if (thead) thead.innerHTML = '<tr><th>No data</th></tr>';
+    if (tbody) tbody.innerHTML = `<tr><td style="padding:20px;color:var(--text-3)">${SC.sbOnline?'Table is empty.':'Could not connect to Supabase.'}</td></tr>`;
+    if (pill) pill.style.display = 'none';
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  if (thead) thead.innerHTML = '<tr>' + cols.map(c => `<th>${escHtml(c)}</th>`).join('') + '</tr>';
+  if (tbody) tbody.innerHTML = rows.slice(0,60).map(r =>
+    '<tr>' + cols.map(c => {
+      const v = r[c];
+      const d = v===null ? '<span style="color:var(--text-3)">null</span>' : (String(v).length>36 ? escHtml(String(v).slice(0,36))+'…' : escHtml(String(v)));
+      return `<td>${d}</td>`;
+    }).join('') + '</tr>'
+  ).join('');
+  if (pill) pill.style.display = 'flex';
+}
+
+/* ══ Status badges ══ */
+function updateBadges() {
+  const setPill = (id, cls, lbl, lblId) => {
+    const el = document.getElementById(id); if(el) el.className = `pill ${cls}`;
+    const le = document.getElementById(lblId); if(le) le.textContent = lbl;
+  };
+  setPill('srv-badge', SC.srvOnline?'online':'offline', SC.srvOnline?'Server Online':'Server Offline', 'srv-lbl');
+  setPill('sb-badge', SC.sbOnline?'online':'pending', SC.sbOnline?'Supabase Live':'Supabase…', 'sb-lbl');
+  setPill('srv-card-badge', SC.srvOnline?'online':'offline', SC.srvOnline?'Online':'Offline', 'srv-card-lbl');
+  setPill('srv-card-badge2', SC.srvOnline?'online':'offline', SC.srvOnline?'Online':'Offline', 'srv-card-lbl2');
+  setPill('sb-card-badge', SC.sbOnline?'online':'pending', SC.sbOnline?'Connected':'Connecting…', 'sb-card-lbl');
+  setPill('sb-view-pill', SC.sbOnline?'online':'pending', SC.sbOnline?'Live':'Connecting…', 'sb-view-lbl');
+  const si = document.getElementById('srv-ico');
+  if (si) si.className = `sc-icon ${SC.srvOnline?'green':'red'}`;
+  const u = document.getElementById('srv-url'); if(u) u.textContent = SC.SERVER_URL;
+  const uh = document.getElementById('srv-hint'); if(uh) uh.textContent = SC.SERVER_URL;
+  // Topbar icon
+  const online = screens.filter(s=>s.status==='online').length;
+  const topIcon = document.getElementById('topbar-icon');
+  const topLbl = document.getElementById('topbar-label');
+  if (topIcon) topIcon.textContent = online>0?'desktop_windows':'cloud_off';
+  if (topLbl) topLbl.textContent = online>0?`${online} Screen${online>1?'s':''} Online`:'Offline';
+}
+
+/* ══ Generate invite link — FIXED ══ */
+function goStep(n) {
+  document.querySelectorAll('.step-wrap').forEach(s => s.classList.remove('active'));
+  document.getElementById(`step-${n}`)?.classList.add('active');
+}
+
+function setConnStep(stepId, state) {
+  const el = document.getElementById(stepId);
+  if (!el) return;
+  el.className = `step-icon ${state}`;
+}
+
+async function generateLink() {
+  const label = document.getElementById('dev-label')?.value?.trim() || '';
+  if (!label) { showToast('Machine label is required', 'error'); return; }
+  const loc    = document.getElementById('dev-location')?.value?.trim() || '';
+  const type   = document.getElementById('dev-type')?.value || 'Standard Display';
+  const expiry = parseInt(document.getElementById('dev-expiry')?.value || '86400');
+  const srv    = (document.getElementById('dev-server-url')?.value?.trim() || SC.SERVER_URL).replace(/\/+$/, '');
+
+  goStep(2);
+  ['cstep-1','cstep-2','cstep-3'].forEach(id => setConnStep(id, 'wait'));
+  setConnStep('cstep-1', 'active');
+
+  const statusEl = document.getElementById('gen-status');
+  const titleEl  = document.getElementById('gen-status-title');
+  const setText   = (t,s) => { if(titleEl) titleEl.textContent=t; if(statusEl) statusEl.textContent=s; };
+
+  try {
+    let token = null, downloadUrl = null;
+
+    // ── Step 1: Ask server to generate token (server also saves to Supabase) ──
+    setText('Contacting server…', `Calling ${srv}/api/invite`);
+    try {
+      const r = await fetch(`${srv}/api/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, location: loc, device_type: type, expiry }),
+        signal: AbortSignal.timeout(6000)
+      });
+      if (r.ok) {
+        const d = await r.json();
+        token       = d.token || d.device_id;
+        downloadUrl = d.download_url || d.agent_url || `${srv}/invite/${token}`;
+      }
+    } catch(e) { console.warn('Server invite failed:', e.message); }
+
+    // ── Fallback: generate token locally if server unreachable ──
+    if (!token) {
+      const hex = () => [...Array(3)].map(()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('').toUpperCase();
+      token = `MV-${hex()}-${hex()}-${hex()}`;
+      downloadUrl = `${srv}/invite/${token}`;
+      setText('Server offline — local token', 'Saving to Supabase directly…');
+
+      // Save to Supabase directly as fallback
+      try {
+        await SB.post(SC.activeTable || 'devices', {
+          device_id: token, label: label||token, location: loc,
+          device_type: type, status: 'pending', created_at: new Date().toISOString()
+        });
+      } catch(e) { console.warn('Supabase direct save failed:', e.message); }
+    }
+
+    setConnStep('cstep-1', 'done');
+    setConnStep('cstep-2', 'active');
+    setText('Session saved', 'Token registered in database');
+    await new Promise(r => setTimeout(r, 400));
+    setConnStep('cstep-2', 'done');
+
+    // ── Step 3: Build download link ──
+    setConnStep('cstep-3', 'active');
+    setText('Building installer link…', `${srv}/invite/${token}`);
+    downloadUrl = downloadUrl || `${srv}/invite/${token}`;
+    _currentToken = token;
+    await new Promise(r => setTimeout(r, 400));
+    setConnStep('cstep-3', 'done');
+
+    // ── Show Step 3 results ──
+    document.getElementById('disp-token').textContent = token;
+    document.getElementById('link-input').value = downloadUrl;
+    document.getElementById('disp-expiry').textContent = expiry===0 ? '· Never' : `· ${expiry/3600<24 ? expiry/3600+'h' : expiry/86400+'d'}`;
+    const dlBtn = document.getElementById('dl-btn');
+    if (dlBtn) { dlBtn.href = downloadUrl; dlBtn.setAttribute('data-token', token); dlBtn.setAttribute('data-download-url', downloadUrl); }
+
+    goStep(3);
+    ['wstep-1','wstep-2','wstep-3','wstep-4'].forEach(id => {
+      const icon = document.getElementById(id+'-icon'); if (icon) icon.className = 'step-icon wait';
+    });
+
+    addLog(`Invite generated: ${token}`, label||token, 'Admin', 'ok');
+    addNotif(`Invite generated: ${label||token}`, 'info');
+    startPoll(token);
+    refresh();
+  } catch(e) {
+    goStep(1);
+    showToast(`Error: ${e.message}`, 'error');
+  }
+}
+
+function handleDownload(e) {
+  const btn = document.getElementById('dl-btn');
+  const url = btn.getAttribute('data-download-url') || btn.href;
+  // Local IP is intentional — the Flask server is on the LAN
+  // Just open the link directly — works for devices on the same network
+  if (url && url !== '#') {
+    e.preventDefault();
+    window.open(url, '_blank');
+    showToast('Opening agent installer link…', 'info');
+    addNotif('Agent installer link opened', 'info');
+  }
+}
+
+/* ══ Poll for agent connection ══ */
+function startPoll(token) {
+  if (_pollTimer) clearInterval(_pollTimer);
+  let att = 0;
+  const pollTitle = document.getElementById('poll-title');
+  const pollTxt = document.getElementById('poll-txt');
+  const pdot = document.getElementById('pdot');
+
+  // Start the animated waiting steps
+  if (pollTitle) pollTitle.textContent = 'Waiting for agent…';
+  if (pollTxt) pollTxt.textContent = 'Install the agent on the target machine to connect';
+
+  // Simulate step progression based on time while polling
+  setTimeout(() => advanceWStep(1), 3000);
+
+  _pollTimer = setInterval(async () => {
+    att++;
+    if (pollTxt) pollTxt.textContent = `Listening for device check-in… (${att*3}s)`;
+    try {
+      const rows = await loadSB();
+      const f = rows.find(r => (r.device_id||r.token) === token);
+      if (f && ['connected','online'].includes(String(f.status||'').toLowerCase())) {
+        clearInterval(_pollTimer);
+
+        // Animate all steps complete
+        advanceWStep(2);
+        setTimeout(() => advanceWStep(3), 500);
+        setTimeout(() => advanceWStep(4), 1000);
+
+        if (pollTitle) pollTitle.textContent = '✓ Connected!';
+        if (pollTxt) pollTxt.textContent = 'Device is online — Remote View & Screen tabs are now active';
+        if (pdot) { pdot.style.background = 'var(--green)'; pdot.style.animation = 'none'; }
+
+        showToast(`${f.label||token} is now online!`, 'success');
+        addNotif(`${f.label||token} connected — all tabs activated`, 'ok');
+        addLog(`Agent online: ${f.label||token}`, f.label||token, 'System', 'ok');
+        refresh();
+      }
+    } catch(e) {}
+
+    if (att > 40) {
+      clearInterval(_pollTimer);
+      if (pollTitle) pollTitle.textContent = 'Timed out';
+      if (pollTxt) pollTxt.textContent = 'Device may still connect later. Dashboard will detect automatically.';
+      if (pdot) { pdot.style.background = 'var(--orange)'; pdot.style.animation = 'none'; }
+    }
+  }, 3000);
+}
+
+function advanceWStep(n) {
+  const icon = document.getElementById(`wstep-${n}-icon`);
+  if (icon) icon.className = 'step-icon done';
+  const lbl = document.getElementById(`wstep-${n}-lbl`);
+  if (lbl) lbl.style.color = 'var(--text-1)';
+}
+
+/* ══ Remote Desktop Viewer ══ */
+const RV = {
+  active: false, deviceId: null, deviceName: null,
+  inputEnabled: true, quality: 'high',
+  frameCount: 0, lastFpsTime: Date.now(), fps: 0,
+  frameTimer: null, pingTimer: null, _watchdog: null, latency: 0, pingSent: 0,
+};
+const QUALITY_MAP = { high:{jpg:85,scale:1}, medium:{jpg:60,scale:0.75}, low:{jpg:40,scale:0.5} };
+
+function el(id) { return document.getElementById(id); }
+function showEl(id) { const e=el(id); if(e) e.style.display='flex'; }
+function hideEl(id) { const e=el(id); if(e) e.style.display='none'; }
+function setPillState(pid,lid,cls,lbl) {
+  const p=el(pid); if(p) p.className=`pill ${cls}`;
+  const l=el(lid); if(l) l.textContent=lbl;
+}
+
+function connectScreen(idx) {
+  const s = screens[idx]; if (!s) return;
+  if (s.status !== 'online') { showToast('Machine must be online to connect', 'error'); return; }
+  RV.active=true; RV.deviceId=s.token; RV.deviceName=s.name;
+  RV.frameCount=0; RV.lastFpsTime=Date.now();
+  showSection('remote-view');
+  const t=el('rv-title'); if(t) t.textContent=`${s.name} · ${s.ip||s.location}`;
+  setPillState('rv-status-pill','rv-status-lbl','pending','Connecting…');
+  el('rv-empty').style.display='none';
+  el('rv-canvas').style.display='none';
+  showEl('rv-connecting');
+  addLog(`Remote connect: ${s.name}`, s.name, 'Admin', 'info');
+
+  if (!SC.socket || !SC.srvOnline) {
+    el('rv-conn-msg').textContent = 'No server connection — check Flask is running';
+    setPillState('rv-status-pill','rv-status-lbl','offline','Server offline');
+    return;
+  }
+
+  // Tell agent to START continuous push streaming (triggers _capture_loop in agent)
+  const qmap = QUALITY_MAP[RV.quality];
+  SC.socket.emit('dashboard_command', {
+    tab: 'monitor',
+    action: 'start',
+    device_id: RV.deviceId,
+    fps: RV.quality==='high' ? 20 : RV.quality==='medium' ? 12 : 6,
+    quality: qmap.jpg,
+    scale: qmap.scale,
+    monitor: 1,
+  });
+
+  // Stop any old polling timer — frames now arrive as push from agent
+  if (RV.frameTimer) { clearInterval(RV.frameTimer); RV.frameTimer = null; }
+
+  // Ping timer for latency display
+  if (RV.pingTimer) clearInterval(RV.pingTimer);
+  RV.pingTimer = setInterval(() => {
+    if (!RV.active||!SC.socket) return;
+    RV.pingSent=Date.now();
+    SC.socket.emit('ping_agent', { device_id:RV.deviceId, t:RV.pingSent });
+  }, 2000);
+
+  // Watchdog: if no frame arrives in 5s, show error
+  if (RV._watchdog) clearTimeout(RV._watchdog);
+  RV._watchdog = setTimeout(() => {
+    if (RV.active && el('rv-canvas').style.display === 'none') {
+      el('rv-conn-msg').textContent = 'Agent connected but no frames received — check agent logs';
+      setPillState('rv-status-pill','rv-status-lbl','offline','No frames');
+    }
+  }, 5000);
+
+  setTimeout(() => el('rv-kb')?.focus(), 300);
+}
+
+function displayRemoteFrame(data) {
+  if (!RV.active) return;
+  const canvas=el('rv-canvas'); const ctx=canvas?.getContext('2d');
+  if (!canvas||!ctx) return;
+  hideEl('rv-connecting');
+  el('rv-empty').style.display='none';
+  canvas.style.display='block';
+  setPillState('rv-status-pill','rv-status-lbl','online','Live');
+  showEl('rv-info-overlay');
+  const src = data.frame||data.screenshot||data.image||data.data;
+  if (!src) return;
+  const img = new Image();
+  img.onload = () => {
+    if (data.w&&data.h) { canvas.width=data.w; canvas.height=data.h; }
+    else if (img.naturalWidth) { canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; }
+    ctx.drawImage(img,0,0);
+    RV.frameCount++;
+    const now=Date.now();
+    if (now-RV.lastFpsTime>=1000) {
+      RV.fps=RV.frameCount; RV.frameCount=0; RV.lastFpsTime=now;
+      const fpslbl=el('rv-fps-label'); if(fpslbl) fpslbl.textContent=`${RV.fps} fps`;
+    }
+    const info=el('rv-info-text');
+    if(info) info.textContent=`${canvas.width}×${canvas.height} · ${RV.fps}fps · ${RV.latency}ms · ${RV.quality}`;
+  };
+  img.src = src.startsWith('data:') ? src : `data:image/jpeg;base64,${src}`;
+}
+
+function rvMouse(e, type) {
+  if (!RV.active||!RV.inputEnabled||!SC.socket) return;
+  const canvas=el('rv-canvas'); if(!canvas) return;
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width; const scaleY=canvas.height/rect.height;
+  SC.socket.emit('mouse_event', { device_id:RV.deviceId, type, button:e.button, buttons:e.buttons, x:Math.round((e.clientX-rect.left)*scaleX), y:Math.round((e.clientY-rect.top)*scaleY) });
+  if (type==='down') el('rv-kb')?.focus();
+}
+function rvScroll(e) {
+  if (!RV.active||!RV.inputEnabled||!SC.socket) return;
+  e.preventDefault();
+  const canvas=el('rv-canvas'); if(!canvas) return;
+  const rect=canvas.getBoundingClientRect();
+  SC.socket.emit('scroll_event', { device_id:RV.deviceId, x:Math.round((e.clientX-rect.left)*(canvas.width/rect.width)), y:Math.round((e.clientY-rect.top)*(canvas.height/rect.height)), dx:e.deltaX, dy:e.deltaY });
+}
+function rvKey(e, type) {
+  if (!RV.active||!RV.inputEnabled||!SC.socket) return;
+  e.preventDefault();
+  SC.socket.emit('key_event', { device_id:RV.deviceId, type, key:e.key, code:e.code, keyCode:e.keyCode, ctrl:e.ctrlKey, alt:e.altKey, shift:e.shiftKey, meta:e.metaKey });
+}
+function sendCtrlAltDel() {
+  if (!RV.active||!SC.socket) return;
+  SC.socket.emit('key_event', { device_id:RV.deviceId, type:'combo', combo:'ctrl+alt+del' });
+  showToast('Sent Ctrl+Alt+Del', 'info');
+}
+function disconnectRemote() {
+  RV.active=false;
+  if (RV.frameTimer) { clearInterval(RV.frameTimer); RV.frameTimer=null; }
+  if (RV.pingTimer)  { clearInterval(RV.pingTimer);  RV.pingTimer=null; }
+  if (RV._watchdog)  { clearTimeout(RV._watchdog);   RV._watchdog=null; }
+  // Tell agent to STOP its push stream loop
+  if (SC.socket) {
+    SC.socket.emit('dashboard_command', { tab:'monitor', action:'stop', device_id:RV.deviceId });
+  }
+  el('rv-canvas').style.display='none';
+  hideEl('rv-connecting'); hideEl('rv-info-overlay');
+  el('rv-empty').style.display='flex';
+  setPillState('rv-status-pill','rv-status-lbl','offline','Disconnected');
+  showToast(`Disconnected from ${RV.deviceName||'device'}`, 'info');
+}
+function toggleInput() {
+  RV.inputEnabled=!RV.inputEnabled;
+  const lbl=el('rv-input-lbl'); if(lbl) lbl.textContent=RV.inputEnabled?'Input On':'Input Off';
+  const btn=el('rv-input-btn'); if(btn) btn.style.opacity=RV.inputEnabled?'1':'0.5';
+  showToast(`Input ${RV.inputEnabled?'enabled':'disabled'}`, 'info');
+}
+function cycleQuality() {
+  const q={high:'medium',medium:'low',low:'high'}; RV.quality=q[RV.quality];
+  const lbl=el('rv-quality-lbl'); if(lbl) lbl.textContent=RV.quality.charAt(0).toUpperCase()+RV.quality.slice(1);
+  if (RV.active && SC.socket) {
+    const qmap = QUALITY_MAP[RV.quality];
+    // Restart stream with new quality params
+    SC.socket.emit('dashboard_command', { tab:'monitor', action:'start', device_id:RV.deviceId,
+      fps: RV.quality==='high'?20:RV.quality==='medium'?12:6,
+      quality: qmap.jpg, scale: qmap.scale, monitor:1 });
+  }
+  showToast(`Quality: ${RV.quality}`, 'info');
+}
+function requestFullscreen() {
+  const wrap=el('rv-wrap');
+  if(wrap?.requestFullscreen) wrap.requestFullscreen();
+  else if(wrap?.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+}
+
+function copyLink() {
+  const i = document.getElementById('link-input'); if (!i) return;
+  i.select();
+  try { document.execCommand('copy'); } catch(e) { navigator.clipboard?.writeText(i.value); }
+  const ico = document.getElementById('copy-ico');
+  if (ico) { ico.textContent = 'check'; setTimeout(() => ico.textContent = 'content_copy', 2000); }
+  showToast('Link copied!', 'success');
+}
+
+function resetModal() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  goStep(1);
+  ['dev-label','dev-location','dev-server-url'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.value = '';
+  });
+}
+
+/* ══ Filter ══ */
+function setFilter(f) { _filter = f; renderMachines(); }
+function filterScreens(q) {
+  if (!q) { renderMachines(); return; }
+  const d = screens.filter(s => [s.name, s.location, s.status, s.ip].some(v => String(v).toLowerCase().includes(q.toLowerCase())));
+  const tbody = document.getElementById('mtbody'); if (!tbody) return;
+  if (!d.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:var(--text-3)">No machines match "${escHtml(q)}"</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = d.map(s => `
+    <tr>
+      <td><input type="checkbox" style="accent-color:var(--teal)"/></td>
+      <td><div class="mname">${escHtml(s.name)}</div><div class="mid">${escHtml(s.token||'—')}</div></td>
+      <td><span class="badge ${s.status}"><i></i>${cap(s.status)}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3)">${escHtml(s.ip)}</td>
+      <td style="font-size:12px;color:var(--text-3)">${s.lastActive}</td>
+      <td style="font-size:12px;color:var(--text-3)">${escHtml(s.type)}</td>
+      <td><div class="abtns">
+        <button class="tbtn del" onclick="deleteScreen(${s.id},event)"><span class="material-symbols-outlined">delete</span></button>
+      </div></td>
+    </tr>`).join('');
+}
+
+/* ══ UI helpers ══ */
+const sectionLabels = {
+  'access': 'Access',
+  'remote-view': 'Remote View',
+  'file-explorer': 'File Manager',
+  'activity-logs': 'Activity Log',
+  'supabase-view': 'Database',
+  'settings': 'Administration',
+};
+
+function showSection(id) {
+  document.querySelectorAll('.dash-section').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.rail-item').forEach(i => i.classList.remove('active'));
+  const s = document.getElementById(`section-${id}`);
+  if (s) {
+    s.classList.add('active');
+    s.style.display = id === 'remote-view' ? 'flex' : 'block';
+  }
+  const navMap = { 'access': ['nav-all'], 'remote-view': [], 'file-explorer': [], 'activity-logs': [], 'supabase-view': [], 'settings': [] };
+  (navMap[id]||[]).forEach(nid => { const el = document.getElementById(nid); if(el) el.classList.add('active'); });
+  const railEl = document.getElementById(`rail-${id}`);
+  if (railEl) railEl.classList.add('active');
+  const sideTitle = document.getElementById('sidebar-section-title');
+  if (sideTitle) sideTitle.textContent = sectionLabels[id] || id;
+}
+
+function openModal() { document.getElementById('modal')?.classList.add('open'); resetModal(); }
+function closeModal() { document.getElementById('modal')?.classList.remove('open'); }
+function toggleNotif() { document.getElementById('notif-panel')?.classList.toggle('open'); }
+function selDir(el, _dir) { document.querySelectorAll('.ftree-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+
+function addLog(event, screen, user, sev) {
+  activityLogs.unshift({ time: new Date().toLocaleTimeString(), event, screen, user, sev });
+  if (activityLogs.length > 200) activityLogs.pop();
+  renderLogs();
+}
+
+function addNotif(title, type='info') {
+  const l = document.getElementById('nlist'); if (!l) return;
+  const icons = { ok:'check_circle', warn:'warning', info:'info' };
+  l.insertAdjacentHTML('afterbegin', `
+    <div class="nitem ${type}">
+      <span class="material-symbols-outlined">${icons[type]||'info'}</span>
+      <div><div class="nitem-title">${escHtml(title)}</div><div class="nitem-time">${new Date().toLocaleTimeString()}</div></div>
+    </div>`);
+  // Show dot on both notification buttons
+  ['notif-dot','notif-dot-2'].forEach(id => { const d=document.getElementById(id); if(d) d.style.display='block'; });
+}
+
+function showToast(msg, type='info') {
+  let c = document.querySelector('.toast-container');
+  if (!c) { c = document.createElement('div'); c.className = 'toast-container'; document.body.appendChild(c); }
+  const icons = { success:'check_circle', error:'error', info:'info' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span class="material-symbols-outlined">${icons[type]||'info'}</span>${escHtml(msg)}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(14px)'; t.style.transition='.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function updateName(n) { localStorage.setItem('sc-auth', JSON.stringify({ name: n })); }
+function doLogout() { localStorage.removeItem('sc-auth'); localStorage.removeItem('mview-auth-user'); showToast('Signed out', 'info'); setTimeout(() => { window.location.href = 'login.html'; }, 600); }
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══ Init ══ */
+document.addEventListener('DOMContentLoaded', async () => {
+  document.querySelectorAll('.dash-section').forEach(s => s.style.display='none');
+  showSection('access');
+  connectSocket();
+  await checkServer();
+  try { await refresh(); } catch(e) { console.warn(e); }
+  addLog('Dashboard loaded', 'System', 'System', 'info');
+  setInterval(async () => { await checkServer(); await refresh(); }, 10000);
+});
+
+document.addEventListener('click', e => {
+  const p = document.getElementById('notif-panel');
+  if (p?.classList.contains('open') && !p.contains(e.target) && !e.target.closest('[onclick="toggleNotif()"]')) {
+    p.classList.remove('open');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    document.getElementById('notif-panel')?.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
