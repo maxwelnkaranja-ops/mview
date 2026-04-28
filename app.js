@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════
-   m view — Application Logic
+   app.js — m view Application Logic
+   Production build: Render URL
 ═══════════════════════════════════════════ */
 
 'use strict';
@@ -23,22 +24,27 @@ const files = [
 ];
 
 const activityLogs = [
-  { time: 'Apr 18 · 14:32', event: 'Screen connected',         screen: 'Alpha-Station-2024', user: 'J. Doe',    sev: 'ok' },
-  { time: 'Apr 18 · 13:55', event: 'Backup completed',         screen: 'All Systems',        user: 'System',    sev: 'ok' },
-  { time: 'Apr 18 · 13:10', event: 'Screen offline detected',  screen: 'Gamma-Node-07',      user: 'System',    sev: 'warn' },
-  { time: 'Apr 18 · 12:44', event: 'File uploaded',            screen: 'Beta-Hub-03',        user: 'A. Kamau',  sev: 'info' },
-  { time: 'Apr 18 · 11:02', event: 'Unauthorized access attempt', screen: 'Epsilon-Wall-02', user: 'Unknown',   sev: 'critical' },
-  { time: 'Apr 18 · 10:17', event: 'Config updated',           screen: 'Delta-Kiosk-01',     user: 'J. Doe',    sev: 'info' },
-  { time: 'Apr 18 · 09:45', event: 'Security scan passed',     screen: 'All Systems',        user: 'System',    sev: 'ok' },
-  { time: 'Apr 17 · 23:00', event: 'Scheduled restart',        screen: 'Zeta-Panel-09',      user: 'Scheduler', sev: 'info' },
+  { time: 'Apr 18 · 14:32', event: 'Screen connected',            screen: 'Alpha-Station-2024', user: 'J. Doe',    sev: 'ok' },
+  { time: 'Apr 18 · 13:55', event: 'Backup completed',            screen: 'All Systems',        user: 'System',    sev: 'ok' },
+  { time: 'Apr 18 · 13:10', event: 'Screen offline detected',     screen: 'Gamma-Node-07',      user: 'System',    sev: 'warn' },
+  { time: 'Apr 18 · 12:44', event: 'File uploaded',               screen: 'Beta-Hub-03',        user: 'A. Kamau',  sev: 'info' },
+  { time: 'Apr 18 · 11:02', event: 'Unauthorized access attempt', screen: 'Epsilon-Wall-02',    user: 'Unknown',   sev: 'critical' },
+  { time: 'Apr 18 · 10:17', event: 'Config updated',              screen: 'Delta-Kiosk-01',     user: 'J. Doe',    sev: 'info' },
+  { time: 'Apr 18 · 09:45', event: 'Security scan passed',        screen: 'All Systems',        user: 'System',    sev: 'ok' },
+  { time: 'Apr 17 · 23:00', event: 'Scheduled restart',           screen: 'Zeta-Panel-09',      user: 'Scheduler', sev: 'info' },
 ];
+
+// ── Production server URL ────────────────────
+// Reads from config.js; falls back to Render URL.
+// NEVER use localhost or a raw IP in this file for production.
+const PROD_SERVER_URL = 'https://screen-connect-rtca.onrender.com';
+function getServerUrl() { return window.MVIEW_SERVER_URL || PROD_SERVER_URL; }
 
 // ── Page Navigation ──────────────────────────
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + page);
   if (target) target.classList.add('active');
-
   if (page === 'dashboard') {
     renderScreensTable(screens);
     renderRemoteGrid();
@@ -51,10 +57,17 @@ function showPage(page) {
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('mview-theme', theme);
-  const icon = document.getElementById('theme-icon');
-  const label = document.getElementById('theme-label');
-  if (icon) icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
-  if (label) label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  // Sync all theme toggle icons (landing, dashboard, login)
+  ['theme-icon', 'theme-icon-landing', 'login-theme-icon'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+  });
+  ['theme-label', 'theme-label-landing', 'login-theme-label'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  });
+  const btn = document.getElementById('dark-mode-btn');
+  if (btn) btn.textContent = theme === 'dark' ? 'Disable Dark' : 'Enable Dark';
 }
 
 function toggleTheme() {
@@ -64,21 +77,14 @@ function toggleTheme() {
 
 // ── Sidebar Navigation ───────────────────────
 function showSection(sectionId) {
-  // Deactivate all nav items and sections
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-
-  // Activate matching section
   const section = document.getElementById('section-' + sectionId);
   if (section) section.classList.add('active');
-
-  // Activate matching nav item (match by onclick content)
   document.querySelectorAll('.nav-item').forEach(item => {
     const onclick = item.getAttribute('onclick') || '';
     if (onclick.includes(sectionId)) item.classList.add('active');
   });
-
-  // Update breadcrumb
   const labels = {
     'dashboard-home': 'Dashboard',
     'remote-view': 'Remote View',
@@ -86,12 +92,12 @@ function showSection(sectionId) {
     'activity-logs': 'Activity Logs',
     'settings': 'Settings',
     'support': 'Support',
+    'pricing': 'Pricing',
   };
   const bc = document.getElementById('breadcrumb-text');
   if (bc) bc.textContent = labels[sectionId] || sectionId;
-
-  // Close notification panel if open
   document.getElementById('notif-panel')?.classList.remove('open');
+  if (typeof closeScreenDetail === 'function') closeScreenDetail();
 }
 
 // ── Sidebar Toggle ───────────────────────────
@@ -99,10 +105,10 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const main = document.querySelector('.dash-main');
   if (window.innerWidth <= 768) {
-    sidebar.classList.toggle('mobile-open');
+    sidebar?.classList.toggle('mobile-open');
   } else {
-    sidebar.classList.toggle('collapsed');
-    main.classList.toggle('full-width');
+    sidebar?.classList.toggle('collapsed');
+    main?.classList.toggle('full-width');
   }
 }
 
@@ -114,12 +120,10 @@ function renderScreensTable(data) {
     <tr>
       <td>
         <div style="font-weight:600">${s.name}</div>
-        <div style="font-size:11px;color:var(--on-surface-variant)">${s.type}</div>
+        <div style="font-size:11px;color:var(--text-2)">${s.type}</div>
       </td>
       <td>
-        <span class="status-pill ${s.status}">
-          <i></i>${capitalize(s.status)}
-        </span>
+        <span class="status-pill ${s.status}"><i></i>${capitalize(s.status)}</span>
       </td>
       <td>${s.location}</td>
       <td>${s.lastActive}</td>
@@ -131,7 +135,7 @@ function renderScreensTable(data) {
         <button class="action-btn" title="Edit" onclick="editScreen(${s.id})">
           <span class="material-symbols-outlined" style="font-size:18px">edit</span>
         </button>
-        <button class="action-btn" title="Delete" onclick="deleteScreen(${s.id})" style="color:var(--error)">
+        <button class="action-btn" title="Delete" onclick="deleteScreen(${s.id})" style="color:var(--red)">
           <span class="material-symbols-outlined" style="font-size:18px">delete</span>
         </button>
       </td>
@@ -168,7 +172,7 @@ function renderRemoteGrid() {
       <div class="remote-screen">
         <span class="material-symbols-outlined">monitor</span>
         <div class="remote-screen-overlay">
-          <span style="width:5px;height:5px;border-radius:50%;background:${s.status==='online'?'#4ade80':s.status==='warning'?'#fbbf24':'#f87171'}"></span>
+          <span style="width:5px;height:5px;border-radius:50%;background:${s.status === 'online' ? '#4ade80' : s.status === 'warning' ? '#fbbf24' : '#f87171'}"></span>
           ${capitalize(s.status)}
         </div>
       </div>
@@ -196,7 +200,7 @@ function renderFilesTable(data) {
     <tr>
       <td>
         <div class="file-icon-wrap">
-          ${f.locked ? `<span class="material-symbols-outlined file-lock">lock</span>` : ''}
+          ${f.locked ? `<span class="material-symbols-outlined" style="font-size:14px;color:var(--text-3)">lock</span>` : ''}
           <div class="file-icon ${f.type}">
             <span class="material-symbols-outlined" style="font-size:14px">${iconMap[f.type]}</span>
           </div>
@@ -204,8 +208,8 @@ function renderFilesTable(data) {
         </div>
       </td>
       <td>${f.size}</td>
-      <td style="text-transform:uppercase;font-size:10px;letter-spacing:.06em;color:var(--on-surface-variant)">${f.type}</td>
-      <td style="color:var(--on-surface-variant)">${f.modified}</td>
+      <td style="text-transform:uppercase;font-size:10px;letter-spacing:.06em;color:var(--text-2)">${f.type}</td>
+      <td style="color:var(--text-2)">${f.modified}</td>
       <td>
         <button class="action-btn" title="Download" onclick="showToast('Downloading ${f.name}','success')">
           <span class="material-symbols-outlined" style="font-size:16px">download</span>
@@ -225,17 +229,9 @@ function selectDir(el, dir) {
   if (dirEl) dirEl.textContent = dir;
 }
 
-function toggleDir(el) {
-  el.classList.toggle('expanded');
-}
-
-function openAddFileModal() {
-  showToast('Upload feature — coming soon', 'info');
-}
-
-function handleConnectDevice() {
-  openAddDeviceModal();
-}
+function toggleDir(el) { el.classList.toggle('expanded'); }
+function openAddFileModal() { showToast('Upload feature — coming soon', 'info'); }
+function handleConnectDevice() { if (typeof openAddDeviceModal === 'function') openAddDeviceModal(); }
 
 // ── Logs Table ───────────────────────────────
 function renderLogsTable(data) {
@@ -243,7 +239,7 @@ function renderLogsTable(data) {
   if (!tbody) return;
   tbody.innerHTML = data.map(l => `
     <tr>
-      <td style="color:var(--on-surface-variant);font-size:12px;white-space:nowrap">${l.time}</td>
+      <td style="color:var(--text-2);font-size:12px;white-space:nowrap">${l.time}</td>
       <td style="font-weight:500">${l.event}</td>
       <td>${l.screen}</td>
       <td>${l.user}</td>
@@ -252,43 +248,28 @@ function renderLogsTable(data) {
   `).join('');
 }
 
-// ── Add Screen Modal ─────────────────────────
-function openAddScreenModal() {
-  document.getElementById('modal-add-screen').classList.add('open');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
+// ── Modals ───────────────────────────────────
+function openAddScreenModal() { document.getElementById('modal-add-screen')?.classList.add('open'); }
+function closeModal(id)       { document.getElementById(id)?.classList.remove('open'); }
 
 function addScreen() {
-  const name    = document.getElementById('new-screen-name').value.trim();
-  const loc     = document.getElementById('new-screen-location').value.trim();
-  const type    = document.getElementById('new-screen-type').value;
-  const status  = document.getElementById('new-screen-status').value;
-
+  const name   = document.getElementById('new-screen-name')?.value.trim();
+  const loc    = document.getElementById('new-screen-location')?.value.trim();
+  const type   = document.getElementById('new-screen-type')?.value;
+  const status = document.getElementById('new-screen-status')?.value;
   if (!name) { showToast('Please enter a screen name', 'error'); return; }
-
-  screens.push({
-    id: Date.now(),
-    name, location: loc || 'Unknown Location',
-    type, status, lastActive: 'Just now', storage: '0 GB',
-  });
-
+  screens.push({ id: Date.now(), name, location: loc || 'Unknown Location', type, status, lastActive: 'Just now', storage: '0 GB' });
   closeModal('modal-add-screen');
   renderScreensTable(screens);
   renderRemoteGrid();
-
-  // Clear form
   document.getElementById('new-screen-name').value = '';
   document.getElementById('new-screen-location').value = '';
-
   showToast(`${name} added successfully`, 'success');
 }
 
 // ── Notifications ────────────────────────────
 function showNotifications() {
-  document.getElementById('notif-panel').classList.toggle('open');
+  document.getElementById('notif-panel')?.classList.toggle('open');
 }
 
 // ── Toast ────────────────────────────────────
@@ -304,14 +285,19 @@ function showToast(msg, type = 'info') {
   toast.className = `toast ${type}`;
   toast.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span>${msg}`;
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)'; toast.style.transition = '.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = '.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 // ── Nav Scroll Effect ────────────────────────
 window.addEventListener('scroll', () => {
   const nav = document.getElementById('main-nav');
   if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
-});
+}, { passive: true });
 
 // ── Keyboard Shortcuts ───────────────────────
 document.addEventListener('keydown', e => {
@@ -321,7 +307,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Click outside to close notif ────────────
+// ── Click outside to close notif ─────────────
 document.addEventListener('click', e => {
   const panel = document.getElementById('notif-panel');
   if (panel?.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.icon-btn')) {
@@ -330,22 +316,27 @@ document.addEventListener('click', e => {
 });
 
 // ── Utility ──────────────────────────────────
-function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+function capitalize(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
+
+// ── Activity Log Helper ───────────────────────
+function addActivityLog(entry) {
+  activityLogs.unshift(entry);
+  renderLogsTable(activityLogs);
+}
 
 // ── Init ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('mview-theme') || 'light';
-  applyTheme(savedTheme);
-  if (window.location.hash === '#dashboard') {
+  applyTheme(localStorage.getItem('mview-theme') || 'light');
+
+  // Auth check
+  const authRaw = localStorage.getItem('mview-auth-user');
+  let isLoggedIn = false;
+  if (authRaw) { try { JSON.parse(authRaw); isLoggedIn = true; } catch (e) {} }
+
+  if (isLoggedIn) {
     showPage('dashboard');
     showSection('dashboard-home');
   } else {
     showPage('landing');
   }
 });
-
-// ── Activity Log Helper (called by sessionManager) ──────────
-function addActivityLog(entry) {
-  activityLogs.unshift(entry);
-  renderLogsTable(activityLogs);
-}
