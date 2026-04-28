@@ -10,8 +10,8 @@ Fixes applied:
   - Supabase client reuse made thread-safe
   - /health endpoint enriched for Render uptime checks
 
-pip install flask flask-cors flask-socketio supabase python-dotenv gunicorn gevent gevent-websocket
-Render start command: gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 server:app
+pip install flask flask-cors flask-socketio supabase python-dotenv gunicorn eventlet
+Render start command: gunicorn -k eventlet -w 1 server:app
 Local:               py -3.12 server.py
 """
 import os, re, logging, datetime, threading
@@ -79,7 +79,7 @@ if SOCKETIO_OK:
     sio = SocketIO(
         app,
         cors_allowed_origins="*",
-        async_mode="gevent",        # matches gunicorn -k geventwebsocket worker
+        async_mode="eventlet",      # matches gunicorn -k eventlet
         logger=False,
         engineio_logger=False,
         ping_timeout=60,
@@ -239,9 +239,7 @@ def serve_login_html():
 @app.route("/dashboard")
 @app.route("/dashboard.html")
 def serve_dashboard():
-    # Redirect to root — dashboard is now embedded in app.html
-    from flask import redirect
-    return redirect("/", 301)
+    return send_from_directory(".", "dashboard.html")
 
 # ══════════════════════════════════════════════════════════════
 #  Health / Status endpoints
@@ -667,12 +665,12 @@ def startup():
     else:
         log.info(f"  ✗ Agent:    NOT found at {a.resolve()}")
     log.info(f"  ✓ Supabase: {SUPABASE_URL[:55]}")
-    log.info(f"  ✓ SocketIO: {'yes — gevent' if SOCKETIO_OK else 'NO — pip install flask-socketio gevent gevent-websocket'}")
+    log.info(f"  ✓ SocketIO: {'yes — eventlet' if SOCKETIO_OK else 'NO — pip install flask-socketio eventlet'}")
     log.info(f"  ✓ Port:     {PORT}  (Render maps this to https automatically)")
     log.info(f"  ✓ Entry:    {'app.html (combined build)' if Path('app.html').is_file() else 'index.html (separate build)'}")
     log.info("=" * 60)
     log.info("  Render start command:")
-    log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 server:app")
+    log.info("    gunicorn -k eventlet -w 1 server:app")
     log.info("  Local dev:")
     log.info("    py -3.12 server.py")
     log.info("=" * 60)
