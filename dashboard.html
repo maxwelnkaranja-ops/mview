@@ -358,9 +358,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">support_agent</span>
       <div class="rail-tooltip">Access</div>
     </div>
-    <div class="rail-item" id="rail-remote-view" onclick="showSection('remote-view')">
+    <div class="rail-item" id="rail-remote-grid" onclick="showSection('remote-grid')">
       <span class="material-symbols-outlined">videocam</span>
-      <div class="rail-tooltip">Remote View</div>
+      <div class="rail-tooltip">Remote Screens</div>
     </div>
     <div class="rail-item" id="rail-file-explorer" onclick="showSection('file-explorer')">
       <span class="material-symbols-outlined">folder_open</span>
@@ -591,6 +591,22 @@ tailwind.config = {
     </section>
 
     <!-- ══ REMOTE VIEW ══ -->
+    <!-- Screen cards grid — rendered by renderRemote() when section is in grid mode -->
+    <section class="dash-section" id="section-remote-grid" style="padding:24px">
+      <div class="sec-header">
+        <div>
+          <div class="sec-title">Remote Screens</div>
+          <div class="sec-sub">Click any card to open the live viewer</div>
+        </div>
+        <div class="sec-actions">
+          <button class="btn btn-p" onclick="openModal()"><span class="material-symbols-outlined">add</span>Connect Screen</button>
+          <button class="btn btn-s" onclick="manualRefresh()"><span class="material-symbols-outlined">refresh</span>Refresh</button>
+        </div>
+      </div>
+      <div class="rgrid" id="rgrid"></div>
+    </section>
+
+    <!-- ══ REMOTE VIEW (live canvas) ══ -->
     <section class="dash-section" id="section-remote-view" style="padding:0;flex-direction:column;height:calc(100vh - 56px)">
       <!-- Toolbar -->
       <div style="height:48px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0">
@@ -1055,13 +1071,14 @@ const SC = {
   SB_URL: 'https://iacdzpcoftxxcoigopun.supabase.co',
   SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
   SERVER_URL: (function() {
-    // Priority: config.js → same origin as current page → fallback local
+    // Priority: config.js → same origin as current page → localhost fallback
     if (window.MVIEW_SERVER_URL) return window.MVIEW_SERVER_URL.replace(/\/+$/, '');
     const loc = window.location;
-    if (loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1' && !loc.hostname.startsWith('192.168')) {
-      return `${loc.protocol}//${loc.host}`;  // same origin — works on Render
+    // On any non-localhost host (Render, prod, etc.) always use same origin — NEVER a hardcoded HTTP URL
+    if (loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1') {
+      return `${loc.protocol}//${loc.host}`;
     }
-    return 'http://192.168.0.100:5000';  // local dev fallback
+    return `${loc.protocol}//${loc.host}`; // localhost dev — still use actual host:port
   })(),
   socket: null, srvOnline: false, sbOnline: false, activeTable: null, lastSync: null,
 };
@@ -1107,8 +1124,21 @@ async function loadSB() {
 }
 
 async function checkServer() {
-  const url = (document.getElementById('settings-server-url')?.value?.trim() || SC.SERVER_URL).replace(/\/+$/, '');
-  SC.SERVER_URL = url;
+  const inputEl = document.getElementById('settings-server-url');
+  const inputVal = inputEl?.value?.trim().replace(/\/+$/, '');
+  // Only honour the settings input if it's a deliberate change by the user AND
+  // it doesn't introduce a mixed-content issue (http:// from an https:// page)
+  if (inputVal && inputVal !== SC.SERVER_URL) {
+    const inputIsHttp = inputVal.startsWith('http://');
+    const pageIsHttps = window.location.protocol === 'https:';
+    if (!inputIsHttp || !pageIsHttps) {
+      SC.SERVER_URL = inputVal;
+    } else {
+      // Silently ignore — would cause mixed-content block
+      if (inputEl) inputEl.value = SC.SERVER_URL;
+    }
+  }
+  const url = SC.SERVER_URL;
   // Try multiple health endpoints — Flask server may expose any of these
   const paths = ['/status', '/health', '/api/status', '/'];
   for (const path of paths) {
@@ -1257,9 +1287,9 @@ function activateScreenTabs(deviceName) {
 }
 
 /* ══ Main refresh ══ */
-let _busy = false;
+let _busy = false, _refreshPending = false;
 async function refresh() {
-  if (_busy) return;
+  if (_busy) { _refreshPending = true; return; }
   _busy = true;
   try {
     const rows = await loadSB();
@@ -1282,6 +1312,7 @@ async function refresh() {
     renderSBRaw(rows);
   } catch(e) { console.warn(e.message); }
   _busy = false;
+  if (_refreshPending) { _refreshPending = false; refresh(); }
 }
 
 function manualRefresh() {
@@ -1335,7 +1366,17 @@ function hydrateScreens(rows) {
 }
 
 /* ══ Delete screen ══ */
-const _deletedTokens = new Set(); // track permanently deleted tokens so refresh doesn't restore them
+// Persist deleted tokens across page reloads so screens don't reappear after refresh
+const _deletedTokens = (() => {
+  const KEY = 'mview-deleted-tokens';
+  let _data;
+  try { _data = new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch(e) { _data = new Set(); }
+  return {
+    has: t => _data.has(t),
+    add: t => { _data.add(t); try { localStorage.setItem(KEY, JSON.stringify([..._data])); } catch(e){} },
+    delete: t => { _data.delete(t); try { localStorage.setItem(KEY, JSON.stringify([..._data])); } catch(e){} },
+  };
+})();
 
 async function deleteScreen(idx, e) {
   if (e) e.stopPropagation();
@@ -1408,13 +1449,17 @@ function renderAll(rows) {
   renderRemote();
   renderLogs();
   updateAccessSub(rows);
+  if (typeof _populateDeviceSelects === 'function') _populateDeviceSelects();
 }
 
 function renderKpis(rows) {
-  const total = rows.length;
-  const online = rows.filter(r => ['connected','online'].includes(String(r.status||'').toLowerCase())).length;
-  const offline = rows.filter(r => ['offline'].includes(String(r.status||'').toLowerCase())).length;
-  const pending = rows.filter(r => ['pending','downloading'].includes(String(r.status||'').toLowerCase())).length;
+  // Use the already-hydrated screens[] array so live-merged statuses (from /api/devices)
+  // are counted correctly — raw rows from Supabase may still say 'pending' for live devices
+  const src = screens.length ? screens : rows.map((r,i) => ({ status: statusFrom(r), raw: r }));
+  const total   = src.length;
+  const online  = src.filter(s => s.status === 'online').length;
+  const offline = src.filter(s => s.status === 'offline').length;
+  const pending = src.filter(s => s.status === 'pending' || (typeof s.raw === 'object' && ['downloading'].includes(String(s.raw?.status||'').toLowerCase()))).length;
   const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   set('kpi-total', total); set('kpi-online', online); set('kpi-offline', offline); set('kpi-pending', pending);
   set('nc-all', total); set('nc-group', total); set('nc-online', online);
@@ -1424,7 +1469,7 @@ function renderKpis(rows) {
 }
 
 function updateAccessSub(rows) {
-  const online = rows.filter(r => ['connected','online'].includes(String(r.status||'').toLowerCase())).length;
+  const online = screens.filter(s => s.status === 'online').length;
   const sub = document.getElementById('access-sub');
   if (sub) sub.textContent = SC.sbOnline
     ? `${rows.length} machines · ${online} online · Last synced ${SC.lastSync ? SC.lastSync.toLocaleTimeString() : 'never'}`
@@ -1943,11 +1988,7 @@ const sectionLabels = {
   'system': 'System Monitor',
   'processes': 'Processes & Shell',
   'access': 'Access',
-  'remote-view': 'Remote View',
-  'file-explorer': 'File Manager',
-  'activity-logs': 'Activity Log',
-  'supabase-view': 'Database',
-  'settings': 'Administration',
+  'remote-grid': 'Remote Screens',
   'remote-view': 'Remote View',
   'file-explorer': 'File Manager',
   'activity-logs': 'Activity Log',
@@ -1956,9 +1997,6 @@ const sectionLabels = {
 };
 
 function showSection(id) {
-  if (showSection._active) return;
-  showSection._active = true;
-  try {
   document.querySelectorAll('.dash-section').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
@@ -1968,9 +2006,9 @@ function showSection(id) {
   const s = document.getElementById(`section-${id}`);
   if (s) {
     s.classList.add('active');
-    s.style.display = (id === 'remote-view') ? 'flex' : (id === 'system' || id === 'processes') ? 'block' : 'block';
+    s.style.display = (id === 'remote-view') ? 'flex' : 'block';
   }
-  const navMap = { 'access': ['nav-all'], 'remote-view': [], 'file-explorer': [], 'activity-logs': [], 'supabase-view': [], 'settings': [], 'system': [], 'processes': [] };
+  const navMap = { 'access': ['nav-all'], 'remote-view': [], 'remote-grid': [], 'file-explorer': [], 'activity-logs': [], 'supabase-view': [], 'settings': [], 'system': [], 'processes': [] };
   (navMap[id]||[]).forEach(nid => { const el = document.getElementById(nid); if(el) el.classList.add('active'); });
   const railEl = document.getElementById(`rail-${id}`);
   if (railEl) railEl.classList.add('active');
@@ -1981,10 +2019,9 @@ function showSection(id) {
     const ri = document.getElementById('rail-'+sec);
     if (ri) ri.classList.toggle('active', id===sec);
   });
-  // Show cursor overlay when in remote view
+  // Show cursor overlay only in live viewer
   const ov = document.getElementById('rv-cursor-overlay');
   if (ov) ov.style.display = id==='remote-view' ? 'block' : 'none';
-  } finally { showSection._active = false; }
 }
 
 function openModal() { document.getElementById('modal')?.classList.add('open'); resetModal(); }
@@ -2324,20 +2361,21 @@ function toggleStreamMode() {
 }
 
 /* ── Refresh hook: populate device dropdowns ── */
-const _origRefresh = refresh;
-async function refresh() {
-  await _origRefresh();
-  _populateDeviceSelects();
-}
+// _populateDeviceSelects is called after each successful refresh below
 
 /* ── showSection hook: activate cursor overlay (merged — no recursion) ── */
 // NOTE: No wrapper here; extra logic folded directly into the main showSection above.
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.dash-section').forEach(s => s.style.display='none');
-  // Set settings input to actual resolved URL
+  // Populate settings URL with the correctly resolved SERVER_URL (never a hardcoded IP)
   const urlInput = document.getElementById('settings-server-url');
   if (urlInput) urlInput.value = SC.SERVER_URL;
+  // Also populate the modal server hint
+  const srvHint = document.getElementById('srv-hint');
+  if (srvHint) srvHint.textContent = SC.SERVER_URL;
+  const modalUrl = document.getElementById('dev-server-url');
+  if (modalUrl) modalUrl.placeholder = SC.SERVER_URL;
   showSection('access');
   connectSocket();
   await checkServer();
