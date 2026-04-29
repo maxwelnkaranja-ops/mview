@@ -3,10 +3,10 @@
 
 a = Analysis(
     ['agent_source.py'],
-    pathex=[],
+    pathex=['./clean_env/Lib/site-packages'],
     binaries=[],
     datas=[],
-    hiddenimports=['engineio.async_drivers.threading', 'cv2', 'pynput.keyboard', 'pynput.mouse', 'pynput._util.win32', 'pynput._util.win32_vms'],
+    hiddenimports=['mss', 'cv2', 'engineio.async_drivers.threading', 'pynput.keyboard', 'pynput.mouse'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
