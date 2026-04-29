@@ -346,7 +346,8 @@ def handle_preflight():
 # ══════════════════════════════════════════════════════════════
 @app.route("/")
 def root():
-    for f in ("app.html", "dashboard.html", "index.html"):
+    # Always serve the landing/login page first
+    for f in ("index.html", "app.html"):
         if Path(f).is_file():
             return send_from_directory(".", f)
     return jsonify({"status": "ok", "version": VERSION}), 200
