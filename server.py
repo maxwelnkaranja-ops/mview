@@ -10,8 +10,8 @@ Fixes applied:
   - Supabase client reuse made thread-safe
   - /health endpoint enriched for Render uptime checks
 
-pip install flask flask-cors flask-socketio supabase python-dotenv gunicorn eventlet
-Render start command: gunicorn -k eventlet -w 1 server:app
+pip install flask flask-cors flask-socketio supabase python-dotenv gunicorn gevent gevent-websocket
+Render start command: gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --timeout 120 --bind 0.0.0.0:10000 server:app
 Local:               py -3.12 server.py
 """
 import os, re, logging, datetime, threading
@@ -79,7 +79,7 @@ if SOCKETIO_OK:
     sio = SocketIO(
         app,
         cors_allowed_origins="*",
-        async_mode="eventlet",      # matches gunicorn -k eventlet
+        async_mode="gevent",        # matches gunicorn -k geventwebsocket worker
         logger=False,
         engineio_logger=False,
         ping_timeout=60,
