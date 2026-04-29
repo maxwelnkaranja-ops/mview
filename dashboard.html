@@ -6,6 +6,7 @@
 <title>ScreenConnect — Remote Access & Management</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="config.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -702,7 +703,7 @@ tailwind.config = {
         <div class="scard-hdr"><span class="material-symbols-outlined">dns</span>Server Configuration</div>
         <div class="srow">
           <div><div class="skey">Server URL</div><div class="sval">Flask backend endpoint</div></div>
-          <input class="sinput" id="settings-server-url" value="http://192.168.0.100:5000" onchange="SC.SERVER_URL=this.value;updateBadges();checkServer()"/>
+          <input class="sinput" id="settings-server-url" value="" onchange="SC.SERVER_URL=this.value;updateBadges();checkServer()"/>
         </div>
         <div class="srow">
           <div><div class="skey">Supabase Project</div><div class="sval">REST API endpoint</div></div>
@@ -864,7 +865,15 @@ tailwind.config = {
 const SC = {
   SB_URL: 'https://iacdzpcoftxxcoigopun.supabase.co',
   SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
-  SERVER_URL: 'http://192.168.0.100:5000',
+  SERVER_URL: (function() {
+    // Priority: config.js → same origin as current page → fallback local
+    if (window.MVIEW_SERVER_URL) return window.MVIEW_SERVER_URL.replace(/\/+$/, '');
+    const loc = window.location;
+    if (loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1' && !loc.hostname.startsWith('192.168')) {
+      return `${loc.protocol}//${loc.host}`;  // same origin — works on Render
+    }
+    return 'http://192.168.0.100:5000';  // local dev fallback
+  })(),
   socket: null, srvOnline: false, sbOnline: false, activeTable: null, lastSync: null,
 };
 
@@ -1713,6 +1722,9 @@ function escHtml(str) {
 /* ══ Init ══ */
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.dash-section').forEach(s => s.style.display='none');
+  // Set settings input to actual resolved URL
+  const urlInput = document.getElementById('settings-server-url');
+  if (urlInput) urlInput.value = SC.SERVER_URL;
   showSection('access');
   connectSocket();
   await checkServer();

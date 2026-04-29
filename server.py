@@ -236,10 +236,28 @@ def serve_login_html():
     from flask import redirect
     return redirect("/", 301)
 
+@app.route("/config.js")
+def serve_config():
+    if Path("config.js").is_file():
+        return send_from_directory(".", "config.js", mimetype="application/javascript")
+    host = request.host_url.rstrip("/")
+    js = f"""window.MVIEW_SERVER_URL = '{host}';
+window.MVIEW_SUPABASE_URL = '{SUPABASE_URL}';
+window.MVIEW_SUPABASE_ANON_KEY = '{SUPABASE_KEY}';
+window.SessionManager = window.SessionManager || {{}};
+window.SessionManager.CONFIG = window.SessionManager.CONFIG || {{}};
+window.SessionManager.CONFIG.SERVER_URL = window.MVIEW_SERVER_URL;
+window.SessionManager.CONFIG.SUPABASE_URL = window.MVIEW_SUPABASE_URL;
+window.SessionManager.CONFIG.SUPABASE_ANON_KEY = window.MVIEW_SUPABASE_ANON_KEY;
+"""
+    return js, 200, {"Content-Type": "application/javascript"}
+
 @app.route("/dashboard")
 @app.route("/dashboard.html")
 def serve_dashboard():
     return send_from_directory(".", "dashboard.html")
+
+
 
 # ══════════════════════════════════════════════════════════════
 #  Health / Status endpoints
@@ -665,12 +683,12 @@ def startup():
     else:
         log.info(f"  ✗ Agent:    NOT found at {a.resolve()}")
     log.info(f"  ✓ Supabase: {SUPABASE_URL[:55]}")
-    log.info(f"  ✓ SocketIO: {'yes — eventlet' if SOCKETIO_OK else 'NO — pip install flask-socketio eventlet'}")
+    log.info(f"  ✓ SocketIO: {'yes — gevent' if SOCKETIO_OK else 'NO — pip install flask-socketio gevent gevent-websocket'}")
     log.info(f"  ✓ Port:     {PORT}  (Render maps this to https automatically)")
     log.info(f"  ✓ Entry:    {'app.html (combined build)' if Path('app.html').is_file() else 'index.html (separate build)'}")
     log.info("=" * 60)
     log.info("  Render start command:")
-    log.info("    gunicorn -k eventlet -w 1 server:app")
+    log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --timeout 120 server:app")
     log.info("  Local dev:")
     log.info("    py -3.12 server.py")
     log.info("=" * 60)
