@@ -1129,8 +1129,13 @@ async function checkServer() {
 
 function connectSocket() {
   if (SC.socket || typeof io === 'undefined') return;
+  // Use relative origin so Socket.IO connects to whatever host served this page
+  // (works on Render, local dev, anywhere — no hard-coded URL needed)
+  const socketUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? SC.SERVER_URL
+    : window.location.origin;
   try {
-    SC.socket = io(SC.SERVER_URL, { transports: ['websocket','polling'], timeout: 4000, reconnectionAttempts: 6 });
+    SC.socket = io(socketUrl, { transports: ['websocket','polling'], timeout: 4000, reconnectionAttempts: 6 });
     SC.socket.on('connect', () => {
       SC.srvOnline = true; updateBadges();
       showToast('Server connected', 'success');
@@ -1955,6 +1960,14 @@ function showSection(id) {
   if (railEl) railEl.classList.add('active');
   const sideTitle = document.getElementById('sidebar-section-title');
   if (sideTitle) sideTitle.textContent = sectionLabels[id] || id;
+  // Extra rail highlighting for system/processes
+  ['system','processes'].forEach(sec => {
+    const ri = document.getElementById('rail-'+sec);
+    if (ri) ri.classList.toggle('active', id===sec);
+  });
+  // Show cursor overlay when in remote view
+  const ov = document.getElementById('rv-cursor-overlay');
+  if (ov) ov.style.display = id==='remote-view' ? 'block' : 'none';
 }
 
 function openModal() { document.getElementById('modal')?.classList.add('open'); resetModal(); }
@@ -2300,19 +2313,8 @@ async function refresh() {
   _populateDeviceSelects();
 }
 
-/* ── showSection hook: activate cursor overlay ── */
-const _origShowSection = showSection;
-function showSection(id) {
-  _origShowSection(id);
-  // Extra rail highlighting
-  ['system','processes'].forEach(sec => {
-    const ri = document.getElementById('rail-'+sec);
-    if (ri) ri.classList.toggle('active', id===sec);
-  });
-  // Show cursor overlay when in remote view
-  const ov = document.getElementById('rv-cursor-overlay');
-  if (ov) ov.style.display = id==='remote-view' ? 'block' : 'none';
-}
+/* ── showSection hook: activate cursor overlay (merged — no recursion) ── */
+// NOTE: No wrapper here; extra logic folded directly into the main showSection above.
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.dash-section').forEach(s => s.style.display='none');
