@@ -1943,6 +1943,9 @@ const sectionLabels = {
 };
 
 function showSection(id) {
+  if (showSection._active) return;
+  showSection._active = true;
+  try {
   document.querySelectorAll('.dash-section').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
@@ -1968,6 +1971,7 @@ function showSection(id) {
   // Show cursor overlay when in remote view
   const ov = document.getElementById('rv-cursor-overlay');
   if (ov) ov.style.display = id==='remote-view' ? 'block' : 'none';
+  } finally { showSection._active = false; }
 }
 
 function openModal() { document.getElementById('modal')?.classList.add('open'); resetModal(); }

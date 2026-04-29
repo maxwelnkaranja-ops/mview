@@ -369,6 +369,181 @@ def serve_index():
 def serve_login():
     return redirect("/", 301)
 
+@app.route("/session_manager.js")
+def serve_session_manager():
+    """Serve a built-in SessionManager so no external file is needed."""
+    host = request.host_url.rstrip("/")
+    js = f"""/* Auto-generated SessionManager — do not edit manually */
+'use strict';
+(function() {{
+  const SERVER_URL = window.MVIEW_SERVER_URL || '{host}';
+  const SUPABASE_URL = window.MVIEW_SUPABASE_URL || '{SUPABASE_URL}';
+  const SUPABASE_KEY = window.MVIEW_SUPABASE_ANON_KEY || '{SUPABASE_KEY}';
+
+  let _pollTimer = null;
+  let _currentToken = null;
+
+  const SM = {{
+    CONFIG: {{
+      SERVER_URL,
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY: SUPABASE_KEY,
+      TABLE_CANDIDATES: ['agent_invites', 'devices'],
+    }},
+
+    currentToken: null,
+    currentLink: null,
+
+    reset() {{
+      if (_pollTimer) {{ clearInterval(_pollTimer); _pollTimer = null; }}
+      _currentToken = null;
+      SM.currentToken = null;
+      SM.currentLink = null;
+      const s3 = document.getElementById('device-step-3');
+      const s2 = document.getElementById('device-step-2');
+      const s1 = document.getElementById('device-step-1');
+      if (s3) s3.style.display = 'none';
+      if (s2) s2.style.display = 'none';
+      if (s1) s1.style.display = '';
+    }},
+
+    async generateInviteLink() {{
+      const labelEl = document.getElementById('device-name-input') || document.getElementById('device-label');
+      const typeEl  = document.getElementById('device-type-select') || document.getElementById('device-type');
+      const locEl   = document.getElementById('device-location-input') || document.getElementById('device-location');
+      const label   = labelEl?.value?.trim() || 'New Device';
+      const dtype   = typeEl?.value  || 'Standard Display';
+      const loc     = locEl?.value?.trim() || '';
+
+      // Show step 2 (generating...)
+      const s1 = document.getElementById('device-step-1');
+      const s2 = document.getElementById('device-step-2');
+      const s3 = document.getElementById('device-step-3');
+      if (s1) s1.style.display = 'none';
+      if (s2) s2.style.display = '';
+      if (s3) s3.style.display = 'none';
+      SM._notify('Generating invite link…', 'info');
+
+      try {{
+        const res = await fetch(SERVER_URL + '/api/invite', {{
+          method: 'POST',
+          headers: {{ 'Content-Type': 'application/json' }},
+          body: JSON.stringify({{ label, device_type: dtype, location: loc }}),
+        }});
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Server error');
+
+        _currentToken = data.token;
+        SM.currentToken = data.token;
+        SM.currentLink  = data.download_url || data.agent_url;
+
+        // Populate step 3 UI
+        const inp = document.getElementById('copy-link-input');
+        if (inp) inp.value = SM.currentLink;
+        const dtok = document.getElementById('display-token');
+        if (dtok) dtok.textContent = data.token;
+        const dexp = document.getElementById('display-expiry');
+        if (dexp && data.expires_at) dexp.textContent = '· Expires ' + new Date(data.expires_at).toLocaleString();
+        const mexp = document.getElementById('meta-expiry');
+        if (mexp) mexp.textContent = '24 hours';
+        const mtype = document.getElementById('meta-type');
+        if (mtype) mtype.textContent = dtype;
+        const ddbtn = document.getElementById('direct-download-btn');
+        if (ddbtn) ddbtn.href = SM.currentLink;
+
+        if (s2) s2.style.display = 'none';
+        if (s3) s3.style.display = '';
+        SM._notify('Invite link ready — waiting for device to connect', 'ok');
+        SM._startPolling(data.token);
+      }} catch (err) {{
+        if (s2) s2.style.display = 'none';
+        if (s1) s1.style.display = '';
+        SM._notify('Failed to generate link: ' + err.message, 'warn');
+      }}
+    }},
+
+    copyLink() {{
+      const inp = document.getElementById('copy-link-input');
+      if (!inp) return;
+      inp.select();
+      try {{ document.execCommand('copy'); }} catch(e) {{ navigator.clipboard?.writeText(inp.value); }}
+      const icon = document.getElementById('copy-icon');
+      if (icon) {{ icon.textContent = 'check'; setTimeout(() => icon.textContent = 'content_copy', 1800); }}
+    }},
+
+    _startPolling(token) {{
+      if (_pollTimer) clearInterval(_pollTimer);
+      const dot  = document.getElementById('poll-dot');
+      const text = document.getElementById('poll-status-text');
+      let checks = 0;
+
+      async function tick() {{
+        checks++;
+        try {{
+          const r = await fetch(SERVER_URL + '/api/session/' + token + '/status');
+          if (!r.ok) return;
+          const d = await r.json();
+          if (d.status === 'downloading') {{
+            if (dot)  {{ dot.className = 'poll-dot yellow'; }}
+            if (text) text.textContent = 'Agent downloaded — waiting for first check-in…';
+            SM._notify('Agent installer downloaded on target device', 'info');
+          }} else if (d.status === 'connected') {{
+            clearInterval(_pollTimer); _pollTimer = null;
+            if (dot)  {{ dot.className = 'poll-dot green'; dot.style.animation = 'none'; }}
+            if (text) text.textContent = '✓ Device connected! Refreshing dashboard…';
+            SM._notify('✓ ' + (d.hostname || d.label || token) + ' connected successfully', 'ok');
+            SM._addActivity('Device connected: ' + (d.hostname || d.label || token), 'ok');
+            // Refresh dashboard data
+            if (typeof refreshDashboardFromSupabase === 'function') {{
+              setTimeout(refreshDashboardFromSupabase, 1000);
+            }}
+            return;
+          }}
+          // Timeout after ~10 minutes
+          if (checks > 120) {{
+            clearInterval(_pollTimer); _pollTimer = null;
+            if (text) text.textContent = 'Link waiting — open in dashboard to reconnect.';
+          }}
+        }} catch (e) {{}}
+      }}
+      _pollTimer = setInterval(tick, 5000);
+      tick(); // immediate first check
+    }},
+
+    _notify(msg, type) {{
+      // Toast
+      if (typeof showToast === 'function') {{ showToast(msg, type === 'ok' ? 'success' : type === 'warn' ? 'error' : 'info'); }}
+      // Notification panel
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      const icons = {{ ok: 'check_circle', warn: 'warning', info: 'info' }};
+      const icon  = icons[type] || 'info';
+      const item  = document.createElement('div');
+      item.className = 'notif-item';
+      item.innerHTML = `<span class="material-symbols-outlined notif-i ${{type}}">${{icon}}</span>
+        <div><div class="notif-title">${{msg}}</div><div class="notif-time">${{new Date().toLocaleTimeString()}}</div></div>`;
+      // Remove "no devices" placeholder if present
+      const empty = list.querySelector('.notif-item:only-child');
+      if (empty && empty.textContent.includes('No devices')) list.innerHTML = '';
+      list.insertBefore(item, list.firstChild);
+      // Badge
+      const badge = document.getElementById('notif-badge');
+      if (badge) {{ badge.textContent = list.children.length; badge.style.display = 'flex'; }}
+    }},
+
+    _addActivity(msg, sev) {{
+      if (typeof addActivityLog === 'function') {{
+        addActivityLog({{ time: new Date().toLocaleTimeString(), event: msg, screen: '', user: 'System', sev: sev || 'info' }});
+      }}
+    }},
+  }};
+
+  window.SessionManager = SM;
+}})();
+"""
+    return js, 200, {"Content-Type": "application/javascript"}
+
+
 @app.route("/config.js")
 def serve_config():
     if Path("config.js").is_file():
@@ -478,7 +653,7 @@ def generate_invite():
 @app.route("/invite/<token>")
 @app.route("/onboard/<token>")
 def serve_agent(token):
-    log.info(f"Agent download: token={token}  ip={request.remote_addr}")
+    log.info(f"Agent download request: token={token}  ip={request.remote_addr}")
 
     if not valid_token(token):
         return jsonify({"error": "Invalid token format."}), 400
@@ -492,32 +667,118 @@ def serve_agent(token):
         db_update(token, {"status": "expired"})
         return jsonify({"error": "Link expired."}), 410
 
-    # Build patched binary
-    patched = _build_patched_agent(token)
-    if not patched:
-        return jsonify({
-            "error":  "Agent binary not available.",
-            "hint":   "Upload master_agent.exe to Supabase Storage bucket 'agents'.",
-            "url":    AGENT_STORAGE_URL,
-        }), 503
-
+    # Mark as downloading so dashboard can track state
     db_update(token, {
         "status":        "downloading",
         "download_ip":   request.remote_addr,
         "downloaded_at": utcnow(),
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
+    log.info(f"Agent download: token={token}  redirecting to Supabase Storage")
 
-    log.info(f"Agent dispatched: token={token}  size={len(patched):,} bytes")
-    return Response(
-        io.BytesIO(patched),
-        mimetype="application/octet-stream",
-        headers={
-            "Content-Disposition": f'attachment; filename="mview_agent_{token}.exe"',
-            "Content-Length":      str(len(patched)),
-        },
-        direct_passthrough=True,
-    )
+    # Serve a self-extracting HTML page that immediately starts download
+    # from Supabase Storage and embeds the token so the agent can read it.
+    # The agent reads its token from the filename pattern mview_agent_TOKEN.exe
+    srv = request.host_url.rstrip("/")
+    download_url = AGENT_STORAGE_URL  # direct Supabase public URL
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ScreenConnect Agent Installer</title>
+  <style>
+    *{{margin:0;padding:0;box-sizing:border-box}}
+    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;
+         display:flex;align-items:center;justify-content:center;min-height:100vh;}}
+    .card{{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px;max-width:480px;width:90%;text-align:center;}}
+    .logo{{font-size:48px;margin-bottom:16px}}
+    h1{{font-size:22px;font-weight:700;margin-bottom:8px;color:#f1f5f9}}
+    .sub{{color:#94a3b8;font-size:14px;margin-bottom:28px;line-height:1.5}}
+    .token-badge{{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 16px;
+                  font-family:monospace;font-size:13px;color:#7dd3fc;margin-bottom:24px;}}
+    .status-bar{{background:#0f172a;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#94a3b8;}}
+    .status-bar .dot{{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;
+                      animation:pulse 1.2s infinite;margin-right:8px;}}
+    @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.3}}}}
+    .btn{{display:inline-block;background:#3b82f6;color:#fff;padding:12px 28px;border-radius:8px;
+          font-size:15px;font-weight:600;text-decoration:none;margin:8px 4px;border:none;cursor:pointer;}}
+    .btn:hover{{background:#2563eb}}
+    .btn.sec{{background:#334155;color:#cbd5e1}}
+    .note{{font-size:12px;color:#64748b;margin-top:20px;line-height:1.6}}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🖥️</div>
+  <h1>ScreenConnect Agent</h1>
+  <p class="sub">Your invite link is ready. Download and run the installer to connect this device to your dashboard.</p>
+  <div class="token-badge">Token: {token}</div>
+  <div class="status-bar">
+    <span class="dot"></span>
+    Waiting for agent to check in… dashboard will update automatically.
+  </div>
+  <a class="btn" id="dl-btn" href="{download_url}" download="mview_agent_{token}.exe">
+    ⬇ Download Agent Installer
+  </a>
+  <button class="btn sec" onclick="window.close()">Close</button>
+  <p class="note">
+    After downloading, run <strong>mview_agent_{token}.exe</strong> on Windows.<br>
+    The agent will connect back automatically — no config needed.<br>
+    Your dashboard at <a href="{srv}/dashboard" style="color:#7dd3fc">{srv}/dashboard</a> will show this device once connected.
+  </p>
+</div>
+<script>
+  // Auto-start download after 800 ms
+  setTimeout(() => {{
+    const a = document.createElement('a');
+    a.href = '{download_url}';
+    a.download = 'mview_agent_{token}.exe';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }}, 800);
+  // Poll server every 5 s and update status text
+  const pollUrl = '{srv}/api/session/{token}';
+  const statusEl = document.querySelector('.status-bar');
+  async function poll() {{
+    try {{
+      const r = await fetch(pollUrl);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.status === 'connected') {{
+        statusEl.innerHTML = '<span style="color:#22c55e;font-size:18px">✓</span> <strong style="color:#22c55e">Connected!</strong> Device is live on your dashboard.';
+        clearInterval(poller);
+      }} else if (d.status === 'downloading') {{
+        statusEl.innerHTML = '<span class="dot"></span> Agent downloaded — waiting for first check-in…';
+      }}
+    }} catch(e) {{}}
+  }}
+  const poller = setInterval(poll, 5000);
+</script>
+</body>
+</html>"""
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/api/session/<token>/status")
+def get_session_status(token):
+    """Lightweight polling endpoint — returns just the status field."""
+    if not valid_token(token):
+        return jsonify({"error": "Invalid token"}), 400
+    s = db_get(token)
+    if not s:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({
+        "token":        token,
+        "status":       s.get("status", "pending"),
+        "hostname":     s.get("hostname", ""),
+        "username":     s.get("username", ""),
+        "label":        s.get("label", ""),
+        "connected_at": s.get("connected_at", ""),
+        "download_ip":  s.get("download_ip", ""),
+    }), 200
 
 # ══════════════════════════════════════════════════════════════
 #  Session management
