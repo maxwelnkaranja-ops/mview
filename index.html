@@ -805,6 +805,8 @@ body.has-connection .locked-overlay{display:none}
 .session-poll-wrap{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-2)}
 .poll-dot{width:7px;height:7px;border-radius:50%;background:var(--text-3);flex-shrink:0}
 .poll-dot.pulsing{background:var(--orange);animation:pulse-dot 1.4s infinite}
+.poll-dot.yellow{background:#fbbf24;animation:pulse-dot 1.4s infinite}
+.poll-dot.green{background:var(--green);animation:none}
 .poll-dot.connected{background:var(--green);animation:none}
 .device-info-banner{
   display:flex;align-items:flex-start;gap:9px;
@@ -2385,6 +2387,25 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
 
 <script src="config.js"></script>
 <script src="session_manager.js"></script>
+<script>
+/* ── Inline bootstrap: ensure SessionManager.CONFIG exists even if scripts fail ── */
+(function() {
+  const SM = window.SessionManager = window.SessionManager || {};
+  if (!SM.CONFIG) {
+    SM.CONFIG = {
+      SERVER_URL:       window.MVIEW_SERVER_URL       || window.location.origin,
+      SUPABASE_URL:     window.MVIEW_SUPABASE_URL     || 'https://iacdzpcoftxxcoigopun.supabase.co',
+      SUPABASE_ANON_KEY: window.MVIEW_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
+      TABLE_CANDIDATES: ['agent_invites', 'devices'],
+    };
+  }
+  // Stub any missing methods so callers don't throw
+  SM.generateInviteLink = SM.generateInviteLink || function() { console.warn('SessionManager not fully loaded'); };
+  SM.copyLink           = SM.copyLink           || function() {};
+  SM.reset              = SM.reset              || function() {};
+  SM._notify            = SM._notify            || function() {};
+})();
+</script>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -2760,6 +2781,9 @@ function showPage(page) {
 }
 
 function showSection(sectionId) {
+  if (showSection._active) return; // recursion guard
+  showSection._active = true;
+  try {
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
   const section = document.getElementById(`section-${sectionId}`);
@@ -2777,6 +2801,7 @@ function showSection(sectionId) {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
   }
+  } finally { showSection._active = false; }
 }
 
 function updateMobileNav(el) {
