@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ScreenConnect Enterprise — Remote Management Platform</title>
+<script>
+/* ── Enforce HTTPS redirect before anything loads ── */
+if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  location.replace('https:' + location.href.slice(5));
+}
+</script>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="/config.js" onerror="void 0"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -2030,8 +2037,14 @@ const SC = {
   SB_URL: 'https://iacdzpcoftxxcoigopun.supabase.co',
   SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
   SERVER_URL: (() => {
-    if (window.SCREEN_CONNECT_SERVER_URL) return window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, '');
-    return `${location.protocol}//${location.host}`;
+    let url = window.SCREEN_CONNECT_SERVER_URL
+      ? window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, '')
+      : `${location.protocol}//${location.host}`;
+    // On HTTPS pages, force https — never allow mixed content
+    if (location.protocol === 'https:') {
+      url = url.replace(/^http:\/\//i, 'https://').replace(/^ws:\/\//i, 'wss://');
+    }
+    return url;
   })(),
   socket: null, srvOnline: false, sbOnline: false,
   activeTable: null, lastSync: null,
@@ -2101,8 +2114,14 @@ async function loadSB() {
 async function checkServer() {
   const inp = $('settings-server-url');
   if (inp?.value?.trim() && inp.value.trim() !== SC.SERVER_URL) {
-    const v = inp.value.trim().replace(/\/+$/, '');
+    let v = inp.value.trim().replace(/\/+$/, '');
+    // Block mixed-content: never set http:// URL when page is https://
+    if (location.protocol === 'https:') v = v.replace(/^http:\/\//i, 'https://');
     if (!(v.startsWith('http://') && location.protocol === 'https:')) SC.SERVER_URL = v;
+  }
+  // Ensure SERVER_URL is always secure when on HTTPS
+  if (location.protocol === 'https:') {
+    SC.SERVER_URL = SC.SERVER_URL.replace(/^http:\/\//i, 'https://');
   }
   try {
     const r = await fetch(`${SC.SERVER_URL}/status`, { signal: AbortSignal.timeout(5000), headers: { Accept: 'application/json' } });
@@ -2119,16 +2138,25 @@ function connectSocket() {
   if (typeof io === 'undefined') { showBanner('Socket.IO not loaded — WebSocket disabled', false); return; }
   if (SC.socket) { SC.socket.disconnect(); SC.socket = null; }
 
-  const url = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-    ? SC.SERVER_URL : location.origin;
+  // Always use page's own origin for socket when on HTTPS (Render proxy handles it).
+  // Only fall back to SC.SERVER_URL on localhost dev environments.
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  let socketUrl = isLocal ? SC.SERVER_URL : location.origin;
 
-  SC.socket = io(url, {
+  // Enforce secure protocols — never allow ws:// or http:// when page is HTTPS
+  if (location.protocol === 'https:') {
+    socketUrl = socketUrl.replace(/^http:\/\//i, 'https://').replace(/^ws:\/\//i, 'wss://');
+  }
+
+  SC.socket = io(socketUrl, {
     transports: ['websocket', 'polling'],
     timeout: 6000,
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 2000,
     reconnectionDelayMax: 15000,
+    secure: location.protocol === 'https:',
+    rejectUnauthorized: false,
   });
 
   SC.socket.on('connect', () => {
