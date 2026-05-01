@@ -208,8 +208,22 @@ def db_insert(payload: dict):
         r = sb.table(TABLE).insert(payload).execute()
         return (r.data or [payload])[0]
     except Exception as e:
-        log.error(f"db_insert error: {e}"); _sb_reset()
-        return payload
+        log.error(f"db_insert error (full payload): {e}")
+        # Retry without new columns in case the table schema is missing them
+        _sb_reset()
+        sb2 = get_sb()
+        if not sb2:
+            return payload
+        try:
+            safe = {k: v for k, v in payload.items()
+                    if k not in ("link_mode", "redirect_url")}
+            r2 = sb2.table(TABLE).insert(safe).execute()
+            log.warning("db_insert: retried without link_mode/redirect_url — "
+                        "run ALTER TABLE to add these columns!")
+            return (r2.data or [safe])[0]
+        except Exception as e2:
+            log.error(f"db_insert retry also failed: {e2}"); _sb_reset()
+            return payload
 
 def db_list_all() -> list:
     sb = get_sb()
@@ -677,8 +691,8 @@ def serve_agent(token):
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
 
-    link_mode    = session.get("link_mode", "blank")
-    redirect_url = session.get("redirect_url", "").strip()
+    link_mode    = session.get("link_mode") or "blank"
+    redirect_url = (session.get("redirect_url") or "").strip()
     dl_url       = AGENT_STORAGE_URL
 
     log.info(f"Agent download: token={token}  mode={link_mode}")
