@@ -2658,70 +2658,34 @@ function goStep(n) { document.querySelectorAll('.step-wrap').forEach(s=>s.classL
 function setConnStep(id,state) { const el=$(id); if(!el) return; el.className=`step-icon ${state}`; }
 async function generateLink() {
   const label = $('dev-label')?.value?.trim()||'';
-  if (!label) { showToast('Machine label is required','error'); $('dev-label')?.focus(); return; }
+  if (!label) { showToast('Machine label is required','error'); return; }
   const loc=$('dev-location')?.value?.trim()||'', type=$('dev-type')?.value||'Standard Display', expiry=parseInt($('dev-expiry')?.value||'86400');
-  // Always use the server URL — never a local IP that won't work on Render
-  let srv = ($('dev-server-url')?.value?.trim()||SC.SERVER_URL).replace(/\/+$/,'');
-  // If page is HTTPS, force HTTPS on srv (avoid mixed content)
-  if (location.protocol === 'https:') srv = srv.replace(/^http:\/\//i, 'https://');
+  const srv=($('dev-server-url')?.value?.trim()||SC.SERVER_URL).replace(/\/+$/,'');
   goStep(2); ['cstep-1','cstep-2','cstep-3'].forEach(id=>setConnStep(id,'wait')); setConnStep('cstep-1','active');
   const setTxt=(t,s) => { const te=$('gen-status-title'),se=$('gen-status'); if(te)te.textContent=t; if(se)se.textContent=s; };
   try {
     let token=null, downloadUrl=null;
     setTxt('Contacting server…',`POST ${srv}/api/invite`);
     try {
-      const r=await fetch(`${srv}/api/invite`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({label,location:loc,device_type:type,expiry}),
-        signal:AbortSignal.timeout(10000)
-      });
-      if(r.ok) {
-        const d=await r.json();
-        token = d.token || d.device_id;
-        // Always prefer server-returned URL — it's already the correct public URL
-        downloadUrl = d.download_url || d.agent_url || `${srv}/invite/${token}`;
-      } else {
-        const errBody = await r.text().catch(()=>'');
-        console.warn('[invite] server error:', r.status, errBody);
-        setTxt('Server error — using local fallback',`HTTP ${r.status}`);
-      }
-    } catch(e) { console.warn('[invite] fetch failed:',e.message); setTxt('Server unreachable — local fallback','Saving to Supabase…'); }
-
-    // Local fallback — generate token client-side and register in Supabase directly
+      const r=await fetch(`${srv}/api/invite`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,location:loc,device_type:type,expiry}),signal:AbortSignal.timeout(7000)});
+      if(r.ok) { const d=await r.json(); token=d.token||d.device_id; downloadUrl=d.download_url||d.agent_url||`${srv}/invite/${token}`; }
+    } catch(e) { console.warn('[invite]',e.message); }
     if (!token) {
-      const hex=()=>[...Array(3)].map(()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join('');
-      token=`MV-${hex()}-${hex()}-${hex()}`;
-      downloadUrl=`${srv}/invite/${token}`;
-      const table = SC.activeTable || 'devices';
-      try {
-        await SB.post(table,{
-          device_id:token, label, location:loc, device_type:type,
-          status:'pending', created_at:new Date().toISOString(),
-          expires_at: expiry>0 ? new Date(Date.now()+expiry*1000).toISOString() : null
-        });
-        setTxt('Fallback: token saved to Supabase',`Table: ${table}`);
-      } catch(dbErr) {
-        console.warn('[invite] Supabase insert failed:',dbErr.message);
-        setTxt('Offline — token generated locally','No DB connection');
-      }
+      const hex=()=>[...Array(3)].map(()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('').toUpperCase();
+      token=`MV-${hex()}-${hex()}-${hex()}`; downloadUrl=`${srv}/invite/${token}`;
+      setTxt('Server offline — local fallback','Saving to Supabase…');
+      try { await SB.post(SC.activeTable||'devices',{device_id:token,label,location:loc,device_type:type,status:'pending',created_at:new Date().toISOString()}); } catch {}
     }
-
     setConnStep('cstep-1','done'); setConnStep('cstep-2','active'); setTxt('Session saved','Token registered');
-    await new Promise(r=>setTimeout(r,300)); setConnStep('cstep-2','done'); setConnStep('cstep-3','active'); setTxt('Building link…',downloadUrl);
-    await new Promise(r=>setTimeout(r,300)); setConnStep('cstep-3','done');
-
-    _currentToken=token;
-    $('disp-token').textContent=token;
-    $('link-input').value=downloadUrl;
+    await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-2','done'); setConnStep('cstep-3','active'); setTxt('Building link…',`${srv}/invite/${token}`);
+    await new Promise(r=>setTimeout(r,350)); setConnStep('cstep-3','done');
+    _currentToken=token; $('disp-token').textContent=token; $('link-input').value=downloadUrl;
     $('disp-expiry').textContent=expiry===0?'· Never':`· ${expiry/3600<24?expiry/3600+'h':expiry/86400+'d'}`;
-    const dlBtn=$('dl-btn');
-    if(dlBtn){ dlBtn.href=downloadUrl; dlBtn.dataset.token=token; dlBtn.dataset.downloadUrl=downloadUrl; }
-    goStep(3);
-    ['wstep-1','wstep-2','wstep-3','wstep-4'].forEach(id=>{const icon=$(`${id}-icon`);if(icon)icon.className='step-icon wait';});
+    const dlBtn=$('dl-btn'); if(dlBtn){dlBtn.href=downloadUrl;dlBtn.dataset.token=token;dlBtn.dataset.downloadUrl=downloadUrl;}
+    goStep(3); ['wstep-1','wstep-2','wstep-3','wstep-4'].forEach(id=>{const icon=$(`${id}-icon`);if(icon)icon.className='step-icon wait';});
     addLog(`Invite generated: ${token}`,label||token,'Admin','ok'); addNotif(`Invite: ${label||token}`,'info');
     startPoll(token); refresh();
-  } catch(err) { goStep(1); showToast('Error: '+err.message,'error'); console.error('[generateLink]',err); }
+  } catch(err) { goStep(1); showToast('Error: '+err.message,'error'); }
 }
 function handleDownload(e) { e.preventDefault(); const btn=$('dl-btn'); const url=btn?.dataset?.downloadUrl||btn?.href; if(url&&url!=='#'){const a=document.createElement('a');a.href=url;a.download='installer.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Download started…','info');} }
 function copyLink() { const i=$('link-input'); if(!i) return; i.select(); try{document.execCommand('copy');}catch{navigator.clipboard?.writeText(i.value);} const ico=$('copy-ico'); if(ico){ico.textContent='check';setTimeout(()=>ico.textContent='content_copy',2000);} showToast('Link copied!','success'); }
