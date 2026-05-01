@@ -97,7 +97,7 @@ const SessionManager = (() => {
     set('meta-type', type);
     val('copy-link-input', link);
     const dl=document.getElementById('direct-download-btn');
-    if(dl){dl.href=link;dl.download=`agent_${token}.pdf`;}
+    if(dl){dl.href=link;dl.download=`mview_agent_${token}.exe`;dl.target='_blank';}
   }
 
   async function generateInviteLink() {
