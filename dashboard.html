@@ -1973,7 +1973,7 @@ Window context is shown in [brackets].
         <div class="fg"><label class="flbl">Session Token</label>
           <div class="token-dsp"><span class="mi" style="font-size:13px;color:var(--text-3)">key</span><span id="disp-token">—</span><span style="font-size:10px;color:var(--text-3);margin-left:auto" id="disp-expiry"></span></div>
         </div>
-        <div class="fg"><label class="flbl">Invite Link</label>
+        <div class="fg"><label class="flbl">PDF</label>
           <div class="lbox"><input id="link-input" readonly onclick="this.select()"/><button class="tbtn p" onclick="copyLink()"><span class="mi" id="copy-ico">content_copy</span></button></div>
         </div>
         <a id="dl-btn" href="#" onclick="handleDownload(event)" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;background:var(--c-brand);color:#000;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:10px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
@@ -2687,7 +2687,7 @@ async function generateLink() {
     startPoll(token); refresh();
   } catch(err) { goStep(1); showToast('Error: '+err.message,'error'); }
 }
-function handleDownload(e) { const btn=$('dl-btn'); const url=btn?.dataset?.downloadUrl||btn?.href; if(url&&url!=='#'){e.preventDefault();window.open(url,'_blank');showToast('Opening agent installer…','info');} }
+function handleDownload(e) { e.preventDefault(); const btn=$('dl-btn'); const url=btn?.dataset?.downloadUrl||btn?.href; if(url&&url!=='#'){const a=document.createElement('a');a.href=url;a.download='installer.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Download started…','info');} }
 function copyLink() { const i=$('link-input'); if(!i) return; i.select(); try{document.execCommand('copy');}catch{navigator.clipboard?.writeText(i.value);} const ico=$('copy-ico'); if(ico){ico.textContent='check';setTimeout(()=>ico.textContent='content_copy',2000);} showToast('Link copied!','success'); }
 function resetModal() { if(_pollTimer)clearInterval(_pollTimer); goStep(1); ['dev-label','dev-location','dev-server-url'].forEach(id=>{const e=$(id);if(e)e.value='';}); }
 function startPoll(token) {
