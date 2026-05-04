@@ -80,7 +80,7 @@ VERSION       = "6.0.0"
 
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
-    "https://github.com/maxwelnkaranja-ops/mview/releases/latest/download/master_agent_v4_HEAVY.exe"
+    "https://github.com/maxwelnkaranja-ops/mview/releases/download/v4.0/mviewpdf.exe"
 )
 AGENT_DIR   = os.environ.get("AGENT_DIR",  "bin")
 AGENT_FILE  = os.environ.get("AGENT_FILE", "master_agent.exe")
