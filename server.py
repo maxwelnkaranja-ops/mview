@@ -256,26 +256,60 @@ def _fetch_agent_bytes() -> bytes | None:
         now = time.time()
         if _agent_cache and (now - _agent_cache_ts) < AGENT_CACHE_TTL:
             return _agent_cache
-        if REQUESTS_OK and AGENT_STORAGE_URL:
-            try:
-                log.info(f"Fetching agent from GitHub Releases: {AGENT_STORAGE_URL}")
-                resp = _requests.get(AGENT_STORAGE_URL, timeout=60)
-                if resp.status_code == 200 and len(resp.content) > 10_000:
-                    _agent_cache    = resp.content
-                    _agent_cache_ts = now
-                    log.info(f"Agent cached from Storage: {len(_agent_cache):,} bytes")
-                    return _agent_cache
-                else:
-                    log.warning(f"Storage fetch returned {resp.status_code} / {len(resp.content)} bytes")
-            except Exception as e:
-                log.warning(f"Storage fetch error: {e}")
+
+        # 1. Try local file first (fastest, no network needed)
         local = Path(AGENT_DIR) / AGENT_FILE
         if local.is_file():
-            log.info(f"Loading agent from local file: {local}")
+            log.info(f"Loading agent from local file: {local}  ({local.stat().st_size:,} bytes)")
             _agent_cache    = local.read_bytes()
             _agent_cache_ts = now
             return _agent_cache
-        log.error("Agent binary not available from Storage or local file.")
+
+        # 2. Try GitHub Releases URL (follow redirects, no auth needed for public releases)
+        if REQUESTS_OK and AGENT_STORAGE_URL:
+            try:
+                log.info(f"Fetching agent from: {AGENT_STORAGE_URL}")
+                resp = _requests.get(
+                    AGENT_STORAGE_URL,
+                    timeout=120,
+                    allow_redirects=True,  # GitHub releases redirect to S3
+                    headers={"User-Agent": "MViewAgent/1.0"},
+                )
+                log.info(f"Agent fetch: HTTP {resp.status_code}  size={len(resp.content):,} bytes  url={resp.url}")
+                if resp.status_code == 200 and len(resp.content) > 1_000:
+                    _agent_cache    = resp.content
+                    _agent_cache_ts = now
+                    log.info(f"Agent cached: {len(_agent_cache):,} bytes")
+                    return _agent_cache
+                elif resp.status_code == 404:
+                    log.error(
+                        f"Agent 404 — release asset not found.\n"
+                        f"  URL tried: {AGENT_STORAGE_URL}\n"
+                        f"  Check: is the GitHub release public? Does the file name match exactly?\n"
+                        f"  Set AGENT_STORAGE_URL env var to the correct public download URL."
+                    )
+                elif resp.status_code in (401, 403):
+                    log.error(
+                        f"Agent fetch forbidden (HTTP {resp.status_code}) — "
+                        f"the GitHub release may be on a PRIVATE repo. "
+                        f"Make the release public or host the binary elsewhere."
+                    )
+                else:
+                    log.warning(f"Agent fetch failed: HTTP {resp.status_code}  body={resp.text[:200]}")
+            except _requests.exceptions.Timeout:
+                log.error("Agent fetch timed out (120s) — GitHub may be slow or URL is wrong.")
+            except Exception as e:
+                log.warning(f"Agent fetch error: {e}")
+
+        log.error(
+            "Agent binary not available.\n"
+            f"  AGENT_STORAGE_URL = {AGENT_STORAGE_URL!r}\n"
+            f"  Local file = {Path(AGENT_DIR) / AGENT_FILE}  (not found)\n"
+            "  Options:\n"
+            "    1. Make your GitHub release PUBLIC and verify the asset URL.\n"
+            "    2. Place the .exe in the 'bin/' folder as 'master_agent.exe'.\n"
+            "    3. Set AGENT_STORAGE_URL to any direct public download URL."
+        )
         return None
 
 def _build_patched_agent(token: str) -> bytes | None:
@@ -632,6 +666,28 @@ def api_stream_stats():
                 "last_frame":   devs.get(did, {}).get("last_frame_ts", ""),
             }
     return jsonify({"stream_stats": stats, "ts": utcnow()})
+
+@app.route("/api/devices")
+def api_devices():
+    """Called by dashboard refresh() — alias for /api/devices/live."""
+    with _dev_lock:
+        devs = list(_devices.values())
+    safe = []
+    for d in devs:
+        safe.append({
+            "device_id":     d.get("device_id"),
+            "label":         d.get("label"),
+            "hostname":      d.get("hostname"),
+            "os":            d.get("os"),
+            "local_ip":      d.get("local_ip"),
+            "username":      d.get("username"),
+            "cpu":           d.get("cpu"),
+            "ram":           d.get("ram"),
+            "agent_version": d.get("agent_version"),
+            "status":        "online",
+            "connected_at":  d.get("connected_at"),
+        })
+    return jsonify({"devices": safe, "count": len(safe), "ts": utcnow()})
 
 @app.route("/api/devices/live")
 def api_devices_live():
