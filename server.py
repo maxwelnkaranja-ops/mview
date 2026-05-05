@@ -832,7 +832,7 @@ def serve_agent(token):
     if link_mode == "redirect" and redirect_url:
         return redirect(redirect_url, 302)
 
-    # Serve the patched binary
+    # Try to serve a patched binary (token embedded in trailer)
     patched = _build_patched_agent(token)
     if patched:
         resp = make_response(patched)
@@ -841,6 +841,13 @@ def serve_agent(token):
         resp.headers["Content-Length"] = len(patched)
         resp.headers["Cache-Control"] = "no-store"
         return resp
+
+    # Fallback: redirect the browser directly to the GitHub release URL.
+    # Works even when the server cannot proxy the binary (Render free tier
+    # network/memory limits, cold start with no cache, etc.)
+    if AGENT_STORAGE_URL:
+        log.info(f"Agent binary not cached — redirecting client to: {AGENT_STORAGE_URL}")
+        return redirect(AGENT_STORAGE_URL, 302)
 
     return jsonify({"error": "Agent binary not available. Contact admin."}), 503
 
