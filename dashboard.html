@@ -2214,6 +2214,7 @@ function connectSocket() {
   SC.socket.on('device_update', d => { if (d?.rows) { hydrateFromRows(d.rows); renderAll(d.rows); } else refresh(); });
 
   /* ── Streaming ── */
+  SC.socket.on('screen_data',    d => displayRemoteFrame(d));  // PRIMARY — server emits this
   SC.socket.on('screenshot',     d => displayRemoteFrame(d));
   SC.socket.on('screen_frame',   d => displayRemoteFrame(d));
   SC.socket.on('frame',          d => displayRemoteFrame(d));
@@ -2234,7 +2235,18 @@ function connectSocket() {
   });
 
   SC.socket.on('cursor_event', d => {
-    if (d.device_id === RV.deviceId) drawCursorOverlay(d.x, d.y, d.type === 'click');
+    if (d.device_id !== RV.deviceId) return;
+    const canvas = $('rv-canvas');
+    if (!canvas || canvas.style.display === 'none') return;
+    // Agent may send normalized (0..1) or absolute pixel coords.
+    // Detect: if both x and y are <= 1.0 treat as normalized, else treat as pixels.
+    let cx = d.x, cy = d.y;
+    if (cx <= 1.0 && cy <= 1.0) {
+      // normalized → convert to canvas pixel space
+      cx = cx * (canvas.width || 1920);
+      cy = cy * (canvas.height || 1080);
+    }
+    drawCursorOverlay(cx, cy, d.type === 'click' || d.type === 'down');
   });
 
   /* ── System ── */
@@ -2819,10 +2831,12 @@ function connectScreen(idx) {
   const rio=$('rv-info-overlay'); if(rio) rio.style.display='none';
   addLog(`Remote connect: ${s.name}`,s.name,'Admin','info');
   if (!SC.socket||!SC.srvOnline) { const rcm=$('rv-conn-msg');if(rcm)rcm.textContent='No server connection'; if(rvPill)rvPill.className='pill offline'; if(rvLbl)rvLbl.textContent='No server'; return; }
-  // Subscribe to this device's stream room
-  SC.socket.emit('subscribe_stream', { device_id: RV.deviceId });
+  // Subscribe to this device's stream room (server will also trigger agent start)
   const qmap=QUALITY_MAP[RV.quality];
-  SC.socket.emit('dashboard_command', { tab:'monitor', action:'start', device_id:RV.deviceId, fps:RV.quality==='high'?20:RV.quality==='medium'?12:6, quality:qmap.jpg, scale:qmap.scale, monitor:parseInt($('rv-monitor-sel')?.value||'1') });
+  const fps = RV.quality==='high'?20:RV.quality==='medium'?12:6;
+  SC.socket.emit('subscribe_stream', { device_id: RV.deviceId, fps, quality: qmap.jpg, scale: qmap.scale, monitor: parseInt($('rv-monitor-sel')?.value||'1') });
+  // Also send dashboard_command as belt-and-suspenders in case agent needs the explicit signal
+  SC.socket.emit('dashboard_command', { tab:'monitor', action:'start', device_id:RV.deviceId, fps, quality:qmap.jpg, scale:qmap.scale, monitor:parseInt($('rv-monitor-sel')?.value||'1') });
   if(RV.pingTimer) clearInterval(RV.pingTimer);
   RV.pingTimer=setInterval(()=>{ if(!RV.active||!SC.socket)return; RV.pingSent=Date.now(); SC.socket.emit('ping_agent',{device_id:RV.deviceId,t:RV.pingSent}); },2000);
   if(RV._watchdog) clearTimeout(RV._watchdog);
