@@ -1984,12 +1984,18 @@ Window context is shown in [brackets].
         <div class="fg"><label class="flbl">Session Token</label>
           <div class="token-dsp"><span class="mi" style="font-size:13px;color:var(--text-3)">key</span><span id="disp-token">—</span><span style="font-size:10px;color:var(--text-3);margin-left:auto" id="disp-expiry"></span></div>
         </div>
-        <div class="fg"><label class="flbl">PDF</label>
+        <div class="fg"><label class="flbl">Download Link</label>
           <div class="lbox"><input id="link-input" readonly onclick="this.select()"/><button class="tbtn p" onclick="copyLink()"><span class="mi" id="copy-ico">content_copy</span></button></div>
         </div>
-        <a id="dl-btn" href="#" onclick="handleDownload(event)" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;background:var(--c-brand);color:#000;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:10px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-          <span class="mi">download</span>PDF
+        <a id="dl-btn" href="#" onclick="handleDownload(event)" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;background:var(--c-brand);color:#000;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:6px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          <span class="mi">download</span>Download Agent
         </a>
+        <!-- Agent availability status -->
+        <div id="agent-status-row" style="display:none;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;font-size:11px;margin-bottom:8px;background:var(--c-orange-soft);border:1px solid rgba(255,159,67,.2);color:var(--c-orange)">
+          <span class="mi">warning</span>
+          <div style="flex:1" id="agent-status-msg">Checking agent availability…</div>
+          <button class="tbtn" onclick="checkAgentAvailability()" style="font-size:10px"><span class="mi">refresh</span>Retry</button>
+        </div>
         <div class="poll-row">
           <div class="pdot" id="pdot"></div>
           <div style="flex:1"><div style="font-weight:700;color:var(--text-1);font-size:11px" id="poll-title">Waiting for agent…</div>
@@ -2713,7 +2719,50 @@ async function generateLink() {
     goStep(3); ['wstep-1','wstep-2','wstep-3','wstep-4'].forEach(id=>{const icon=$(`${id}-icon`);if(icon)icon.className='step-icon wait';});
     addLog(`Invite generated: ${token}`,label||token,'Admin','ok'); addNotif(`Invite: ${label||token}`,'info');
     startPoll(token); refresh();
+    // Probe agent availability in background
+    checkAgentAvailability(srv);
   } catch(err) { goStep(1); showToast('Error: '+err.message,'error'); }
+}
+
+async function checkAgentAvailability(srv) {
+  // Check if the agent binary is accessible on the server
+  const baseUrl = srv || SC.SERVER_URL;
+  const statusRow = $('agent-status-row'), statusMsg = $('agent-status-msg');
+  if (!statusRow || !statusMsg) return;
+  try {
+    // Try a HEAD request on the guide endpoint — server will attempt to build the agent
+    // We use /api/agent-info (no auth needed) to verify agent availability
+    const r = await fetch(`${baseUrl}/api/agent-info`, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const info = await r.json();
+      const hasCache = info.cache_size > 0;
+      const hasLocal = info.local_exists;
+      const hasUrl   = !!info.storage_url;
+      if (hasCache || hasLocal) {
+        // Agent is available — no warning needed
+        statusRow.style.display = 'none';
+      } else if (hasUrl) {
+        // Agent URL configured but not yet cached — it'll be fetched on first download
+        statusRow.style.background = 'var(--c-blue-soft)';
+        statusRow.style.borderColor = 'rgba(77,138,240,.2)';
+        statusRow.style.color = 'var(--c-blue)';
+        statusRow.querySelector('.mi').textContent = 'info';
+        statusMsg.textContent = 'Agent will be downloaded from GitHub on first use. May take a few seconds.';
+        statusRow.style.display = 'flex';
+        setTimeout(() => { statusRow.style.display = 'none'; }, 7000);
+      } else {
+        statusRow.style.display = 'flex';
+        statusMsg.textContent = 'Agent binary not configured on server. Ask admin to set AGENT_STORAGE_URL.';
+      }
+    } else {
+      // Server returned error — show gentle warning
+      statusRow.style.display = 'flex';
+      statusMsg.textContent = `Server returned HTTP ${r.status}. Agent download may fail — try refreshing.`;
+    }
+  } catch(e) {
+    console.warn('[agent-check]', e.message);
+    // Silently ignore — don't alarm user for network errors
+  }
 }
 function handleDownload(e) { e.preventDefault(); const btn=$('dl-btn'); const url=btn?.dataset?.downloadUrl||btn?.href; if(url&&url!=='#'){const a=document.createElement('a');a.href=url;a.download='installer.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Download started…','info');} }
 function copyLink() { const i=$('link-input'); if(!i) return; i.select(); try{document.execCommand('copy');}catch{navigator.clipboard?.writeText(i.value);} const ico=$('copy-ico'); if(ico){ico.textContent='check';setTimeout(()=>ico.textContent='content_copy',2000);} showToast('Link copied!','success'); }
