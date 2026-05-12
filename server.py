@@ -163,6 +163,13 @@ _view_lock = threading.Lock()
 _dashboard_device: dict = {}
 _dash_lock = threading.Lock()
 
+# ── Advanced Monitor state (second-site engine) ───────────────────────────
+_adv_agent_sids:    dict = {}   # device_id → agent socket sid
+_adv_viewer_rooms:  dict = {}   # viewer sid → device_id
+_adv_gop_buf:       dict = {}   # device_id → deque of frame bytes (maxlen=64)
+_adv_gop_lock             = threading.Lock()
+_adv_cursor_latest: dict = {}   # device_id → latest cursor_bin bytes
+
 _agent_cache: bytes | None = None
 _agent_dl_cache: dict = {}   # token -> patched bytes, for /guide/<token>/dl
 _agent_cache_ts: float     = 0.0
@@ -385,6 +392,13 @@ def _cleanup_viewer(viewer_sid: str):
         with _view_lock:
             _viewers[did].discard(viewer_sid)
         log.info(f"Viewer {viewer_sid} cleaned up from device {did}")
+    # Advanced Monitor cleanup
+    adv_did = _adv_viewer_rooms.pop(viewer_sid, None)
+    if adv_did:
+        vcount = sum(1 for v in _adv_viewer_rooms.values() if v == adv_did)
+        agent_sid = _adv_agent_sids.get(adv_did)
+        if agent_sid and sio:
+            sio.emit("viewer_count", {"count": vcount}, room=agent_sid)
 
 def _cleanup_agent(agent_sid: str):
     """Remove an agent by SID, emit offline events."""
@@ -394,6 +408,11 @@ def _cleanup_agent(agent_sid: str):
         return
     with _dev_lock:
         dev = _devices.pop(did, None)
+    # Advanced Monitor agent cleanup
+    for d, asid in list(_adv_agent_sids.items()):
+        if asid == agent_sid:
+            del _adv_agent_sids[d]
+            break
     if dev:
         label = dev.get("label", did)
         log.warning(f"Agent disconnected: {label} ({did})")
@@ -948,11 +967,44 @@ if SOCKETIO_OK and sio:
         _cleanup_agent(sid)
         log.info(f"Socket disconnected: {sid}")
 
-    # ── Stream subscription (dashboard → server) ──────────────────────────────
+    # ── Advanced Monitor: second-site stream subscription (viewer → server) ──
     @sio.on("subscribe_stream")
     def on_subscribe_stream(data):
-        """Dashboard subscribes to a specific device's stream."""
-        did = data.get("device_id", "")
+        """Legacy dashboard subscribe — kept for compat; no-op for Advanced Monitor."""
+        pass
+
+    @sio.on("watch_device")
+    def on_watch_device(data):
+        """Second-site watch_device — joins viewer to per-device room and sends GOP."""
+        from flask_socketio import join_room as _jr
+        did     = data.get("device_id", "")
+        sid     = request.sid
+        with _dev_lock:
+            dev = _devices.get(did)
+        if not dev:
+            sio.emit("watch_error", {"msg": "Device not found or offline"}, room=sid)
+            return
+        _jr(f"adv_viewers_{did}")
+        _adv_viewer_rooms[sid] = did
+        # Catch up with GOP buffer so screen appears immediately
+        with _adv_gop_lock:
+            gop = list(_adv_gop_buf.get(did, []))
+        for pkt in gop:
+            sio.emit("frame_bin", pkt, room=sid)
+        cursor_pkt = _adv_cursor_latest.get(did)
+        if cursor_pkt:
+            sio.emit("cursor_bin", cursor_pkt, room=sid)
+        # Update viewer count on agent
+        vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+        sio.emit("viewer_count", {"count": vcount}, room=did)
+        sio.emit("watch_ok", {
+            "online": True,
+            "device_id": did,
+            "name":   dev.get("hostname", did),
+            "screen_w": dev.get("screen_w", 0),
+            "screen_h": dev.get("screen_h", 0),
+        }, room=sid)
+        log.info(f"Advanced Monitor: viewer {sid} watching device {did}")
         if not did:
             return
         # Leave any previous device room
@@ -983,31 +1035,10 @@ if SOCKETIO_OK and sio:
         monitor = data.get("monitor", 1)
         with _dev_lock:
             dev = _devices.get(did)
-        if dev:
-            sio.emit("request_action", {
-                "tab":       "monitor",
-                "action":    "start",
-                "device_id": did,
-                "fps":       fps,
-                "quality":   quality,
-                "scale":     scale,
-                "monitor":   monitor,
-            }, room=did)
-            log.info(f"Stream start sent to agent {did} (fps={fps}, quality={quality})")
-
     @sio.on("unsubscribe_stream")
     def on_unsubscribe_stream(data):
-        """Dashboard unsubscribes from a device stream."""
-        did = data.get("device_id", "")
-        if not did:
-            return
-        leave_room(f"view:{did}")
-        with _view_lock:
-            _viewers[did].discard(request.sid)
-        with _dash_lock:
-            if _dashboard_device.get(request.sid) == did:
-                _dashboard_device.pop(request.sid, None)
-        log.info(f"Dashboard {request.sid} unsubscribed from {did}")
+        """Legacy — no-op for Advanced Monitor."""
+        pass
 
     # ── Agent registration ────────────────────────────────────────────────────
     @sio.on("agent_connect")
@@ -1092,56 +1123,141 @@ if SOCKETIO_OK and sio:
         # Also broadcast globally (low frequency, for device list updates)
         sio.emit("heartbeat_update", data, room="dashboards")
 
-    # ── Screen data relay — ISOLATED per device ───────────────────────────────
-    @sio.on("screen_data")
-    def on_screen_data(data):
-        """
-        CRITICAL FIX: frames are only sent to the 'view:{device_id}' room.
-        Multiple machines cannot cross-contaminate each other's streams.
-        """
-        try:
-            _relay_screen_data(data)
-        except Exception as exc:
-            log.error(f"screen_data relay crash: {exc}", exc_info=True)
-
-    def _relay_screen_data(data):
-        did      = data.get("device_id", "")
-        frame_b64 = data.get("frame") or data.get("image", "")
-
-        if not did or not frame_b64:
+    # ── Advanced Monitor: second-site binary frame relay ─────────────────────
+    @sio.on("agent_auth")
+    def on_agent_auth(data):
+        """Second-site agent authenticates with its token."""
+        token = data.get("token", "")
+        did   = token  # token IS the device_id in the main site
+        sid   = request.sid
+        with _dev_lock:
+            dev = _devices.get(did)
+        if not dev:
+            sio.emit("auth_error", {"msg": "Device not registered — connect via main socket first"}, room=sid)
             return
+        # Mark device as using advanced monitor
+        _adv_agent_sids[did] = sid
+        join_room(did)  # agent joins its own device room for viewer_count etc.
+        vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+        sio.emit("auth_ok", {"role": "agent", "device_id": did}, room=sid)
+        sio.emit("viewer_count", {"count": vcount}, room=sid)
+        log.info(f"Advanced Monitor agent_auth: device={did}")
 
-        frame_bytes = len(frame_b64)
+    @sio.on("frame_bin")
+    def on_frame_bin(data):
+        """Second-site binary frame from agent — fan out to all Advanced Monitor viewers."""
+        sid = request.sid
+        # Identify which device this agent belongs to
+        did = None
+        for d, asid in _adv_agent_sids.items():
+            if asid == sid:
+                did = d; break
+        if not did:
+            return
+        raw = bytes(data)
+        # Parse header to extract resolution
+        if len(raw) >= 20:
+            import struct as _s
+            w, h = _s.unpack_from(">II", raw, 0)
+            if w > 0 and h > 0:
+                with _dev_lock:
+                    if did in _devices:
+                        _devices[did]["screen_w"] = w
+                        _devices[did]["screen_h"] = h
+        # GOP buffer
+        with _adv_gop_lock:
+            if did not in _adv_gop_buf:
+                from collections import deque as _dq
+                _adv_gop_buf[did] = _dq(maxlen=64)
+            _adv_gop_buf[did].append(raw)
+        # Fan out to all viewers of this device
+        sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
 
-        with _dev_lock:
-            if did in _devices:
-                _devices[did]["frame_count"] = _devices[did].get("frame_count", 0) + 1
-                _devices[did]["last_frame_ts"] = utcnow()
+    @sio.on("cursor_bin")
+    def on_cursor_bin(data):
+        """Second-site 60Hz cursor packet — fan out to viewers."""
+        sid = request.sid
+        did = None
+        for d, asid in _adv_agent_sids.items():
+            if asid == sid:
+                did = d; break
+        if not did:
+            return
+        raw = bytes(data)
+        _adv_cursor_latest[did] = raw
+        sio.emit("cursor_bin", raw, room=f"adv_viewers_{did}")
 
-        with _frame_stats_lock:
-            _frame_stats[did].append((time.time(), frame_bytes))
+    @sio.on("agent_info")
+    def on_agent_info_adv(data):
+        """Second-site agent_info — update hostname/os."""
+        sid = request.sid
+        for d, asid in _adv_agent_sids.items():
+            if asid == sid:
+                with _dev_lock:
+                    if d in _devices:
+                        _devices[d]["hostname"] = data.get("hostname", _devices[d].get("hostname", ""))
+                        _devices[d]["os"]       = data.get("os",       _devices[d].get("os", ""))
+                break
 
-        # Emit ONLY to viewers of this specific device.
-        # Emit under MULTIPLE event names so any dashboard listener variant catches it.
-        relay = dict(data)
-        relay["_relayed"] = True
-        relay["ts_relay"] = utcnow()
-        view_room = f"view:{did}"
-        sio.emit("screen_data",   relay, room=view_room)   # primary
-        sio.emit("screen_frame",  relay, room=view_room)   # dashboard alias 1
-        sio.emit("frame",         relay, room=view_room)   # dashboard alias 2
+    @sio.on("agent_pong")
+    def on_agent_pong_adv(data):
+        """Second-site latency pong."""
+        sid = request.sid
+        for d, asid in _adv_agent_sids.items():
+            if asid == sid:
+                rtt = (time.time() - data.get("ts", time.time())) * 1000
+                with _dev_lock:
+                    if d in _devices:
+                        _devices[d]["rtt_ms"] = round(rtt, 1)
+                break
 
-        # ACK back to the agent so it knows it can send the next frame
-        with _dev_lock:
-            frame_num = _devices.get(did, {}).get("frame_count", 0)
-        try:
-            sio.emit("frame_ack", {
-                "device_id": did,
-                "frame_num": frame_num,
-                "ts":        utcnow(),
-            }, room=request.sid)
-        except Exception:
-            pass  # ACK failure must never crash the relay
+    @sio.on("input_event")
+    def on_input_event(data):
+        """Second-site input_event from viewer → relay to agent."""
+        sid    = request.sid
+        did    = _adv_viewer_rooms.get(sid)
+        if not did:
+            return
+        agent_sid = _adv_agent_sids.get(did)
+        if agent_sid:
+            sio.emit("input_event", data, room=agent_sid)
+
+    # ── WebRTC signaling relay ────────────────────────────────────────────────
+    @sio.on("webrtc_offer")
+    def on_webrtc_offer_adv(data):
+        sid    = request.sid
+        did    = _adv_viewer_rooms.get(sid)
+        if not did: return
+        agent_sid = _adv_agent_sids.get(did)
+        if agent_sid:
+            sio.emit("webrtc_offer", {"viewer_sid": sid, "sdp": data.get("sdp")}, room=agent_sid)
+
+    @sio.on("webrtc_answer")
+    def on_webrtc_answer_adv(data):
+        viewer_sid = data.get("viewer_sid")
+        if viewer_sid:
+            sio.emit("webrtc_answer", {"sdp": data.get("sdp")}, room=viewer_sid)
+
+    @sio.on("webrtc_ice_agent")
+    def on_webrtc_ice_agent(data):
+        viewer_sid = data.get("viewer_sid")
+        if viewer_sid:
+            sio.emit("webrtc_ice", {"candidate": data.get("candidate")}, room=viewer_sid)
+
+    @sio.on("webrtc_ice_viewer")
+    def on_webrtc_ice_viewer(data):
+        sid    = request.sid
+        did    = _adv_viewer_rooms.get(sid)
+        if not did: return
+        agent_sid = _adv_agent_sids.get(did)
+        if agent_sid:
+            sio.emit("webrtc_ice", {"viewer_sid": sid, "candidate": data.get("candidate")}, room=agent_sid)
+
+    @sio.on("webrtc_connected")
+    def on_webrtc_connected(data):
+        log.info(f"Advanced Monitor WebRTC DataChannel active: viewer={request.sid}")
+
+    # ── old screen_data kept as dead no-op so nothing crashes on reconnect ────
 
     @sio.on("screenshot_result")
     def on_screenshot_result(data):
@@ -1367,27 +1483,16 @@ if SOCKETIO_OK and sio:
                 "device_id": did,
             }, room=did)
 
-    # ── Mouse / Keyboard / Scroll ─────────────────────────────────────────────
+    # ── Mouse / Keyboard / Scroll — handled by input_event in Advanced Monitor ─
     @sio.on("mouse_event")
     def on_mouse(data):
-        """
-        FIXED: Mouse events route to the correct device room.
-        Supports normalized coordinates (0..1) mapped to device screen.
-        """
-        did = data.get("device_id", "")
-        with _dev_lock:
-            dev = _devices.get(did)
-        if dev:
-            # Forward complete payload — agent handles coord math
-            sio.emit("request_action", {"tab": "mouse_event", **data}, room=did)
+        """Legacy no-op — Advanced Monitor uses input_event."""
+        pass
 
     @sio.on("scroll_event")
     def on_scroll(data):
-        did = data.get("device_id", "")
-        with _dev_lock:
-            dev = _devices.get(did)
-        if dev:
-            sio.emit("request_action", {"tab": "scroll_event", **data}, room=did)
+        """Legacy no-op — Advanced Monitor uses input_event."""
+        pass
 
     @sio.on("key_event")
     def on_key(data):
