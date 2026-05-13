@@ -5143,9 +5143,10 @@ function boot(){
     latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-ts_ms)));
     bIn+=buf.byteLength; fCount++;
     if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH)){scrW=w;scrH=h;relayout()}
+    // FIX: browsers cannot decode H.264 via createImageBitmap('video/mp4'); only JPEG works
     codec=(flags&amp;FH)?'H.264':'JPEG';
-    try{
-      const bmp=await createImageBitmap(new Blob([buf.slice(FHL)],{type:(flags&amp;FH)?'video/mp4':'image/jpeg'}));
+    if(!(flags&amp;FH)) try{
+      const bmp=await createImageBitmap(new Blob([buf.slice(FHL)],{type:'image/jpeg'}));
       if(pendBmp) pendBmp.close(); pendBmp=bmp;
     }catch(_){}
   });
@@ -5769,8 +5770,7 @@ function connectSocket() {
 
   /* ── Streaming ── */
   SC.socket.on('watch_ok', d => {
-    if (!RV.active) return;
-    RV.active = true;
+    RV.active = true;  // FIX: must set BEFORE the guard — was always returning early
     const rvPill=$('rv-status-pill'), rvLbl=$('rv-status-lbl');
     if (rvPill) rvPill.className='pill online'; if (rvLbl) rvLbl.textContent='Connected';
     const rc=$('rv-connecting'); if(rc) rc.style.display='none';
@@ -5802,7 +5802,20 @@ function connectSocket() {
       const w=dv.getUint32(0,false), h=dv.getUint32(4,false);
       const flags=dv.getUint32(16,false);
       const isH264 = flags & 0x04;
-      const bmp = await createImageBitmap(new Blob([buf.slice(24)], {type: isH264 ? 'video/mp4' : 'image/jpeg'}));
+      // FIX Bug 2: createImageBitmap cannot decode H.264/MP4 blobs in browsers.
+      // H.264 frames must be piped through MediaSource — not supported here.
+      // Skip H.264 packets; agent will auto-fall-back to JPEG when av/pyav is unavailable.
+      // If agent is stuck on H.264, ask server to switch to JPEG via stream_mode.
+      if (isH264) {
+        // Signal agent to switch to JPEG mode if we keep getting H.264
+        if (!RV._h264Warned) {
+          RV._h264Warned = true;
+          if (SC.socket) SC.socket.emit('set_stream_mode', {device_id: RV.deviceId, mode: 'screenshot'});
+          console.warn('frame_bin: H.264 not decodable in browser — requested JPEG fallback');
+        }
+        return;
+      }
+      const bmp = await createImageBitmap(new Blob([buf.slice(24)], {type: 'image/jpeg'}));
       const canvas=$('rv-canvas'), ctx=canvas?.getContext('2d'); if(!canvas||!ctx) return;
       $('rv-empty').style.display='none'; canvas.style.display='block';
       const rc=$('rv-connecting'); if(rc) rc.style.display='none';
@@ -6429,13 +6442,13 @@ function populateDeviceSelects() {
 }
 
 /* ══ Remote Desktop Viewer ══════════════════════════════════════ */
-const RV = { active:false, deviceId:null, deviceName:null, inputEnabled:true, quality:'high', frameCount:0, lastFpsTime:Date.now(), fps:0, pingTimer:null, _watchdog:null, latency:0, pingSent:0, _streamMode:'video' };
+const RV = { active:false, deviceId:null, deviceName:null, inputEnabled:true, quality:'high', frameCount:0, lastFpsTime:Date.now(), fps:0, pingTimer:null, _watchdog:null, latency:0, pingSent:0, _streamMode:'video', _h264Warned:false };
 const QUALITY_MAP = { high:{jpg:85,scale:1}, medium:{jpg:65,scale:0.85}, low:{jpg:45,scale:0.6} };
 
 function connectScreen(idx) {
   const s=screens[idx]; if(!s) return;
   if (s.status!=='online') { showToast('Machine must be online','error'); return; }
-  RV.active=true; RV.deviceId=s.token; RV.deviceName=s.name;
+  RV.active=true; RV.deviceId=s.token; RV.deviceName=s.name; RV._h264Warned=false;
   RV.frameCount=0; RV.lastFpsTime=Date.now();
   showSection('remote-view');
   const t=$('rv-title'); if(t) t.textContent=`${s.name} · ${s.ip||s.location}`;

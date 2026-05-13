@@ -33,7 +33,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='malinda_ultimate_v1',
+    name='malinda_final_v1',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

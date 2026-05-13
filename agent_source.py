@@ -637,11 +637,10 @@ class JPEGEncoder:
 
 
 def _make_encoder(w, h, fps, quality):
-    try:
-        return H264Encoder(w, h, fps, quality), FLAG_H264
-    except Exception as e:
-        log.warning(f"H.264 unavailable ({e}) — using JPEG")
-        return JPEGEncoder(quality), FLAG_JPEG
+    # NOTE: Browsers cannot decode H.264 via createImageBitmap('video/mp4').
+    # Always use JPEG for WebSocket relay. H.264 is only useful over WebRTC DataChannels.
+    log.info("Advanced Monitor: using JPEG encoder for WebSocket relay (browser-compatible)")
+    return JPEGEncoder(quality), FLAG_JPEG
 
 
 # ── WebRTC peer state (agent-side) ────────────────────────────────────────
