@@ -5102,7 +5102,13 @@ function boot(){
   sock.on('device_update',d=>{const w=devices[d.id];devices[d.id]=d;render();if(d.id===watchId)updWcard(d);if(!w||w.online!==d.online)log(d.online?'ok':'warn',`${d.name} — ${d.online?'connected ✓':'disconnected'}`)});
   sock.on('frame_bin',async raw=>{
     if(watchId===null) return;
-    const buf=toAB(raw);if(buf.byteLength<FHL) return;
+    // FIXED: handle ArrayBuffer, Uint8Array, Array
+    let buf;
+    if(raw instanceof ArrayBuffer){buf=raw;}
+    else if(raw&&raw.buffer instanceof ArrayBuffer){buf=raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength);}
+    else if(Array.isArray(raw)){buf=new Uint8Array(raw).buffer;}
+    else return;
+    if(buf.byteLength<FHL) return;
     const dv=new DataView(buf);
     const w=dv.getUint32(0,false),h=dv.getUint32(4,false);
     const tH=dv.getUint32(8,false),tL=dv.getUint32(12,false);
@@ -5182,7 +5188,7 @@ function relayout(){
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 let _lm=0;
-rc.addEventListener('mousemove',e=>{if(performance.now()-_lm<16)return;_lm=performance.now();if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_move',x:rx,y:ry})});
+rc.addEventListener('mousemove',e=>{if(performance.now()-_lm<8)return;_lm=performance.now();if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_move',x:rx,y:ry})});
 rc.addEventListener('mousedown',e=>{if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_click',x:rx,y:ry,button:e.button===2?'right':'left',down:true})});
 rc.addEventListener('mouseup',e=>{if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_click',x:rx,y:ry,button:e.button===2?'right':'left',down:false})});
 rc.addEventListener('wheel',e=>{if(!mousOn||viewOnly||!agentUp)return;e.preventDefault();const{rx,ry}=toR(e);emit('input_event',{type:'mouse_scroll',x:rx,y:ry,delta:Math.round(-e.deltaY/25)})},{passive:false});
@@ -5714,7 +5720,68 @@ function connectSocket() {
   SC.socket.on('device_update', d => { if (d?.rows) { hydrateFromRows(d.rows); renderAll(d.rows); } else refresh(); });
 
   /* ── Streaming ── */
-  SC.socket.on('screen_data',    d => displayRemoteFrame(d));  // PRIMARY — server emits this
+  SC.socket.on('watch_ok', d => {
+    if (!RV.active) return;
+    RV.active = true;
+    const rvPill=$('rv-status-pill'), rvLbl=$('rv-status-lbl');
+    if (rvPill) rvPill.className='pill online'; if (rvLbl) rvLbl.textContent='Connected';
+    const rc=$('rv-connecting'); if(rc) rc.style.display='none';
+    addLog(`Watching: ${d.name||RV.deviceName}`, RV.deviceName||'Device', 'System', 'ok');
+  });
+  SC.socket.on('watch_error', d => {
+    const rcm=$('rv-conn-msg'); if(rcm) rcm.textContent = d.msg||'Watch error';
+    const rvPill=$('rv-status-pill'), rvLbl=$('rv-status-lbl');
+    if(rvPill) rvPill.className='pill offline'; if(rvLbl) rvLbl.textContent='Error';
+    showToast('Watch error: '+(d.msg||''), 'error');
+  });
+  SC.socket.on('frame_bin', async raw => {
+    if (!RV.active) return;
+    // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, or Buffer
+    let buf;
+    if (raw instanceof ArrayBuffer) {
+      buf = raw;
+    } else if (raw && raw.buffer instanceof ArrayBuffer) {
+      // Uint8Array / typed array
+      buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+    } else if (Array.isArray(raw)) {
+      buf = new Uint8Array(raw).buffer;
+    } else {
+      return;
+    }
+    if (buf.byteLength < 24) return;
+    try {
+      const dv = new DataView(buf);
+      const w=dv.getUint32(0,false), h=dv.getUint32(4,false);
+      const flags=dv.getUint32(16,false);
+      const isH264 = flags & 0x04;
+      const bmp = await createImageBitmap(new Blob([buf.slice(24)], {type: isH264 ? 'video/mp4' : 'image/jpeg'}));
+      const canvas=$('rv-canvas'), ctx=canvas?.getContext('2d'); if(!canvas||!ctx) return;
+      $('rv-empty').style.display='none'; canvas.style.display='block';
+      const rc=$('rv-connecting'); if(rc) rc.style.display='none';
+      const rio=$('rv-info-overlay'); if(rio) rio.style.display='flex';
+      const rvPill=$('rv-status-pill'), rvLbl=$('rv-status-lbl');
+      if(rvPill) rvPill.className='pill online'; if(rvLbl) rvLbl.textContent='Live';
+      if(w>0&&h>0){canvas.width=w;canvas.height=h;}
+      ctx.drawImage(bmp,0,0,canvas.width,canvas.height); bmp.close();
+      RV.frameCount++;
+      const now=Date.now();
+      if(now-RV.lastFpsTime>=1000){RV.fps=RV.frameCount;RV.frameCount=0;RV.lastFpsTime=now;const fl=$('rv-fps-label');if(fl)fl.textContent=`${RV.fps} fps`;}
+    } catch(_){}
+  });
+  SC.socket.on('cursor_bin', raw => {
+    if(!RV.active) return;
+    // FIXED: handle ArrayBuffer, Uint8Array, or Array
+    let buf;
+    if (raw instanceof ArrayBuffer) { buf = raw; }
+    else if (raw && raw.buffer instanceof ArrayBuffer) { buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength); }
+    else if (Array.isArray(raw)) { buf = new Uint8Array(raw).buffer; }
+    else return;
+    if(!buf||buf.byteLength<8) return;
+    const dv=new DataView(buf);
+    const cx=dv.getInt32(0,false), cy=dv.getInt32(4,false);
+    drawCursorOverlay(cx,cy,false);
+  });
+  SC.socket.on('screen_data',    d => displayRemoteFrame(d));
   SC.socket.on('screenshot',     d => displayRemoteFrame(d));
   SC.socket.on('screen_frame',   d => displayRemoteFrame(d));
   SC.socket.on('frame',          d => displayRemoteFrame(d));
@@ -6315,7 +6382,7 @@ function populateDeviceSelects() {
 
 /* ══ Remote Desktop Viewer ══════════════════════════════════════ */
 const RV = { active:false, deviceId:null, deviceName:null, inputEnabled:true, quality:'high', frameCount:0, lastFpsTime:Date.now(), fps:0, pingTimer:null, _watchdog:null, latency:0, pingSent:0, _streamMode:'video' };
-const QUALITY_MAP = { high:{jpg:85,scale:1}, medium:{jpg:60,scale:0.75}, low:{jpg:40,scale:0.5} };
+const QUALITY_MAP = { high:{jpg:85,scale:1}, medium:{jpg:65,scale:0.85}, low:{jpg:45,scale:0.6} };
 
 function connectScreen(idx) {
   const s=screens[idx]; if(!s) return;
@@ -6331,18 +6398,25 @@ function connectScreen(idx) {
   const rio=$('rv-info-overlay'); if(rio) rio.style.display='none';
   addLog(`Remote connect: ${s.name}`,s.name,'Admin','info');
   if (!SC.socket||!SC.srvOnline) { const rcm=$('rv-conn-msg');if(rcm)rcm.textContent='No server connection'; if(rvPill)rvPill.className='pill offline'; if(rvLbl)rvLbl.textContent='No server'; return; }
-  // Subscribe to this device's stream room (server will also trigger agent start)
+  // watch_device joins viewer to device room, sends GOP catch-up frames, and triggers agent stream start
   const qmap=QUALITY_MAP[RV.quality];
-  const fps = RV.quality==='high'?20:RV.quality==='medium'?12:6;
-  SC.socket.emit('subscribe_stream', { device_id: RV.deviceId, fps, quality: qmap.jpg, scale: qmap.scale, monitor: parseInt($('rv-monitor-sel')?.value||'1') });
-  // Also send dashboard_command as belt-and-suspenders in case agent needs the explicit signal
-  SC.socket.emit('dashboard_command', { tab:'monitor', action:'start', device_id:RV.deviceId, fps, quality:qmap.jpg, scale:qmap.scale, monitor:parseInt($('rv-monitor-sel')?.value||'1') });
+  const fps = RV.quality==='high'?60:RV.quality==='medium'?30:15;
+  SC.socket.emit('watch_device', { device_id: RV.deviceId, fps, quality: qmap.jpg, scale: qmap.scale, monitor: parseInt($('rv-monitor-sel')?.value||'1') });
   if(RV.pingTimer) clearInterval(RV.pingTimer);
   RV.pingTimer=setInterval(()=>{ if(!RV.active||!SC.socket)return; RV.pingSent=Date.now(); SC.socket.emit('ping_agent',{device_id:RV.deviceId,t:RV.pingSent}); },2000);
   if(RV._watchdog) clearTimeout(RV._watchdog);
+  // FIXED: Increased watchdog from 6s→15s; also retry watch_device at 8s in case
+  // the advanced monitor auth race caused the agent to miss the first viewer_count.
   RV._watchdog=setTimeout(()=>{
     if(RV.active&&$('rv-canvas').style.display==='none') { const rcm=$('rv-conn-msg');if(rcm)rcm.textContent='Agent connected but no frames received'; if(rvPill)rvPill.className='pill offline'; if(rvLbl)rvLbl.textContent='No frames'; }
-  },6000);
+  },15000);
+  // Retry watch_device at 8s if still no frames (agent auth race recovery)
+  setTimeout(()=>{
+    if(RV.active && $('rv-canvas').style.display==='none' && SC.socket) {
+      const rcm=$('rv-conn-msg'); if(rcm) rcm.textContent='Retrying stream…';
+      SC.socket.emit('watch_device', { device_id: RV.deviceId, fps, quality: qmap.jpg, scale: qmap.scale, monitor: parseInt($('rv-monitor-sel')?.value||'1') });
+    }
+  }, 8000);
   setTimeout(()=>$('rv-kb')?.focus(),300);
 }
 
@@ -6381,15 +6455,31 @@ function rvMouse(e,type) {
   const rect=canvas.getBoundingClientRect();
   const x=Math.round((e.clientX-rect.left)*(canvas.width/rect.width));
   const y=Math.round((e.clientY-rect.top)*(canvas.height/rect.height));
-  SC.socket.emit('mouse_event',{device_id:RV.deviceId,type,button:e.button,x,y});
-  if(type==='down') $('rv-kb')?.focus();
+  if(type==='move'){
+    // Throttle mousemove to ~120Hz (8ms) to avoid flooding the server
+    const now=performance.now();
+    if(!rvMouse._lt||now-rvMouse._lt>=8){
+      rvMouse._lt=now;
+      SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_move',x,y});
+    }
+  } else if(type==='down'||type==='up'){
+    SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_click',x,y,button:e.button===2?'right':'left',down:type==='down'});
+    if(type==='down') $('rv-kb')?.focus();
+  } else if(type==='dblclick'){
+    SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_dblclick',x,y,button:'left'});
+  } else if(type==='rclick'){
+    SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_click',x,y,button:'right',down:true});
+    setTimeout(()=>SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_click',x,y,button:'right',down:false}),50);
+  }
 }
 function rvScroll(e) {
   if(!RV.active||!RV.inputEnabled||!SC.socket) return;
   e.preventDefault();
   const canvas=$('rv-canvas'); if(!canvas) return;
   const rect=canvas.getBoundingClientRect();
-  SC.socket.emit('scroll_event',{device_id:RV.deviceId,x:Math.round((e.clientX-rect.left)*(canvas.width/rect.width)),y:Math.round((e.clientY-rect.top)*(canvas.height/rect.height)),dx:e.deltaX,dy:e.deltaY});
+  const x=Math.round((e.clientX-rect.left)*(canvas.width/rect.width));
+  const y=Math.round((e.clientY-rect.top)*(canvas.height/rect.height));
+  SC.socket.emit('input_event',{device_id:RV.deviceId,type:'mouse_scroll',x,y,delta:Math.round(-e.deltaY/25)});
 }
 function rvKey(e,type) {
   if(!RV.active||!RV.inputEnabled||!SC.socket) return;

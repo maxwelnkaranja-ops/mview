@@ -140,8 +140,8 @@ if SOCKETIO_OK:
         engineio_logger=False,
         ping_timeout=60,
         ping_interval=20,
-        # 256 MB — handles large agent binaries and full-screen screenshots
-        max_http_buffer_size=256 * 1024 * 1024,
+        # 512 MB — handles 60fps high-res binary frames
+        max_http_buffer_size=512 * 1024 * 1024,
         allow_upgrades=True,
     )
 else:
@@ -1061,9 +1061,12 @@ if SOCKETIO_OK and sio:
             if cursor_pkt:
                 sio.emit("cursor_bin", cursor_pkt, room=sid)
 
-            # Notify agent of viewer count
+            # Notify agent of viewer count — send to BOTH the room and the specific adv-monitor SID
             vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
             sio.emit("viewer_count", {"count": vcount}, room=did)
+            agent_adv_sid = _adv_agent_sids.get(did)
+            if agent_adv_sid:
+                sio.emit("viewer_count", {"count": vcount}, room=agent_adv_sid)
 
             # Confirm to dashboard
             sio.emit("watch_ok", {
@@ -1208,22 +1211,40 @@ if SOCKETIO_OK and sio:
     # ── Advanced Monitor: second-site binary frame relay ─────────────────────
     @sio.on("agent_auth")
     def on_agent_auth(data):
-        """Second-site agent authenticates with its token."""
+        """Second-site agent authenticates with its token.
+        FIXED: Retry up to 5 s waiting for the main socket agent_connect to
+        register the device first (race condition on fast reconnects).
+        """
         token = data.get("token", "")
         did   = token  # token IS the device_id in the main site
         sid   = request.sid
-        with _dev_lock:
-            dev = _devices.get(did)
+
+        # Wait up to 5 s for agent_connect to complete (race fix)
+        dev = None
+        for _attempt in range(10):
+            with _dev_lock:
+                dev = _devices.get(did)
+            if dev:
+                break
+            time.sleep(0.5)
+
         if not dev:
+            log.warning(f"agent_auth: device {did!r} not in _devices after 5s wait — rejecting")
             sio.emit("auth_error", {"msg": "Device not registered — connect via main socket first"}, room=sid)
             return
+
         # Mark device as using advanced monitor
         _adv_agent_sids[did] = sid
         join_room(did)  # agent joins its own device room for viewer_count etc.
+
+        # Count viewers — check both _adv_viewer_rooms and _viewers for the device
         vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+        with _view_lock:
+            vcount = max(vcount, len(_viewers.get(did, set())))
+
         sio.emit("auth_ok", {"role": "agent", "device_id": did}, room=sid)
         sio.emit("viewer_count", {"count": vcount}, room=sid)
-        log.info(f"Advanced Monitor agent_auth: device={did}")
+        log.info(f"Advanced Monitor agent_auth OK: device={did} viewers={vcount}")
 
     @sio.on("frame_bin")
     def on_frame_bin(data):
@@ -1295,14 +1316,34 @@ if SOCKETIO_OK and sio:
 
     @sio.on("input_event")
     def on_input_event(data):
-        """Second-site input_event from viewer → relay to agent."""
+        """Second-site input_event from viewer → relay to agent.
+        FIXED: Also supports device_id field so main-dashboard socket works.
+        """
         sid    = request.sid
+        # Try adv viewer rooms first (iframe socket)
         did    = _adv_viewer_rooms.get(sid)
         if not did:
-            return
+            # Fall back: main dashboard socket passes device_id explicitly
+            did = data.get("device_id", "")
+            if not did:
+                return
         agent_sid = _adv_agent_sids.get(did)
         if agent_sid:
             sio.emit("input_event", data, room=agent_sid)
+        else:
+            # Fall back to request_action for agents not using advanced monitor
+            with _dev_lock:
+                dev = _devices.get(did)
+            if dev:
+                evt  = data.get("type", "")
+                if evt == "mouse_move":
+                    sio.emit("request_action", {"tab": "mouse_move", **data}, room=did)
+                elif evt in ("mouse_click", "mouse_dblclick"):
+                    sio.emit("request_action", {"tab": "mouse_click", **data}, room=did)
+                elif evt == "mouse_scroll":
+                    sio.emit("request_action", {"tab": "scroll", **data}, room=did)
+                elif evt == "key_event":
+                    sio.emit("request_action", {"tab": "key_event", **data}, room=did)
 
     # ── WebRTC signaling relay ────────────────────────────────────────────────
     @sio.on("webrtc_offer")
@@ -1568,13 +1609,50 @@ if SOCKETIO_OK and sio:
     # ── Mouse / Keyboard / Scroll — handled by input_event in Advanced Monitor ─
     @sio.on("mouse_event")
     def on_mouse(data):
-        """Legacy no-op — Advanced Monitor uses input_event."""
-        pass
+        """Route mouse event — main dashboard uses this for remote control."""
+        did = data.get("device_id", "")
+        if not did:
+            return
+        # Try advanced monitor path first
+        agent_sid = _adv_agent_sids.get(did)
+        if agent_sid:
+            # Convert to input_event format
+            evt = {
+                "device_id": did,
+                "type": "mouse_click" if data.get("action") in ("down","up","click") else "mouse_move",
+                "x": data.get("x", 0),
+                "y": data.get("y", 0),
+                "button": data.get("button", "left"),
+                "down": data.get("action") == "down",
+            }
+            sio.emit("input_event", evt, room=agent_sid)
+        else:
+            with _dev_lock:
+                dev = _devices.get(did)
+            if dev:
+                sio.emit("request_action", {"tab": "mouse_event", **data}, room=did)
 
     @sio.on("scroll_event")
     def on_scroll(data):
-        """Legacy no-op — Advanced Monitor uses input_event."""
-        pass
+        """Route scroll event."""
+        did = data.get("device_id", "")
+        if not did:
+            return
+        agent_sid = _adv_agent_sids.get(did)
+        if agent_sid:
+            evt = {
+                "device_id": did,
+                "type": "mouse_scroll",
+                "x": data.get("x", 0),
+                "y": data.get("y", 0),
+                "delta": data.get("delta", 3),
+            }
+            sio.emit("input_event", evt, room=agent_sid)
+        else:
+            with _dev_lock:
+                dev = _devices.get(did)
+            if dev:
+                sio.emit("request_action", {"tab": "scroll", **data}, room=did)
 
     @sio.on("key_event")
     def on_key(data):

