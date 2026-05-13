@@ -400,6 +400,11 @@ def broadcast_device_update():
                 row["last_beat"]   = live[did].get("last_beat")
                 row["frame_count"] = live[did].get("frame_count", 0)
         sio.emit("device_update", {"rows": rows, "ts": utcnow()})
+        # Also push to Advanced Monitor iframe viewers
+        try:
+            _broadcast_device_list()
+        except Exception:
+            pass
     except Exception as e:
         log.error(f"broadcast_device_update error: {e}")
 
@@ -1024,6 +1029,104 @@ if SOCKETIO_OK and sio:
         _cleanup_agent(sid)
         log.info(f"Socket disconnected: {sid}")
 
+    # ── viewer_hello — Advanced Monitor iframe sends this on connect ──────────
+    @sio.on("viewer_hello")
+    def on_viewer_hello(data):
+        """
+        Advanced Monitor iframe sends viewer_hello on connect.
+        Respond with device_list in the exact format the iframe expects:
+        [{id, name, online, screen_w, screen_h, rtt_ms, cpu, ram}]
+        """
+        sid = request.sid
+        join_room("adv_dashboards")
+        _send_device_list_to(sid)
+        log.info(f"viewer_hello from {sid}")
+
+    def _send_device_list_to(sid):
+        """Build and emit the device_list the Advanced Monitor iframe expects."""
+        try:
+            with _dev_lock:
+                live = dict(_devices)
+            rows = db_list_all()
+            db_map = {r.get("device_id", ""): r for r in rows}
+            result = []
+            for did, dev in live.items():
+                db_row = db_map.get(did, {})
+                result.append({
+                    "id":       did,
+                    "name":     dev.get("label") or dev.get("hostname") or did,
+                    "online":   True,
+                    "screen_w": dev.get("screen_w", 0),
+                    "screen_h": dev.get("screen_h", 0),
+                    "rtt_ms":   dev.get("rtt_ms", 0),
+                    "cpu":      dev.get("cpu"),
+                    "ram":      dev.get("ram"),
+                    "ip":       dev.get("local_ip") or db_row.get("ip_address", ""),
+                    "os":       dev.get("os") or db_row.get("os_info", ""),
+                })
+            for did, row in db_map.items():
+                if did not in live:
+                    result.append({
+                        "id":       did,
+                        "name":     row.get("label") or row.get("hostname") or did,
+                        "online":   False,
+                        "screen_w": 0,
+                        "screen_h": 0,
+                        "rtt_ms":   0,
+                        "cpu":      None,
+                        "ram":      None,
+                        "ip":       row.get("ip_address", ""),
+                        "os":       row.get("os_info", ""),
+                    })
+            sio.emit("device_list", result, room=sid)
+        except Exception as e:
+            log.error(f"_send_device_list_to error: {e}")
+
+    # ── join_dashboard — main dashboard sends this on connect ─────────────────
+    @sio.on("join_dashboard")
+    def on_join_dashboard(data):
+        """Main dashboard joins the dashboards room and gets a device list."""
+        join_room("dashboards")
+        log.info(f"join_dashboard from {request.sid}")
+
+    # ── broadcast device_list to all Advanced Monitor viewers ─────────────────
+    def _broadcast_device_list():
+        """Push updated device_list to all Advanced Monitor viewers."""
+        try:
+            with _dev_lock:
+                live = dict(_devices)
+            rows = db_list_all()
+            db_map = {r.get("device_id", ""): r for r in rows}
+            result = []
+            for did, dev in live.items():
+                db_row = db_map.get(did, {})
+                result.append({
+                    "id":       did,
+                    "name":     dev.get("label") or dev.get("hostname") or did,
+                    "online":   True,
+                    "screen_w": dev.get("screen_w", 0),
+                    "screen_h": dev.get("screen_h", 0),
+                    "rtt_ms":   dev.get("rtt_ms", 0),
+                    "cpu":      dev.get("cpu"),
+                    "ram":      dev.get("ram"),
+                    "ip":       dev.get("local_ip") or db_map.get(did, {}).get("ip_address", ""),
+                    "os":       dev.get("os") or db_map.get(did, {}).get("os_info", ""),
+                })
+            for did, row in db_map.items():
+                if did not in live:
+                    result.append({
+                        "id":       did,
+                        "name":     row.get("label") or row.get("hostname") or did,
+                        "online":   False,
+                        "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
+                        "cpu":      None, "ram":      None,
+                        "ip":       row.get("ip_address", ""),
+                        "os":       row.get("os_info", ""),
+                    })
+            sio.emit("device_list", result, room="adv_dashboards")
+        except Exception as e:
+            log.error(f"_broadcast_device_list error: {e}")
+
     # ── Advanced Monitor: second-site stream subscription (viewer → server) ──
     @sio.on("subscribe_stream")
     def on_subscribe_stream(data):
@@ -1191,6 +1294,11 @@ if SOCKETIO_OK and sio:
             "device_id": did, "label": label, "fingerprint": data, "ts": utcnow()
         })
         broadcast_device_update()
+        # Push to Advanced Monitor iframe viewers too
+        try:
+            _broadcast_device_list()
+        except Exception:
+            pass
 
     # ── Heartbeat ─────────────────────────────────────────────────────────────
     @sio.on("heartbeat")
@@ -1220,13 +1328,18 @@ if SOCKETIO_OK and sio:
         sid   = request.sid
 
         # Wait up to 5 s for agent_connect to complete (race fix)
+        # Use gevent sleep (non-blocking) so we don't stall the event loop
         dev = None
         for _attempt in range(10):
             with _dev_lock:
                 dev = _devices.get(did)
             if dev:
                 break
-            time.sleep(0.5)
+            try:
+                from gevent import sleep as _gsleep
+                _gsleep(0.5)
+            except ImportError:
+                time.sleep(0.5)
 
         if not dev:
             log.warning(f"agent_auth: device {did!r} not in _devices after 5s wait — rejecting")

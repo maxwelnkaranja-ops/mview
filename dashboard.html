@@ -5099,7 +5099,32 @@ function boot(){
   sock.on('auth_ok',()=>log('ok','Session authenticated'));
   sock.on('auth_error',d=>{setRelay(0);log('err','Auth failed: '+(d.msg||'bad token'))});
   sock.on('device_list',list=>{devices={};list.forEach(d=>devices[d.id]=d);render();log('info',`Loaded ${list.length} device${list.length!==1?'s':''}`)});
-  sock.on('device_update',d=>{const w=devices[d.id];devices[d.id]=d;render();if(d.id===watchId)updWcard(d);if(!w||w.online!==d.online)log(d.online?'ok':'warn',`${d.name} — ${d.online?'connected ✓':'disconnected'}`)});
+  // device_update from server sends {rows:[...]} — convert to device_list format and merge
+  sock.on('device_update',payload=>{
+    const rows=payload?.rows||payload;
+    if(Array.isArray(rows)){
+      rows.forEach(r=>{
+        const id=r.device_id||r.id||'';
+        if(!id)return;
+        const live=r._live||r.status==='online';
+        const existing=devices[id]||{};
+        devices[id]=Object.assign({},existing,{
+          id, name:r.label||r.hostname||id,
+          online:live, screen_w:existing.screen_w||0,
+          screen_h:existing.screen_h||0,
+          ip:r.ip_address||r.ip||existing.ip||'',
+          cpu:r.cpu||existing.cpu, ram:r.ram||existing.ram,
+        });
+        if(id===watchId) updWcard(devices[id]);
+      });
+      render();
+    }
+  });
+  // Agent online/offline — refresh device list
+  sock.on('agent_online',  d=>{if(d.device_id){const id=d.device_id;devices[id]=Object.assign(devices[id]||{},{id,name:d.label||d.name||id,online:true});render();log('ok',`${d.label||id} — connected ✓`)}});
+  sock.on('device_online', d=>{if(d.device_id){const id=d.device_id;if(devices[id])devices[id].online=true;render()}});
+  sock.on('agent_offline', d=>{if(d.device_id){const id=d.device_id;if(devices[id]){devices[id].online=false;if(id===watchId){agentUp=false;updWcard(devices[id])}}render();log('warn',`${d.label||id} — disconnected`)}});
+  sock.on('device_offline',d=>{if(d.device_id){const id=d.device_id;if(devices[id])devices[id].online=false;render()}});
   sock.on('frame_bin',async raw=>{
     if(watchId===null) return;
     // FIXED: handle ArrayBuffer, Uint8Array, Array
@@ -5124,7 +5149,18 @@ function boot(){
   });
   sock.on('cursor_bin',raw=>{const buf=toAB(raw);if(buf.byteLength<CHL)return;const dv=new DataView(buf);pendCur={x:dv.getInt32(0,false),y:dv.getInt32(4,false)}});
   sock.on('watch_ok',d=>{agentUp=d.online;if(d.screen_w){scrW=d.screen_w;scrH=d.screen_h;relayout()}document.getElementById('no-dev').classList.add('h');updWcard(d);log('ok','Monitoring: '+d.name+(d.screen_w?' '+d.screen_w+'×'+d.screen_h:''))});
-  sock.on('watch_error',d=>log('err','Watch error: '+d.msg));
+  sock.on('watch_error',d=>{
+    log('err','Watch error: '+d.msg);
+    // Retry once after 3s — agent may still be registering on server
+    if(watchId && d.msg && d.msg.includes('not found')){
+      setTimeout(()=>{
+        if(watchId && sock?.connected){
+          log('info','Retrying watch for '+watchId+'...');
+          sock.emit('watch_device',{device_id:watchId});
+        }
+      }, 3000);
+    }
+  });
   sock.on('disconnect',()=>{setRelay(0);agentUp=false;log('warn','Relay disconnected — reconnecting…')});
   sock.on('connect_error',e=>log('err','Connect error: '+e.message));
 }
@@ -5384,7 +5420,17 @@ setInterval(async()=>{
     const d=await(await fetch(SERVER_URL+'/metrics')).json();
     $('kv-sess').textContent=d.viewers||0;$('sb-vw').textContent=d.viewers||0;
     pushSp(sparkH.sess,d.viewers||0);drawSp('sp-sess',sparkH.sess);
-    (d.devices||[]).forEach(dev=>{if(devices[dev.id])Object.assign(devices[dev.id],dev)});
+    (d.devices||[]).forEach(dev=>{
+      // server uses device_id, iframe uses id — normalise
+      const id=dev.device_id||dev.id||'';
+      if(!id)return;
+      if(!devices[id]){
+        devices[id]={id,name:dev.label||dev.hostname||id,online:dev.status==='online'||dev.online||false,screen_w:0,screen_h:0};
+      }
+      Object.assign(devices[id],{id,online:dev.status==='online'||dev.online||devices[id].online,
+        cpu:dev.cpu??devices[id].cpu, ram:dev.ram??devices[id].ram,
+        screen_w:dev.screen_w||devices[id].screen_w, screen_h:dev.screen_h||devices[id].screen_h});
+    });
     render();
   }catch(_){}
 },8000);
@@ -5400,7 +5446,7 @@ function toAB(data){
 }
 function mkey(e){const m={' ':'space','ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down','Enter':'enter','Backspace':'backspace','Delete':'delete','Escape':'esc','Tab':'tab','Home':'home','End':'end','PageUp':'pageup','PageDown':'pagedown','F1':'f1','F2':'f2','F3':'f3','F4':'f4','F5':'f5','F6':'f6','F7':'f7','F8':'f8','F9':'f9','F10':'f10','F11':'f11','F12':'f12','Control':'ctrl','Alt':'alt','Shift':'shift','Meta':'win','CapsLock':'capslock','PrintScreen':'printscreen','Insert':'insert'};return m[e.key]||e.key.toLowerCase()}
 function typing(){const t=document.activeElement?.tagName;return t==='INPUT'||t==='TEXTAREA'}
-function emit(ev,d){if(sock?.connected)sock.emit(ev,d)}
+function emit(ev,d){if(sock?.connected)sock.emit(ev,watchId?Object.assign({device_id:watchId},d):d)}
 function esc(s){return String(s).replace(/&amp;/g,'&amp;amp;').replace(/</g,'&amp;lt;').replace(/>/g,'&amp;gt;').replace(/&quot;/g,'&amp;quot;')}
 function ts(){return new Date().toTimeString().slice(0,8)}
 
