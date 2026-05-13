@@ -5138,7 +5138,9 @@ function boot(){
     const w=dv.getUint32(0,false),h=dv.getUint32(4,false);
     const tH=dv.getUint32(8,false),tL=dv.getUint32(12,false);
     const flags=dv.getUint32(16,false);
-    latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-(tH*4294967296+tL)/1000)));
+    // FIX Issue 7: tH*4294967296 overflows Number.MAX_SAFE_INTEGER for Unix µs timestamps.
+    const ts_ms=Number((BigInt(tH)*4294967296n+BigInt(tL))/1000n);
+    latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-ts_ms)));
     bIn+=buf.byteLength; fCount++;
     if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH)){scrW=w;scrH=h;relayout()}
     codec=(flags&amp;FH)?'H.264':'JPEG';
@@ -5707,10 +5709,10 @@ function connectSocket() {
   if (typeof io === 'undefined') { showBanner('Socket.IO not loaded — WebSocket disabled', false); return; }
   if (SC.socket) { SC.socket.disconnect(); SC.socket = null; }
 
-  // Always use page's own origin for socket when on HTTPS (Render proxy handles it).
-  // Only fall back to SC.SERVER_URL on localhost dev environments.
-  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  let socketUrl = isLocal ? SC.SERVER_URL : location.origin;
+  // FIX Issue 2: Always use the configured SERVER_URL so the socket connects to
+  // the relay server regardless of how this HTML file is served (CDN, file://, etc).
+  // location.origin is 'null' when opened from file:// and wrong on static CDN hosts.
+  let socketUrl = SC.SERVER_URL;
 
   // Enforce secure protocols — never allow ws:// or http:// when page is HTTPS
   if (location.protocol === 'https:') {
@@ -6443,6 +6445,8 @@ function connectScreen(idx) {
   const rc=$('rv-connecting'); if(rc) rc.style.display='flex';
   const rio=$('rv-info-overlay'); if(rio) rio.style.display='none';
   addLog(`Remote connect: ${s.name}`,s.name,'Admin','info');
+  // FIX Issue 3: Make cursor overlay visible now (not deferred to showSection).
+  const ov=$('rv-cursor-overlay'); if(ov) ov.style.display='block';
   if (!SC.socket||!SC.srvOnline) { const rcm=$('rv-conn-msg');if(rcm)rcm.textContent='No server connection'; if(rvPill)rvPill.className='pill offline'; if(rvLbl)rvLbl.textContent='No server'; return; }
   // watch_device joins viewer to device room, sends GOP catch-up frames, and triggers agent stream start
   const qmap=QUALITY_MAP[RV.quality];
@@ -6557,7 +6561,10 @@ function takeScreenshot() {
 }
 function drawCursorOverlay(cx,cy,clicking) {
   const canvas=$('rv-canvas'),overlay=$('rv-cursor-overlay');
-  if(!canvas||!overlay||canvas.style.display==='none') return;
+  // FIX Issue 4: Check RV.active instead of canvas.style.display so cursor renders
+  // before (or immediately alongside) the first frame, and works regardless of
+  // which code path made the canvas visible.
+  if(!canvas||!overlay||!RV.active) return;
   overlay.width=canvas.clientWidth; overlay.height=canvas.clientHeight;
   overlay.style.width=canvas.clientWidth+'px'; overlay.style.height=canvas.clientHeight+'px';
   const ctx=overlay.getContext('2d'); ctx.clearRect(0,0,overlay.width,overlay.height);

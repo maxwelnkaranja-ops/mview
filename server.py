@@ -1359,6 +1359,22 @@ if SOCKETIO_OK and sio:
         sio.emit("viewer_count", {"count": vcount}, room=sid)
         log.info(f"Advanced Monitor agent_auth OK: device={did} viewers={vcount}")
 
+    @sio.on("agent_auth_ready")
+    def on_agent_auth_ready(data):
+        """FIX Issue 1: Agent notifies server that adv-socket auth just completed.
+        Server re-sends the current viewer count so _adv_viewers becomes > 0 even
+        when the dashboard connected before the adv socket finished authenticating.
+        """
+        token = data.get("token", "")
+        did   = token
+        sid   = request.sid
+        vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+        with _view_lock:
+            vcount = max(vcount, len(_viewers.get(did, set())))
+        if vcount > 0:
+            sio.emit("viewer_count", {"count": vcount}, room=sid)
+            log.info(f"agent_auth_ready: re-sent viewer_count={vcount} to {did}")
+
     @sio.on("frame_bin")
     def on_frame_bin(data):
         """Second-site binary frame from agent — fan out to all Advanced Monitor viewers."""

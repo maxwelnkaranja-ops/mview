@@ -788,6 +788,9 @@ async def _adv_main(server_url: str, token: str):
             "hostname": socket.gethostname(),
             "os": platform.system() + " " + platform.release(),
         })
+        # FIX Issue 1: Ask server to re-send viewer_count in case dashboard connected
+        # before this adv socket finished auth (race condition).
+        await sio.emit("agent_auth_ready", {"token": token})
 
     @sio.on("auth_error")
     async def on_auth_error(data):
