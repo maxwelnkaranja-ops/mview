@@ -5038,7 +5038,35 @@ kbd { display:inline-flex; align-items:center; padding:1px 5px; border-radius:3p
 <script>
 'use strict';
 // ─── Config ─────────────────────────────────────────────────────────────────
-const SERVER_URL = window.location.origin;
+// Fix: srcdoc iframes have location.origin === 'null' / 'about'
+// Read the real server URL from the parent page (injected via config.js → window.SCREEN_CONNECT_SERVER_URL)
+// or fall back to ancestorOrigins, then the known Render deployment URL.
+const SERVER_URL = (() => {
+  // 1. Parent page sets this via config.js
+  try {
+    if (window.parent && window.parent.SCREEN_CONNECT_SERVER_URL)
+      return window.parent.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, '');
+    if (window.parent && window.parent.SC && window.parent.SC.SERVER_URL)
+      return window.parent.SC.SERVER_URL.replace(/\/+$/, '');
+  } catch(e) {}
+  // 2. ancestorOrigins (Chrome/Edge — not available in Firefox)
+  try {
+    if (location.ancestorOrigins && location.ancestorOrigins.length > 0) {
+      const ao = location.ancestorOrigins[0];
+      if (ao && ao !== 'null' && !ao.startsWith('about'))
+        return ao.replace(/\/+$/, '');
+    }
+  } catch(e) {}
+  // 3. document.referrer origin
+  try {
+    if (document.referrer) {
+      const u = new URL(document.referrer);
+      if (u.origin && u.origin !== 'null') return u.origin;
+    }
+  } catch(e) {}
+  // 4. Hard-coded Render URL — update this if your server moves
+  return 'https://screen-connect-rtca.onrender.com';
+})();
 const AUTH_TOKEN = 'CHANGE_ME'; // ← match REMOTE_ADMIN_TOKEN on server.py
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -5370,11 +5398,11 @@ function emit(ev,d){if(sock?.connected)sock.emit(ev,d)}
 function esc(s){return String(s).replace(/&amp;/g,'&amp;amp;').replace(/</g,'&amp;lt;').replace(/>/g,'&amp;gt;').replace(/&quot;/g,'&amp;quot;')}
 function ts(){return new Date().toTimeString().slice(0,8)}
 
-$('m-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('m-tok').focus()});
-$('m-tok').addEventListener('keydown',e=>{if(e.key==='Enter')createInvite()});
+$('m-name')?.addEventListener('keydown',e=>{if(e.key==='Enter')$('m-tok')?.focus()});
+$('m-tok')?.addEventListener('keydown',e=>{if(e.key==='Enter')createInvite()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 </script>
-<script src=&quot;dashboard_patch_v2.js&quot;></script>
+
 </body>
 </html>
 "
