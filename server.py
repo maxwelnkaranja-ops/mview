@@ -236,6 +236,25 @@ def db_update(token, upd: dict):
     result, ok = _sb_retry(lambda: sb.table(TABLE).update(upd).eq("device_id", token).execute())
     return ok
 
+def db_upsert(token, upd: dict):
+    """Insert-or-update: works even if no row exists yet for this token.
+    Agents running with MVIEW_TOKEN env var or CLI arg have no prior invite
+    row — upsert creates it so the dashboard can see them.
+    """
+    sb = get_sb()
+    if not sb:
+        return False
+    payload = {"device_id": token, **upd}
+    result, ok = _sb_retry(lambda: sb.table(TABLE).upsert(payload, on_conflict="device_id").execute())
+    if not ok:
+        # Fall back: try update, then insert if no row existed
+        updated, ok2 = _sb_retry(lambda: sb.table(TABLE).update(upd).eq("device_id", token).execute())
+        if ok2 and updated and updated.data:
+            return True
+        _, ok3 = _sb_retry(lambda: sb.table(TABLE).insert(payload).execute())
+        return ok3
+    return ok
+
 def db_insert(payload: dict):
     sb = get_sb()
     if not sb:
@@ -975,8 +994,9 @@ def agent_checkin():
     token = data.get("device_id") or data.get("token", "")
     if not token:
         return jsonify({"error": "No device_id"}), 400
-    db_update(token, {
+    db_upsert(token, {
         "status":        "online",
+        "label":         data.get("hostname") or token,
         "ip_address":    data.get("local_ip"),
         "hostname":      data.get("hostname"),
         "os_info":       data.get("os"),
@@ -1151,8 +1171,9 @@ if SOCKETIO_OK and sio:
             }
 
         log.info(f"Agent ONLINE: {label} ({did}) sid={request.sid}")
-        db_update(did, {
+        db_upsert(did, {
             "status":        "online",
+            "label":         label,
             "ip_address":    data.get("local_ip"),
             "hostname":      data.get("hostname"),
             "os_info":       data.get("os"),
