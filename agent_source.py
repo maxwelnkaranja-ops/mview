@@ -233,9 +233,9 @@ CONFIG = {
     "RECONNECT_MAX":        60,
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           60,         # target FPS — 60Hz for fluid remote view
-    "STREAM_MIN_FPS":       10,         # adaptive floor — never drop below 10fps
-    "STREAM_QUALITY":       85,         # JPEG quality — sharp enough for text
+    "STREAM_FPS":           30,         # target FPS — 30Hz is stable for relay
+    "STREAM_MIN_FPS":       5,          # adaptive floor
+    "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "video",    # "video" or "screenshot"
 
@@ -784,9 +784,13 @@ async def _adv_task_stream_frames():
     global _adv_last_frame_pkt, _adv_last_frame_ts
     try:
         capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
-    except Exception:
-        log.error("Advanced Monitor: capture failed after 10 attempts — exiting")
+    except Exception as e:
+        log.error(f"Advanced Monitor: capture failed — exiting ({e})")
         return
+    
+    # Extract dimensions for the header — CRITICAL FIX: w/h must be defined
+    h, w = frame.shape[:2]
+    
     loop    = asyncio.get_event_loop()
     n = 0
     cfg_sig = _current_stream_config()
@@ -797,7 +801,6 @@ async def _adv_task_stream_frames():
             if not _adv_authed:
                 await asyncio.sleep(0.1); continue
             if _adv_viewers == 0:
-                # FIX: sleep only 50ms so we respond quickly when viewer_count arrives
                 await asyncio.sleep(0.05); continue
 
             next_sig = _current_stream_config()
@@ -808,6 +811,7 @@ async def _adv_task_stream_frames():
                     pass
                 try:
                     capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
+                    h, w = frame.shape[:2] # Update dimensions
                     cfg_sig = next_sig
                     n = 0
                 except Exception as e:
@@ -818,7 +822,7 @@ async def _adv_task_stream_frames():
             raw = frame if frame is not None else capture.grab()
             frame = None
             if raw is None:
-                await asyncio.sleep(fps_ctl.interval); continue
+                await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
 
             changed = differ.changed(raw)
             fps_ctl.report(changed)
@@ -826,9 +830,15 @@ async def _adv_task_stream_frames():
                 await asyncio.sleep(fps_ctl.interval); continue
 
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
-            payload, is_key = await loop.run_in_executor(
-                _adv_pool, lambda f=raw, k=force_key: encoder.encode_frame(f, k)
-            )
+            
+            try:
+                payload, is_key = await loop.run_in_executor(
+                    _adv_pool, lambda f=raw, k=force_key: encoder.encode_frame(f, k)
+                )
+            except Exception as e:
+                log.debug(f"Encode error: {e}")
+                await asyncio.sleep(fps_ctl.interval); continue
+                
             if not payload:
                 await asyncio.sleep(fps_ctl.interval); continue
 
@@ -839,7 +849,9 @@ async def _adv_task_stream_frames():
             _adv_last_frame_pkt = pkt
             _adv_last_frame_ts = time.monotonic()
 
+            # Emit frame — non-blocking
             await _adv_sio_async.emit("frame_bin", pkt)
+            n += 1
 
             # Also push over any open WebRTC DataChannels
             for vsid, dc in list(_adv_webrtc_channels.items()):
@@ -850,11 +862,11 @@ async def _adv_task_stream_frames():
                     log.debug(f"WebRTC send failed for {vsid}: {e}")
                     _adv_webrtc_channels.pop(vsid, None)
 
-            n += 1
             elapsed = time.monotonic() - t0
             await asyncio.sleep(max(0.0, fps_ctl.interval - elapsed))
     finally:
-        capture.close()
+        try: capture.close()
+        except Exception: pass
 
 
 async def _adv_task_stream_cursor():
@@ -962,28 +974,58 @@ async def _adv_main(server_url: str, token: str):
 
     @sio.on("input_event")
     async def on_input_event(data):
-        """Second-site input event handler — absolute pixel coords, PAUSE=0."""
+        """Second-site input event handler — absolute pixel coords, ultra-fast win32 path."""
         evt = data.get("type")
         try:
             mx, my = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
-            if   evt == "mouse_move":
-                pyautogui.moveTo(mx, my, _pause=False)
-            elif evt in ("mouse_click", "mouse_dblclick"):
+            
+            # Use win32api for ultra-low latency mouse movement if available
+            if evt == "mouse_move":
+                if WIN32_OK:
+                    win32api.SetCursorPos((mx, my))
+                else:
+                    pyautogui.moveTo(mx, my, _pause=False)
+                return
+
+            # Clicks and other events
+            if evt in ("mouse_click", "mouse_dblclick"):
                 btn = "left" if data.get("button") == "left" else "right"
                 if evt == "mouse_dblclick":
                     pyautogui.doubleClick(mx, my, button=btn, _pause=False)
                 elif "down" not in data:
                     pyautogui.click(mx, my, button=btn, _pause=False)
                 else:
-                    fn = pyautogui.mouseDown if data.get("down") else pyautogui.mouseUp
-                    fn(mx, my, button=btn, _pause=False)
+                    is_down = data.get("down")
+                    if WIN32_OK:
+                        # Fast win32 path for clicks
+                        flags = 0
+                        if btn == "left":
+                            flags = win32con.MOUSEEVENTF_LEFTDOWN if is_down else win32con.MOUSEEVENTF_LEFTUP
+                        else:
+                            flags = win32con.MOUSEEVENTF_RIGHTDOWN if is_down else win32con.MOUSEEVENTF_RIGHTUP
+                        win32api.mouse_event(flags, 0, 0, 0, 0)
+                    else:
+                        fn = pyautogui.mouseDown if is_down else pyautogui.mouseUp
+                        fn(mx, my, button=btn, _pause=False)
+            
             elif evt == "mouse_scroll":
                 pyautogui.scroll(int(data.get("delta", 3)), x=mx, y=my, _pause=False)
+            
             elif evt == "key_event":
-                fn = pyautogui.keyDown if data.get("down") else pyautogui.keyUp
-                fn(data.get("key", ""), _pause=False)
+                key = data.get("key", "")
+                if not key: return
+                is_down = data.get("down")
+                if WIN32_OK:
+                    # Try to use win32api for keys if it's a special key or character
+                    # This is complex, so we'll stick to pyautogui for keys for now
+                    # but ensure _pause=False is always honored.
+                    pass
+                fn = pyautogui.keyDown if is_down else pyautogui.keyUp
+                fn(key, _pause=False)
+                
             elif evt == "type_text":
-                pyautogui.typewrite(data.get("text", ""), interval=0.005, _pause=False)
+                pyautogui.typewrite(data.get("text", ""), interval=0.0, _pause=False)
+                
         except Exception as e:
             log.debug(f"Advanced Monitor input error: {e}")
 

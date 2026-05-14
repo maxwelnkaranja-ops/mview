@@ -8159,9 +8159,12 @@ function drawCursor(){
 // ─── Layout ───────────────────────────────────────────────────────────────────
 function relayout(){
   const r=vp.getBoundingClientRect();vpW=r.width||1280;vpH=r.height||720;
+  
+  const vf = $('vframe');
   if(!scrW||!scrH){
     if(rc.width===0)rc.width=vpW;if(rc.height===0)rc.height=vpH;
     co.width=vpW;co.height=vpH;
+    if(vf) vf.style.cssText = `width:100%;height:100%;display:flex;justify-content:center;align-items:center;`;
     return;
   }
   const asp=scrW/scrH,vap=vpW/vpH;
@@ -8172,7 +8175,6 @@ function relayout(){
   co.width=Math.round(cw);co.height=Math.round(ch);
   co.style.cssText=`position:absolute;top:6px;left:6px;width:${cw}px;height:${ch}px;pointer-events:none;display:block;visibility:visible`;
   
-  const vf = $('vframe');
   if(vf) vf.style.cssText = `width:${cw+12}px;height:${ch+12}px;display:flex;`;
 }
 
