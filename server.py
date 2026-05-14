@@ -1404,17 +1404,14 @@ if SOCKETIO_OK and sio:
     def on_frame_bin(data):
         """Second-site binary frame from agent — fan out to all Advanced Monitor viewers."""
         sid = request.sid
-        # Identify which device this agent belongs to
         did = None
         for d, asid in _adv_agent_sids.items():
             if asid == sid:
                 did = d; break
         if not did:
-            # Log so we can diagnose agent_auth failures
-            log.warning(f"frame_bin from unregistered agent sid={sid} — agent_auth may have failed")
+            log.warning(f"frame_bin from UNREGISTERED agent sid={sid} — agent_auth failed/pending")
             return
         raw = bytes(data)
-        # Parse header to extract resolution
         if len(raw) >= 20:
             import struct as _s
             w, h = _s.unpack_from(">II", raw, 0)
@@ -1423,29 +1420,26 @@ if SOCKETIO_OK and sio:
                     if did in _devices:
                         _devices[did]["screen_w"] = w
                         _devices[did]["screen_h"] = h
-        # GOP buffer
         with _adv_gop_lock:
             if did not in _adv_gop_buf:
                 from collections import deque as _dq
                 _adv_gop_buf[did] = _dq(maxlen=64)
             _adv_gop_buf[did].append(raw)
-            frame_count = len(_adv_gop_buf[did])
-        if frame_count == 1:
-            log.info(f"frame_bin: FIRST frame from agent {did} — streaming is active!")
-        # Fan out to all viewers of this device
+            fc = len(_adv_gop_buf[did])
+        if fc == 1:
+            log.info(f"frame_bin: FIRST frame from agent {did} — ADV SOCKET streaming active!")
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
 
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data):
-        """Fallback: agent sends frames via main socket when adv socket is unavailable.
-        Converts the JSON-encoded frame back to bytes and fans out to viewers."""
+        """Fallback: agent sends frames via main socket when adv socket unavailable.
+        Receives JSON with device_id + data (list of ints = raw bytes), fans out to viewers."""
         try:
-            did = data.get("device_id", "")
+            did      = data.get("device_id", "")
             raw_list = data.get("data")
             if not did or not raw_list:
                 return
             raw = bytes(raw_list)
-            # Parse header for resolution
             if len(raw) >= 20:
                 import struct as _s
                 w, h = _s.unpack_from(">II", raw, 0)
@@ -1454,18 +1448,16 @@ if SOCKETIO_OK and sio:
                         if did in _devices:
                             _devices[did]["screen_w"] = w
                             _devices[did]["screen_h"] = h
-            # GOP buffer
             with _adv_gop_lock:
                 if did not in _adv_gop_buf:
                     from collections import deque as _dq
                     _adv_gop_buf[did] = _dq(maxlen=64)
                 _adv_gop_buf[did].append(raw)
-                frame_count = len(_adv_gop_buf[did])
-            if frame_count == 1:
-                log.info(f"frame_bin_relay: FIRST frame from agent {did} via MAIN SOCKET fallback")
-            # Fan out to adv viewers
+                fc = len(_adv_gop_buf[did])
+            if fc == 1:
+                log.info(f"frame_bin_relay: FIRST frame from {did} via MAIN SOCKET fallback")
+            # Fan out to adv monitor viewers AND live viewer room
             sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
-            # Also fan out to RV viewers
             sio.emit("frame_bin", raw, room=f"view:{did}")
         except Exception as e:
             log.warning(f"frame_bin_relay error: {e}")

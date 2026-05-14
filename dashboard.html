@@ -5150,15 +5150,10 @@ function boot(){
     bIn+=buf.byteLength; fCount++;
     // FIX: relayout on every dim change AND on first frame (scrW===0) so canvas is sized+shown
     if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH||scrW===0)){scrW=w;scrH=h;relayout();}
-    // SHOW canvas immediately on first frame — it starts hidden
-    if(rc.style.display==='none'||!rc.style.display){
-      rc.style.display='block';rc.style.visibility='visible';
-    }
-    if(co.style.display==='none'||!co.style.display){
-      co.style.display='block';co.style.visibility='visible';
-    }
+    // Show canvas immediately on first real frame
+    if(rc.style.display==='none'||!rc.style.display){rc.style.display='block';rc.style.visibility='visible';}
+    if(co.style.display==='none'||!co.style.display){co.style.display='block';co.style.visibility='visible';}
     document.getElementById('no-dev').classList.add('h');
-    // FIX: mark agent as up the moment we receive a frame — watch_ok may have set online:false
     if(!agentUp){agentUp=true;}
     // FIX: browsers cannot decode H.264 via createImageBitmap('video/mp4'); only JPEG works
     codec=(flags&amp;FH)?'H.264':'JPEG';
@@ -5197,11 +5192,9 @@ function startRAF(){
   function loop(){
     rafH=requestAnimationFrame(loop);
     if(pendBmp){
-      // Ensure canvas visible before drawing
       if(rc.style.display==='none'||!rc.style.display){rc.style.display='block';rc.style.visibility='visible';}
       if(co.style.display==='none'||!co.style.display){co.style.display='block';co.style.visibility='visible';}
-      // If canvas has 0 size (relayout not called yet), set it now
-      if(rc.width===0||rc.height===0){const r=vp.getBoundingClientRect();rc.width=r.width||1280;rc.height=r.height||720;}
+      if(rc.width===0||rc.height===0){const _r=vp.getBoundingClientRect();rc.width=_r.width||1280;rc.height=_r.height||720;}
       rctx.drawImage(pendBmp,0,0,rc.width,rc.height);pendBmp.close();pendBmp=null;
       document.getElementById('no-dev').classList.add('h');
     }
@@ -5248,7 +5241,6 @@ function drawCursor(){
 function relayout(){
   const r=vp.getBoundingClientRect();vpW=r.width||1280;vpH=r.height||720;
   if(!scrW||!scrH){
-    // FIX: don't resize canvas when we don't know screen dims yet — avoids black flash
     if(rc.width===0)rc.width=vpW;if(rc.height===0)rc.height=vpH;
     co.width=vpW;co.height=vpH;
     co.style.cssText=`position:absolute;top:0;left:0;width:${vpW}px;height:${vpH}px;pointer-events:none`;
@@ -5292,17 +5284,15 @@ function goTab(t){
 function watch(id){
   if(!sock?.connected && !SC.socket?.connected) return;
   const _prevId=watchId;
-  watchId=id;agentUp=false;
-  // FIX: only reset dimensions if switching to a DIFFERENT device
-  // Resetting scrW/scrH causes canvas to go blank on repeated watch_device for same device
+  watchId=id;agentUp=false;pendBmp=null;pendCur=null;
+  // Only reset dimensions when switching to a DIFFERENT device — avoids black flash on re-subscribe
   if(_prevId!==id){scrW=0;scrH=0;rctx.clearRect(0,0,rc.width,rc.height);cctx.clearRect(0,0,co.width,co.height);}
-  pendBmp=null;pendCur=null;
   document.getElementById('no-dev').classList.remove('h');
-  // FIX: emit watch_device on BOTH sockets so whichever one the server uses for fan-out
-  // the viewer is subscribed. sock handles the adv_viewers_{id} room join (frame_bin relay).
-  // SC.socket handles the RV panel and is also needed when SC.socket is the active transport.
-  if(sock?.connected) sock.emit('watch_device',{device_id:id});
+  // Use SC.socket for watch_device — it's the stable main socket.
+  // sock (adv socket) gets joined to adv_viewers_{id} room automatically by the server
+  // when SC.socket emits watch_device, so we don't need to duplicate it.
   if(SC.socket?.connected) SC.socket.emit('watch_device',{device_id:id});
+  else if(sock?.connected) sock.emit('watch_device',{device_id:id});
   goTab('mon');
   document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
 }

