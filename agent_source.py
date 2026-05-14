@@ -426,12 +426,17 @@ def _to_monitor_absolute(x, y, monitor_idx: int | None = None):
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
     
     # If the input is in 0..1 range (normalized), scale it
+    # We check if both are in 0..1 range. If the dashboard sends pixels like 800, 600, 
+    # they won't trigger this block.
     if 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0 and mon["width"] > 1:
         rx = int(fx * (mon["width"] - 1))
         ry = int(fy * (mon["height"] - 1))
+        # log.debug(f"Mapped normalized ({fx:.3f}, {fy:.3f}) to monitor pixels ({rx}, {ry})")
     else:
+        # Fallback for pixel coordinates (if dashboard sends them)
         rx = max(0, min(int(fx), max(0, mon["width"] - 1)))
         ry = max(0, min(int(fy), max(0, mon["height"] - 1)))
+        # log.debug(f"Mapped pixel ({fx}, {fy}) to monitor pixels ({rx}, {ry})")
         
     return mon["left"] + rx, mon["top"] + ry
 
@@ -582,7 +587,8 @@ class AdaptiveFPS:
             self._idle = 0; self._cur = self.max_fps
         else:
             self._idle += 1
-            if self._idle > 90: self._cur = self.min_fps
+            if self._idle > 300: # Wait 5s before dropping to min_fps
+                self._cur = self.min_fps
 
     @property
     def fps(self): return self._cur

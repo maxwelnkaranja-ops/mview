@@ -2024,6 +2024,71 @@
       /* ═══════════════════════════════════════════════════════════════════
    LIVE VIEWER / REMOTE VIEW
    ═══════════════════════════════════════════════════════════════════ */
+      #vp {
+        flex: 1;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1000px; /* For 3D look */
+      }
+
+      /* Premium 3D Frame — Apple style */
+      .viewport-frame {
+        position: relative;
+        background: #050507;
+        border-radius: 14px;
+        padding: 6px;
+        box-shadow: 
+          0 20px 50px rgba(0,0,0,0.8),
+          0 10px 20px rgba(0,0,0,0.5),
+          inset 0 1px 1px rgba(255,255,255,0.1),
+          0 0 0 1px rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.03);
+        transition: transform 0.5s var(--ease-out);
+        transform-style: preserve-3d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .viewport-frame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 40%);
+        pointer-events: none;
+        z-index: 5;
+        border-radius: 14px;
+      }
+
+      /* Glass reflection on frame */
+      .viewport-glass {
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 50%;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
+        pointer-events: none;
+        z-index: 6;
+      }
+
+      #rc {
+        background: #000;
+        border-radius: 8px;
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      #co {
+        position: absolute;
+        pointer-events: none;
+        z-index: 10;
+      }
+
       .rv-layout {
         display: flex;
         flex-direction: column;
@@ -7790,8 +7855,11 @@ kbd { display:inline-flex; align-items:center; padding:1px 5px; border-radius:3p
       </div>
 
       <div id=&quot;vp&quot;>
-        <canvas id=&quot;rc&quot;></canvas>
-        <canvas id=&quot;co&quot;></canvas>
+        <div class=&quot;viewport-frame&quot; id=&quot;vframe&quot;>
+          <div class=&quot;viewport-glass&quot;></div>
+          <canvas id=&quot;rc&quot;></canvas>
+          <canvas id=&quot;co&quot;></canvas>
+        </div>
         <div id=&quot;no-dev&quot;>
           <div class=&quot;nd-ico&quot;><svg viewBox=&quot;0 0 24 24&quot;><rect x=&quot;2&quot; y=&quot;3&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;2&quot;/><path d=&quot;M8 21h8M12 17v4&quot;/></svg></div>
           <div class=&quot;nd-h&quot;>No Device Selected</div>
@@ -8080,7 +8148,7 @@ function updHUD(){
 // ─── Cursor ───────────────────────────────────────────────────────────────────
 function drawCursor(){
   cctx.clearRect(0,0,co.width,co.height);
-  const cx=oX+curX*sc,cy=oY+curY*sc;
+  const cx=curX*sc,cy=curY*sc;
   cctx.save();cctx.translate(cx,cy);
   cctx.shadowColor='rgba(0,0,0,.88)';cctx.shadowBlur=7;cctx.shadowOffsetX=1;cctx.shadowOffsetY=1;
   cctx.beginPath();cctx.moveTo(0,0);cctx.lineTo(0,17);cctx.lineTo(4,12);cctx.lineTo(8,19);cctx.lineTo(10,18);cctx.lineTo(6,11);cctx.lineTo(11,11);cctx.closePath();
@@ -8094,22 +8162,42 @@ function relayout(){
   if(!scrW||!scrH){
     if(rc.width===0)rc.width=vpW;if(rc.height===0)rc.height=vpH;
     co.width=vpW;co.height=vpH;
-    co.style.cssText=`position:absolute;top:0;left:0;width:${vpW}px;height:${vpH}px;pointer-events:none`;
     return;
   }
   const asp=scrW/scrH,vap=vpW/vpH;
-  let cw,ch;if(asp>vap){cw=vpW;ch=vpW/asp}else{ch=vpH;cw=vpH*asp}
-  oX=Math.round((vpW-cw)/2);oY=Math.round((vpH-ch)/2);sc=cw/scrW;
+  let cw,ch;if(asp>vap){cw=vpW-40;ch=cw/asp}else{ch=vpH-40;cw=ch*asp}
+  oX=0; oY=0; sc=cw/scrW;
   rc.width=Math.round(cw);rc.height=Math.round(ch);
-  // FIX: force canvases visible whenever we have real screen dimensions
-  rc.style.cssText=`position:absolute;top:${oY}px;left:${oX}px;width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible`;
-  co.width=vpW;co.height=vpH;
-  co.style.cssText=`position:absolute;top:0;left:0;width:${vpW}px;height:${vpH}px;pointer-events:none;display:block;visibility:visible`;
+  rc.style.cssText=`width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible`;
+  co.width=Math.round(cw);co.height=Math.round(ch);
+  co.style.cssText=`position:absolute;top:6px;left:6px;width:${cw}px;height:${ch}px;pointer-events:none;display:block;visibility:visible`;
+  
+  const vf = $('vframe');
+  if(vf) vf.style.cssText = `width:${cw+12}px;height:${ch+12}px;display:flex;`;
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 let _lm=0;
-rc.addEventListener('mousemove',e=>{if(performance.now()-_lm<8)return;_lm=performance.now();if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_move',x:rx,y:ry})});
+rc.addEventListener('mousemove',e=>{
+  if(performance.now()-_lm<8)return;
+  _lm=performance.now();
+  if(!mousOn||viewOnly||!agentUp)return;
+  
+  const{rx,ry}=toR(e);
+  emit('input_event',{type:'mouse_move',x:rx,y:ry});
+  
+  // 3D Tilt Effect
+  const vf = $('vframe');
+  if(vf){
+    const tx = (rx - 0.5) * 8; // Tilt up to 4 degrees
+    const ty = (ry - 0.5) * -8;
+    vf.style.transform = `rotateY(${tx}deg) rotateX(${ty}deg)`;
+  }
+});
+rc.addEventListener('mouseleave', () => {
+  const vf = $('vframe');
+  if(vf) vf.style.transform = `rotateY(0deg) rotateX(0deg)`;
+});
 rc.addEventListener('mousedown',e=>{if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_click',x:rx,y:ry,button:e.button===2?'right':'left',down:true})});
 rc.addEventListener('mouseup',e=>{if(!mousOn||viewOnly||!agentUp)return;const{rx,ry}=toR(e);emit('input_event',{type:'mouse_click',x:rx,y:ry,button:e.button===2?'right':'left',down:false})});
 rc.addEventListener('wheel',e=>{if(!mousOn||viewOnly||!agentUp)return;e.preventDefault();const{rx,ry}=toR(e);emit('input_event',{type:'mouse_scroll',x:rx,y:ry,delta:Math.round(-e.deltaY/25)})},{passive:false});
@@ -8356,7 +8444,14 @@ setInterval(async()=>{
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function $(id){return document.getElementById(id)}
-function toR(e){const r=rc.getBoundingClientRect();return{rx:Math.round((e.clientX-r.left)/(r.width/scrW)),ry:Math.round((e.clientY-r.top)/(r.height/scrH))}}
+function toR(e){
+  const r=rc.getBoundingClientRect();
+  // Send normalized coordinates (0.0 to 1.0) to avoid scaling issues
+  return {
+    rx: (e.clientX - r.left) / r.width,
+    ry: (e.clientY - r.top) / r.height
+  };
+}
 function toAB(data){
   if(data instanceof ArrayBuffer)return data;
   if(ArrayBuffer.isView(data))return data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength);
