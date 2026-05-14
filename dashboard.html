@@ -2046,48 +2046,58 @@
           0 10px 20px rgba(0,0,0,0.5),
           inset 0 1px 1px rgba(255,255,255,0.1),
           0 0 0 1px rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
         transition: transform 0.5s var(--ease-out);
         transform-style: preserve-3d;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: visible; /* Ensure shadows/reflections aren't clipped */
+        min-width: 100px;
+        min-height: 100px;
+      }
+
+      /* Container for canvases to keep them perfectly stacked */
+      .canvas-stack {
+        position: relative;
+        background: #000;
+        border-radius: 4px;
         overflow: hidden;
-      }
-
-      .viewport-frame::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 40%);
-        pointer-events: none;
-        z-index: 5;
-        border-radius: 14px;
-      }
-
-      /* Glass reflection on frame */
-      .viewport-glass {
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 50%;
-        background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
-        pointer-events: none;
-        z-index: 6;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #rc {
-        background: #000;
-        border-radius: 8px;
-        box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
         display: block;
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
       }
 
       #co {
         position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
         pointer-events: none;
-        z-index: 10;
+        z-index: 2; /* Ensure cursor is ALWAYS on top */
       }
+      
+      /* New: Connection Pulse Indicator */
+      .pulse-ring {
+        position: absolute;
+        top: 15px; right: 15px;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--em400);
+        box-shadow: 0 0 10px var(--em400);
+        z-index: 100;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .pulse-ring.active { opacity: 1; animation: pulse-anim 0.4s ease-out; }
+      @keyframes pulse-anim { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
 
       .rv-layout {
         display: flex;
@@ -7657,15 +7667,15 @@ kbd { display:inline-flex; align-items:center; padding:1px 5px; border-radius:3p
 </head>
 <body>
 
-<div id=&quot;mesh&quot; aria-hidden=&quot;true&quot;></div>
+<div id="mesh" aria-hidden="true"></div>
 
-<div id=&quot;app&quot;>
+<div id="app">
 
   <!-- ═══ TOPBAR ════════════════════════════════ -->
-  <header id=&quot;topbar&quot;>
-    <div class=&quot;logo-zone&quot;>
-      <div class=&quot;logo-mark&quot;>
-        <svg viewBox=&quot;0 0 16 16&quot;><path d=&quot;M1 1h6v6H1zM9 1h6v6H9zM1 9h6v6H1zM9 9h6v6H9z&quot;/></svg>
+  <header id="topbar">
+    <div class="logo-zone">
+      <div class="logo-mark">
+        <svg viewBox="0 0 16 16"><path d="M1 1h6v6H1zM9 1h6v6H9zM1 9h6v6H1zM9 9h6v6H9z"/></svg>
       </div>
       <div class=&quot;logo-copy&quot;>
         <div class=&quot;logo-name&quot;>RemoteOps</div>
@@ -7856,9 +7866,11 @@ kbd { display:inline-flex; align-items:center; padding:1px 5px; border-radius:3p
 
       <div id=&quot;vp&quot;>
         <div class=&quot;viewport-frame&quot; id=&quot;vframe&quot;>
-          <div class=&quot;viewport-glass&quot;></div>
-          <canvas id=&quot;rc&quot;></canvas>
-          <canvas id=&quot;co&quot;></canvas>
+          <div class=&quot;pulse-ring&quot; id=&quot;pulse&quot;></div>
+          <div class=&quot;canvas-stack&quot; id=&quot;cstack&quot;>
+            <canvas id=&quot;rc&quot;></canvas>
+            <canvas id=&quot;co&quot;></canvas>
+          </div>
         </div>
         <div id=&quot;no-dev&quot;>
           <div class=&quot;nd-ico&quot;><svg viewBox=&quot;0 0 24 24&quot;><rect x=&quot;2&quot; y=&quot;3&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;2&quot;/><path d=&quot;M8 21h8M12 17v4&quot;/></svg></div>
@@ -7982,6 +7994,11 @@ function boot(){
   sock.on('device_offline',d=>{if(d.device_id){const id=d.device_id;if(devices[id])devices[id].online=false;render()}});
   sock.on('frame_bin',async raw=>{
     if(watchId===null) return;
+    
+    // Data Pulse Effect — visible heartbeat when data arrives
+    const p = $('pulse');
+    if(p){ p.classList.remove('active'); void p.offsetWidth; p.classList.add('active'); }
+
     // FIXED: handle ArrayBuffer, Uint8Array, Array
     let buf;
     if(raw instanceof ArrayBuffer){buf=raw;}
@@ -7997,19 +8014,28 @@ function boot(){
     const ts_ms=Number((BigInt(tH)*4294967296n+BigInt(tL))/1000n);
     latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-ts_ms)));
     bIn+=buf.byteLength; fCount++;
+    
+    // Debug logging for frames
+    if (fCount % 60 === 0) console.log(`Frame arrived: ${w}x${h}, flags=${flags}, len=${buf.byteLength}, lat=${latMs}ms`);
+
     // FIX: relayout on every dim change AND on first frame (scrW===0) so canvas is sized+shown
-    if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH||scrW===0)){scrW=w;scrH=h;relayout();}
+    if(w>0 &amp;&amp; h>0 &amp;&amp; (w!==scrW || h!==scrH || scrW===0)){
+      console.log(`Resolution change: ${scrW}x${scrH} -> ${w}x${h}`);
+      scrW=w;scrH=h;relayout();
+    }
     // Show canvas immediately on first real frame
     if(rc.style.display==='none'||!rc.style.display){rc.style.display='block';rc.style.visibility='visible';}
     if(co.style.display==='none'||!co.style.display){co.style.display='block';co.style.visibility='visible';}
     document.getElementById('no-dev').classList.add('h');
     if(!agentUp){agentUp=true;}
     // FIX: browsers cannot decode H.264 via createImageBitmap('video/mp4'); only JPEG works
-    codec=(flags&amp;FH)?'H.264':'JPEG';
-    if(!(flags&amp;FH)) try{
+    codec=(flags & FH)?'H.264':'JPEG';
+    if(!(flags & FH)) try{
       const bmp=await createImageBitmap(new Blob([buf.slice(FHL)],{type:'image/jpeg'}));
       if(pendBmp) pendBmp.close(); pendBmp=bmp;
-    }catch(_){}
+    }catch(err){
+      if (fCount % 30 === 0) console.error("JPEG Decode Error:", err);
+    }
   });
   sock.on('cursor_bin',raw=>{const buf=toAB(raw);if(buf.byteLength<CHL)return;const dv=new DataView(buf);pendCur={x:dv.getInt32(0,false),y:dv.getInt32(4,false)}});
   sock.on('watch_ok',d=>{
@@ -8116,7 +8142,7 @@ function startRAF(){
       document.getElementById('no-dev').classList.add('h');
     }
     if(pendCur){curX=pendCur.x;curY=pendCur.y;pendCur=null}
-    if(showCursor&amp;&amp;agentUp&amp;&amp;scrW>0) drawCursor();
+    if(showCursor && agentUp && scrW>0) drawCursor();
     else cctx.clearRect(0,0,co.width,co.height);
     const now=performance.now();
     if(bridgeActive){
@@ -8161,21 +8187,26 @@ function relayout(){
   const r=vp.getBoundingClientRect();vpW=r.width||1280;vpH=r.height||720;
   
   const vf = $('vframe');
+  const cs = $('cstack');
   if(!scrW||!scrH){
     if(rc.width===0)rc.width=vpW;if(rc.height===0)rc.height=vpH;
     co.width=vpW;co.height=vpH;
-    if(vf) vf.style.cssText = `width:100%;height:100%;display:flex;justify-content:center;align-items:center;`;
+    if(vf) vf.style.cssText = &quot;width:100%;height:100%;display:flex;justify-content:center;align-items:center;&quot;;
+    if(cs) cs.style.cssText = &quot;width:100%;height:100%;&quot;;
     return;
   }
   const asp=scrW/scrH,vap=vpW/vpH;
   let cw,ch;if(asp>vap){cw=vpW-40;ch=cw/asp}else{ch=vpH-40;cw=ch*asp}
   oX=0; oY=0; sc=cw/scrW;
   rc.width=Math.round(cw);rc.height=Math.round(ch);
-  rc.style.cssText=`width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible`;
   co.width=Math.round(cw);co.height=Math.round(ch);
-  co.style.cssText=`position:absolute;top:6px;left:6px;width:${cw}px;height:${ch}px;pointer-events:none;display:block;visibility:visible`;
   
-  if(vf) vf.style.cssText = `width:${cw+12}px;height:${ch+12}px;display:flex;`;
+  // FIX: Force absolute positioning on canvases so they stack correctly
+  rc.style.cssText=&quot;position:absolute;top:0;left:0;width:100%;height:100%;cursor:none;display:block;visibility:visible;z-index:1;&quot;;
+  co.style.cssText=&quot;position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:block;visibility:visible;z-index:2;&quot;;
+  
+  if(cs) cs.style.cssText = `width:${Math.round(cw)}px;height:${Math.round(ch)}px;position:relative;display:block;`;
+  if(vf) vf.style.cssText = `width:${Math.round(cw+12)}px;height:${Math.round(ch+12)}px;display:flex;`;
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -8205,7 +8236,7 @@ rc.addEventListener('mouseup',e=>{if(!mousOn||viewOnly||!agentUp)return;const{rx
 rc.addEventListener('wheel',e=>{if(!mousOn||viewOnly||!agentUp)return;e.preventDefault();const{rx,ry}=toR(e);emit('input_event',{type:'mouse_scroll',x:rx,y:ry,delta:Math.round(-e.deltaY/25)})},{passive:false});
 rc.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('keydown',e=>{
-  if(e.key==='f'&amp;&amp;!e.ctrlKey&amp;&amp;!e.altKey&amp;&amp;!typing()&amp;&amp;tab==='mon'){toggleFS();return}
+  if(e.key==='f' && !e.ctrlKey && !e.altKey && !typing() && tab==='mon'){toggleFS();return}
   if(!kbdOn||viewOnly||!agentUp||typing())return;
   e.preventDefault();emit('input_event',{type:'key_event',key:mkey(e),down:true});
 });
@@ -8271,7 +8302,7 @@ function renderSB(list){
         <div class=&quot;sb-iname&quot;>${esc(d.name)}</div>
         <div class=&quot;sb-imeta&quot;>${esc(d.hostname||d.os||'No info yet')}</div>
       </div>
-      ${d.online&amp;&amp;d.screen_w?`<div class=&quot;sb-ibadge&quot;>${d.screen_h}p</div>`:''}
+      ${d.online &amp;&amp; d.screen_w?`<div class=&quot;sb-ibadge&quot;>${d.screen_h}p</div>`:''}
     </div>`).join('');
 }
 
