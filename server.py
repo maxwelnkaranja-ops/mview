@@ -1428,7 +1428,10 @@ if SOCKETIO_OK and sio:
             fc = len(_adv_gop_buf[did])
         if fc == 1:
             log.info(f"frame_bin: FIRST frame from agent {did} — ADV SOCKET streaming active!")
+        # Fan out to BOTH the advanced-monitor viewer room AND the main-socket view room
+        # so single-socket dashboards (no separate adv socket) receive frames too.
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
+        sio.emit("frame_bin", raw, room=f"view:{did}")
 
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data):
@@ -1474,7 +1477,9 @@ if SOCKETIO_OK and sio:
             return
         raw = bytes(data)
         _adv_cursor_latest[did] = raw
+        # Fan out to BOTH rooms — adv-monitor viewers and main-socket viewers
         sio.emit("cursor_bin", raw, room=f"adv_viewers_{did}")
+        sio.emit("cursor_bin", raw, room=f"view:{did}")
 
     @sio.on("agent_info")
     def on_agent_info_adv(data):

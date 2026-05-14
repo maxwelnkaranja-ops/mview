@@ -2160,6 +2160,30 @@ class ScreenConnectAgent:
             elif tab in ("mouse_event", "scroll_event", "frame_ack"):
                 pass  # handled by Advanced Monitor engine
 
+            # ── Mouse control via main-socket fallback ─────────────────────
+            elif tab == "mouse_move":
+                if PYAUTOGUI_OK:
+                    try:
+                        pyautogui.moveTo(int(data.get("x", 0)), int(data.get("y", 0)), _pause=False)
+                    except Exception as e:
+                        log.debug(f"mouse_move error: {e}")
+
+            elif tab == "mouse_click":
+                if PYAUTOGUI_OK:
+                    try:
+                        btn = "left" if data.get("button", "left") == "left" else "right"
+                        fn = pyautogui.mouseDown if data.get("down", True) else pyautogui.mouseUp
+                        fn(int(data.get("x", 0)), int(data.get("y", 0)), button=btn, _pause=False)
+                    except Exception as e:
+                        log.debug(f"mouse_click error: {e}")
+
+            elif tab == "scroll":
+                if PYAUTOGUI_OK:
+                    try:
+                        pyautogui.scroll(int(data.get("delta", 3)), x=int(data.get("x", 0)), y=int(data.get("y", 0)), _pause=False)
+                    except Exception as e:
+                        log.debug(f"scroll error: {e}")
+
             # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":
                 if PYAUTOGUI_OK:
