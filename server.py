@@ -1356,17 +1356,21 @@ if SOCKETIO_OK and sio:
     @sio.on("agent_auth")
     def on_agent_auth(data):
         """Second-site agent authenticates with its token.
-        FIXED: Retry up to 5 s waiting for the main socket agent_connect to
+        FIXED: Wait up to 10s for the main socket agent_connect to
         register the device first (race condition on fast reconnects).
         """
         token = data.get("token", "")
         did   = token  # token IS the device_id in the main site
         sid   = request.sid
 
-        # Wait up to 5 s for agent_connect to complete (race fix)
-        # Use gevent sleep (non-blocking) so we don't stall the event loop
+        if not token:
+            log.warning(f"agent_auth: received empty token from sid={sid}")
+            sio.emit("auth_error", {"msg": "Empty token"}, room=sid)
+            return
+
+        # Wait up to 10s for agent_connect to complete (race fix)
         dev = None
-        for _attempt in range(10):
+        for _attempt in range(20):
             with _dev_lock:
                 dev = _devices.get(did)
             if dev:
@@ -1378,13 +1382,14 @@ if SOCKETIO_OK and sio:
                 time.sleep(0.5)
 
         if not dev:
-            log.warning(f"agent_auth: device {did!r} not in _devices after 5s wait — rejecting")
+            log.warning(f"agent_auth: device {did!r} not in _devices after 10s wait — rejecting sid={sid}")
             sio.emit("auth_error", {"msg": "Device not registered — connect via main socket first"}, room=sid)
             return
 
         # Mark device as using advanced monitor
         _adv_agent_sids[did] = sid
         join_room(did)  # agent joins its own device room for viewer_count etc.
+        log.info(f"Advanced Monitor: agent {did} registered with sid={sid}")
 
         # Count viewers — check both _adv_viewer_rooms and _viewers for the device
         vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)

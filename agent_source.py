@@ -413,13 +413,32 @@ def _get_monitor_geometry(monitor_idx: int = 1):
 
 def _to_monitor_absolute(x, y, monitor_idx: int | None = None):
     """Map viewer-relative monitor coordinates to OS absolute desktop coordinates."""
+    try:
+        # Handle cases where x or y might be NaN or invalid from a black-screen dashboard
+        fx, fy = float(x), float(y)
+        # Use math.isinf/isnan if numpy isn't available
+        import math
+        if math.isinf(fx) or math.isnan(fx) or math.isinf(fy) or math.isnan(fy):
+            return 0, 0
+    except (ValueError, TypeError):
+        return 0, 0
+
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
-    rx = max(0, min(int(x), max(0, mon["width"] - 1)))
-    ry = max(0, min(int(y), max(0, mon["height"] - 1)))
+    
+    # If the input is in 0..1 range (normalized), scale it
+    if 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0 and mon["width"] > 1:
+        rx = int(fx * (mon["width"] - 1))
+        ry = int(fy * (mon["height"] - 1))
+    else:
+        rx = max(0, min(int(fx), max(0, mon["width"] - 1)))
+        ry = max(0, min(int(fy), max(0, mon["height"] - 1)))
+        
     return mon["left"] + rx, mon["top"] + ry
 
 def _cursor_relative_to_monitor(monitor_idx: int | None = None):
     """Return cursor position relative to the selected monitor, or None if outside it."""
+    if not PYAUTOGUI_OK:
+        return None
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
     try:
         x, y = pyautogui.position()
@@ -590,13 +609,23 @@ class MSSCapture:
     def __init__(self):
         import mss as _mss
         self._mss = _mss.mss()
-        self._mon = self._mss.monitors[CONFIG["STREAM_MONITOR"]]
-        log.info("Advanced Monitor Capture: mss CPU")
+        mon_idx = int(CONFIG.get("STREAM_MONITOR", 1))
+        # Ensure index is within bounds
+        idx = max(1, min(mon_idx, len(self._mss.monitors) - 1))
+        self._mon = self._mss.monitors[idx]
+        log.info(f"Advanced Monitor Capture: mss CPU monitor={idx}")
 
     def grab(self) -> Optional[np.ndarray]:
-        raw  = self._mss.grab(self._mon)
-        bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
-        return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
+        if not CV2_OK:
+            log.warning("MSSCapture: OpenCV (cv2) not available — capture disabled")
+            return None
+        try:
+            raw  = self._mss.grab(self._mon)
+            bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
+            return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
+        except Exception as e:
+            log.error(f"MSSCapture.grab error: {e}")
+            return None
 
     def close(self):
         try: self._mss.close()
@@ -616,15 +645,21 @@ class FrameDiffer:
         self._prev = None
 
     def changed(self, frame: np.ndarray) -> bool:
+        if not CV2_OK or frame is None:
+            return True # Always assume changed if we can't diff
         if self._prev is None:
             self._prev = frame.copy(); return True
-        # Downsample to 1/2 (not 1/4) for more accurate change detection
-        s = cv2.resize(frame,      (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
-        p = cv2.resize(self._prev, (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
-        # Lower threshold (4 vs 8) — catches cursor movement & subtle UI changes
-        diff = cv2.absdiff(s, p).max() > 4
-        if diff: self._prev = frame.copy()
-        return diff
+        try:
+            # Downsample to 1/2 (not 1/4) for more accurate change detection
+            s = cv2.resize(frame,      (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
+            p = cv2.resize(self._prev, (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
+            # Lower threshold (4 vs 8) — catches cursor movement & subtle UI changes
+            diff = cv2.absdiff(s, p).max() > 4
+            if diff: self._prev = frame.copy()
+            return diff
+        except Exception as e:
+            log.debug(f"FrameDiffer error: {e}")
+            return True
 
 
 # ── Encoders ─────────────────────────────────────────────────────────────
@@ -667,13 +702,21 @@ class JPEGEncoder:
         log.info(f"Advanced Monitor Encoder: JPEG quality={quality}")
 
     def encode_frame(self, bgr: np.ndarray, force_key=False):
-        ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
-        return (buf.tobytes() if ok else b""), True
+        if not CV2_OK:
+            return b"", False
+        try:
+            ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
+            return (buf.tobytes() if ok else b""), True
+        except Exception as e:
+            log.debug(f"JPEGEncoder error: {e}")
+            return b"", False
 
 
 def _make_encoder(w, h, fps, quality):
     # NOTE: Browsers cannot decode H.264 via createImageBitmap('video/mp4').
     # Always use JPEG for WebSocket relay. H.264 is only useful over WebRTC DataChannels.
+    if not CV2_OK:
+        log.error("Advanced Monitor: OpenCV (cv2) NOT FOUND — frame encoding will fail!")
     log.info("Advanced Monitor: using JPEG encoder for WebSocket relay (browser-compatible)")
     return JPEGEncoder(quality), FLAG_JPEG
 
@@ -705,19 +748,22 @@ def _current_stream_config():
 def _init_stream_pipeline():
     capture = None
     frame = None
-    for _att in range(10):
+    log.info("Advanced Monitor: initializing stream pipeline...")
+    # Retry indefinitely but log warnings
+    _att = 0
+    while True:
         try:
             capture = _make_capture()
             frame = capture.grab()
             if frame is not None:
                 break
-            log.warning(f"Advanced Monitor: grab None (attempt {_att+1})")
+            log.warning(f"Advanced Monitor: capture.grab() returned None (attempt {_att+1})")
         except Exception as _ce:
-            log.warning(f"Advanced Monitor: capture init error ({_ce})")
+            log.warning(f"Advanced Monitor: capture init error ({_ce}) (attempt {_att+1})")
             capture = None
-        time.sleep(2)
-    if capture is None or frame is None:
-        raise RuntimeError("capture failed after 10 attempts")
+        _att += 1
+        time.sleep(min(30, 2 + _att)) # Exponential backoff capped at 30s
+    
     h, w = frame.shape[:2]
     encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
     differ  = FrameDiffer()
@@ -878,6 +924,13 @@ async def _adv_main(server_url: str, token: str):
         # FIX Issue 1: Ask server to re-send viewer_count in case dashboard connected
         # before this adv socket finished auth (race condition).
         await sio.emit("agent_auth_ready", {"token": token})
+        # Also proactively request viewer count every 30s to stay in sync
+        async def _keep_sync():
+            while _adv_authed:
+                await asyncio.sleep(30)
+                if _adv_authed:
+                    await sio.emit("agent_auth_ready", {"token": token})
+        asyncio.create_task(_keep_sync())
 
     @sio.on("auth_error")
     async def on_auth_error(data):
@@ -896,8 +949,10 @@ async def _adv_main(server_url: str, token: str):
         _adv_viewers = data.get("count", 0)
         if prev == 0 and _adv_viewers > 0:
             log.info(f"Advanced Monitor: viewer connected (count={_adv_viewers}) — stream starting")
-        elif _adv_viewers == 0:
-            log.info("Advanced Monitor: no viewers — stream paused")
+        elif _adv_viewers == 0 and prev > 0:
+            log.info("Advanced Monitor: all viewers disconnected — stream paused")
+        elif _adv_viewers > 0:
+            log.debug(f"Advanced Monitor: viewer count update ({_adv_viewers})")
 
     @sio.on("input_event")
     async def on_input_event(data):
