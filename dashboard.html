@@ -2147,6 +2147,103 @@
         cursor: crosshair;
         display: none;
         object-fit: contain;
+        border-radius: 6px;
+      }
+
+      /* ── 3D Apple SaaS Stream Frame ── */
+      .stream-frame-3d {
+        position: relative;
+        border-radius: 16px;
+        padding: 3px;
+        background: linear-gradient(
+          145deg,
+          rgba(255,255,255,0.12) 0%,
+          rgba(0,212,170,0.18) 30%,
+          rgba(255,255,255,0.04) 60%,
+          rgba(0,212,170,0.08) 100%
+        );
+        box-shadow:
+          0 0 0 1px rgba(0,212,170,0.25),
+          0 2px 8px rgba(0,0,0,0.6),
+          0 8px 32px rgba(0,0,0,0.5),
+          0 24px 64px rgba(0,0,0,0.4),
+          inset 0 1px 0 rgba(255,255,255,0.15),
+          0 0 40px rgba(0,212,170,0.06),
+          0 0 80px rgba(0,212,170,0.03);
+        transform-style: preserve-3d;
+        transition: box-shadow 0.4s ease, transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .stream-frame-3d.streaming {
+        box-shadow:
+          0 0 0 1px rgba(0,212,170,0.5),
+          0 2px 8px rgba(0,0,0,0.6),
+          0 8px 32px rgba(0,0,0,0.5),
+          0 24px 64px rgba(0,0,0,0.4),
+          inset 0 1px 0 rgba(255,255,255,0.2),
+          0 0 40px rgba(0,212,170,0.15),
+          0 0 80px rgba(0,212,170,0.06);
+        animation: streamGlow 3s ease-in-out infinite;
+      }
+      @keyframes streamGlow {
+        0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,170,0.45), 0 8px 32px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18), 0 0 40px rgba(0,212,170,0.12); }
+        50%       { box-shadow: 0 0 0 1px rgba(0,212,170,0.65), 0 8px 32px rgba(0,0,0,0.5), 0 24px 64px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.22), 0 0 60px rgba(0,212,170,0.20); }
+      }
+      /* Glass highlight on frame top */
+      .stream-frame-3d::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 3px; right: 3px;
+        height: 40%;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.07), transparent);
+        border-radius: 14px 14px 0 0;
+        pointer-events: none;
+        z-index: 10;
+      }
+      /* Corner accent dots */
+      .stream-frame-3d::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        background:
+          radial-gradient(circle 3px at 8px 8px, rgba(0,212,170,0.6), transparent),
+          radial-gradient(circle 3px at calc(100% - 8px) 8px, rgba(0,212,170,0.6), transparent),
+          radial-gradient(circle 3px at 8px calc(100% - 8px), rgba(0,212,170,0.3), transparent),
+          radial-gradient(circle 3px at calc(100% - 8px) calc(100% - 8px), rgba(0,212,170,0.3), transparent);
+        pointer-events: none;
+        z-index: 10;
+      }
+      /* Live indicator badge inside frame */
+      .stream-live-badge {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 5px;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(0,212,170,0.3);
+        border-radius: 99px;
+        padding: 3px 10px 3px 7px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--c-brand);
+        z-index: 20;
+      }
+      .stream-live-badge .live-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--c-brand);
+        animation: blink 1.2s ease-in-out infinite;
+      }
+      .stream-frame-3d.streaming .stream-live-badge {
+        display: flex;
       }
       #rv-cursor-overlay {
         position: absolute;
@@ -5221,8 +5318,11 @@
 
               <div class="rv-body" id="rv-wrap">
                 <div class="rv-canvas-wrap">
-                  <canvas id="rv-canvas"></canvas>
-                  <canvas id="rv-cursor-overlay"></canvas>
+                  <div class="stream-frame-3d" id="stream-frame-3d">
+                    <div class="stream-live-badge"><span class="live-dot"></span>LIVE</div>
+                    <canvas id="rv-canvas"></canvas>
+                    <canvas id="rv-cursor-overlay"></canvas>
+                  </div>
                 </div>
                 <div class="rv-connecting" id="rv-connecting">
                   <div class="rv-spinner"></div>
@@ -7514,8 +7614,57 @@ html,body { height:100%; overflow:hidden; background:var(--black); color:var(--t
 
 /* Viewport */
 #vp { flex:1; position:relative; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center }
-#rc { display:block; position:absolute; cursor:none; image-rendering:auto }
+#rc { display:block; cursor:none; image-rendering:auto; border-radius:6px; }
 #co { position:absolute; top:0; left:0; pointer-events:none; z-index:5 }
+.viewport-frame {
+  position:relative;
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,0.10),rgba(100,80,255,0.12) 40%,rgba(255,255,255,0.04));
+  box-shadow:
+    0 0 0 1px rgba(139,92,246,0.40),
+    0 2px 8px rgba(0,0,0,0.7),
+    0 10px 40px rgba(0,0,0,0.6),
+    0 28px 72px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 0 50px rgba(139,92,246,0.08),
+    0 0 100px rgba(139,92,246,0.04);
+  padding:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  transition:box-shadow 0.5s ease;
+}
+.viewport-frame.live {
+  box-shadow:
+    0 0 0 1px rgba(139,92,246,0.65),
+    0 2px 8px rgba(0,0,0,0.7),
+    0 10px 40px rgba(0,0,0,0.6),
+    0 28px 72px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 0 60px rgba(139,92,246,0.18),
+    0 0 120px rgba(139,92,246,0.08);
+  animation:framePulse 3s ease-in-out infinite;
+}
+@keyframes framePulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(139,92,246,0.60),0 10px 40px rgba(0,0,0,0.6),0 0 60px rgba(139,92,246,0.15); }
+  50%      { box-shadow: 0 0 0 1px rgba(139,92,246,0.85),0 10px 40px rgba(0,0,0,0.6),0 0 90px rgba(139,92,246,0.26); }
+}
+.viewport-frame::before {
+  content:''; position:absolute; top:0; left:4px; right:4px; height:45%;
+  background:linear-gradient(to bottom,rgba(255,255,255,0.08),transparent);
+  border-radius:13px 13px 0 0; pointer-events:none; z-index:10;
+}
+.viewport-frame::after {
+  content:''; position:absolute; inset:0; border-radius:16px;
+  background:
+    radial-gradient(circle 4px at 10px 10px,rgba(139,92,246,0.7),transparent),
+    radial-gradient(circle 4px at calc(100% - 10px) 10px,rgba(139,92,246,0.7),transparent),
+    radial-gradient(circle 3px at 10px calc(100% - 10px),rgba(139,92,246,0.35),transparent),
+    radial-gradient(circle 3px at calc(100% - 10px) calc(100% - 10px),rgba(139,92,246,0.35),transparent);
+  pointer-events:none; z-index:10;
+}
+.viewport-glass { display:none; }
 
 #hud { position:absolute; top:11px; right:11px; display:flex; gap:5px; pointer-events:none; z-index:10 }
 .hchip {
@@ -7945,6 +8094,8 @@ window.addEventListener('load',()=>{
 function boot(){
   sock=io(SERVER_URL,{transports:['websocket'],reconnection:true,reconnectionDelay:2000,reconnectionDelayMax:8000});
   sock.on('connect',()=>{
+    // CRITICAL: Force binary delivery as ArrayBuffer, not Blob
+    try { if(sock.io?.engine) sock.io.engine.binaryType='arraybuffer'; } catch(_){}
     setRelay(1);log('ok','Connected to relay');
     sock.emit('viewer_hello',{token:AUTH_TOKEN}); // joins adv_dashboards, gets device_list
     sock.emit('join_dashboard',{});               // FIX: also join dashboards room for broadcasts
@@ -7982,11 +8133,12 @@ function boot(){
   sock.on('device_offline',d=>{if(d.device_id){const id=d.device_id;if(devices[id])devices[id].online=false;render()}});
   sock.on('frame_bin',async raw=>{
     if(watchId===null) return;
-    // FIXED: handle ArrayBuffer, Uint8Array, Array
+    // FIXED: handle ArrayBuffer, Uint8Array, Array, and Blob (default in some browsers)
     let buf;
     if(raw instanceof ArrayBuffer){buf=raw;}
     else if(raw&&raw.buffer instanceof ArrayBuffer){buf=raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength);}
     else if(Array.isArray(raw)){buf=new Uint8Array(raw).buffer;}
+    else if(raw instanceof Blob){buf=await raw.arrayBuffer();}
     else return;
     if(buf.byteLength<FHL) return;
     const dv=new DataView(buf);
@@ -8164,18 +8316,22 @@ function relayout(){
   if(!scrW||!scrH){
     if(rc.width===0)rc.width=vpW;if(rc.height===0)rc.height=vpH;
     co.width=vpW;co.height=vpH;
-    if(vf) vf.style.cssText = `width:100%;height:100%;display:flex;justify-content:center;align-items:center;`;
+    if(vf) { vf.style.width='1px'; vf.style.height='1px'; vf.style.display='flex'; vf.style.justifyContent='center'; vf.style.alignItems='center'; }
     return;
   }
   const asp=scrW/scrH,vap=vpW/vpH;
-  let cw,ch;if(asp>vap){cw=vpW-40;ch=cw/asp}else{ch=vpH-40;cw=ch*asp}
+  let cw,ch;if(asp>vap){cw=vpW-48;ch=cw/asp}else{ch=vpH-48;cw=ch*asp}
   oX=0; oY=0; sc=cw/scrW;
   rc.width=Math.round(cw);rc.height=Math.round(ch);
-  rc.style.cssText=`width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible`;
+  rc.style.cssText=`width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible;position:relative;z-index:1;`;
   co.width=Math.round(cw);co.height=Math.round(ch);
-  co.style.cssText=`position:absolute;top:6px;left:6px;width:${cw}px;height:${ch}px;pointer-events:none;display:block;visibility:visible`;
+  co.style.cssText=`position:absolute;top:4px;left:4px;width:${cw}px;height:${ch}px;pointer-events:none;display:block;visibility:visible;z-index:5;`;
   
-  if(vf) vf.style.cssText = `width:${cw+12}px;height:${ch+12}px;display:flex;`;
+  if(vf) {
+    vf.style.cssText = `width:${cw+12}px;height:${ch+12}px;display:flex;align-items:center;justify-content:center;`;
+    // Add live glow class once canvas is showing
+    if(agentUp) vf.classList.add('live');
+  }
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -8977,6 +9133,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         SC.socket.on("connect", () => {
           SC.srvOnline = true;
           SC._reconnTries = 0;
+          // CRITICAL FIX: Force binary frames delivered as ArrayBuffer, not Blob
+          // Socket.io websocket transport defaults to Blob in browsers — this breaks
+          // the frame_bin handler which expects ArrayBuffer/Uint8Array
+          try {
+            if (SC.socket.io?.engine) {
+              SC.socket.io.engine.binaryType = "arraybuffer";
+            }
+          } catch (_) {}
           updateBadges();
           hideBanner();
           showToast("Server connected", "success");
@@ -9077,7 +9241,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         });
         SC.socket.on("frame_bin", async (raw) => {
           if (!RV.active) return;
-          // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, or Buffer
+          // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
           let buf;
           if (raw instanceof ArrayBuffer) {
             buf = raw;
@@ -9089,6 +9253,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             );
           } else if (Array.isArray(raw)) {
             buf = new Uint8Array(raw).buffer;
+          } else if (raw instanceof Blob) {
+            // Blob fallback — occurs when binaryType is not set to 'arraybuffer'
+            buf = await raw.arrayBuffer();
           } else {
             return;
           }
@@ -9128,6 +9295,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             if (!canvas || !ctx) return;
             $("rv-empty").style.display = "none";
             canvas.style.display = "block";
+            // Activate the 3D streaming border glow
+            const sf3d = $("stream-frame-3d");
+            if (sf3d) sf3d.classList.add("streaming");
             const rc = $("rv-connecting");
             if (rc) rc.style.display = "none";
             const rio = $("rv-info-overlay");
@@ -9169,9 +9339,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             }
           } catch (_) {}
         });
-        SC.socket.on("cursor_bin", (raw) => {
+        SC.socket.on("cursor_bin", async (raw) => {
           if (!RV.active) return;
-          // FIXED: handle ArrayBuffer, Uint8Array, or Array
+          // FIXED: handle ArrayBuffer, Uint8Array, Array, or Blob
           let buf;
           if (raw instanceof ArrayBuffer) {
             buf = raw;
@@ -9182,6 +9352,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             );
           } else if (Array.isArray(raw)) {
             buf = new Uint8Array(raw).buffer;
+          } else if (raw instanceof Blob) {
+            buf = await raw.arrayBuffer();
           } else return;
           if (!buf || buf.byteLength < 8) return;
           const dv = new DataView(buf);
@@ -10738,6 +10910,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
           });
         }
         ADV_MONITOR_CURSOR.clicking = false;
+        const sf3d = $("stream-frame-3d");
+        if (sf3d) sf3d.classList.remove("streaming");
         $("rv-canvas").style.display = "none";
         const rc = $("rv-connecting");
         if (rc) rc.style.display = "none";
