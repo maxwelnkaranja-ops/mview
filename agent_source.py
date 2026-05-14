@@ -2059,9 +2059,20 @@ class ScreenConnectAgent:
             log.info(f"Action: {tab}")
 
             # ── Monitor/stream/mouse — handled by Advanced Monitor engine ──
-            # (frame_bin, cursor_bin, input_event are processed by _adv_main)
-            if tab in ("monitor", "mouse_event", "scroll_event", "frame_ack"):
-                pass  # no-op — Advanced Monitor engine handles these
+            if tab == "monitor":
+                action = data.get("action", "start")
+                if action == "start":
+                    # FIX: If viewer_count never arrived on the adv socket (race condition),
+                    # this request_action "start" on the main socket is our fallback trigger.
+                    # Bump _adv_viewers so the stream loop wakes up immediately.
+                    global _adv_viewers
+                    if _adv_viewers == 0:
+                        _adv_viewers = 1
+                        log.info("Monitor start via request_action — forced _adv_viewers=1 (adv socket race fallback)")
+                elif action == "stop":
+                    pass  # stream loop will pause when viewer_count goes to 0
+            elif tab in ("mouse_event", "scroll_event", "frame_ack"):
+                pass  # handled by Advanced Monitor engine
 
             # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":

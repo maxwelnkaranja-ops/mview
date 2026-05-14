@@ -5095,7 +5095,13 @@ window.addEventListener('load',()=>{boot();startRAF();new ResizeObserver(relayou
 // ─── Socket ──────────────────────────────────────────────────────────────────
 function boot(){
   sock=io(SERVER_URL,{transports:['websocket'],reconnection:true,reconnectionDelay:2000,reconnectionDelayMax:8000});
-  sock.on('connect',()=>{setRelay(1);log('ok','Connected to relay');sock.emit('viewer_hello',{token:AUTH_TOKEN})});
+  sock.on('connect',()=>{
+    setRelay(1);log('ok','Connected to relay');
+    sock.emit('viewer_hello',{token:AUTH_TOKEN}); // joins adv_dashboards, gets device_list
+    sock.emit('join_dashboard',{});               // FIX: also join dashboards room for broadcasts
+    // FIX: re-subscribe to active device if we reconnect mid-session
+    if(watchId) setTimeout(()=>{ if(sock.connected) sock.emit('watch_device',{device_id:watchId}); }, 500);
+  });
   sock.on('auth_ok',()=>log('ok','Session authenticated'));
   sock.on('auth_error',d=>{setRelay(0);log('err','Auth failed: '+(d.msg||'bad token'))});
   sock.on('device_list',list=>{devices={};list.forEach(d=>devices[d.id]=d);render();log('info',`Loaded ${list.length} device${list.length!==1?'s':''}`)});
@@ -5268,11 +5274,15 @@ function goTab(t){
 
 // ─── Watch ────────────────────────────────────────────────────────────────────
 function watch(id){
-  if(!sock?.connected)return;
+  if(!sock?.connected && !SC.socket?.connected) return;
   watchId=id;agentUp=false;scrW=0;scrH=0;pendBmp=null;pendCur=null;
   rctx.clearRect(0,0,rc.width,rc.height);cctx.clearRect(0,0,co.width,co.height);
   document.getElementById('no-dev').classList.remove('h');
-  sock.emit('watch_device',{device_id:id});
+  // FIX: emit watch_device on BOTH sockets so whichever one the server uses for fan-out
+  // the viewer is subscribed. sock handles the adv_viewers_{id} room join (frame_bin relay).
+  // SC.socket handles the RV panel and is also needed when SC.socket is the active transport.
+  if(sock?.connected) sock.emit('watch_device',{device_id:id});
+  if(SC.socket?.connected) SC.socket.emit('watch_device',{device_id:id});
   goTab('mon');
   document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
 }
@@ -5626,10 +5636,13 @@ const SC = {
   SB_URL: 'https://iacdzpcoftxxcoigopun.supabase.co',
   SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
   SERVER_URL: (() => {
+    // FIX: Reuse the top-level SERVER_URL which correctly handles srcdoc/iframe/parent cases.
+    // The old fallback `location.protocol//location.host` returns "about://" inside a srcdoc
+    // iframe, making SC.socket silently connect to the wrong (non-existent) server.
+    if (typeof SERVER_URL !== 'undefined' && SERVER_URL) return SERVER_URL;
     let url = window.SCREEN_CONNECT_SERVER_URL
       ? window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, '')
       : `${location.protocol}//${location.host}`;
-    // On HTTPS pages, force https — never allow mixed content
     if (location.protocol === 'https:') {
       url = url.replace(/^http:\/\//i, 'https://').replace(/^ws:\/\//i, 'wss://');
     }

@@ -1147,8 +1147,21 @@ if SOCKETIO_OK and sio:
 
             with _dev_lock:
                 dev = _devices.get(did)
+            # FIX: Don't reject if device not yet in _devices — it may be reconnecting.
+            # Join rooms anyway so frames arrive the moment the agent comes back online.
             if not dev:
-                sio.emit("watch_error", {"msg": "Device not found or offline"}, room=sid)
+                log.warning(f"on_watch_device: device {did!r} not in _devices — letting viewer wait")
+                _jr(f"adv_viewers_{did}")
+                _adv_viewer_rooms[sid] = did
+                join_room(f"view:{did}")
+                with _view_lock:
+                    _viewers[did].add(request.sid)
+                with _dash_lock:
+                    _dashboard_device[request.sid] = did
+                sio.emit("watch_ok", {
+                    "online": False, "device_id": did, "name": did,
+                    "screen_w": 0, "screen_h": 0,
+                }, room=sid)
                 return
 
             # ── Advanced Monitor: join binary-frame viewer room ──────────────
