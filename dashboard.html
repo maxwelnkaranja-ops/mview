@@ -5142,7 +5142,10 @@ function boot(){
     const ts_ms=Number((BigInt(tH)*4294967296n+BigInt(tL))/1000n);
     latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-ts_ms)));
     bIn+=buf.byteLength; fCount++;
-    if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH)){scrW=w;scrH=h;relayout()}
+    // FIX: relayout on every dim change AND on first frame (scrW===0) so canvas is sized+shown
+    if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH||scrW===0)){scrW=w;scrH=h;relayout();}
+    // FIX: mark agent as up the moment we receive a frame — watch_ok may have set online:false
+    if(!agentUp){agentUp=true;}
     // FIX: browsers cannot decode H.264 via createImageBitmap('video/mp4'); only JPEG works
     codec=(flags&amp;FH)?'H.264':'JPEG';
     if(!(flags&amp;FH)) try{
@@ -5151,7 +5154,14 @@ function boot(){
     }catch(_){}
   });
   sock.on('cursor_bin',raw=>{const buf=toAB(raw);if(buf.byteLength<CHL)return;const dv=new DataView(buf);pendCur={x:dv.getInt32(0,false),y:dv.getInt32(4,false)}});
-  sock.on('watch_ok',d=>{agentUp=d.online;if(d.screen_w){scrW=d.screen_w;scrH=d.screen_h;relayout()}document.getElementById('no-dev').classList.add('h');updWcard(d);log('ok','Monitoring: '+d.name+(d.screen_w?' '+d.screen_w+'×'+d.screen_h:''))});
+  sock.on('watch_ok',d=>{
+    agentUp=true; // FIX: always true on watch_ok — agent is online if server sent this
+    if(d.screen_w&&d.screen_h){scrW=d.screen_w;scrH=d.screen_h;}
+    relayout(); // FIX: always relayout so canvas is shown immediately
+    document.getElementById('no-dev').classList.add('h');
+    updWcard(d);
+    log('ok','Monitoring: '+d.name+(d.screen_w?' '+d.screen_w+'×'+d.screen_h:''));
+  });
   sock.on('watch_error',d=>{
     log('err','Watch error: '+d.msg);
     // Retry once after 3s — agent may still be registering on server
@@ -5172,7 +5182,13 @@ function boot(){
 function startRAF(){
   function loop(){
     rafH=requestAnimationFrame(loop);
-    if(pendBmp){rctx.drawImage(pendBmp,0,0,rc.width,rc.height);pendBmp.close();pendBmp=null;document.getElementById('no-dev').classList.add('h')}
+    if(pendBmp){
+      // FIX: unhide canvas on first frame arrival
+      if(rc.style.display==='none'||!rc.style.display){rc.style.display='';rc.style.visibility='visible';}
+      if(co.style.display==='none'||!co.style.display){co.style.display='';co.style.visibility='visible';}
+      rctx.drawImage(pendBmp,0,0,rc.width,rc.height);pendBmp.close();pendBmp=null;
+      document.getElementById('no-dev').classList.add('h');
+    }
     if(pendCur){curX=pendCur.x;curY=pendCur.y;pendCur=null}
     if(showCursor&amp;&amp;agentUp&amp;&amp;scrW>0) drawCursor();
     else cctx.clearRect(0,0,co.width,co.height);
@@ -5220,9 +5236,10 @@ function relayout(){
   let cw,ch;if(asp>vap){cw=vpW;ch=vpW/asp}else{ch=vpH;cw=vpH*asp}
   oX=Math.round((vpW-cw)/2);oY=Math.round((vpH-ch)/2);sc=cw/scrW;
   rc.width=Math.round(cw);rc.height=Math.round(ch);
-  rc.style.cssText=`position:absolute;top:${oY}px;left:${oX}px;width:${cw}px;height:${ch}px;cursor:none`;
+  // FIX: force canvases visible whenever we have real screen dimensions
+  rc.style.cssText=`position:absolute;top:${oY}px;left:${oX}px;width:${cw}px;height:${ch}px;cursor:none;display:block;visibility:visible`;
   co.width=vpW;co.height=vpH;
-  co.style.cssText=`position:absolute;top:0;left:0;width:${vpW}px;height:${vpH}px;pointer-events:none`;
+  co.style.cssText=`position:absolute;top:0;left:0;width:${vpW}px;height:${vpH}px;pointer-events:none;display:block;visibility:visible`;
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -5824,6 +5841,13 @@ function connectSocket() {
       if(rvPill) rvPill.className='pill online'; if(rvLbl) rvLbl.textContent='Live';
       if(w>0&&h>0){canvas.width=w;canvas.height=h;}
       ctx.drawImage(bmp,0,0,canvas.width,canvas.height); bmp.close();
+      // FIX: also feed the main monitor canvas (rc/rctx) via pendBmp so the Monitor tab shows live video
+      if(w>0&&h>0&&(w!==scrW||h!==scrH||scrW===0)){scrW=w;scrH=h;relayout();}
+      if(!agentUp){agentUp=true;}
+      try {
+        const bmp2=await createImageBitmap(new Blob([buf.slice(24)],{type:'image/jpeg'}));
+        if(pendBmp) pendBmp.close(); pendBmp=bmp2;
+      } catch(_){}
       RV.frameCount++;
       const now=Date.now();
       if(now-RV.lastFpsTime>=1000){RV.fps=RV.frameCount;RV.frameCount=0;RV.lastFpsTime=now;const fl=$('rv-fps-label');if(fl)fl.textContent=`${RV.fps} fps`;}
@@ -5840,6 +5864,8 @@ function connectSocket() {
     if(!buf||buf.byteLength<8) return;
     const dv=new DataView(buf);
     const cx=dv.getInt32(0,false), cy=dv.getInt32(4,false);
+    // FIX: update pendCur so the main monitor canvas RAF loop also tracks the cursor
+    pendCur = {x: cx, y: cy};
     drawCursorOverlay(cx,cy,false);
   });
   SC.socket.on('screen_data',    d => displayRemoteFrame(d));

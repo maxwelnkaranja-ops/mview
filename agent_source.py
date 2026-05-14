@@ -680,7 +680,8 @@ async def _adv_task_stream_frames():
             if not _adv_authed:
                 await asyncio.sleep(0.1); continue
             if _adv_viewers == 0:
-                await asyncio.sleep(0.2); continue
+                # FIX: sleep only 50ms so we respond quickly when viewer_count arrives
+                await asyncio.sleep(0.05); continue
 
             raw = capture.grab()
             if raw is None:
@@ -804,7 +805,12 @@ async def _adv_main(server_url: str, token: str):
     @sio.on("viewer_count")
     async def on_viewer_count(data):
         global _adv_viewers
+        prev = _adv_viewers
         _adv_viewers = data.get("count", 0)
+        if prev == 0 and _adv_viewers > 0:
+            log.info(f"Advanced Monitor: viewer connected (count={_adv_viewers}) — stream starting")
+        elif _adv_viewers == 0:
+            log.info("Advanced Monitor: no viewers — stream paused")
 
     @sio.on("input_event")
     async def on_input_event(data):

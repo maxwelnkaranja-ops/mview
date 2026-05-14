@@ -1200,6 +1200,18 @@ if SOCKETIO_OK and sio:
             log.info(f"Dashboard {request.sid} subscribed to {did} (viewers: {viewer_count})")
             emit("subscribed", {"device_id": did, "viewers": viewer_count})
 
+            # FIX: Re-send viewer_count to agent NOW (after both viewer rooms are joined)
+            # so _adv_viewers > 0 and the stream loop starts immediately.
+            adv_vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+            with _view_lock:
+                adv_vcount = max(adv_vcount, len(_viewers.get(did, set())))
+            agent_adv_sid = _adv_agent_sids.get(did)
+            if agent_adv_sid:
+                sio.emit("viewer_count", {"count": adv_vcount}, room=agent_adv_sid)
+                log.info(f"Re-sent viewer_count={adv_vcount} to agent {did} after viewer join")
+            # Also broadcast to the device room (covers main-socket agents)
+            sio.emit("viewer_count", {"count": adv_vcount}, room=did)
+
             # Tell agent to START streaming (use the dev we already fetched — no re-fetch)
             fps     = data.get("fps", 15)
             quality = data.get("quality", 55)
