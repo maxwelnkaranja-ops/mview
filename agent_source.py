@@ -396,6 +396,40 @@ def _get_monitor_resolution(monitor_idx: int = 1):
     except Exception:
         return 1920, 1080
 
+def _get_monitor_geometry(monitor_idx: int = 1):
+    """Return the selected monitor's virtual desktop bounds."""
+    try:
+        with mss.mss() as sct:
+            idx = max(1, min(int(monitor_idx or 1), len(sct.monitors) - 1))
+            mon = sct.monitors[idx]
+            return {
+                "left": int(mon.get("left", 0)),
+                "top": int(mon.get("top", 0)),
+                "width": int(mon.get("width", 1920)),
+                "height": int(mon.get("height", 1080)),
+            }
+    except Exception:
+        return {"left": 0, "top": 0, "width": 1920, "height": 1080}
+
+def _to_monitor_absolute(x, y, monitor_idx: int | None = None):
+    """Map viewer-relative monitor coordinates to OS absolute desktop coordinates."""
+    mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
+    rx = max(0, min(int(x), max(0, mon["width"] - 1)))
+    ry = max(0, min(int(y), max(0, mon["height"] - 1)))
+    return mon["left"] + rx, mon["top"] + ry
+
+def _cursor_relative_to_monitor(monitor_idx: int | None = None):
+    """Return cursor position relative to the selected monitor, or None if outside it."""
+    mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
+    try:
+        x, y = pyautogui.position()
+    except Exception:
+        return None
+    rx, ry = int(x) - mon["left"], int(y) - mon["top"]
+    if rx < 0 or ry < 0 or rx >= mon["width"] or ry >= mon["height"]:
+        return None
+    return rx, ry
+
 
 # ════════════════════════════════════════════════════════════════════════════
 #  PERSISTENCE MODULE
@@ -539,9 +573,10 @@ class AdaptiveFPS:
 class DXGICapture:
     def __init__(self, fps):
         import dxcam as _dxcam
-        self._cam = _dxcam.create(output_color="BGR")
+        output_idx = max(0, int(CONFIG.get("STREAM_MONITOR", 1)) - 1)
+        self._cam = _dxcam.create(output_idx=output_idx, output_color="BGR")
         self._cam.start(target_fps=fps, video_mode=True)
-        log.info(f"Advanced Monitor Capture: DXGI GPU @ {fps} fps")
+        log.info(f"Advanced Monitor Capture: DXGI GPU monitor={output_idx+1} @ {fps} fps")
 
     def grab(self) -> Optional[np.ndarray]:
         return self._cam.get_latest_frame()
@@ -653,34 +688,56 @@ _adv_last_frame_pkt:  Optional[bytes] = None
 _adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
 _adv_viewers    = 0
 _adv_authed     = False
+_adv_last_frame_ts = 0.0
 _adv_loop: Optional[asyncio.AbstractEventLoop] = None
 _adv_thread: Optional[threading.Thread] = None
 _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
 
 
-async def _adv_task_stream_frames():
-    """Second-site frame streaming loop — continuous, no ACK gate."""
-    global _adv_last_frame_pkt
-    capture = None; frame = None
+def _current_stream_config():
+    return (
+        int(CONFIG.get("STREAM_MONITOR", 1)),
+        int(CONFIG.get("STREAM_FPS", 15)),
+        int(CONFIG.get("STREAM_QUALITY", 75)),
+        str(CONFIG.get("STREAM_MODE", "video")),
+    )
+
+def _init_stream_pipeline():
+    capture = None
+    frame = None
     for _att in range(10):
         try:
-            capture = _make_capture(); frame = capture.grab()
-            if frame is not None: break
+            capture = _make_capture()
+            frame = capture.grab()
+            if frame is not None:
+                break
             log.warning(f"Advanced Monitor: grab None (attempt {_att+1})")
         except Exception as _ce:
             log.warning(f"Advanced Monitor: capture init error ({_ce})")
             capture = None
-        await asyncio.sleep(2)
+        time.sleep(2)
     if capture is None or frame is None:
-        log.error("Advanced Monitor: capture failed after 10 attempts — exiting"); return
-
+        raise RuntimeError("capture failed after 10 attempts")
     h, w = frame.shape[:2]
     encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
     differ  = FrameDiffer()
     fps_ctl = AdaptiveFPS(CONFIG["STREAM_FPS"], CONFIG["STREAM_MIN_FPS"])
+    log.info(
+        f"Advanced Monitor streaming {w}x{h} monitor={CONFIG['STREAM_MONITOR']} @ up to {CONFIG['STREAM_FPS']} fps"
+    )
+    return capture, frame, encoder, enc_flag, differ, fps_ctl
+
+async def _adv_task_stream_frames():
+    """Second-site frame streaming loop — continuous, no ACK gate."""
+    global _adv_last_frame_pkt, _adv_last_frame_ts
+    try:
+        capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
+    except Exception:
+        log.error("Advanced Monitor: capture failed after 10 attempts — exiting")
+        return
     loop    = asyncio.get_event_loop()
     n = 0
-    log.info(f"Advanced Monitor streaming {w}×{h} @ up to {CONFIG['STREAM_FPS']} fps")
+    cfg_sig = _current_stream_config()
 
     try:
         while True:
@@ -691,7 +748,23 @@ async def _adv_task_stream_frames():
                 # FIX: sleep only 50ms so we respond quickly when viewer_count arrives
                 await asyncio.sleep(0.05); continue
 
-            raw = capture.grab()
+            next_sig = _current_stream_config()
+            if next_sig != cfg_sig:
+                try:
+                    capture.close()
+                except Exception:
+                    pass
+                try:
+                    capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
+                    cfg_sig = next_sig
+                    n = 0
+                except Exception as e:
+                    log.warning(f"Advanced Monitor reconfigure failed: {e}")
+                    await asyncio.sleep(1)
+                    continue
+
+            raw = frame if frame is not None else capture.grab()
+            frame = None
             if raw is None:
                 await asyncio.sleep(fps_ctl.interval); continue
 
@@ -712,6 +785,7 @@ async def _adv_task_stream_frames():
             header = FRAME_HDR.pack(w, h, ts_us, flags, len(payload))
             pkt    = header + payload
             _adv_last_frame_pkt = pkt
+            _adv_last_frame_ts = time.monotonic()
 
             await _adv_sio_async.emit("frame_bin", pkt)
 
@@ -738,7 +812,12 @@ async def _adv_task_stream_cursor():
     while True:
         if _adv_authed and _adv_viewers > 0:
             try:
-                x, y = pyautogui.position()
+                pos = _cursor_relative_to_monitor()
+                if pos is None:
+                    lx = ly = -1
+                    await asyncio.sleep(interval)
+                    continue
+                x, y = pos
                 if x != lx or y != ly:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
@@ -825,19 +904,25 @@ async def _adv_main(server_url: str, token: str):
         """Second-site input event handler — absolute pixel coords, PAUSE=0."""
         evt = data.get("type")
         try:
+            mx, my = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
             if   evt == "mouse_move":
-                pyautogui.moveTo(data["x"], data["y"])
-            elif evt == "mouse_click":
+                pyautogui.moveTo(mx, my, _pause=False)
+            elif evt in ("mouse_click", "mouse_dblclick"):
                 btn = "left" if data.get("button") == "left" else "right"
-                fn  = pyautogui.mouseDown if data.get("down") else pyautogui.mouseUp
-                fn(data["x"], data["y"], button=btn)
+                if evt == "mouse_dblclick":
+                    pyautogui.doubleClick(mx, my, button=btn, _pause=False)
+                elif "down" not in data:
+                    pyautogui.click(mx, my, button=btn, _pause=False)
+                else:
+                    fn = pyautogui.mouseDown if data.get("down") else pyautogui.mouseUp
+                    fn(mx, my, button=btn, _pause=False)
             elif evt == "mouse_scroll":
-                pyautogui.scroll(int(data.get("delta", 3)), x=data["x"], y=data["y"])
+                pyautogui.scroll(int(data.get("delta", 3)), x=mx, y=my, _pause=False)
             elif evt == "key_event":
                 fn = pyautogui.keyDown if data.get("down") else pyautogui.keyUp
-                fn(data.get("key", ""))
+                fn(data.get("key", ""), _pause=False)
             elif evt == "type_text":
-                pyautogui.typewrite(data.get("text", ""), interval=0.005)
+                pyautogui.typewrite(data.get("text", ""), interval=0.005, _pause=False)
         except Exception as e:
             log.debug(f"Advanced Monitor input error: {e}")
 
@@ -940,24 +1025,33 @@ def _start_screenshot_fallback(sio_client):
         import struct as _struct
         FLAG_JPEG = 0x02
         FRAME_HDR = _struct.Struct(">IIQII")
-        fps = CONFIG.get("STREAM_FPS", 15)
-        quality = CONFIG.get("STREAM_QUALITY", 70)
-        interval = 1.0 / max(1, min(fps, 15))  # cap at 15fps for main socket
+        fps = quality = None
+        interval = 1.0 / 15
         cap = None
-        try:
-            cap = _make_capture()
-        except Exception as e:
-            log.warning(f"Screenshot fallback: capture init failed: {e}")
-            return
+        cfg_sig = None
         n = 0
         while not _fb_stop.is_set():
             try:
                 # Stop if adv socket is now working
-                if _adv_authed and _adv_sio_async and _adv_sio_async.connected:
+                if (
+                    _adv_authed and _adv_sio_async and _adv_sio_async.connected
+                    and (time.monotonic() - _adv_last_frame_ts) < 2.0
+                ):
                     log.info("Screenshot fallback: adv socket now active — stopping fallback")
                     break
                 if _adv_viewers == 0:
                     time.sleep(0.1); continue
+                next_sig = _current_stream_config()
+                if next_sig != cfg_sig or cap is None:
+                    if cap:
+                        try: cap.close()
+                        except Exception: pass
+                    fps = next_sig[1]
+                    quality = next_sig[2]
+                    interval = 1.0 / max(1, min(fps, 15))  # cap at 15fps for main socket
+                    cap = _make_capture()
+                    cfg_sig = next_sig
+                    log.info(f"Screenshot fallback: reconfigured monitor={next_sig[0]} fps={fps} quality={quality}")
                 frame = cap.grab()
                 if frame is None:
                     time.sleep(interval); continue
@@ -972,9 +1066,10 @@ def _start_screenshot_fallback(sio_client):
                 if sio_client and sio_client.connected:
                     sio_client.emit("screenshot_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame":     base64.b64encode(pkt).decode(),
+                        "frame":     base64.b64encode(payload).decode(),
+                        "image":     base64.b64encode(payload).decode(),
                         "w": w, "h": h,
-                        "_raw_bin":  True,
+                        "_raw_bin":  False,
                     })
                     # Also emit frame_bin_relay (binary fallback for adv viewers)
                     sio_client.emit("frame_bin_relay", {
@@ -2146,6 +2241,12 @@ class ScreenConnectAgent:
             # ── Monitor/stream/mouse — handled by Advanced Monitor engine ──
             if tab == "monitor":
                 action = data.get("action", "start")
+                if data.get("fps") is not None:
+                    CONFIG["STREAM_FPS"] = max(1, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))
+                if data.get("quality") is not None:
+                    CONFIG["STREAM_QUALITY"] = max(25, min(int(data.get("quality", CONFIG["STREAM_QUALITY"])), 95))
+                if data.get("monitor") is not None:
+                    CONFIG["STREAM_MONITOR"] = max(1, int(data.get("monitor", CONFIG["STREAM_MONITOR"])))
                 if action == "start":
                     # FIX: If viewer_count never arrived on the adv socket (race condition),
                     # bump _adv_viewers so the stream loop wakes up immediately.
@@ -2154,6 +2255,11 @@ class ScreenConnectAgent:
                         _adv_viewers = 1
                         log.info("Monitor start via request_action — forced _adv_viewers=1 (adv socket race fallback)")
                     # Always start screenshot fallback — no-op if adv socket is working
+                    _start_screenshot_fallback(sio)
+                elif action == "set_mode":
+                    CONFIG["STREAM_MODE"] = data.get("mode", CONFIG["STREAM_MODE"])
+                    _start_screenshot_fallback(sio)
+                elif action == "set_quality":
                     _start_screenshot_fallback(sio)
                 elif action == "stop":
                     _fb_stop.set()
@@ -2164,25 +2270,41 @@ class ScreenConnectAgent:
             elif tab == "mouse_move":
                 if PYAUTOGUI_OK:
                     try:
-                        pyautogui.moveTo(int(data.get("x", 0)), int(data.get("y", 0)), _pause=False)
+                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
+                        pyautogui.moveTo(x, y, _pause=False)
                     except Exception as e:
                         log.debug(f"mouse_move error: {e}")
 
             elif tab == "mouse_click":
                 if PYAUTOGUI_OK:
                     try:
+                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
                         btn = "left" if data.get("button", "left") == "left" else "right"
-                        fn = pyautogui.mouseDown if data.get("down", True) else pyautogui.mouseUp
-                        fn(int(data.get("x", 0)), int(data.get("y", 0)), button=btn, _pause=False)
+                        evt_type = data.get("type", "")
+                        if evt_type == "mouse_dblclick":
+                            pyautogui.doubleClick(x, y, button=btn, _pause=False)
+                        elif "down" in data:
+                            fn = pyautogui.mouseDown if data.get("down", True) else pyautogui.mouseUp
+                            fn(x, y, button=btn, _pause=False)
+                        else:
+                            pyautogui.click(x, y, button=btn, _pause=False)
                     except Exception as e:
                         log.debug(f"mouse_click error: {e}")
 
             elif tab == "scroll":
                 if PYAUTOGUI_OK:
                     try:
-                        pyautogui.scroll(int(data.get("delta", 3)), x=int(data.get("x", 0)), y=int(data.get("y", 0)), _pause=False)
+                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
+                        pyautogui.scroll(int(data.get("delta", 3)), x=x, y=y, _pause=False)
                     except Exception as e:
                         log.debug(f"scroll error: {e}")
+
+            elif tab == "type_text":
+                if PYAUTOGUI_OK:
+                    try:
+                        pyautogui.write(data.get("text", ""), interval=0.01, _pause=False)
+                    except Exception as e:
+                        log.debug(f"type_text error: {e}")
 
             # ── Keyboard ───────────────────────────────────────────────────
             elif tab == "key_event":

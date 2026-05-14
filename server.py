@@ -1140,10 +1140,21 @@ if SOCKETIO_OK and sio:
             from flask_socketio import join_room as _jr
             did = data.get("device_id", "")
             sid = request.sid
+            old_adv_did = _adv_viewer_rooms.get(sid)
 
             if not did:
                 sio.emit("watch_error", {"msg": "No device_id provided"}, room=sid)
                 return
+
+            if old_adv_did and old_adv_did != did:
+                leave_room(f"adv_viewers_{old_adv_did}")
+                _adv_viewer_rooms.pop(sid, None)
+                old_agent_sid = _adv_agent_sids.get(old_adv_did)
+                old_vcount = sum(1 for v in _adv_viewer_rooms.values() if v == old_adv_did)
+                if old_agent_sid:
+                    sio.emit("viewer_count", {"count": old_vcount}, room=old_agent_sid)
+                sio.emit("viewer_count", {"count": old_vcount}, room=old_adv_did)
+                log.info(f"Advanced Monitor: viewer {sid} left device {old_adv_did}")
 
             with _dev_lock:
                 dev = _devices.get(did)
@@ -1535,6 +1546,8 @@ if SOCKETIO_OK and sio:
                     sio.emit("request_action", {"tab": "scroll", **data}, room=did)
                 elif evt == "key_event":
                     sio.emit("request_action", {"tab": "key_event", **data}, room=did)
+                elif evt == "type_text":
+                    sio.emit("request_action", {"tab": "type_text", **data}, room=did)
 
     # ── WebRTC signaling relay ────────────────────────────────────────────────
     @sio.on("webrtc_offer")
