@@ -789,12 +789,7 @@ async def _adv_task_stream_frames():
         return
     
     # Extract dimensions for the header — CRITICAL FIX: w/h must be defined
-    try:
-        h, w = frame.shape[:2]
-        log.info(f"Advanced Monitor: streaming started at {w}x{h}")
-    except Exception as e:
-        log.error(f"Advanced Monitor: failed to get frame dimensions: {e}")
-        return
+    h, w = frame.shape[:2]
     
     loop    = asyncio.get_event_loop()
     n = 0
@@ -831,14 +826,11 @@ async def _adv_task_stream_frames():
 
             changed = differ.changed(raw)
             fps_ctl.report(changed)
-            
-            # Force keyframe every few seconds regardless of changes
-            force_key = (n % (int(CONFIG["STREAM_FPS"]) * 4) == 0)
-            
-            # If nothing changed and we aren't forcing a keyframe, skip encoding
-            if not changed and not force_key and n > 0:
+            if not changed and n > 0:
                 await asyncio.sleep(fps_ctl.interval); continue
 
+            force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
+            
             try:
                 payload, is_key = await loop.run_in_executor(
                     _adv_pool, lambda f=raw, k=force_key: encoder.encode_frame(f, k)
