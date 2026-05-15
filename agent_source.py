@@ -831,8 +831,14 @@ async def _adv_task_stream_frames():
             t0 = time.monotonic()
             if not _adv_authed:
                 await asyncio.sleep(0.1); continue
+            # FIX: If adv socket is authed but viewer_count never arrived (race condition),
+            # fall back to checking if the screenshot fallback is active (means a viewer exists)
             if _adv_viewers == 0:
-                await asyncio.sleep(0.05); continue
+                # Check if main socket has viewers via fallback thread
+                if not (_fb_thread and _fb_thread.is_alive()):
+                    await asyncio.sleep(0.05); continue
+                # Fallback running = viewer exists — stream anyway
+                pass
 
             next_sig = _current_stream_config()
             if next_sig != cfg_sig:
@@ -976,7 +982,7 @@ async def _adv_main(server_url: str, token: str):
         # Also proactively request viewer count every 30s to stay in sync
         async def _keep_sync():
             while _adv_authed:
-                await asyncio.sleep(30)
+                await asyncio.sleep(10)  # FIX: check every 10s (was 30s) to recover faster from viewer_count race
                 if _adv_authed:
                     await sio.emit("agent_auth_ready", {"token": token})
         asyncio.create_task(_keep_sync())
@@ -1206,9 +1212,11 @@ def _start_screenshot_fallback(sio_client):
                         "_raw_bin":  False,
                     })
                     # Also emit frame_bin_relay (binary fallback for adv viewers)
+                    # FIX: Send as base64 string instead of list of ints (much faster)
                     sio_client.emit("frame_bin_relay", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "data": list(pkt),
+                        "data": list(pkt),  # kept for server compat
+                        "b64": base64.b64encode(pkt).decode(),
                     })
                 n += 1
                 time.sleep(interval)

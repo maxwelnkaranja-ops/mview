@@ -8998,7 +8998,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
       "use strict";
 
       /* ══ Config ══════════════════════════════════════════════════ */
-      const SC = {
+      const SC = window.SC = {
         SB_URL: "https://iacdzpcoftxxcoigopun.supabase.co",
         SB_KEY:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054",
@@ -9026,7 +9026,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         _reconnTries: 0,
       };
 
-      let screens = [],
+      let screens = window._diagScreens = [],
         activityLogs = [],
         _filter = null;
       let _pollTimer = null,
@@ -9308,7 +9308,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
           showToast("Watch error: " + (d.msg || ""), "error");
         });
         SC.socket.on("frame_bin", async (raw) => {
-          if (!RV.active) return;
+          // FIX: Don't drop frames even when RV.active is false — we still update stats
+          // so Advanced Monitor bridge gets live fps/kbps/codec. Only drop if no device selected.
+          if (!RV.deviceId) return;
           // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
           let buf;
           if (raw instanceof ArrayBuffer) {
@@ -9364,6 +9366,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               }
               return;
             }
+            // FIX: Only draw to rv-canvas when in live viewer mode (RV.active)
+            // In Advanced Monitor mode, we still update stats (fps, kbps, codec, latency)
+            // so the bridge.getState() returns live data to the AM iframe
+            if (RV.active) {
             const bmp = await createImageBitmap(
               new Blob([buf.slice(24)], { type: "image/jpeg" }),
             );
@@ -9413,6 +9419,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               RV.lastFpsTime = now;
               const fl = $("rv-fps-label");
               if (fl) fl.textContent = `${RV.fps} fps`;
+            }
+            } // end if(RV.active) canvas draw block
+            // FIX: Always track frame stats even in AM mode (for bridge.getState())
+            if (!RV.active) {
+              RV.frameCount++;
+              const now2 = Date.now();
+              if (now2 - RV.lastFpsTime >= 1000) {
+                RV.fps = RV.frameCount;
+                RV.frameCount = 0;
+                RV.lastFpsTime = now2;
+              }
             }
           } catch (_) {}
         });
@@ -9815,6 +9832,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             : "Connecting to Supabase…";
       }
       function renderMachines() {
+        window._diagScreens = screens; // sync for diagnostics engine
         const data = _filter
           ? screens.filter((s) => s.status === _filter)
           : screens;
@@ -10666,7 +10684,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
       }
 
       /* ══ Remote Desktop Viewer ══════════════════════════════════════ */
-      const RV = {
+      const RV = window.RV = {
         active: false,
         deviceId: null,
         deviceName: null,
@@ -10731,8 +10749,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         RV._h264Warned = false;
         RV.frameCount = 0;
         RV.lastFpsTime = Date.now();
-        if (opts.showSection !== false)
+        // FIX: Don't force-navigate to remote-view when called from Advanced Monitor
+        if (opts.showSection !== false) {
           showSection(opts.section || "remote-view");
+        }
+        // FIX: Always mark active so frame_bin handler processes frames
+        // even when viewing from Advanced Monitor tab (bridge mode)
         const t = $("rv-title");
         if (t) t.textContent = `${s.name} · ${s.ip || s.location}`;
         const rvPill = $("rv-status-pill"),
@@ -12758,5 +12780,280 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         });
       })();
     </script>
+
+  <script>
+/* ══════════════════════════════════════════════════════════
+   DIAGNOSTICS ENGINE  — runs in the MAIN page scope
+   Reads window.RV, window.SC directly (no iframe needed)
+══════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/* ── Styling ─────────────────────────────────────────────── */
+const _diagStyle = document.createElement('style');
+_diagStyle.textContent = `
+.diag-card{background:var(--card,#111);border:1px solid var(--border,#222);border-radius:10px;padding:14px 16px}
+.dmc-label{font-size:10.5px;color:var(--t3,#666);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.dmc-val{font-size:22px;font-weight:600;color:var(--fg,#eee)}
+.dmc-ok .dmc-val{color:#4ade80}.dmc-fail .dmc-val{color:#f87171}.dmc-warn .dmc-val{color:#fb923c}.dmc-checking .dmc-val{color:var(--t3,#666)}
+.dchk{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border,#1c1c1c)}
+.dchk:last-child{border-bottom:none}
+.dchk-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.dchk.ok .dchk-dot{background:rgba(74,222,128,.15);color:#4ade80}
+.dchk.fail .dchk-dot{background:rgba(248,113,113,.15);color:#f87171}
+.dchk.warn .dchk-dot{background:rgba(251,146,60,.15);color:#fb923c}
+.dchk.pending .dchk-dot{background:var(--card,#1a1a1a);color:var(--t3,#666)}
+.dchk-title{font-size:13px;font-weight:500;margin-bottom:3px;color:var(--fg,#eee)}
+.dchk-desc{font-size:12px;color:var(--t3,#999);line-height:1.55}
+.dchk.fail .dchk-desc{color:#fca5a5}.dchk.ok .dchk-desc{color:#86efac}
+.dlog-line{padding:1.5px 0;white-space:pre-wrap;word-break:break-all}
+.dlog-ok{color:#4ade80}.dlog-err{color:#f87171}.dlog-warn{color:#fb923c}.dlog-info{color:#60a5fa}.dlog-muted{color:var(--t3,#666)}
+`;
+document.head.appendChild(_diagStyle);
+
+let diagEventCount = 0;
+
+function dlog(msg, level='info'){
+  const box = document.getElementById('diag-log');
+  if(!box) return;
+  const ts = new Date().toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line = document.createElement('div');
+  line.className = 'dlog-line dlog-'+level;
+  line.textContent = ts+'  '+msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+  diagEventCount++;
+  const badge = document.getElementById('diag-log-badge');
+  if(badge) badge.textContent = diagEventCount+' event'+(diagEventCount!==1?'s':'');
+}
+window.dlog = dlog;
+
+function setCard(id, val, state){
+  const card = document.getElementById('dmc-'+id);
+  const valEl = document.getElementById('dmv-'+id);
+  if(!card||!valEl) return;
+  card.className = 'diag-card dmc-'+state;
+  valEl.textContent = val;
+}
+
+/* ── Check definitions — read window.RV and window.SC directly ─ */
+const CHECKS = [
+  {
+    id:'relay',
+    title:'Relay WebSocket is connected',
+    run(){
+      const SC = window.SC;
+      const ok = !!(SC && SC.socket && SC.socket.connected);
+      const url = SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || 'unknown';
+      return { ok, desc: ok
+        ? 'Socket.IO connected ✓  Server: '+url
+        : 'Socket disconnected. Check SERVER_URL in config.js and that the Render server is running. URL: '+url };
+    }
+  },
+  {
+    id:'agent_online',
+    title:'At least one agent is online',
+    run(){
+      // Read from the screens array exposed by the dashboard
+      let devs = [];
+      try {
+        // window.screens from dashboard JS (exposed via window.SC or global screens)
+        const allScreens = window._diagScreens || [];
+        devs = allScreens.filter(d => d.status === 'online' || d.online);
+      } catch(_){}
+      const ok = devs.length > 0;
+      return { ok, desc: ok
+        ? devs.length+' agent(s) connected: '+devs.map(d=>d.name||d.token||d.id).join(', ')
+        : 'No agents online. Possible causes: (1) agent not running on target machine, (2) cv2 missing on agent — run: pip install opencv-python-headless, (3) agent not pointed at this server.' };
+    }
+  },
+  {
+    id:'device_selected',
+    title:'A device is selected for monitoring',
+    run(){
+      const RV = window.RV;
+      const did = RV?.deviceId;
+      const active = !!RV?.active;
+      return { ok: !!(did && active), warn: !!(did && !active),
+        desc: did && active ? 'Watching: '+did
+          : did ? 'Device selected ('+did+') but stream not active — click Connect on a device'
+          : 'No device selected. Click a machine card and press Connect.' };
+    }
+  },
+  {
+    id:'fps',
+    title:'FPS > 0 — frames actually arriving',
+    run(){
+      const RV = window.RV;
+      let fps = RV?.fps || 0;
+      const ok = fps > 0;
+      return { ok, warn: fps===0, desc: ok
+        ? fps+' fps — frames are decoding and rendering correctly ✓'
+        : '0 fps. TOP CAUSE: OpenCV (cv2) not installed on the agent.\n  Fix: pip install opencv-python-headless\n  Then restart the agent and reconnect.' };
+    }
+  },
+  {
+    id:'kbps',
+    title:'Bandwidth > 0 KB/s — bytes flowing',
+    run(){
+      const RV = window.RV;
+      const kbps = Math.round((RV?.bytesPerSec||0)/1024);
+      const ok = kbps > 0;
+      return { ok, warn: kbps===0, desc: ok
+        ? kbps+' KB/s flowing through relay ✓'
+        : '0 KB/s. frame_bin events not arriving. Check agent log for "FIRST frame from agent". If missing: cv2 not installed, or viewer_count stuck at 0 on agent side.' };
+    }
+  },
+  {
+    id:'codec',
+    title:'Codec is JPEG (H.264 would be silently dropped)',
+    run(){
+      const RV = window.RV;
+      const codec = RV?.codec || '—';
+      const isH264 = codec === 'H.264';
+      return { ok: !isH264, warn: isH264, desc: isH264
+        ? 'Agent is sending H.264! Browsers cannot decode H.264 via WebSocket — all frames are silently dropped.\n  Fix: pip uninstall av  (removes pyav, forces JPEG mode permanently)'
+        : codec === '—' ? 'No frames received yet — codec unknown'
+        : 'Codec: '+codec+' — correct. Browser can decode ✓' };
+    }
+  },
+  {
+    id:'latency',
+    title:'Latency — relay round-trip',
+    run(){
+      const RV = window.RV;
+      const lat = RV?.latency || 0;
+      const warn = lat > 400;
+      return { ok: !warn || lat===0, warn, desc: lat===0
+        ? 'No latency data — no frames received yet'
+        : warn ? lat+'ms high latency. Relay socket alive but no video = confirms issue is agent-side (cv2/encode pipeline), NOT the network'
+        : lat+'ms — good ✓' };
+    }
+  },
+  {
+    id:'server_status',
+    title:'Server /status API reachable',
+    async run(){
+      try{
+        const SC = window.SC;
+        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
+        const r = await fetch(url+'/status',{signal:AbortSignal.timeout(5000)});
+        const j = await r.json();
+        return { ok:j.status==='ok', desc:'Server v'+j.version+' · SocketIO:'+j.socketio+' · Supabase:'+j.database+' · devices_online:'+j.devices_online };
+      }catch(e){
+        return { ok:false, desc:'Cannot reach /status: '+e.message+'. Server may be sleeping (Render free tier spins down after inactivity).' };
+      }
+    }
+  },
+  {
+    id:'metrics',
+    title:'Server /metrics — agent registration count',
+    async run(){
+      try{
+        const SC = window.SC;
+        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
+        const r = await fetch(url+'/metrics',{signal:AbortSignal.timeout(5000)});
+        const j = await r.json();
+        const n = j.devices_online||0;
+        return { ok:true, warn:n===0, desc: n>0
+          ? n+' device(s) registered on server: '+j.devices.map(d=>d.label||d.id).join(', ')
+          : 'Server reports 0 devices online. Agent may be offline or using a different server URL.' };
+      }catch(e){
+        return { ok:false, desc:'/metrics unreachable: '+e.message };
+      }
+    }
+  },
+  {
+    id:'stream_stats',
+    title:'Server /api/stream-stats — frames reaching relay',
+    async run(){
+      try{
+        const SC = window.SC;
+        const RV = window.RV;
+        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
+        const r = await fetch(url+'/api/stream-stats',{signal:AbortSignal.timeout(5000)});
+        const j = await r.json();
+        const stats = j.stream_stats || {};
+        const did = RV?.deviceId;
+        if(!did) return { ok:false, warn:true, desc:'No device selected — select a device first then re-run' };
+        const ds = stats[did];
+        if(!ds) return { ok:false, desc:'No stream stats for device '+did+' on server. Frames not reaching relay.' };
+        return { ok: ds.fps>0, warn: ds.fps===0, desc: ds.fps>0
+          ? ds.fps+' fps · '+ds.kbps+' KB/s · '+ds.viewers+' viewer(s) · '+ds.total_frames+' total frames ✓'
+          : '0 fps at relay. Agent not sending frames to server. Check agent log for "FIRST frame from agent".' };
+      }catch(e){
+        return { ok:false, desc:'/api/stream-stats unreachable: '+e.message };
+      }
+    }
+  },
+];
+
+async function runDiagnostics(){
+  const list = document.getElementById('diag-check-list');
+  if(!list) return;
+  list.innerHTML = '';
+  diagEventCount = 0;
+  const logBox = document.getElementById('diag-log');
+  if(logBox) logBox.innerHTML = '';
+  dlog('── Running '+CHECKS.length+' checks ────────────────────', 'muted');
+
+  const RV = window.RV;
+  const SC = window.SC;
+
+  // Live metric cards (instant snapshot)
+  const fps = RV?.fps||0;
+  const kbps = Math.round((RV?.bytesPerSec||0)/1024);
+  const lat = RV?.latency||0;
+  const relayOk = !!(SC?.socket?.connected);
+  let devCount = 0;
+  try { devCount = (window._diagScreens||[]).filter(d=>d.status==='online'||d.online).length; } catch(_){}
+  const streamActive = !!(RV?.active && RV?.deviceId);
+
+  setCard('relay', relayOk?'Connected':'Disconnected', relayOk?'ok':'fail');
+  setCard('agent', devCount>0?devCount+' online':'None', devCount>0?'ok':'fail');
+  setCard('stream', streamActive?'Active':'Idle', streamActive?'ok':'warn');
+  setCard('fps', fps+' fps', fps>0?'ok':'fail');
+  setCard('kbps', kbps+' KB/s', kbps>0?'ok':'fail');
+  setCard('lat', lat?lat+'ms':'—', lat>400?'warn':lat>0?'ok':'checking');
+
+  let passed=0, failed=0;
+
+  for(const chk of CHECKS){
+    const row = document.createElement('div');
+    row.className = 'dchk pending';
+    row.innerHTML = '<div class="dchk-dot">…</div><div><div class="dchk-title">'+chk.title+'</div><div class="dchk-desc">running…</div></div>';
+    list.appendChild(row);
+    let result;
+    try{ result = await chk.run(); }catch(e){ result={ok:false,desc:'Check error: '+e.message}; }
+    const state = result.ok?'ok':result.warn?'warn':'fail';
+    const icon  = result.ok?'✓':result.warn?'!':'✗';
+    row.className = 'dchk '+state;
+    row.querySelector('.dchk-dot').textContent = icon;
+    row.querySelector('.dchk-title').textContent = chk.title;
+    row.querySelector('.dchk-desc').textContent = result.desc||'';
+    if(result.ok) passed++; else failed++;
+    dlog('['+state.toUpperCase()+'] '+chk.title, state==='ok'?'ok':state==='warn'?'warn':'err');
+    if(!result.ok||result.warn) dlog('    '+result.desc, state==='ok'?'muted':state==='warn'?'warn':'err');
+  }
+
+  const summary = document.getElementById('diag-summary');
+  if(summary) summary.textContent = passed+' passed · '+failed+' failed';
+  dlog('── Done: '+passed+' passed, '+failed+' failed ─────────', 'muted');
+}
+window.runDiagnostics = runDiagnostics;
+
+// Hook showSection to auto-run diagnostics when tab opens
+const _origShowSection = window.showSection;
+if(typeof _origShowSection === 'function'){
+  window.showSection = function(id){
+    _origShowSection(id);
+    if(id === 'diagnostics'){
+      setTimeout(runDiagnostics, 200);
+    }
+  };
+}
+
+})();
+  </script>
   </body>
 </html>

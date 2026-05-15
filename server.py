@@ -720,6 +720,12 @@ def api_metrics():
     })
 
 
+@app.route("/api/stream-stats")
+def api_stream_stats_route():
+    """Per-device streaming statistics for the Diagnostics tab."""
+    return api_stream_stats()
+
+
 def api_stream_stats():
     """Per-device streaming statistics — FPS, kbps, viewer count."""
     stats = {}
@@ -1471,13 +1477,20 @@ if SOCKETIO_OK and sio:
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data):
         """Fallback: agent sends frames via main socket when adv socket unavailable.
-        Receives JSON with device_id + data (list of ints = raw bytes), fans out to viewers."""
+        Receives JSON with device_id + data (list of ints or b64 string), fans out to viewers."""
         try:
             did      = data.get("device_id", "")
-            raw_list = data.get("data")
-            if not did or not raw_list:
+            # FIX: Accept base64-encoded frames (faster than list of ints)
+            if data.get("b64"):
+                import base64 as _b64
+                raw = _b64.b64decode(data["b64"])
+            else:
+                raw_list = data.get("data")
+                if not did or not raw_list:
+                    return
+                raw = bytes(raw_list)
+            if not did or not raw:
                 return
-            raw = bytes(raw_list)
             if len(raw) >= 20:
                 import struct as _s
                 w, h = _s.unpack_from(">II", raw, 0)
