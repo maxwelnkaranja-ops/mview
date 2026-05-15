@@ -8093,9 +8093,12 @@ window.addEventListener('load',()=>{
 // ─── Socket ──────────────────────────────────────────────────────────────────
 function boot(){
   sock=io(SERVER_URL,{transports:['websocket'],reconnection:true,reconnectionDelay:2000,reconnectionDelayMax:8000});
+  // CRITICAL: Force arraybuffer at engine level — before first binary frame arrives
+  const _fb=()=>{try{if(sock.io.engine)sock.io.engine.binaryType='arraybuffer';}catch(_){}};
+  try{sock.io.on('open',_fb);}catch(_){}
+  try{sock.io.engine?.on('upgrade',_fb);}catch(_){}
   sock.on('connect',()=>{
-    // CRITICAL: Force binary delivery as ArrayBuffer, not Blob
-    try { if(sock.io?.engine) sock.io.engine.binaryType='arraybuffer'; } catch(_){}
+    _fb(); // also on every reconnect
     setRelay(1);log('ok','Connected to relay');
     sock.emit('viewer_hello',{token:AUTH_TOKEN}); // joins adv_dashboards, gets device_list
     sock.emit('join_dashboard',{});               // FIX: also join dashboards room for broadcasts
@@ -8163,7 +8166,7 @@ function boot(){
       if(pendBmp) pendBmp.close(); pendBmp=bmp;
     }catch(_){}
   });
-  sock.on('cursor_bin',raw=>{const buf=toAB(raw);if(buf.byteLength<CHL)return;const dv=new DataView(buf);pendCur={x:dv.getInt32(0,false),y:dv.getInt32(4,false)}});
+  sock.on('cursor_bin',async raw=>{const buf=await toABAsync(raw);if(buf.byteLength<CHL)return;const dv=new DataView(buf);pendCur={x:dv.getInt32(0,false),y:dv.getInt32(4,false)}});
   sock.on('watch_ok',d=>{
     agentUp=true; // FIX: always true on watch_ok — agent is online if server sent this
     if(d.screen_w&&d.screen_h){scrW=d.screen_w;scrH=d.screen_h;}
@@ -8613,8 +8616,15 @@ function toR(e){
 function toAB(data){
   if(data instanceof ArrayBuffer)return data;
   if(ArrayBuffer.isView(data))return data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength);
+  if(Array.isArray(data))return new Uint8Array(data).buffer;
   if(typeof data==='string'){const b=atob(data),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
+  // Blob: can't convert synchronously — return empty (binaryType=arraybuffer prevents this)
   return new ArrayBuffer(0);
+}
+// Async version used where await is possible
+async function toABAsync(data){
+  if(data instanceof Blob) return data.arrayBuffer();
+  return toAB(data);
 }
 function mkey(e){const m={' ':'space','ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down','Enter':'enter','Backspace':'backspace','Delete':'delete','Escape':'esc','Tab':'tab','Home':'home','End':'end','PageUp':'pageup','PageDown':'pagedown','F1':'f1','F2':'f2','F3':'f3','F4':'f4','F5':'f5','F6':'f6','F7':'f7','F8':'f8','F9':'f9','F10':'f10','F11':'f11','F12':'f12','Control':'ctrl','Alt':'alt','Shift':'shift','Meta':'win','CapsLock':'capslock','PrintScreen':'printscreen','Insert':'insert'};return m[e.key]||e.key.toLowerCase()}
 function typing(){const t=document.activeElement?.tagName;return t==='INPUT'||t==='TEXTAREA'}
@@ -9129,18 +9139,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
           secure: location.protocol === "https:",
           rejectUnauthorized: false,
         });
+        // CRITICAL FIX: Force arraybuffer at engine level — must hook 'open' AND 'upgrade'.
+        // Setting only in 'connect' handler is too late: the first binary frames can arrive
+        // right after WebSocket upgrade before the connect event fires.
+        const _forceBinaryAB = () => {
+          try { if (SC.socket.io.engine) SC.socket.io.engine.binaryType = "arraybuffer"; } catch (_) {}
+        };
+        try { SC.socket.io.on("open", _forceBinaryAB); } catch (_) {}
+        try { SC.socket.io.engine?.on("upgrade", _forceBinaryAB); } catch (_) {}
 
         SC.socket.on("connect", () => {
           SC.srvOnline = true;
           SC._reconnTries = 0;
-          // CRITICAL FIX: Force binary frames delivered as ArrayBuffer, not Blob
-          // Socket.io websocket transport defaults to Blob in browsers — this breaks
-          // the frame_bin handler which expects ArrayBuffer/Uint8Array
-          try {
-            if (SC.socket.io?.engine) {
-              SC.socket.io.engine.binaryType = "arraybuffer";
-            }
-          } catch (_) {}
+          _forceBinaryAB(); // belt-and-suspenders: set arraybuffer on every connect/reconnect
           updateBadges();
           hideBanner();
           showToast("Server connected", "success");
@@ -9264,6 +9275,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             const dv = new DataView(buf);
             const w = dv.getUint32(0, false),
               h = dv.getUint32(4, false);
+            // Read 64-bit timestamp: high 32 bits at offset 8, low 32 bits at offset 12
+            const tsHi = dv.getUint32(8, false), tsLo = dv.getUint32(12, false);
+            const frameTs = Number((BigInt(tsHi) * 4294967296n + BigInt(tsLo)) / 1000n);
+            const frameLat = Math.max(0, Math.min(9999, Math.round(Date.now() - frameTs)));
+            if (frameLat < 9000) { // valid timestamp
+              RV.latency = frameLat;
+              const ll = $("rv-lat-lbl");
+              if (ll) ll.textContent = RV.latency + "ms";
+            }
             const flags = dv.getUint32(16, false);
             const isH264 = flags & 0x04;
             RV.codec = isH264 ? "H.264" : "JPEG";
@@ -10603,6 +10623,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         pingSent: 0,
         _streamMode: "video",
         _h264Warned: false,
+        _healTimer: null,
         codec: "—",
         byteCount: 0,
         bytesPerSec: 0,
@@ -10708,6 +10729,28 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             if (rvLbl) rvLbl.textContent = "No frames";
           }
         }, 15000);
+        // Self-healing: re-emit watch_device every 5s until first frame arrives
+        // Handles race where viewer_count never reached the agent (adv socket auth delay)
+        let _healAttempts = 0;
+        const _healTimer = setInterval(() => {
+          if (!RV.active || $("rv-canvas").style.display !== "none") {
+            clearInterval(_healTimer); return;
+          }
+          if (++_healAttempts > 6) { clearInterval(_healTimer); return; } // give up after 30s
+          const rcm = $("rv-conn-msg");
+          if (rcm) rcm.textContent = `Retrying stream (attempt ${_healAttempts})…`;
+          if (SC.socket?.connected) {
+            SC.socket.emit("watch_device", {
+              device_id: RV.deviceId,
+              fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 15,
+              quality: QUALITY_MAP[RV.quality]?.jpg || 55,
+              scale: QUALITY_MAP[RV.quality]?.scale || 0.8,
+              monitor: parseInt($("rv-monitor-sel")?.value || "1"),
+            });
+          }
+        }, 5000);
+        RV._healTimer = _healTimer;
+
         // Retry watch_device at 8s if still no frames (agent auth race recovery)
         setTimeout(() => {
           if (
@@ -10912,6 +10955,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         ADV_MONITOR_CURSOR.clicking = false;
         const sf3d = $("stream-frame-3d");
         if (sf3d) sf3d.classList.remove("streaming");
+        if (RV._healTimer) { clearInterval(RV._healTimer); RV._healTimer = null; }
         $("rv-canvas").style.display = "none";
         const rc = $("rv-connecting");
         if (rc) rc.style.display = "none";

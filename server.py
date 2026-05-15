@@ -1241,7 +1241,7 @@ if SOCKETIO_OK and sio:
             quality = data.get("quality", 55)
             scale   = data.get("scale", 0.8)
             monitor = data.get("monitor", 1)
-            sio.emit("request_action", {
+            stream_payload = {
                 "tab":       "monitor",
                 "action":    "start",
                 "device_id": did,
@@ -1249,7 +1249,12 @@ if SOCKETIO_OK and sio:
                 "quality":   quality,
                 "scale":     scale,
                 "monitor":   monitor,
-            }, room=did)
+            }
+            # Emit to device room (main socket agent) AND directly to adv socket agent
+            sio.emit("request_action", stream_payload, room=did)
+            agent_adv_sid2 = _adv_agent_sids.get(did)
+            if agent_adv_sid2:
+                sio.emit("request_action", stream_payload, room=agent_adv_sid2)
             log.info(f"Stream start sent → agent {did}  fps={fps} quality={quality}")
 
         except Exception as exc:
@@ -1368,9 +1373,9 @@ if SOCKETIO_OK and sio:
             sio.emit("auth_error", {"msg": "Empty token"}, room=sid)
             return
 
-        # Wait up to 10s for agent_connect to complete (race fix)
+        # Wait up to 8s for agent_connect to complete (race fix)
         dev = None
-        for _attempt in range(20):
+        for _attempt in range(16):
             with _dev_lock:
                 dev = _devices.get(did)
             if dev:
@@ -1382,9 +1387,19 @@ if SOCKETIO_OK and sio:
                 time.sleep(0.5)
 
         if not dev:
-            log.warning(f"agent_auth: device {did!r} not in _devices after 10s wait — rejecting sid={sid}")
-            sio.emit("auth_error", {"msg": "Device not registered — connect via main socket first"}, room=sid)
-            return
+            # FALLBACK: create a minimal device entry so auth succeeds even if
+            # agent_connect arrived on a different server process (multi-worker deploy).
+            log.warning(f"agent_auth: device {did!r} not in _devices after 8s — creating stub entry")
+            with _dev_lock:
+                _devices[did] = {
+                    "device_id": did,
+                    "hostname": did,
+                    "label": did,
+                    "online": True,
+                    "screen_w": 0,
+                    "screen_h": 0,
+                }
+            dev = _devices[did]
 
         # Mark device as using advanced monitor
         _adv_agent_sids[did] = sid
@@ -1427,7 +1442,11 @@ if SOCKETIO_OK and sio:
         if not did:
             log.warning(f"frame_bin from UNREGISTERED agent sid={sid} — agent_auth failed/pending")
             return
-        raw = bytes(data)
+        try:
+            raw = bytes(data) if not isinstance(data, (bytes, bytearray)) else bytes(data)
+        except Exception as e:
+            log.warning(f"frame_bin: could not convert data to bytes: {e}")
+            return
         if len(raw) >= 20:
             import struct as _s
             w, h = _s.unpack_from(">II", raw, 0)
@@ -1496,6 +1515,8 @@ if SOCKETIO_OK and sio:
         # Fan out to BOTH rooms — adv-monitor viewers and main-socket viewers
         sio.emit("cursor_bin", raw, room=f"adv_viewers_{did}")
         sio.emit("cursor_bin", raw, room=f"view:{did}")
+        # Update cursor latest for GOP catch-up on new viewer join
+        _adv_cursor_latest[did] = raw
 
     @sio.on("agent_info")
     def on_agent_info_adv(data):
