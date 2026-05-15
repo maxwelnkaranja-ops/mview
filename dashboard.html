@@ -4728,6 +4728,9 @@
           <div class="nitem" onclick="showSection('advanced-monitor')">
             <span class="mi">monitor</span>Advanced Monitor
           </div>
+          <div class="nitem" onclick="showSection('diagnostics')">
+            <span class="mi">bug_report</span>Diagnostics
+          </div>
           <div class="nitem" onclick="showSection('remote-view')">
             <span class="mi">desktop_windows</span>Live Viewer
           </div>
@@ -8667,6 +8670,60 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               title="RemoteOps"
             ></iframe>
           </section>
+
+          <!-- ═══════════════════════ DIAGNOSTICS SECTION ═══════════════════════ -->
+          <section
+            class="dash-section"
+            id="section-diagnostics"
+            style="display:none;padding:24px;overflow-y:auto;height:calc(100vh - 52px);flex-direction:column;"
+          >
+            <div style="max-width:960px;margin:0 auto;width:100%">
+
+              <!-- Header row -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+                <div>
+                  <div style="font-size:20px;font-weight:600;margin-bottom:4px">Stream Diagnostics</div>
+                  <div style="font-size:13px;color:var(--t3,#666)">Real-time checks — identifies exactly why video may not be streaming</div>
+                </div>
+                <button id="diag-rerun-btn" onclick="window.runDiagnostics&&window.runDiagnostics()" style="display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border,#333);background:var(--card,#111);color:var(--fg,#eee);cursor:pointer;font-size:13px;font-weight:500">
+                  <span class="mi" style="font-size:16px">refresh</span>Re-run
+                </button>
+              </div>
+
+              <!-- Metric cards -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px">
+                <div class="diag-card" id="dmc-relay"><div class="dmc-label">Relay Socket</div><div class="dmc-val" id="dmv-relay">—</div></div>
+                <div class="diag-card" id="dmc-agent"><div class="dmc-label">Agent</div><div class="dmc-val" id="dmv-agent">—</div></div>
+                <div class="diag-card" id="dmc-stream"><div class="dmc-label">Stream</div><div class="dmc-val" id="dmv-stream">—</div></div>
+                <div class="diag-card" id="dmc-fps"><div class="dmc-label">FPS</div><div class="dmc-val" id="dmv-fps">—</div></div>
+                <div class="diag-card" id="dmc-kbps"><div class="dmc-label">KB/s</div><div class="dmc-val" id="dmv-kbps">—</div></div>
+                <div class="diag-card" id="dmc-lat"><div class="dmc-label">Latency</div><div class="dmc-val" id="dmv-lat">—</div></div>
+              </div>
+
+              <!-- Root cause checklist -->
+              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden;margin-bottom:20px">
+                <div style="padding:12px 16px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Root cause checks</span>
+                  <span id="diag-summary" style="font-size:12px;color:var(--t3,#666)">—</span>
+                </div>
+                <div id="diag-check-list" style="divide-y:1px solid var(--border,#222)"></div>
+              </div>
+
+              <!-- Live event log -->
+              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden">
+                <div style="padding:12px 16px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Live socket log</span>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span id="diag-log-badge" style="font-size:11px;background:var(--card,#1a1a1a);border:1px solid var(--border,#333);padding:2px 8px;border-radius:4px;color:var(--t3,#666)">0 events</span>
+                    <button onclick="document.getElementById('diag-log').innerHTML='';diagEventCount=0;document.getElementById('diag-log-badge').textContent='0 events'" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#666);cursor:pointer">clear</button>
+                  </div>
+                </div>
+                <div id="diag-log" style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;padding:10px 16px;height:240px;overflow-y:auto;line-height:1.85;background:var(--b900,#09090e)"></div>
+              </div>
+
+            </div>
+          </section>
+          <!-- ═══════════════════════ /DIAGNOSTICS SECTION ═══════════════════════ -->
         </div>
         <!-- /.content -->
       </main>
@@ -10133,6 +10190,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         security: "Security",
         "activity-logs": "Activity Logs",
         "supabase-view": "Database",
+        diagnostics: "Diagnostics",
         settings: "Settings",
       };
 
@@ -10151,7 +10209,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         if (sec) {
           sec.classList.add("active");
           sec.style.display =
-            id === "remote-view" || id === "advanced-monitor"
+            id === "remote-view" || id === "advanced-monitor" || id === "diagnostics"
               ? "flex"
               : "block";
         }

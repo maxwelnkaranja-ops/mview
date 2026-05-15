@@ -3,18 +3,10 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
-hiddenimports = ['engineio.async_drivers.threading', 'engineio.async_drivers.aiohttp', 'pkg_resources.extern', 'aiortc', 'aiortc.codecs', 'aiortc.codecs.h264', 'aiortc.codecs.opus', 'dxcam', 'cv2', 'numpy', 'pynput.keyboard', 'pynput.mouse', 'sounddevice', 'scipy', 'scipy.signal', 'comtypes', 'wmi', 'win32api', 'win32con', 'win32gui', 'win32process', 'winreg']
-tmp_ret = collect_all('aiortc')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('dxcam')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+hiddenimports = ['engineio.async_drivers.threading', 'pkg_resources.extern', 'cv2', 'numpy', 'pynput.keyboard', 'pynput.mouse', 'sounddevice', 'scipy', 'comtypes', 'wmi']
 tmp_ret = collect_all('pynput')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('sounddevice')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('engineio')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('socketio')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
@@ -39,7 +31,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='malinda_ultimate_v1',
+    name='master_agent',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -52,5 +44,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.ico'],
 )
