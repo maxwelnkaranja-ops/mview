@@ -272,15 +272,46 @@ CONFIG = {
     "ALERT_COOLDOWN_S":     300,    # seconds between repeated alerts
 }
 
+# ── Auto-registration: each machine gets a unique ID from its hardware ──────
+# No token needed by the end user. The SHARED_TOKEN authenticates this agent
+# to YOUR server. The unique device_id is derived from the machine's hardware
+# so every downloaded exe auto-registers as its own separate entry in your dashboard.
+SHARED_TOKEN = "MVIEW-GLOBAL-AGENT-v8"  # ← Must match REMOTE_ADMIN_TOKEN or be accepted by server
+
+def _derive_device_id() -> str:
+    """Generate a unique, stable device ID from machine hardware. No user input needed."""
+    import uuid as _uuid, socket as _sock, hashlib as _hash, platform as _plat
+    try:
+        mac  = str(_uuid.getnode())
+        host = _sock.gethostname()
+        cpu  = _plat.processor() or _plat.machine()
+        raw  = f"{mac}-{host}-{cpu}-MVIEW"
+        return "MV-" + _hash.sha256(raw.encode()).hexdigest()[:20].upper()
+    except Exception:
+        # Last resort: random but persisted to temp file so it stays stable
+        import tempfile, os, random, string
+        id_file = os.path.join(tempfile.gettempdir(), ".mview_device_id")
+        if os.path.exists(id_file):
+            try: return open(id_file).read().strip()
+            except: pass
+        new_id = "MV-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=20))
+        try: open(id_file, "w").write(new_id)
+        except: pass
+        return new_id
+
+# Try trailer token first (for custom/enterprise deployments), then auto-generate
 _tok = _read_token_from_trailer()
 if not _tok:
-    # Allow setting token via environment variable (for dev/testing without compiling)
     _tok = os.environ.get("MVIEW_TOKEN", "").strip()
 if not _tok:
-    # Allow passing as first CLI argument: python agent_source.py MV-XXXXXX-XXXXXX-XXXXXX
     if len(sys.argv) > 1 and sys.argv[1].startswith("MV-"):
         _tok = sys.argv[1].strip()
-CONFIG["DEVICE_TOKEN"] = _tok if _tok else "UNSET-RUN-VIA-SERVER"
+
+# If still no token — auto-generate unique device ID from hardware (global deploy mode)
+if not _tok:
+    _tok = _derive_device_id()
+
+CONFIG["DEVICE_TOKEN"] = _tok
 
 
 # ════════════════════════════════════════════════════════════════════════════
