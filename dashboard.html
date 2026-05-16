@@ -8264,7 +8264,13 @@ function startRAF(){
         document.getElementById('no-dev').classList.add('h');
         agentUp=true;
       }
-      if(cursor){curX=cursor.x||0;curY=cursor.y||0;}
+      if(cursor){
+        curX=cursor.x||0;curY=cursor.y||0;
+        // FIX: update scrW/scrH from cursor metadata if not already set from frames
+        if(cursor.screenW&&cursor.screenH&&(scrW!==cursor.screenW||scrH!==cursor.screenH)){
+          scrW=cursor.screenW;scrH=cursor.screenH;relayout();
+        }
+      }
     }
     if(pendBmp){
       if(rc.style.display==='none'||!rc.style.display){rc.style.display='block';rc.style.visibility='visible';}
@@ -9366,44 +9372,22 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               }
               return;
             }
-            // FIX: Only draw to rv-canvas when in live viewer mode (RV.active)
-            // In Advanced Monitor mode, we still update stats (fps, kbps, codec, latency)
-            // so the bridge.getState() returns live data to the AM iframe
-            if (RV.active) {
+            // FIX: Always decode and draw to rv-canvas — the AM iframe reads it
+            // via bridge.getFrameCanvas() regardless of RV.active.
+            // UI chrome (status pills, glow) only updates when RV.active (Live Viewer mode).
             const bmp = await createImageBitmap(
               new Blob([buf.slice(24)], { type: "image/jpeg" }),
             );
             const canvas = $("rv-canvas"),
               ctx = canvas?.getContext("2d");
-            if (!canvas || !ctx) return;
-            $("rv-empty").style.display = "none";
-            canvas.style.display = "block";
-            // Activate the 3D streaming border glow
-            const sf3d = $("stream-frame-3d");
-            if (sf3d) sf3d.classList.add("streaming");
-            const rc = $("rv-connecting");
-            if (rc) rc.style.display = "none";
-            const rio = $("rv-info-overlay");
-            if (rio) rio.style.display = "flex";
-            const rvPill = $("rv-status-pill"),
-              rvLbl = $("rv-status-lbl");
-            if (rvPill) rvPill.className = "pill online";
-            if (rvLbl) rvLbl.textContent = "Live";
-            if (w > 0 && h > 0) {
-              canvas.width = w;
-              canvas.height = h;
-            }
+            if (!canvas || !ctx) { bmp.close(); return; }
+            if (w > 0 && h > 0) { canvas.width = w; canvas.height = h; }
             ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
             bmp.close();
-            // FIX: also feed the main monitor canvas (rc/rctx) via pendBmp so the Monitor tab shows live video
-            if (w > 0 && h > 0 && (w !== scrW || h !== scrH || scrW === 0)) {
-              scrW = w;
-              scrH = h;
-              relayout();
-            }
-            if (!agentUp) {
-              agentUp = true;
-            }
+            // Store screen dimensions on RV so bridge.getCursor() can expose them
+            RV.screenW = w || RV.screenW || 0;
+            RV.screenH = h || RV.screenH || 0;
+            // Feed pendBmp for the AM iframe RAF loop
             try {
               const bmp2 = await createImageBitmap(
                 new Blob([buf.slice(24)], { type: "image/jpeg" }),
@@ -9411,6 +9395,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               if (pendBmp) pendBmp.close();
               pendBmp = bmp2;
             } catch (_) {}
+            // Update Live Viewer UI chrome only when in that mode
+            if (RV.active) {
+              $("rv-empty").style.display = "none";
+              canvas.style.display = "block";
+              const sf3d = $("stream-frame-3d");
+              if (sf3d) sf3d.classList.add("streaming");
+              const rc2 = $("rv-connecting");
+              if (rc2) rc2.style.display = "none";
+              const rio = $("rv-info-overlay");
+              if (rio) rio.style.display = "flex";
+              const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+              if (rvPill) rvPill.className = "pill online";
+              if (rvLbl) rvLbl.textContent = "Live";
+              if (w > 0 && h > 0 && (w !== scrW || h !== scrH || scrW === 0)) {
+                scrW = w; scrH = h; relayout();
+              }
+              if (!agentUp) agentUp = true;
+            }
+            // Always track FPS stats (bridge.getState() reads RV.fps)
             RV.frameCount++;
             const now = Date.now();
             if (now - RV.lastFpsTime >= 1000) {
@@ -9420,21 +9423,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
               const fl = $("rv-fps-label");
               if (fl) fl.textContent = `${RV.fps} fps`;
             }
-            } // end if(RV.active) canvas draw block
-            // FIX: Always track frame stats even in AM mode (for bridge.getState())
-            if (!RV.active) {
-              RV.frameCount++;
-              const now2 = Date.now();
-              if (now2 - RV.lastFpsTime >= 1000) {
-                RV.fps = RV.frameCount;
-                RV.frameCount = 0;
-                RV.lastFpsTime = now2;
-              }
-            }
           } catch (_) {}
         });
         SC.socket.on("cursor_bin", async (raw) => {
-          if (!RV.active) return;
+          // FIX: Don't guard on RV.active — cursor must work in Advanced Monitor mode too
+          if (!RV.deviceId) return;
           // FIXED: handle ArrayBuffer, Uint8Array, Array, or Blob
           let buf;
           if (raw instanceof ArrayBuffer) {
@@ -11108,7 +11101,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         // FIX Issue 4: Check RV.active instead of canvas.style.display so cursor renders
         // before (or immediately alongside) the first frame, and works regardless of
         // which code path made the canvas visible.
-        if (!canvas || !overlay || !RV.active) return;
+        if (!canvas || !overlay) return;
         overlay.width = canvas.clientWidth;
         overlay.height = canvas.clientHeight;
         overlay.style.width = canvas.clientWidth + "px";
@@ -11164,7 +11157,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
           return $("rv-canvas");
         },
         getCursor() {
-          return { ...ADV_MONITOR_CURSOR };
+          // FIX: include screen dimensions so iframe can compute correct scale
+          const canvas = $("rv-canvas");
+          return {
+            ...ADV_MONITOR_CURSOR,
+            screenW: canvas?.width  || RV.screenW || 0,
+            screenH: canvas?.height || RV.screenH || 0,
+          };
         },
         watchDevice(deviceId) {
           connectScreenById(deviceId, { showSection: false });

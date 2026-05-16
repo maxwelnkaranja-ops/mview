@@ -1469,6 +1469,10 @@ if SOCKETIO_OK and sio:
             fc = len(_adv_gop_buf[did])
         if fc == 1:
             log.info(f"frame_bin: FIRST frame from agent {did} — ADV SOCKET streaming active!")
+        # FIX: Record frame stats so /api/stream-stats returns live data
+        with _frame_stats_lock:
+            _frame_stats[did].append((time.time(), len(raw)))
+
         # Fan out to BOTH the advanced-monitor viewer room AND the main-socket view room
         # so single-socket dashboards (no separate adv socket) receive frames too.
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
@@ -1507,6 +1511,9 @@ if SOCKETIO_OK and sio:
                 fc = len(_adv_gop_buf[did])
             if fc == 1:
                 log.info(f"frame_bin_relay: FIRST frame from {did} via MAIN SOCKET fallback")
+            # FIX: Record relay frame stats for /api/stream-stats
+            with _frame_stats_lock:
+                _frame_stats[did].append((time.time(), len(raw)))
             # Fan out to adv monitor viewers AND live viewer room
             sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
             sio.emit("frame_bin", raw, room=f"view:{did}")
