@@ -653,13 +653,21 @@ class MSSCapture:
         log.info(f"Advanced Monitor Capture: mss CPU monitor={idx}")
 
     def grab(self) -> Optional[np.ndarray]:
-        if not CV2_OK:
-            log.warning("MSSCapture: OpenCV (cv2) not available — capture disabled")
-            return None
         try:
-            raw  = self._mss.grab(self._mon)
-            bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
-            return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
+            raw = self._mss.grab(self._mon)
+            if CV2_OK:
+                # Fast path: cv2 available — use numpy directly
+                bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
+                return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
+            else:
+                # FIX: PIL fallback — works even without cv2 installed
+                # mss gives us raw BGRA bytes; convert to BGR numpy via PIL
+                from PIL import Image as _PILImage
+                import numpy as _np
+                img = _PILImage.frombytes("RGBA", (raw.width, raw.height), raw.bgra, "raw", "BGRA")
+                rgb = _np.array(img.convert("RGB"))
+                # RGB → BGR (reverse last axis)
+                return rgb[:, :, ::-1].copy()
         except Exception as e:
             log.error(f"MSSCapture.grab error: {e}")
             return None
@@ -681,9 +689,9 @@ class FrameDiffer:
     def __init__(self):
         self._prev = None
 
-    def changed(self, frame: np.ndarray) -> bool:
+    def changed(self, frame) -> bool:
         if not CV2_OK or frame is None:
-            return True # Always assume changed if we can't diff
+            return True  # Always send frames when cv2 unavailable
         if self._prev is None:
             self._prev = frame.copy(); return True
         try:
@@ -738,23 +746,38 @@ class JPEGEncoder:
         self._q = quality
         log.info(f"Advanced Monitor Encoder: JPEG quality={quality}")
 
-    def encode_frame(self, bgr: np.ndarray, force_key=False):
-        if not CV2_OK:
-            return b"", False
+    def encode_frame(self, bgr, force_key=False):
+        # FIX: PIL fallback when cv2 not available (compiled exe without cv2 bundled)
+        if CV2_OK:
+            try:
+                ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
+                return (buf.tobytes() if ok else b""), True
+            except Exception as e:
+                log.debug(f"JPEGEncoder cv2 error: {e}")
+        # PIL fallback — always available (bundled with PyInstaller)
         try:
-            ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
-            return (buf.tobytes() if ok else b""), True
+            from PIL import Image as _PILImage
+            from io import BytesIO as _BytesIO
+            import numpy as _np
+            arr = _np.array(bgr, dtype=_np.uint8)
+            # bgr -> rgb
+            rgb = arr[:, :, ::-1]
+            img = _PILImage.fromarray(rgb, "RGB")
+            buf = _BytesIO()
+            img.save(buf, format="JPEG", quality=self._q, optimize=False)
+            return buf.getvalue(), True
         except Exception as e:
-            log.debug(f"JPEGEncoder error: {e}")
+            log.debug(f"JPEGEncoder PIL error: {e}")
             return b"", False
 
 
 def _make_encoder(w, h, fps, quality):
-    # NOTE: Browsers cannot decode H.264 via createImageBitmap('video/mp4').
-    # Always use JPEG for WebSocket relay. H.264 is only useful over WebRTC DataChannels.
+    # Always use JPEG — browsers can't decode H.264 via WebSocket.
+    # FIX: PIL fallback means JPEG works even without cv2.
     if not CV2_OK:
-        log.error("Advanced Monitor: OpenCV (cv2) NOT FOUND — frame encoding will fail!")
-    log.info("Advanced Monitor: using JPEG encoder for WebSocket relay (browser-compatible)")
+        log.warning("Advanced Monitor: cv2 not found — using PIL JPEG encoder (slower but works)")
+    else:
+        log.info("Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay")
     return JPEGEncoder(quality), FLAG_JPEG
 
 
@@ -769,6 +792,7 @@ _adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
 _adv_viewers    = 0
 _adv_authed     = False
 _adv_last_frame_ts = 0.0
+_adv_auth_time     = 0.0   # monotonic time when agent_auth_ok fired
 _adv_loop: Optional[asyncio.AbstractEventLoop] = None
 _adv_thread: Optional[threading.Thread] = None
 _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
@@ -831,13 +855,15 @@ async def _adv_task_stream_frames():
             t0 = time.monotonic()
             if not _adv_authed:
                 await asyncio.sleep(0.1); continue
-            # FIX: If adv socket is authed but viewer_count never arrived (race condition),
-            # fall back to checking if the screenshot fallback is active (means a viewer exists)
+            # FIX: viewer_count race — stream for up to 60s after auth even if count=0
+            # because viewer_count may arrive AFTER the stream loop starts.
+            # After 60s with no viewer we pause to save bandwidth.
             if _adv_viewers == 0:
-                # Check if main socket has viewers via fallback thread
-                if not (_fb_thread and _fb_thread.is_alive()):
+                _time_since_auth = time.monotonic() - _adv_auth_time
+                fb_running = _fb_thread and _fb_thread.is_alive()
+                if not fb_running and _time_since_auth > 60:
                     await asyncio.sleep(0.05); continue
-                # Fallback running = viewer exists — stream anyway
+                # Within 60s of auth OR fallback running = keep streaming
                 pass
 
             next_sig = _current_stream_config()
@@ -967,8 +993,9 @@ async def _adv_main(server_url: str, token: str):
 
     @sio.on("auth_ok")
     async def on_auth_ok(data):
-        global _adv_authed
+        global _adv_authed, _adv_auth_time
         _adv_authed = True
+        _adv_auth_time = time.monotonic()  # FIX: track when auth completed
         log.info(f"Advanced Monitor authenticated. device_id={data.get('device_id','?')}")
         if not WEBRTC_OK:
             log.info("Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay")
@@ -1196,10 +1223,23 @@ def _start_screenshot_fallback(sio_client):
                 if frame is None:
                     time.sleep(interval); continue
                 h, w = frame.shape[:2]
-                ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
-                if not ok:
+                # FIX: PIL fallback when cv2 not available in compiled exe
+                if CV2_OK:
+                    ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+                    payload = buf.tobytes() if ok else None
+                else:
+                    try:
+                        from PIL import Image as _PI
+                        from io import BytesIO as _BIO
+                        import numpy as _np2
+                        rgb = _np2.array(frame)[:, :, ::-1]
+                        _bio = _BIO()
+                        _PI.fromarray(rgb, "RGB").save(_bio, "JPEG", quality=quality)
+                        payload = _bio.getvalue()
+                    except Exception:
+                        payload = None
+                if not payload:
                     time.sleep(interval); continue
-                payload = buf.tobytes()
                 ts_us   = int(time.time() * 1_000_000)
                 header  = FRAME_HDR.pack(w, h, ts_us, FLAG_JPEG, len(payload))
                 pkt     = header + payload
