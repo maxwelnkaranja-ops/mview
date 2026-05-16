@@ -481,12 +481,8 @@ def _cursor_relative_to_monitor(monitor_idx: int | None = None):
     except Exception:
         return None
     rx, ry = int(x) - mon["left"], int(y) - mon["top"]
-    # FIX: clamp to monitor bounds instead of returning None when cursor drifts
-    # just outside (common at monitor edges). Return None only if FAR outside.
-    if rx < -50 or ry < -50 or rx >= mon["width"] + 50 or ry >= mon["height"] + 50:
+    if rx < 0 or ry < 0 or rx >= mon["width"] or ry >= mon["height"]:
         return None
-    rx = max(0, min(rx, mon["width"]  - 1))
-    ry = max(0, min(ry, mon["height"] - 1))
     return rx, ry
 
 
@@ -623,8 +619,7 @@ class AdaptiveFPS:
         else:
             self._idle += 1
             if self._idle > 600:  # FIX: wait 10s before dropping (was 5s)
-                # FIX: never drop below 2fps so stream appears live
-                self._cur = max(self.min_fps, 2)
+                self._cur = max(self.min_fps, 2)  # FIX: never below 2fps
 
     @property
     def fps(self): return self._cur
@@ -894,7 +889,11 @@ async def _adv_task_stream_frames():
 
             changed = differ.changed(raw)
             fps_ctl.report(changed)
-            if not changed and n > 0:
+            # FIX: always send a keepalive frame every 2s even if screen is static
+            # prevents the viewer from showing a frozen/dead stream
+            _now_mono = time.monotonic()
+            _since_last = _now_mono - _adv_last_frame_ts
+            if not changed and n > 0 and _since_last < 2.0:
                 await asyncio.sleep(fps_ctl.interval); continue
 
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
@@ -942,9 +941,7 @@ async def _adv_task_stream_cursor():
     interval = 1.0 / 120   # 120Hz — silky smooth cursor
     lx = ly = -1
     while True:
-        # FIX: send cursor if authed and viewers > 0, OR within 60s of auth (race window)
-        _cur_grace = (time.monotonic() - _adv_auth_time) < 60
-        if _adv_authed and (_adv_viewers > 0 or _cur_grace):
+        if _adv_authed and _adv_viewers > 0:
             try:
                 pos = _cursor_relative_to_monitor()
                 if pos is None:
@@ -952,15 +949,11 @@ async def _adv_task_stream_cursor():
                     await asyncio.sleep(interval)
                     continue
                 x, y = pos
-                # FIX: always send cursor even if position unchanged
-                # (viewer may have reconnected and lost the last position)
-                _cur_moved = (x != lx or y != ly)
-                if _cur_moved or (_cursor_force_send := getattr(_adv_task_stream_cursor, '_force', 0)) > 0:
+                if x != lx or y != ly:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
                     await _adv_sio_async.emit("cursor_bin", pkt)
                     lx, ly = x, y
-                    _adv_task_stream_cursor._force = max(0, getattr(_adv_task_stream_cursor, '_force', 0) - 1)
             except Exception: pass
         await asyncio.sleep(interval)
 
@@ -1226,7 +1219,7 @@ def _start_screenshot_fallback(sio_client):
                         except Exception: pass
                     fps = next_sig[1]
                     quality = next_sig[2]
-                    interval = 1.0 / max(1, min(fps, 15))  # cap at 15fps for main socket
+                    interval = 1.0 / max(1, min(fps, 30))  # FIX: raised cap to 30fps
                     cap = _make_capture()
                     cfg_sig = next_sig
                     log.info(f"Screenshot fallback: reconfigured monitor={next_sig[0]} fps={fps} quality={quality}")

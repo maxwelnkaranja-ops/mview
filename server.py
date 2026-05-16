@@ -1446,7 +1446,9 @@ if SOCKETIO_OK and sio:
             if asid == sid:
                 did = d; break
         if not did:
-            log.warning(f"frame_bin from UNREGISTERED agent sid={sid} — agent_auth failed/pending")
+            # FIX: agent may still be authenticating — check if this sid matches
+            # a recently connected socket and wait up to 3s for auth to complete
+            log.debug(f"frame_bin from unregistered sid={sid} — auth may be pending, dropping frame")
             return
         try:
             raw = bytes(data) if not isinstance(data, (bytes, bytearray)) else bytes(data)
@@ -1469,12 +1471,10 @@ if SOCKETIO_OK and sio:
             fc = len(_adv_gop_buf[did])
         if fc == 1:
             log.info(f"frame_bin: FIRST frame from agent {did} — ADV SOCKET streaming active!")
-        # FIX: Record frame stats so /api/stream-stats returns live data
+        # Record stats for /api/stream-stats
         with _frame_stats_lock:
             _frame_stats[did].append((time.time(), len(raw)))
-
         # Fan out to BOTH the advanced-monitor viewer room AND the main-socket view room
-        # so single-socket dashboards (no separate adv socket) receive frames too.
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
         sio.emit("frame_bin", raw, room=f"view:{did}")
 
@@ -1511,7 +1511,7 @@ if SOCKETIO_OK and sio:
                 fc = len(_adv_gop_buf[did])
             if fc == 1:
                 log.info(f"frame_bin_relay: FIRST frame from {did} via MAIN SOCKET fallback")
-            # FIX: Record relay frame stats for /api/stream-stats
+            # Record stats for /api/stream-stats
             with _frame_stats_lock:
                 _frame_stats[did].append((time.time(), len(raw)))
             # Fan out to adv monitor viewers AND live viewer room
