@@ -48,4 +48,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['C:\\Users\\maxxi\\Videos\\stitch_m_view_enterprise_suite\\icon.ico'],
 )

