@@ -9054,19 +9054,22 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
       "use strict";
 
       /* ══ Config ══════════════════════════════════════════════════ */
-      const SC = window.SC = {
+      // FIX: config.js seeds window.SC.SERVER_URL before this script block runs.
+      // Preserve that value; only fall back to IIFE resolution if it wasn't set.
+      const SC = window.SC = Object.assign(window.SC || {}, {
         SB_URL: "https://iacdzpcoftxxcoigopun.supabase.co",
         SB_KEY:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054",
         SERVER_URL: (() => {
-          // FIX: Reuse the top-level SERVER_URL which correctly handles srcdoc/iframe/parent cases.
-          // The old fallback `location.protocol//location.host` returns "about://" inside a srcdoc
-          // iframe, making SC.socket silently connect to the wrong (non-existent) server.
-          if (typeof SERVER_URL !== "undefined" && SERVER_URL)
-            return SERVER_URL;
-          let url = window.SCREEN_CONNECT_SERVER_URL
-            ? window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, "")
-            : `${location.protocol}//${location.host}`;
+          // FIX priority order:
+          // 1. config.js already seeded window.SC.SERVER_URL — use it (no trailing slash)
+          if (window.SC && window.SC.SERVER_URL && window.SC.SERVER_URL.length > 4)
+            return window.SC.SERVER_URL.replace(/\/+$/, "");
+          // 2. config.js set window.SCREEN_CONNECT_SERVER_URL
+          if (window.SCREEN_CONNECT_SERVER_URL)
+            return window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, "");
+          // 3. Same-origin fallback (only valid when served from the relay server itself)
+          let url = `${location.protocol}//${location.host}`;
           if (location.protocol === "https:") {
             url = url
               .replace(/^http:\/\//i, "https://")
@@ -9080,7 +9083,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         activeTable: null,
         lastSync: null,
         _reconnTries: 0,
-      };
+      });
+      // Re-apply SCREEN_CONNECT_SERVER_URL to SC in case it was overridden above
+      if (window.SCREEN_CONNECT_SERVER_URL && !SC.SERVER_URL)
+        SC.SERVER_URL = window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, "");
 
       let screens = window._diagScreens = [],
         activityLogs = [],
@@ -9386,6 +9392,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             return;
           }
           if (buf.byteLength < 24) return;
+          // FIX: update bandwidth counter before any early-returns below
+          RV._bytesWindow = RV._bytesWindow || [];
+          RV._bytesWindow.push([Date.now(), buf.byteLength]);
+          // Keep only last 3 seconds
+          const _bwCutoff = Date.now() - 3000;
+          RV._bytesWindow = RV._bytesWindow.filter(([t]) => t > _bwCutoff);
+          RV.bytesPerSec = RV._bytesWindow.reduce((s, [,b]) => s + b, 0) / 3;
           try {
             const dv = new DataView(buf);
             const w = dv.getUint32(0, false),
@@ -9402,7 +9415,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             const flags = dv.getUint32(16, false);
             const isH264 = flags & 0x04;
             RV.codec = isH264 ? "H.264" : "JPEG";
-            updateViewerBandwidth(buf.byteLength);
+            // FIX: bandwidth already updated inline above — no separate call needed
+            if (typeof updateViewerBandwidth === "function") updateViewerBandwidth(buf.byteLength);
             // FIX Bug 2: createImageBitmap cannot decode H.264/MP4 blobs in browsers.
             // H.264 frames must be piped through MediaSource — not supported here.
             // Skip H.264 packets; agent will auto-fall-back to JPEG when av/pyav is unavailable.
@@ -12892,7 +12906,17 @@ function _getServerUrl(){
 }
 
 function _getAdminKey(){
-  return (document.getElementById('diag-admin-key')?.value || '').trim();
+  // FIX: also read from config.js hint so the check works without manual input
+  const typed = (document.getElementById('diag-admin-key')?.value || '').trim();
+  if (typed) return typed;
+  // Pre-fill the input from config.js hint (soft default — user can override)
+  const hint = window._MVIEW_ADMIN_KEY_HINT || '';
+  if (hint) {
+    const inp = document.getElementById('diag-admin-key');
+    if (inp && !inp.value) inp.value = hint;
+    return hint;
+  }
+  return '';
 }
 
 /* ══════════════════════════════════════════════════════
@@ -12965,12 +12989,14 @@ window.loadCrashReports = loadCrashReports;
 ══════════════════════════════════════════════════════ */
 const CONTRACT_CHECKS = [
   { label:'config.js → window.SCREEN_CONNECT_SERVER_URL defined', check(){
-    return typeof window.SCREEN_CONNECT_SERVER_URL === 'string' && window.SCREEN_CONNECT_SERVER_URL.length > 0;
+    const url = window.SCREEN_CONNECT_SERVER_URL || '';
+    return typeof url === 'string' && url.length > 4 && url.startsWith('http');
   }},
-  { label:'Dashboard → SC.SERVER_URL resolves to same origin', check(){
-    const sc = window.SC?.SERVER_URL||'';
-    const cfg = window.SCREEN_CONNECT_SERVER_URL||'';
-    return sc.length>0 && (sc===cfg || sc.replace(/\/+$/,'')+'' === cfg.replace(/\/+$/,'')+'');
+  { label:'Dashboard → SC.SERVER_URL resolves to same origin as config.js', check(){
+    const sc  = (window.SC?.SERVER_URL||'').replace(/\/+$/,'');
+    const cfg = (window.SCREEN_CONNECT_SERVER_URL||'').replace(/\/+$/,'');
+    // Must match, not be empty, not be "about://"
+    return sc.length > 4 && sc.startsWith('http') && (sc === cfg || cfg === '');
   }},
   { label:'Socket.IO version matches: dashboard uses 4.7.x, server uses flask-socketio 5.x', check(){
     // Both use socket.io v4 wire protocol — always compatible

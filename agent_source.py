@@ -987,10 +987,12 @@ async def _adv_task_stream_frames():
 
 async def _adv_task_stream_cursor():
     """Dedicated 120 Hz cursor task — independent of frame encoder."""
-    interval = 1.0 / 120   # 120Hz — silky smooth cursor
+    interval = 1.0 / 60   # FIX: 60Hz is plenty; 120Hz wastes bandwidth on slow connections
     lx = ly = -1
     while True:
-        if _adv_authed and _adv_viewers > 0:
+        # FIX: removed _adv_viewers > 0 gate — viewer_count is race-prone and
+        # the server only fans out to actual viewers anyway. Always stream when authed.
+        if _adv_authed:
             try:
                 pos = _cursor_relative_to_monitor()
                 if pos is None:
@@ -1033,8 +1035,18 @@ async def _adv_main(server_url: str, token: str):
     @sio.event
     async def connect():
         global _adv_authed
+        _adv_authed = False   # FIX: reset on every reconnect so stream loop re-waits
         log.info("Advanced Monitor: connected — authenticating…")
         await sio.emit("agent_auth", {"token": token})
+        # FIX: if auth_ok doesn't arrive within 5s (server restart race),
+        # re-send agent_auth automatically — covers the window between main socket
+        # agent_connect and adv socket agent_auth
+        async def _auth_watchdog():
+            await asyncio.sleep(5)
+            if not _adv_authed and sio.connected:
+                log.info("Advanced Monitor: auth_ok not received after 5s — re-sending agent_auth")
+                await sio.emit("agent_auth", {"token": token})
+        asyncio.ensure_future(_auth_watchdog())
 
     @sio.event
     async def disconnect():
@@ -1309,19 +1321,20 @@ def _start_screenshot_fallback(sio_client):
                 header  = FRAME_HDR.pack(w, h, ts_us, FLAG_JPEG, len(payload))
                 pkt     = header + payload
                 if sio_client and sio_client.connected:
+                    b64_frame = base64.b64encode(payload).decode()
+                    b64_pkt   = base64.b64encode(pkt).decode()
                     sio_client.emit("screenshot_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame":     base64.b64encode(payload).decode(),
-                        "image":     base64.b64encode(payload).decode(),
+                        "frame":     b64_frame,
+                        "image":     b64_frame,
                         "w": w, "h": h,
                         "_raw_bin":  False,
                     })
-                    # Also emit frame_bin_relay (binary fallback for adv viewers)
-                    # FIX: Send as base64 string instead of list of ints (much faster)
+                    # FIX: send only b64 (no list key) — list(pkt) for a 200KB frame
+                    # allocates 200K Python int objects and is extremely slow
                     sio_client.emit("frame_bin_relay", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "data": list(pkt),  # kept for server compat
-                        "b64": base64.b64encode(pkt).decode(),
+                        "b64": b64_pkt,
                     })
                 n += 1
                 time.sleep(interval)
