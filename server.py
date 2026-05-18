@@ -1243,8 +1243,8 @@ if SOCKETIO_OK and sio:
             sio.emit("viewer_count", {"count": adv_vcount}, room=did)
 
             # Tell agent to START streaming (use the dev we already fetched — no re-fetch)
-            fps     = data.get("fps", 15)
-            quality = data.get("quality", 55)
+            fps     = data.get("fps", 25)   # FIX: raised default from 15
+            quality = data.get("quality", 70)  # FIX: raised quality from 55
             scale   = data.get("scale", 0.8)
             monitor = data.get("monitor", 1)
             stream_payload = {

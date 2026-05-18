@@ -10773,8 +10773,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
         }
         // watch_device joins viewer to device room, sends GOP catch-up frames, and triggers agent stream start
         const qmap = QUALITY_MAP[RV.quality];
+        // FIX: raised fps floors — low=25, medium=30, high=60
         const fps =
-          RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 15;
+          RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25;
         SC.socket.emit("watch_device", {
           device_id: RV.deviceId,
           fps,
@@ -10815,8 +10816,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
           if (SC.socket?.connected) {
             SC.socket.emit("watch_device", {
               device_id: RV.deviceId,
-              fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 15,
-              quality: QUALITY_MAP[RV.quality]?.jpg || 55,
+              fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25,
+              quality: QUALITY_MAP[RV.quality]?.jpg || 70,
               scale: QUALITY_MAP[RV.quality]?.scale || 0.8,
               monitor: parseInt($("rv-monitor-sel")?.value || "1"),
             });
@@ -11060,7 +11061,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             tab: "monitor",
             action: "start",
             device_id: RV.deviceId,
-            fps: RV.quality === "high" ? 20 : RV.quality === "medium" ? 12 : 6,
+            fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25,  // FIX: raised AM fps
             quality: qmap.jpg,
             scale: qmap.scale,
             monitor: parseInt($("rv-monitor-sel")?.value || "1"),
