@@ -44,11 +44,15 @@ LOCAL dev:
 import os
 import re
 import time
+import uuid
 import logging
 import datetime
 import threading
 import collections
 import secrets
+import traceback
+import json
+from logging.handlers import RotatingFileHandler
 
 try:
     from dotenv import load_dotenv
@@ -82,7 +86,7 @@ SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 5000))
-VERSION       = "8.0.0"
+VERSION       = "9.0.0"
 
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
@@ -104,14 +108,63 @@ _frame_stats: dict = collections.defaultdict(lambda: collections.deque(maxlen=30
 _frame_stats_lock  = threading.Lock()
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Logging
+#  Logging — dual handler: rotating file + console, structured format
 # ══════════════════════════════════════════════════════════════════════════════
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)-8s  %(message)s",
+_LOG_DIR  = os.environ.get("LOG_DIR", os.path.join(os.path.expanduser("~"), "mview_server_logs"))
+os.makedirs(_LOG_DIR, exist_ok=True)
+_LOG_FILE = os.path.join(_LOG_DIR, "server.log")
+
+_log_fmt = logging.Formatter(
+    "%(asctime)s  %(levelname)-8s  [%(threadName)s]  %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+_file_handler    = RotatingFileHandler(_LOG_FILE, maxBytes=4 * 1024 * 1024, backupCount=5)
+_file_handler.setFormatter(_log_fmt)
+_console_handler = logging.StreamHandler()
+_console_handler.setFormatter(_log_fmt)
+
+logging.basicConfig(level=logging.INFO, handlers=[_file_handler, _console_handler])
 log = logging.getLogger("screenconnect")
+
+# Thread-local request-id — set per HTTP request via before_request
+_req_local = threading.local()
+
+def _req_id() -> str:
+    return getattr(_req_local, "id", "-")
+
+# Crash reporter — keeps last 5 crash reports on disk
+_CRASH_DIR = os.path.join(_LOG_DIR, "crashes")
+os.makedirs(_CRASH_DIR, exist_ok=True)
+
+def _report_crash(context: str, exc: Exception):
+    """Write crash_TIMESTAMP.txt and attempt to ping /agent/crash."""
+    ts  = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    txt = f"=== SERVER CRASH REPORT ===\nContext: {context}\nTime: {ts}\n\n{traceback.format_exc()}"
+    path = os.path.join(_CRASH_DIR, f"crash_{ts}.txt")
+    try:
+        with open(path, "w") as fh:
+            fh.write(txt)
+        # Prune: keep newest 5 only
+        reports = sorted(os.listdir(_CRASH_DIR))
+        for old in reports[:-5]:
+            try:
+                os.remove(os.path.join(_CRASH_DIR, old))
+            except Exception:
+                pass
+    except Exception:
+        pass
+    log.error(f"CRASH in {context}: {exc}\n{traceback.format_exc()}")
+
+def _global_exc_hook(exc_type, exc_value, exc_tb):
+    if issubclass(exc_type, KeyboardInterrupt):
+        import sys
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+        return
+    log.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_tb))
+    _report_crash("global_exc_hook", exc_value)
+
+import sys as _sys
+_sys.excepthook = _global_exc_hook
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Flask + CORS + SocketIO
@@ -379,7 +432,8 @@ def require_admin(f):
     @wraps(f)
     def w(*a, **k):
         if request.headers.get("X-Admin-Key", "") != ADMIN_KEY:
-            return jsonify({"error": "Unauthorised"}), 401
+            log.warning(f"[{_req_id()}] Unauthorised admin access attempt: path={request.path} ip={request.remote_addr}")
+            return jsonify({"error": "Unauthorised", "req_id": _req_id()}), 401
         return f(*a, **k)
     return w
 
@@ -445,6 +499,7 @@ def _cleanup_agent(agent_sid: str):
     if dev:
         label = dev.get("label", did)
         log.warning(f"Agent disconnected: {label} ({did})")
+        _audit("agent_offline", device_id=did, label=label)
         db_update(did, {"status": "offline", "disconnected_at": utcnow()})
         if sio:
             sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
@@ -452,22 +507,62 @@ def _cleanup_agent(agent_sid: str):
         broadcast_device_update()
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  Rate limiting — simple in-memory sliding window per IP
+# ══════════════════════════════════════════════════════════════════════════════
+_RATE_LIMIT_RPM = int(os.environ.get("RATE_LIMIT_RPM", "120"))   # max requests/min per IP
+_rate_buckets: dict = collections.defaultdict(collections.deque)  # ip → deque of timestamps
+_rate_lock          = threading.Lock()
+
+def _rate_check(ip: str) -> bool:
+    """Return True if the IP is within the rate limit."""
+    if _RATE_LIMIT_RPM <= 0:
+        return True
+    now = time.time()
+    with _rate_lock:
+        dq = _rate_buckets[ip]
+        while dq and now - dq[0] > 60:
+            dq.popleft()
+        if len(dq) >= _RATE_LIMIT_RPM:
+            return False
+        dq.append(now)
+    return True
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  CORS preflight
 # ══════════════════════════════════════════════════════════════════════════════
 @app.before_request
 def handle_preflight():
+    # Attach a unique request-id to this thread for tracing
+    _req_local.id = uuid.uuid4().hex[:8]
     if request.method == "OPTIONS":
         resp = make_response("", 204)
         resp.headers["Access-Control-Allow-Origin"]  = "*"
         resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Admin-Key"
         resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         return resp
+    # Rate-limit non-admin routes
+    if not request.path.startswith("/api/") or request.path == "/api/invite":
+        return  # apply rate limit only to invite + download
+    if request.path in ("/invite/", "/guide/", "/onboard/") or "/invite/" in request.path or "/guide/" in request.path:
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+        if not _rate_check(ip):
+            log.warning(f"[{_req_id()}] Rate limit exceeded: ip={ip} path={request.path}")
+            return jsonify({"error": "Too many requests"}), 429
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Static routes
 # ══════════════════════════════════════════════════════════════════════════════
-@app.route("/")
-def root():
+@app.after_request
+def add_security_headers(resp):
+    """Add security headers to every HTTP response."""
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options",        "SAMEORIGIN")
+    resp.headers.setdefault("X-XSS-Protection",       "1; mode=block")
+    resp.headers.setdefault("Referrer-Policy",         "strict-origin-when-cross-origin")
+    resp.headers["X-Request-ID"] = _req_id()
+    return resp
+
+
     for f in ("index.html", "app.html"):
         if Path(f).is_file():
             return send_from_directory(".", f)
@@ -659,6 +754,8 @@ window.SessionManager.CONFIG = {{
 # ══════════════════════════════════════════════════════════════════════════════
 #  Health / Status / API
 # ══════════════════════════════════════════════════════════════════════════════
+_SERVER_START = time.time()
+
 @app.route("/status")
 @app.route("/health")
 @app.route("/api/server-info")
@@ -667,10 +764,18 @@ def health():
         online_count = len(_devices)
     agent_avail = bool(AGENT_STORAGE_URL)
     local_agent  = (Path(AGENT_DIR) / AGENT_FILE).is_file()
+    uptime_s     = int(time.time() - _SERVER_START)
+    crash_count  = len(os.listdir(_CRASH_DIR)) if os.path.isdir(_CRASH_DIR) else 0
+    try:
+        import psutil
+        mem = psutil.Process().memory_info().rss // (1024 * 1024)
+    except Exception:
+        mem = None
     return jsonify({
         "status":          "ok",
         "version":         VERSION,
         "server_time":     utcnow(),
+        "uptime_seconds":  uptime_s,
         "database":        get_sb() is not None,
         "socketio":        SOCKETIO_OK,
         "devices_online":  online_count,
@@ -678,7 +783,50 @@ def health():
         "agent_local":     local_agent,
         "agent_available": agent_avail or local_agent,
         "render_port":     PORT,
+        "memory_mb":       mem,
+        "crash_reports":   crash_count,
+        "log_dir":         _LOG_DIR,
     })
+
+@app.route("/api/crash", methods=["POST"])
+def api_crash_report():
+    """Agent crash report endpoint — stores to disk."""
+    data = request.get_json(silent=True) or {}
+    ts   = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    did  = data.get("device_id", "unknown")[:64]
+    txt  = json.dumps(data, indent=2)
+    path = os.path.join(_CRASH_DIR, f"agent_{did}_{ts}.txt")
+    try:
+        with open(path, "w") as fh:
+            fh.write(txt)
+        reports = sorted(f for f in os.listdir(_CRASH_DIR) if f.startswith(f"agent_{did}"))
+        for old in reports[:-5]:
+            try:
+                os.remove(os.path.join(_CRASH_DIR, old))
+            except Exception:
+                pass
+    except Exception as e:
+        log.warning(f"Could not write agent crash report: {e}")
+    log.error(f"AGENT CRASH REPORT [{did}]: {data.get('context','?')} — {data.get('error','?')}")
+    return jsonify({"status": "received"}), 200
+
+# ── Audit log — in-memory ring buffer of last 500 security events ────────────
+_audit_log: collections.deque = collections.deque(maxlen=500)
+_audit_lock = threading.Lock()
+
+def _audit(event: str, **kw):
+    entry = {"ts": utcnow(), "event": event, **kw}
+    with _audit_lock:
+        _audit_log.append(entry)
+    log.info(f"AUDIT: {event}  {kw}")
+
+@app.route("/api/audit-log")
+@require_admin
+def api_audit_log():
+    with _audit_lock:
+        rows = list(_audit_log)
+    return jsonify({"entries": rows[-200:], "total": len(rows)})
+
 
 @app.route("/api/agent-info")
 def api_agent_info():
@@ -690,6 +838,44 @@ def api_agent_info():
         "local_size":   local.stat().st_size if local.is_file() else 0,
         "cache_size":   len(_agent_cache) if _agent_cache else 0,
     })
+
+@app.route("/api/server-stats")
+@require_admin
+def api_server_stats():
+    """Live internal server stats — threads, memory, connection counts."""
+    with _dev_lock:
+        dev_count = len(_devices)
+    with _view_lock:
+        viewer_count = sum(len(v) for v in _viewers.values())
+    with _rate_lock:
+        rate_ips = len(_rate_buckets)
+    with _adv_gop_lock:
+        gop_devices = len(_adv_gop_buf)
+    thread_count = threading.active_count()
+    try:
+        import psutil
+        proc     = psutil.Process()
+        mem_rss  = proc.memory_info().rss // (1024 * 1024)
+        cpu_pct  = proc.cpu_percent(interval=0.1)
+    except Exception:
+        mem_rss = cpu_pct = None
+    crash_count = len(os.listdir(_CRASH_DIR)) if os.path.isdir(_CRASH_DIR) else 0
+    return jsonify({
+        "version":               VERSION,
+        "uptime_seconds":        int(time.time() - _SERVER_START),
+        "devices_online":        dev_count,
+        "viewers_active":        viewer_count,
+        "adv_agent_sids":        len(_adv_agent_sids),
+        "adv_viewer_rooms":      len(_adv_viewer_rooms),
+        "gop_buffer_devices":    gop_devices,
+        "rate_limit_tracked_ips": rate_ips,
+        "threads":               thread_count,
+        "memory_mb":             mem_rss,
+        "cpu_pct":               cpu_pct,
+        "crash_reports":         crash_count,
+        "ts":                    utcnow(),
+    })
+
 
 @app.route("/metrics")
 def api_metrics():
@@ -810,7 +996,25 @@ def api_device_command(device_id):
     data = request.get_json(silent=True) or {}
     data["device_id"] = device_id
     sio.emit("request_action", data, room=device_id)
+    _audit("rest_command", device_id=device_id, tab=data.get("tab"), ip=request.remote_addr)
     return jsonify({"status": "sent", "device_id": device_id, "tab": data.get("tab")}), 200
+
+@app.route("/api/device/<device_id>", methods=["DELETE"])
+@require_admin
+def api_device_delete(device_id):
+    """Remove a device from memory and mark offline in DB."""
+    with _dev_lock:
+        dev = _devices.pop(device_id, None)
+    with _sid_lock:
+        for sid, did in list(_sid_to_device.items()):
+            if did == device_id:
+                _sid_to_device.pop(sid, None)
+    _adv_agent_sids.pop(device_id, None)
+    db_update(device_id, {"status": "deleted", "disconnected_at": utcnow()})
+    _audit("device_deleted", device_id=device_id, by=request.remote_addr)
+    if dev and sio:
+        sio.emit("device_offline", {"device_id": device_id, "label": dev.get("label", device_id), "ts": utcnow()})
+    return jsonify({"status": "deleted", "device_id": device_id}), 200
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Invite / Agent download
@@ -854,6 +1058,7 @@ def generate_invite():
     }
     db_insert(payload)
     log.info(f"Invite generated: {token}  label={label}  mode={link_mode}")
+    _audit("invite_generated", token=token, label=label, ip=request.remote_addr)
 
     srv = request.host_url.rstrip("/")
     return jsonify({
@@ -1048,43 +1253,44 @@ if SOCKETIO_OK and sio:
         _send_device_list_to(sid)
         log.info(f"viewer_hello from {sid}")
 
+    def _build_device_list_result() -> list:
+        """Shared helper: build the device_list payload for Advanced Monitor viewers."""
+        with _dev_lock:
+            live = dict(_devices)
+        rows   = db_list_all()
+        db_map = {r.get("device_id", ""): r for r in rows}
+        result = []
+        for did, dev in live.items():
+            db_row = db_map.get(did, {})
+            result.append({
+                "id":       did,
+                "name":     dev.get("label") or dev.get("hostname") or did,
+                "online":   True,
+                "screen_w": dev.get("screen_w", 0),
+                "screen_h": dev.get("screen_h", 0),
+                "rtt_ms":   dev.get("rtt_ms", 0),
+                "cpu":      dev.get("cpu"),
+                "ram":      dev.get("ram"),
+                "ip":       dev.get("local_ip") or db_row.get("ip_address", ""),
+                "os":       dev.get("os") or db_row.get("os_info", ""),
+            })
+        for did, row in db_map.items():
+            if did not in live:
+                result.append({
+                    "id":       did,
+                    "name":     row.get("label") or row.get("hostname") or did,
+                    "online":   False,
+                    "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
+                    "cpu":      None, "ram":      None,
+                    "ip":       row.get("ip_address", ""),
+                    "os":       row.get("os_info", ""),
+                })
+        return result
+
     def _send_device_list_to(sid):
         """Build and emit the device_list the Advanced Monitor iframe expects."""
         try:
-            with _dev_lock:
-                live = dict(_devices)
-            rows = db_list_all()
-            db_map = {r.get("device_id", ""): r for r in rows}
-            result = []
-            for did, dev in live.items():
-                db_row = db_map.get(did, {})
-                result.append({
-                    "id":       did,
-                    "name":     dev.get("label") or dev.get("hostname") or did,
-                    "online":   True,
-                    "screen_w": dev.get("screen_w", 0),
-                    "screen_h": dev.get("screen_h", 0),
-                    "rtt_ms":   dev.get("rtt_ms", 0),
-                    "cpu":      dev.get("cpu"),
-                    "ram":      dev.get("ram"),
-                    "ip":       dev.get("local_ip") or db_row.get("ip_address", ""),
-                    "os":       dev.get("os") or db_row.get("os_info", ""),
-                })
-            for did, row in db_map.items():
-                if did not in live:
-                    result.append({
-                        "id":       did,
-                        "name":     row.get("label") or row.get("hostname") or did,
-                        "online":   False,
-                        "screen_w": 0,
-                        "screen_h": 0,
-                        "rtt_ms":   0,
-                        "cpu":      None,
-                        "ram":      None,
-                        "ip":       row.get("ip_address", ""),
-                        "os":       row.get("os_info", ""),
-                    })
-            sio.emit("device_list", result, room=sid)
+            sio.emit("device_list", _build_device_list_result(), room=sid)
         except Exception as e:
             log.error(f"_send_device_list_to error: {e}")
 
@@ -1099,37 +1305,7 @@ if SOCKETIO_OK and sio:
     def _broadcast_device_list():
         """Push updated device_list to all Advanced Monitor viewers."""
         try:
-            with _dev_lock:
-                live = dict(_devices)
-            rows = db_list_all()
-            db_map = {r.get("device_id", ""): r for r in rows}
-            result = []
-            for did, dev in live.items():
-                db_row = db_map.get(did, {})
-                result.append({
-                    "id":       did,
-                    "name":     dev.get("label") or dev.get("hostname") or did,
-                    "online":   True,
-                    "screen_w": dev.get("screen_w", 0),
-                    "screen_h": dev.get("screen_h", 0),
-                    "rtt_ms":   dev.get("rtt_ms", 0),
-                    "cpu":      dev.get("cpu"),
-                    "ram":      dev.get("ram"),
-                    "ip":       dev.get("local_ip") or db_map.get(did, {}).get("ip_address", ""),
-                    "os":       dev.get("os") or db_map.get(did, {}).get("os_info", ""),
-                })
-            for did, row in db_map.items():
-                if did not in live:
-                    result.append({
-                        "id":       did,
-                        "name":     row.get("label") or row.get("hostname") or did,
-                        "online":   False,
-                        "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
-                        "cpu":      None, "ram":      None,
-                        "ip":       row.get("ip_address", ""),
-                        "os":       row.get("os_info", ""),
-                    })
-            sio.emit("device_list", result, room="adv_dashboards")
+            sio.emit("device_list", _build_device_list_result(), room="adv_dashboards")
         except Exception as e:
             log.error(f"_broadcast_device_list error: {e}")
 
@@ -1324,6 +1500,7 @@ if SOCKETIO_OK and sio:
             }
 
         log.info(f"Agent ONLINE: {label} ({did}) sid={request.sid}")
+        _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"), agent_version=data.get("agent_version"))
         db_upsert(did, {
             "status":        "online",
             "label":         label,
@@ -1387,8 +1564,8 @@ if SOCKETIO_OK and sio:
             if dev:
                 break
             try:
-                from gevent import sleep as _gsleep
-                _gsleep(0.5)
+                import gevent
+                gevent.sleep(0.5)
             except ImportError:
                 time.sleep(0.5)
 
@@ -2085,6 +2262,7 @@ if SOCKETIO_OK and sio:
             dev = _devices.get(did)
         if dev:
             sio.emit("request_action", {"tab": command, "device_id": did}, room=did)
+            _audit("power_command", device_id=did, command=command)
             log.info(f"Power command '{command}' → {did}")
 
     @sio.on("uninstall_agent")
@@ -2116,34 +2294,37 @@ if SOCKETIO_OK and sio:
     # ══════════════════════════════════════════════════════════════════════════
     def _watchdog_loop():
         while True:
-            time.sleep(15)
-            now = datetime.datetime.utcnow()
-            stale = []
-            with _dev_lock:
-                for did, dev in list(_devices.items()):
-                    lb = dev.get("last_beat")
-                    if lb:
-                        try:
-                            last = datetime.datetime.fromisoformat(lb.replace("Z", ""))
-                            if (now - last).total_seconds() > HEARTBEAT_TIMEOUT:
-                                stale.append((did, dev.get("label", did), dev.get("sid", "")))
-                        except Exception:
-                            pass
-                # Delete from _devices inside the lock — safe
-                for did, label, agent_sid in stale:
-                    del _devices[did]
-                    log.warning(f"Watchdog: device silent — marking offline: {label} ({did})")
+            try:
+                time.sleep(15)
+                now = datetime.datetime.utcnow()
+                stale = []
+                with _dev_lock:
+                    for did, dev in list(_devices.items()):
+                        lb = dev.get("last_beat")
+                        if lb:
+                            try:
+                                last = datetime.datetime.fromisoformat(lb.replace("Z", ""))
+                                if (now - last).total_seconds() > HEARTBEAT_TIMEOUT:
+                                    stale.append((did, dev.get("label", did), dev.get("sid", "")))
+                            except Exception:
+                                pass
+                    for did, label, agent_sid in stale:
+                        del _devices[did]
+                        log.warning(f"Watchdog: device silent — marking offline: {label} ({did})")
 
-            # DB writes and socket emits happen OUTSIDE the lock to avoid blocking
-            for did, label, agent_sid in stale:
-                db_update(did, {"status": "offline", "disconnected_at": utcnow()})
-                if agent_sid:
-                    with _sid_lock:
-                        _sid_to_device.pop(agent_sid, None)
-                sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
-                sio.emit("device_offline", {"device_id": did, "label": label, "ts": utcnow()})
-            if stale:
-                broadcast_device_update()
+                for did, label, agent_sid in stale:
+                    db_update(did, {"status": "offline", "disconnected_at": utcnow()})
+                    _audit("watchdog_offline", device_id=did, label=label)
+                    if agent_sid:
+                        with _sid_lock:
+                            _sid_to_device.pop(agent_sid, None)
+                    sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
+                    sio.emit("device_offline", {"device_id": did, "label": label, "ts": utcnow()})
+                if stale:
+                    broadcast_device_update()
+            except Exception as exc:
+                _report_crash("_watchdog_loop", exc)
+                time.sleep(5)  # brief pause before restarting iteration
 
     sio.start_background_task(_watchdog_loop)
 
@@ -2154,6 +2335,7 @@ if SOCKETIO_OK and sio:
         if SELF_PING_INTERVAL <= 0 or not REQUESTS_OK:
             log.info("Self-ping disabled")
             return
+        threading.current_thread().name = "self-ping"
         time.sleep(90)
         render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
         local_url  = f"http://127.0.0.1:{PORT}/health"
@@ -2174,7 +2356,7 @@ if SOCKETIO_OK and sio:
 # ══════════════════════════════════════════════════════════════════════════════
 def startup():
     log.info("=" * 70)
-    log.info(f"  Screen Connect Server  v{VERSION}")
+    log.info(f"  Screen Connect Server  v{VERSION}  — ENTERPRISE EDITION")
     log.info("=" * 70)
     local = Path(AGENT_DIR) / AGENT_FILE
     if local.is_file():
@@ -2188,9 +2370,16 @@ def startup():
     log.info(f"  Heartbeat ttl:    {HEARTBEAT_TIMEOUT}s")
     log.info(f"  Self-ping:        every {SELF_PING_INTERVAL}s")
     log.info(f"  WS keep-alive:    ping=20s / timeout=60s")
-    log.info(f"  Max buffer:       256 MB")
+    log.info(f"  Max buffer:       512 MB")
     log.info(f"  Stream relay:     ISOLATED — per-device view rooms")
     log.info(f"  Multi-machine:    FIXED — no cross-machine frame leaks")
+    log.info(f"  Rate limit:       {_RATE_LIMIT_RPM} req/min per IP")
+    log.info(f"  Log dir:          {_LOG_DIR}")
+    log.info(f"  Crash dir:        {_CRASH_DIR}")
+    log.info(f"  Security headers: X-Content-Type-Options, X-Frame-Options, X-XSS")
+    log.info(f"  Audit log:        GET /api/audit-log  (admin key required)")
+    log.info(f"  Server stats:     GET /api/server-stats  (admin key required)")
+    log.info(f"  Device delete:    DELETE /api/device/<id>  (admin key required)")
     log.info("=" * 70)
     log.info("  RENDER start:")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")

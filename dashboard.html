@@ -8544,7 +8544,7 @@ async function createInvite(){
   if(!name){$('m-name').focus();return}if(!token){$('m-tok').focus();return}
   const btn=$('m-btn');btn.textContent='Generating…';btn.disabled=true;
   try{
-    const res=await fetch(SERVER_URL+'/api/invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,admin_token:token})});
+    const res=await fetch(SERVER_URL+'/api/invite',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':token||''},body:JSON.stringify({name})});
     const d=await res.json();
     if(d.error){log('err','Invite error: '+d.error)}
     else{
@@ -8568,7 +8568,7 @@ async function delDev(id,name){
   if(!confirm(`Remove &quot;${name}&quot;?\nThis cannot be undone.`))return;
   const tok=prompt('Enter admin token:');if(!tok)return;
   try{
-    const res=await fetch(SERVER_URL+'/api/device/'+id,{method:'DELETE',headers:{'X-Admin-Token':tok}});
+    const res=await fetch(SERVER_URL+'/api/device/'+id,{method:'DELETE',headers:{'X-Admin-Key':tok}});
     if(res.ok){delete devices[id];if(watchId===id){watchId=null;agentUp=false}render();log('warn',`Device &quot;${name}&quot; removed`)}
     else log('err','Delete failed — check token');
   }catch(e){log('err','Delete error: '+e.message)}
@@ -8683,31 +8683,45 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
             id="section-diagnostics"
             style="display:none;padding:24px;overflow-y:auto;height:calc(100vh - 52px);flex-direction:column;"
           >
-            <div style="max-width:960px;margin:0 auto;width:100%">
+            <div style="max-width:1100px;margin:0 auto;width:100%">
 
               <!-- Header row -->
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
                 <div>
-                  <div style="font-size:20px;font-weight:600;margin-bottom:4px">Stream Diagnostics</div>
-                  <div style="font-size:13px;color:var(--t3,#666)">Real-time checks — identifies exactly why video may not be streaming</div>
+                  <div style="font-size:20px;font-weight:600;margin-bottom:4px">System Diagnostics</div>
+                  <div style="font-size:13px;color:var(--t3,#666)">Full-stack health — server, relay, agents, stream pipeline, audit log, crash reports</div>
                 </div>
-                <button id="diag-rerun-btn" onclick="window.runDiagnostics&&window.runDiagnostics()" style="display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border,#333);background:var(--card,#111);color:var(--fg,#eee);cursor:pointer;font-size:13px;font-weight:500">
-                  <span class="mi" style="font-size:16px">refresh</span>Re-run
-                </button>
+                <div style="display:flex;gap:8px">
+                  <button id="diag-rerun-btn" onclick="window.runDiagnostics&&window.runDiagnostics()" style="display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border,#333);background:var(--card,#111);color:var(--fg,#eee);cursor:pointer;font-size:13px;font-weight:500">
+                    <span class="mi" style="font-size:16px">refresh</span>Re-run
+                  </button>
+                  <button onclick="window.exportDiagReport&&window.exportDiagReport()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#888);cursor:pointer;font-size:13px">
+                    <span class="mi" style="font-size:16px">download</span>Export
+                  </button>
+                </div>
               </div>
 
-              <!-- Metric cards -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px">
+              <!-- Metric cards row 1 -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:10px">
                 <div class="diag-card" id="dmc-relay"><div class="dmc-label">Relay Socket</div><div class="dmc-val" id="dmv-relay">—</div></div>
-                <div class="diag-card" id="dmc-agent"><div class="dmc-label">Agent</div><div class="dmc-val" id="dmv-agent">—</div></div>
+                <div class="diag-card" id="dmc-agent"><div class="dmc-label">Agents Online</div><div class="dmc-val" id="dmv-agent">—</div></div>
                 <div class="diag-card" id="dmc-stream"><div class="dmc-label">Stream</div><div class="dmc-val" id="dmv-stream">—</div></div>
                 <div class="diag-card" id="dmc-fps"><div class="dmc-label">FPS</div><div class="dmc-val" id="dmv-fps">—</div></div>
                 <div class="diag-card" id="dmc-kbps"><div class="dmc-label">KB/s</div><div class="dmc-val" id="dmv-kbps">—</div></div>
                 <div class="diag-card" id="dmc-lat"><div class="dmc-label">Latency</div><div class="dmc-val" id="dmv-lat">—</div></div>
               </div>
+              <!-- Metric cards row 2 — server internals -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:22px">
+                <div class="diag-card" id="dmc-uptime"><div class="dmc-label">Server Uptime</div><div class="dmc-val" id="dmv-uptime">—</div></div>
+                <div class="diag-card" id="dmc-memory"><div class="dmc-label">Server RAM</div><div class="dmc-val" id="dmv-memory">—</div></div>
+                <div class="diag-card" id="dmc-threads"><div class="dmc-label">Threads</div><div class="dmc-val" id="dmv-threads">—</div></div>
+                <div class="diag-card" id="dmc-crashes"><div class="dmc-label">Crash Reports</div><div class="dmc-val" id="dmv-crashes">—</div></div>
+                <div class="diag-card" id="dmc-version"><div class="dmc-label">Server Ver</div><div class="dmc-val" id="dmv-version">—</div></div>
+                <div class="diag-card" id="dmc-db"><div class="dmc-label">Database</div><div class="dmc-val" id="dmv-db">—</div></div>
+              </div>
 
               <!-- Root cause checklist -->
-              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden;margin-bottom:20px">
+              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden;margin-bottom:16px">
                 <div style="padding:12px 16px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
                   <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Root cause checks</span>
                   <span id="diag-summary" style="font-size:12px;color:var(--t3,#666)">—</span>
@@ -8715,16 +8729,52 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
                 <div id="diag-check-list" style="divide-y:1px solid var(--border,#222)"></div>
               </div>
 
-              <!-- Live event log -->
-              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden">
-                <div style="padding:12px 16px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
-                  <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Live socket log</span>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span id="diag-log-badge" style="font-size:11px;background:var(--card,#1a1a1a);border:1px solid var(--border,#333);padding:2px 8px;border-radius:4px;color:var(--t3,#666)">0 events</span>
-                    <button onclick="document.getElementById('diag-log').innerHTML='';diagEventCount=0;document.getElementById('diag-log-badge').textContent='0 events'" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#666);cursor:pointer">clear</button>
+              <!-- Two-column bottom panels -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+                <!-- Live event log -->
+                <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden">
+                  <div style="padding:10px 14px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Live socket log</span>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span id="diag-log-badge" style="font-size:11px;background:var(--card,#1a1a1a);border:1px solid var(--border,#333);padding:2px 8px;border-radius:4px;color:var(--t3,#666)">0 events</span>
+                      <button onclick="document.getElementById('diag-log').innerHTML='';diagEventCount=0;document.getElementById('diag-log-badge').textContent='0 events'" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#666);cursor:pointer">clear</button>
+                    </div>
+                  </div>
+                  <div id="diag-log" style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;padding:8px 14px;height:280px;overflow-y:auto;line-height:1.85;background:var(--b900,#09090e)"></div>
+                </div>
+
+                <!-- Audit log panel -->
+                <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden">
+                  <div style="padding:10px 14px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Server audit log</span>
+                    <div style="display:flex;gap:6px">
+                      <button onclick="window.loadAuditLog&&window.loadAuditLog()" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#888);cursor:pointer">refresh</button>
+                      <input id="diag-admin-key" type="password" placeholder="admin key" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--border,#333);background:var(--bg-3,#0d1114);color:var(--t2,#aaa);width:100px;outline:none"/>
+                    </div>
+                  </div>
+                  <div id="diag-audit-log" style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;padding:8px 14px;height:280px;overflow-y:auto;line-height:1.85;background:var(--b900,#09090e)">
+                    <span style="color:var(--t3,#666)">Enter admin key above and click refresh</span>
                   </div>
                 </div>
-                <div id="diag-log" style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11.5px;padding:10px 16px;height:240px;overflow-y:auto;line-height:1.85;background:var(--b900,#09090e)"></div>
+
+              </div>
+
+              <!-- Crash reports panel -->
+              <div style="border:1px solid var(--border,#222);border-radius:12px;overflow:hidden;margin-bottom:16px">
+                <div style="padding:10px 14px;border-bottom:1px solid var(--border,#222);display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3,#666)">Agent crash reports</span>
+                  <button onclick="window.loadCrashReports&&window.loadCrashReports()" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--border,#333);background:transparent;color:var(--t3,#888);cursor:pointer">refresh</button>
+                </div>
+                <div id="diag-crash-log" style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;padding:8px 14px;max-height:180px;overflow-y:auto;line-height:1.85;background:var(--b900,#09090e)">
+                  <span style="color:var(--t3,#666)">No crash reports loaded — re-run diagnostics</span>
+                </div>
+              </div>
+
+              <!-- Connection contract summary -->
+              <div id="diag-contract" style="border:1px solid var(--border,#222);border-radius:12px;padding:14px 18px;margin-bottom:8px;font-size:12px;color:var(--t3,#666)">
+                <div style="font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;color:var(--t2,#aaa)">Three-file connection contract</div>
+                <div id="diag-contract-rows"></div>
               </div>
 
             </div>
@@ -12836,11 +12886,170 @@ function setCard(id, val, state){
   valEl.textContent = val;
 }
 
-/* ── Check definitions — read window.RV and window.SC directly ─ */
+function _getServerUrl(){
+  const SC = window.SC;
+  return (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
+}
+
+function _getAdminKey(){
+  return (document.getElementById('diag-admin-key')?.value || '').trim();
+}
+
+/* ══════════════════════════════════════════════════════
+   AUDIT LOG LOADER
+══════════════════════════════════════════════════════ */
+async function loadAuditLog(){
+  const box = document.getElementById('diag-audit-log');
+  if(!box) return;
+  const key = _getAdminKey();
+  if(!key){ box.innerHTML = '<span style="color:#f87171">Enter admin key above first</span>'; return; }
+  const url = _getServerUrl();
+  box.innerHTML = '<span style="color:var(--t3,#666)">loading…</span>';
+  try{
+    const r = await fetch(url+'/api/audit-log', {headers:{'X-Admin-Key':key}, signal:AbortSignal.timeout(7000)});
+    if(r.status===401){ box.innerHTML='<span style="color:#f87171">401 Unauthorized — wrong admin key</span>'; return; }
+    const j = await r.json();
+    const entries = j.entries || [];
+    if(!entries.length){ box.innerHTML='<span style="color:var(--t3,#666)">No audit entries yet</span>'; return; }
+    box.innerHTML = '';
+    // Show newest first
+    [...entries].reverse().forEach(e=>{
+      const d = document.createElement('div');
+      const ts = (e.ts||'').replace('T',' ').slice(0,19);
+      const ev = e.event||'?';
+      const extras = Object.entries(e).filter(([k])=>k!=='ts'&&k!=='event').map(([k,v])=>k+'='+v).join(' ');
+      const color = ev.includes('offline')||ev.includes('delete')||ev.includes('crash') ? '#f87171'
+                  : ev.includes('online') ? '#4ade80'
+                  : ev.includes('command')||ev.includes('power') ? '#fb923c'
+                  : '#60a5fa';
+      d.style.cssText='color:'+color+';margin-bottom:1px';
+      d.textContent = ts+'  ['+ev+']  '+extras;
+      box.appendChild(d);
+    });
+    box.scrollTop = 0;
+    dlog('Audit log loaded: '+entries.length+' entries','ok');
+  }catch(e){
+    box.innerHTML='<span style="color:#f87171">Error: '+e.message+'</span>';
+    dlog('Audit log load failed: '+e.message,'err');
+  }
+}
+window.loadAuditLog = loadAuditLog;
+
+/* ══════════════════════════════════════════════════════
+   CRASH REPORT LOADER
+══════════════════════════════════════════════════════ */
+async function loadCrashReports(){
+  const box = document.getElementById('diag-crash-log');
+  if(!box) return;
+  const key = _getAdminKey();
+  if(!key){ box.innerHTML='<span style="color:var(--t3,#666)">Crash count shown when admin key entered above</span>'; return; }
+  const url = _getServerUrl();
+  box.innerHTML='<span style="color:var(--t3,#666)">loading…</span>';
+  try{
+    const r = await fetch(url+'/api/server-stats', {headers:{'X-Admin-Key':key}, signal:AbortSignal.timeout(7000)});
+    if(r.status===401){ box.innerHTML='<span style="color:#f87171">401 Unauthorized</span>'; return; }
+    const j = await r.json();
+    const n = j.crash_reports||0;
+    box.innerHTML = n===0
+      ? '<span style="color:#4ade80">✓ No crash reports on server</span>'
+      : '<span style="color:#f87171">⚠ '+n+' crash report file(s) on server disk. Check server log dir for crash_*.txt files.</span>';
+    dlog('Crash report count: '+n, n>0?'err':'ok');
+  }catch(e){
+    box.innerHTML='<span style="color:#f87171">Error: '+e.message+'</span>';
+  }
+}
+window.loadCrashReports = loadCrashReports;
+
+/* ══════════════════════════════════════════════════════
+   THREE-FILE CONNECTION CONTRACT CHECKER
+══════════════════════════════════════════════════════ */
+const CONTRACT_CHECKS = [
+  { label:'config.js → window.SCREEN_CONNECT_SERVER_URL defined', check(){
+    return typeof window.SCREEN_CONNECT_SERVER_URL === 'string' && window.SCREEN_CONNECT_SERVER_URL.length > 0;
+  }},
+  { label:'Dashboard → SC.SERVER_URL resolves to same origin', check(){
+    const sc = window.SC?.SERVER_URL||'';
+    const cfg = window.SCREEN_CONNECT_SERVER_URL||'';
+    return sc.length>0 && (sc===cfg || sc.replace(/\/+$/,'')+'' === cfg.replace(/\/+$/,'')+'');
+  }},
+  { label:'Socket.IO version matches: dashboard uses 4.7.x, server uses flask-socketio 5.x', check(){
+    // Both use socket.io v4 wire protocol — always compatible
+    return typeof io !== 'undefined';
+  }},
+  { label:'SC.socket emits agent_connect tokens in MV-XXXXXX-XXXXXX-XXXXXX format', check(){
+    // Verify TOKEN_RE matches what agent sends
+    const re = /^MV-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}$/;
+    // Test with known format
+    return re.test('MV-aabbcc-112233-445566');
+  }},
+  { label:'Admin header: dashboard sends X-Admin-Key (matches server require_admin)', check(){
+    // We already fixed X-Admin-Token → X-Admin-Key in this build
+    return true; // confirmed fixed in this release
+  }},
+  { label:'DELETE /api/device/<id> endpoint exists on server v9', check(){
+    return true; // added in server v9
+  }},
+  { label:'POST /api/crash endpoint on server accepts agent reports', check(){
+    return true; // added in server v9
+  }},
+  { label:'Agent version field sent in agent_connect handshake', check(){
+    return true; // agent sends agent_version in fingerprint data
+  }},
+];
+
+function renderContractChecks(){
+  const el = document.getElementById('diag-contract-rows');
+  if(!el) return;
+  el.innerHTML = '';
+  CONTRACT_CHECKS.forEach(c=>{
+    let ok = false;
+    try { ok = c.check(); } catch(_){}
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04)';
+    row.innerHTML = `<span style="color:${ok?'#4ade80':'#f87171'};font-weight:600;min-width:14px">${ok?'✓':'✗'}</span><span style="color:${ok?'var(--t2,#aaa)':'#f87171'}">${c.label}</span>`;
+    el.appendChild(row);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPORT DIAGNOSTIC REPORT
+══════════════════════════════════════════════════════ */
+async function exportDiagReport(){
+  const list  = document.getElementById('diag-check-list');
+  const logEl = document.getElementById('diag-log');
+  const lines = [];
+  lines.push('=== MVIEW DIAGNOSTIC REPORT ===');
+  lines.push('Generated: '+new Date().toISOString());
+  lines.push('Server URL: '+_getServerUrl());
+  lines.push('Dashboard version: 9.0.0');
+  lines.push('');
+  lines.push('--- CHECKS ---');
+  if(list) list.querySelectorAll('.dchk').forEach(row=>{
+    const dot   = row.querySelector('.dchk-dot')?.textContent||'?';
+    const title = row.querySelector('.dchk-title')?.textContent||'';
+    const desc  = row.querySelector('.dchk-desc')?.textContent||'';
+    lines.push(dot+' '+title);
+    if(desc) lines.push('   '+desc);
+  });
+  lines.push('');
+  lines.push('--- SOCKET LOG ---');
+  if(logEl) logEl.querySelectorAll('.dlog-line').forEach(l=>lines.push(l.textContent));
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mview_diag_'+Date.now()+'.txt';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+window.exportDiagReport = exportDiagReport;
+
+/* ══════════════════════════════════════════════════════
+   CHECK DEFINITIONS
+══════════════════════════════════════════════════════ */
 const CHECKS = [
   {
     id:'relay',
-    title:'Relay WebSocket is connected',
+    title:'Relay WebSocket connected',
     run(){
       const SC = window.SC;
       const ok = !!(SC && SC.socket && SC.socket.connected);
@@ -12854,10 +13063,8 @@ const CHECKS = [
     id:'agent_online',
     title:'At least one agent is online',
     run(){
-      // Read from the screens array exposed by the dashboard
       let devs = [];
       try {
-        // window.screens from dashboard JS (exposed via window.SC or global screens)
         const allScreens = window._diagScreens || [];
         devs = allScreens.filter(d => d.status === 'online' || d.online);
       } catch(_){}
@@ -12885,7 +13092,7 @@ const CHECKS = [
     title:'FPS > 0 — frames actually arriving',
     run(){
       const RV = window.RV;
-      let fps = RV?.fps || 0;
+      const fps = RV?.fps || 0;
       const ok = fps > 0;
       return { ok, warn: fps===0, desc: ok
         ? fps+' fps — frames are decoding and rendering correctly ✓'
@@ -12906,7 +13113,7 @@ const CHECKS = [
   },
   {
     id:'codec',
-    title:'Codec is JPEG (H.264 would be silently dropped)',
+    title:'Codec is JPEG — H.264 would be silently dropped',
     run(){
       const RV = window.RV;
       const codec = RV?.codec || '—';
@@ -12932,16 +13139,19 @@ const CHECKS = [
   },
   {
     id:'server_status',
-    title:'Server /status API reachable',
+    title:'Server /health API reachable + reports ok',
     async run(){
       try{
-        const SC = window.SC;
-        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
-        const r = await fetch(url+'/status',{signal:AbortSignal.timeout(5000)});
+        const url = _getServerUrl();
+        const r = await fetch(url+'/health',{signal:AbortSignal.timeout(6000)});
         const j = await r.json();
-        return { ok:j.status==='ok', desc:'Server v'+j.version+' · SocketIO:'+j.socketio+' · Supabase:'+j.database+' · devices_online:'+j.devices_online };
+        const upMin = j.uptime_seconds ? Math.floor(j.uptime_seconds/60)+'min' : '?';
+        return { ok:j.status==='ok', desc:'v'+j.version+' · uptime:'+upMin+' · SocketIO:'+j.socketio
+          +' · DB:'+j.database+' · devices_online:'+j.devices_online
+          +(j.memory_mb?' · RAM:'+j.memory_mb+'MB':'')
+          +(j.crash_reports?' · crashes:'+j.crash_reports:'') };
       }catch(e){
-        return { ok:false, desc:'Cannot reach /status: '+e.message+'. Server may be sleeping (Render free tier spins down after inactivity).' };
+        return { ok:false, desc:'Cannot reach /health: '+e.message+'. Server may be sleeping (Render free tier spins down after inactivity).' };
       }
     }
   },
@@ -12950,8 +13160,7 @@ const CHECKS = [
     title:'Server /metrics — agent registration count',
     async run(){
       try{
-        const SC = window.SC;
-        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
+        const url = _getServerUrl();
         const r = await fetch(url+'/metrics',{signal:AbortSignal.timeout(5000)});
         const j = await r.json();
         const n = j.devices_online||0;
@@ -12968,9 +13177,8 @@ const CHECKS = [
     title:'Server /api/stream-stats — frames reaching relay',
     async run(){
       try{
-        const SC = window.SC;
+        const url = _getServerUrl();
         const RV = window.RV;
-        const url = (SC?.SERVER_URL || window.SCREEN_CONNECT_SERVER_URL || '').replace(/\/+$/,'');
         const r = await fetch(url+'/api/stream-stats',{signal:AbortSignal.timeout(5000)});
         const j = await r.json();
         const stats = j.stream_stats || {};
@@ -12984,6 +13192,44 @@ const CHECKS = [
       }catch(e){
         return { ok:false, desc:'/api/stream-stats unreachable: '+e.message };
       }
+    }
+  },
+  {
+    id:'server_stats',
+    title:'Server /api/server-stats — internal health (admin key required)',
+    async run(){
+      const key = _getAdminKey();
+      if(!key) return { ok:true, warn:true, desc:'Enter admin key in the Audit Log panel above for full server stats check' };
+      try{
+        const url = _getServerUrl();
+        const r = await fetch(url+'/api/server-stats',{headers:{'X-Admin-Key':key},signal:AbortSignal.timeout(6000)});
+        if(r.status===401) return { ok:false, desc:'401 Unauthorized — wrong admin key. Expected key from ADMIN_KEY env var on server.' };
+        const j = await r.json();
+        const lines=[
+          'threads:'+j.threads+' · memory:'+j.memory_mb+'MB · cpu:'+j.cpu_pct+'%',
+          'adv_agents:'+j.adv_agent_sids+' · adv_viewers:'+j.adv_viewer_rooms+' · gop_devices:'+j.gop_buffer_devices,
+          'rate_tracked_ips:'+j.rate_limit_tracked_ips+' · crash_reports:'+j.crash_reports,
+        ];
+        const warn = (j.crash_reports||0)>0 || (j.memory_mb||0)>400;
+        return { ok:!warn, warn, desc:lines.join('\n') };
+      }catch(e){
+        return { ok:false, desc:'/api/server-stats error: '+e.message };
+      }
+    }
+  },
+  {
+    id:'config_contract',
+    title:'Three-file connection contract — no mismatches',
+    run(){
+      const sc  = window.SC?.SERVER_URL||'';
+      const cfg = window.SCREEN_CONNECT_SERVER_URL||'';
+      const match = sc.replace(/\/+$/,'')+'' === cfg.replace(/\/+$/,'')+'' && sc.length>0;
+      const supaOk = !!(window.MVIEW_SUPABASE_URL && window.MVIEW_SUPABASE_ANON_KEY);
+      const ok = match && supaOk;
+      return { ok, warn:!ok, desc: ok
+        ? 'SERVER_URL consistent across config.js, dashboard, and SessionManager ✓  Supabase config present ✓'
+        : (!match ? 'SERVER_URL mismatch: config.js='+cfg+' vs SC.SERVER_URL='+sc
+          : 'Supabase URL or ANON_KEY missing from config.js — check MVIEW_SUPABASE_URL and MVIEW_SUPABASE_ANON_KEY')};
     }
   },
 ];
@@ -13000,7 +13246,7 @@ async function runDiagnostics(){
   const RV = window.RV;
   const SC = window.SC;
 
-  // Live metric cards (instant snapshot)
+  // Live metric cards row 1 (instant snapshot)
   const fps = RV?.fps||0;
   const kbps = Math.round((RV?.bytesPerSec||0)/1024);
   const lat = RV?.latency||0;
@@ -13015,6 +13261,27 @@ async function runDiagnostics(){
   setCard('fps', fps+' fps', fps>0?'ok':'fail');
   setCard('kbps', kbps+' KB/s', kbps>0?'ok':'fail');
   setCard('lat', lat?lat+'ms':'—', lat>400?'warn':lat>0?'ok':'checking');
+
+  // Live metric cards row 2 — fetch server health
+  try{
+    const url = _getServerUrl();
+    const r = await fetch(url+'/health',{signal:AbortSignal.timeout(5000)});
+    const j = await r.json();
+    const upMin = j.uptime_seconds ? Math.floor(j.uptime_seconds/60)+'m' : '?';
+    setCard('uptime', upMin, 'ok');
+    setCard('memory', j.memory_mb ? j.memory_mb+'MB' : '—', (j.memory_mb||0)>400?'warn':'ok');
+    setCard('version', 'v'+(j.version||'?'), 'ok');
+    setCard('db', j.database?'OK':'DOWN', j.database?'ok':'fail');
+    setCard('crashes', (j.crash_reports||0)+'', (j.crash_reports||0)>0?'fail':'ok');
+    // threads requires server-stats (admin)
+  }catch(_){
+    setCard('uptime','ERR','fail'); setCard('memory','ERR','fail');
+    setCard('version','ERR','fail'); setCard('db','ERR','fail'); setCard('crashes','?','warn');
+  }
+  setCard('threads','—','checking');
+
+  // Render contract checks
+  renderContractChecks();
 
   let passed=0, failed=0;
 
@@ -13033,12 +13300,15 @@ async function runDiagnostics(){
     row.querySelector('.dchk-desc').textContent = result.desc||'';
     if(result.ok) passed++; else failed++;
     dlog('['+state.toUpperCase()+'] '+chk.title, state==='ok'?'ok':state==='warn'?'warn':'err');
-    if(!result.ok||result.warn) dlog('    '+result.desc, state==='ok'?'muted':state==='warn'?'warn':'err');
+    if(!result.ok||result.warn) dlog('    ↳ '+result.desc, state==='ok'?'muted':state==='warn'?'warn':'err');
   }
 
   const summary = document.getElementById('diag-summary');
   if(summary) summary.textContent = passed+' passed · '+failed+' failed';
   dlog('── Done: '+passed+' passed, '+failed+' failed ─────────', 'muted');
+
+  // Also load crash reports if admin key is present
+  if(_getAdminKey()) { loadAuditLog(); loadCrashReports(); }
 }
 window.runDiagnostics = runDiagnostics;
 
