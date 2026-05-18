@@ -562,7 +562,8 @@ def add_security_headers(resp):
     resp.headers["X-Request-ID"] = _req_id()
     return resp
 
-
+@app.route("/")
+def serve_root():
     for f in ("index.html", "app.html"):
         if Path(f).is_file():
             return send_from_directory(".", f)
