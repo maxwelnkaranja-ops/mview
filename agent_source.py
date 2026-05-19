@@ -748,17 +748,23 @@ class FrameDiffer:
         self._prev = None
 
     def changed(self, frame) -> bool:
-        if not CV2_OK or frame is None:
-            return True  # Always send frames when cv2 unavailable
+        if frame is None:
+            return False
+        if not CV2_OK:
+            # If cv2 is missing, we can't do diffing easily.
+            # To avoid 0 FPS / 0 KBps reports on the dashboard, we MUST send frames.
+            return True
         if self._prev is None:
-            self._prev = frame.copy(); return True
+            self._prev = frame.copy()
+            return True
         try:
-            # Downsample to 1/2 (not 1/4) for more accurate change detection
+            # Downsample to 1/2 for more accurate change detection
             s = cv2.resize(frame,      (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
             p = cv2.resize(self._prev, (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
             # Lower threshold (4 vs 8) — catches cursor movement & subtle UI changes
             diff = cv2.absdiff(s, p).max() > 4
-            if diff: self._prev = frame.copy()
+            if diff:
+                self._prev = frame.copy()
             return diff
         except Exception as e:
             log.debug(f"FrameDiffer error: {e}")

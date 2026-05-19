@@ -1,0 +1,117 @@
+System Diagnostics
+Full-stack health — server, relay, agents, stream pipeline, audit log, crash reports
+
+Re-run
+
+Export
+Relay Socket
+Connected
+Agents Online
+1 online
+Stream
+Active
+FPS
+0 fps
+KB/s
+0 KB/s
+Latency
+805ms
+Server Uptime
+118m
+Server RAM
+—
+Threads
+—
+Crash Reports
+0
+Server Ver
+v9.0.0
+Database
+OK
+Root cause checks
+6 passed · 6 failed
+✓
+Relay WebSocket connected
+Socket.IO connected ✓ Server: https://screen-connect-rtca.onrender.com
+✓
+At least one agent is online
+1 agent(s) connected: DESKTOP-UQT5UQ7
+✓
+A device is selected for monitoring
+Watching: MV-A5ABD3848FA805741C1B
+!
+FPS > 0 — frames actually arriving
+0 fps. TOP CAUSE: OpenCV (cv2) not installed on the agent. Fix: pip install opencv-python-headless Then restart the agent and reconnect.
+!
+Bandwidth > 0 KB/s — bytes flowing
+0 KB/s. frame_bin events not arriving. Check agent log for "FIRST frame from agent". If missing: cv2 not installed, or viewer_count stuck at 0 on agent side.
+✓
+Codec is JPEG — H.264 would be silently dropped
+No frames received yet — codec unknown
+!
+Latency — relay round-trip
+805ms high latency. Relay socket alive but no video = confirms issue is agent-side (cv2/encode pipeline), NOT the network
+✓
+Server /health API reachable + reports ok
+v9.0.0 · uptime:118min · SocketIO:true · DB:true · devices_online:1
+✓
+Server /metrics — agent registration count
+1 device(s) registered on server: DESKTOP-UQT5UQ7
+✗
+Server /api/stream-stats — frames reaching relay
+No stream stats for device MV-A5ABD3848FA805741C1B on server. Frames not reaching relay.
+✗
+Server /api/server-stats — internal health (admin key required)
+401 Unauthorized — wrong admin key. Expected key from ADMIN_KEY env var on server.
+!
+Three-file connection contract — no mismatches
+SERVER_URL mismatch: config.js= vs SC.SERVER_URL=https://screen-connect-rtca.onrender.com
+Live socket log
+20 events
+clear
+13:08:50  ── Running 12 checks ────────────────────
+13:08:51  [OK] Relay WebSocket connected
+13:08:51  [OK] At least one agent is online
+13:08:51  [OK] A device is selected for monitoring
+13:08:51  [WARN] FPS > 0 — frames actually arriving
+13:08:51      ↳ 0 fps. TOP CAUSE: OpenCV (cv2) not installed on the agent.
+  Fix: pip install opencv-python-headless
+  Then restart the agent and reconnect.
+13:08:51  [WARN] Bandwidth > 0 KB/s — bytes flowing
+13:08:51      ↳ 0 KB/s. frame_bin events not arriving. Check agent log for "FIRST frame from agent". If missing: cv2 not installed, or viewer_count stuck at 0 on agent side.
+13:08:51  [OK] Codec is JPEG — H.264 would be silently dropped
+13:08:51  [WARN] Latency — relay round-trip
+13:08:51      ↳ 805ms high latency. Relay socket alive but no video = confirms issue is agent-side (cv2/encode pipeline), NOT the network
+13:08:51  [OK] Server /health API reachable + reports ok
+13:08:53  [OK] Server /metrics — agent registration count
+13:08:53  [FAIL] Server /api/stream-stats — frames reaching relay
+13:08:53      ↳ No stream stats for device MV-A5ABD3848FA805741C1B on server. Frames not reaching relay.
+13:08:54  [FAIL] Server /api/server-stats — internal health (admin key required)
+13:08:54      ↳ 401 Unauthorized — wrong admin key. Expected key from ADMIN_KEY env var on server.
+13:08:54  [WARN] Three-file connection contract — no mismatches
+13:08:54      ↳ SERVER_URL mismatch: config.js= vs SC.SERVER_URL=https://screen-connect-rtca.onrender.com
+13:08:54  ── Done: 6 passed, 6 failed ─────────
+Server audit log
+refresh
+••••
+401 Unauthorized — wrong admin key
+Agent crash reports
+refresh
+401 Unauthorized
+Three-file connection contract
+✗
+config.js → window.SCREEN_CONNECT_SERVER_URL defined
+✓
+Dashboard → SC.SERVER_URL resolves to same origin as config.js
+✓
+Socket.IO version matches: dashboard uses 4.7.x, server uses flask-socketio 5.x
+✓
+SC.socket emits agent_connect tokens in MV-XXXXXX-XXXXXX-XXXXXX format
+✓
+Admin header: dashboard sends X-Admin-Key (matches server require_admin)
+✓
+DELETE /api/device/ endpoint exists on server v9
+✓
+POST /api/crash endpoint on server accepts agent reports
+✓
+Agent version field sent in agent_connect handshake
