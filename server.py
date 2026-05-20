@@ -1573,12 +1573,12 @@ if SOCKETIO_OK and sio:
         register the device first (race condition on fast reconnects).
         """
         token = data.get("token", "")
-        did   = token  # token IS the device_id in the main site
+        did   = data.get("device_id") or token  # FIXED: prioritize unique hardware ID
         sid   = request.sid
 
-        if not token:
-            log.warning(f"agent_auth: received empty token from sid={sid}")
-            sio.emit("auth_error", {"msg": "Empty token"}, room=sid)
+        if not token and not did:
+            log.warning(f"agent_auth: received empty token/did from sid={sid}")
+            sio.emit("auth_error", {"msg": "Empty token/did"}, room=sid)
             return
 
         # Wait up to 8s for agent_connect to complete (race fix)

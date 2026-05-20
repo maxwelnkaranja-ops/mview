@@ -7,6 +7,8 @@
  * Just use the plain https:// URL as shown below.
  */
 window.MVIEW_SERVER_URL = 'https://screen-connect-rtca.onrender.com';
+window.SCREEN_CONNECT_SERVER_URL = window.MVIEW_SERVER_URL; // Compatibility for diagnostics
+window.MVIEW_ADMIN_KEY = 'mview-admin-secret'; // For dashboard diagnostics
 
 // ── Supabase credentials ───────────────────────────────────
 window.MVIEW_SUPABASE_URL      = 'https://iacdzpcoftxxcoigopun.supabase.co';

@@ -285,7 +285,7 @@ CONFIG = {
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
     "STREAM_FPS":           20,         # target FPS
-    "STREAM_MIN_FPS":       2,          # drop to 2fps on static screens
+    "STREAM_MIN_FPS":       5,          # drop to 5fps on static screens
     "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "video",    # "video" or "screenshot"
@@ -429,8 +429,8 @@ def get_device_fingerprint() -> dict:
     uname = platform.uname()
     vm    = psutil.virtual_memory()
     fp = {
-        "device_id":       CONFIG["DEVICE_TOKEN"],
-        "token":           CONFIG["DEVICE_TOKEN"],
+        "device_id":       get_device_id(),  # FIXED: Use unique hardware ID as primary key
+        "token":           CONFIG["DEVICE_TOKEN"], # Keep invite token separate
         "hardware_id":     get_device_id(),
         "hostname":        socket.gethostname(),
         "username":        os.getenv("USERNAME") or os.getenv("USER") or "unknown",
@@ -675,9 +675,9 @@ class AdaptiveFPS:
             self._cur = self.max_fps
         else:
             self._idle += 1
-            # ENTERPRISE: drop FPS faster on static screens to save bandwidth
-            if self._idle > 30:  # 1 second at 30fps
-                self._cur = max(self.min_fps, 2)
+            # ENTERPRISE: drop FPS more conservatively to avoid "1 FPS" feeling
+            if self._idle > 150:  # 5 seconds at 30fps
+                self._cur = max(self.min_fps, 5) # Minimum 5 FPS for smoother feel
 
     @property
     def fps(self): return self._cur
@@ -956,11 +956,18 @@ async def _adv_task_stream_frames():
             changed = differ.changed(raw)
             fps_ctl.report(changed)
 
+            # FIXED: Downscale 50% for high FPS and low CPU usage
+            # Browsers handle the scaling back up effortlessly.
+            h_orig, w_orig = raw.shape[:2]
+            small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST) if CV2_OK else raw
+            if CV2_OK:
+                h, w = small.shape[:2]
+            
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
             
             try:
                 payload, is_key = await loop.run_in_executor(
-                    _adv_pool, lambda f=raw, k=force_key: encoder.encode_frame(f, k)
+                    _adv_pool, lambda f=small, k=force_key: encoder.encode_frame(f, k)
                 )
             except Exception as e:
                 log.debug(f"Encode error: {e}")
@@ -1053,7 +1060,10 @@ async def _adv_main(server_url: str, token: str):
         global _adv_authed
         _adv_authed = False   # FIX: reset on every reconnect so stream loop re-waits
         log.info("Advanced Monitor: connected — authenticating…")
-        await sio.emit("agent_auth", {"token": token})
+        await sio.emit("agent_auth", {
+            "token":     token,
+            "device_id": get_device_id(), # FIXED: Send unique ID to avoid conflicts
+        })
         # FIX: if auth_ok doesn't arrive within 5s (server restart race),
         # re-send agent_auth automatically — covers the window between main socket
         # agent_connect and adv socket agent_auth
@@ -1061,7 +1071,10 @@ async def _adv_main(server_url: str, token: str):
             await asyncio.sleep(5)
             if not _adv_authed and sio.connected:
                 log.info("Advanced Monitor: auth_ok not received after 5s — re-sending agent_auth")
-                await sio.emit("agent_auth", {"token": token})
+                await sio.emit("agent_auth", {
+                    "token":     token,
+                    "device_id": get_device_id(),
+                })
         asyncio.ensure_future(_auth_watchdog())
 
     @sio.event
@@ -1086,13 +1099,19 @@ async def _adv_main(server_url: str, token: str):
         })
         # FIX Issue 1: Ask server to re-send viewer_count in case dashboard connected
         # before this adv socket finished auth (race condition).
-        await sio.emit("agent_auth_ready", {"token": token})
+        await sio.emit("agent_auth_ready", {
+            "token":     token,
+            "device_id": get_device_id(),
+        })
         # Also proactively request viewer count every 30s to stay in sync
         async def _keep_sync():
             while _adv_authed:
                 await asyncio.sleep(10)  # FIX: check every 10s (was 30s) to recover faster from viewer_count race
                 if _adv_authed:
-                    await sio.emit("agent_auth_ready", {"token": token})
+                    await sio.emit("agent_auth_ready", {
+                        "token":     token,
+                        "device_id": get_device_id(),
+                    })
         asyncio.create_task(_keep_sync())
 
     @sio.on("auth_error")
@@ -1103,7 +1122,10 @@ async def _adv_main(server_url: str, token: str):
         log.warning(f"Advanced Monitor auth failed: {data.get('msg')} — retrying in 2s…")
         await asyncio.sleep(2)
         log.info("Advanced Monitor: re-sending agent_auth…")
-        await sio.emit("agent_auth", {"token": token})
+        await sio.emit("agent_auth", {
+            "token":     token,
+            "device_id": get_device_id(),
+        })
 
     @sio.on("viewer_count")
     async def on_viewer_count(data):
@@ -1326,17 +1348,27 @@ def _start_screenshot_fallback(sio_client):
                 h, w = frame.shape[:2]
                 # FIX: PIL fallback when cv2 not available in compiled exe
                 if CV2_OK:
-                    ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, quality])
+                    # FIXED: Downscale 50% for high FPS and low CPU
+                    h_orig, w_orig = frame.shape[:2]
+                    small = cv2.resize(frame, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
+                    ok, buf = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, quality])
                     payload = buf.tobytes() if ok else None
+                    if ok:
+                        h, w = small.shape[:2]
                 else:
                     try:
                         from PIL import Image as _PI
                         from io import BytesIO as _BIO
                         import numpy as _np2
+                        # FIXED: Downscale 50% for PIL to save CPU and improve FPS
+                        h_orig, w_orig = frame.shape[:2]
                         rgb = _np2.array(frame)[:, :, ::-1]
+                        img = _PI.fromarray(rgb, "RGB")
+                        img = img.resize((w_orig // 2, h_orig // 2), _PI.NEAREST)
                         _bio = _BIO()
-                        _PI.fromarray(rgb, "RGB").save(_bio, "JPEG", quality=quality)
+                        img.save(_bio, "JPEG", quality=quality)
                         payload = _bio.getvalue()
+                        w, h = img.size # Update dimensions for the header
                     except Exception:
                         payload = None
                 if not payload:
@@ -1348,8 +1380,10 @@ def _start_screenshot_fallback(sio_client):
                     try:
                         b64_frame = base64.b64encode(payload).decode()
                         b64_pkt   = base64.b64encode(pkt).decode()
+                        # FIXED: Use unique hardware ID to avoid machine conflicts
+                        did = get_device_id()
                         sio_client.emit("screenshot_result", {
-                            "device_id": CONFIG["DEVICE_TOKEN"],
+                            "device_id": did,
                             "frame":     b64_frame,
                             "image":     b64_frame,
                             "w": w, "h": h,
@@ -1358,7 +1392,7 @@ def _start_screenshot_fallback(sio_client):
                         # FIX: send only b64 (no list key) — list(pkt) for a 200KB frame
                         # allocates 200K Python int objects and is extremely slow
                         sio_client.emit("frame_bin_relay", {
-                            "device_id": CONFIG["DEVICE_TOKEN"],
+                            "device_id": did,
                             "b64": b64_pkt,
                         })
                     except Exception as e:
