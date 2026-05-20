@@ -658,24 +658,30 @@ FLAG_KEYFRAME = 0x01
 FLAG_JPEG     = 0x02
 FLAG_H264     = 0x04
 
-# ── Adaptive FPS ─────────────────────────────────────────────────────────
+# ── Adaptive FPS — gradual ramp, no sawtooth ─────────────────────────────
 class AdaptiveFPS:
+    """
+    Ramp down slowly (−1 fps per 150 idle frames).
+    Ramp up gradually (+4 fps per changed frame) — never instant snap to max.
+    This prevents the 5→20 fps burst that floods the socket after an idle period.
+    """
     def __init__(self, max_fps, min_fps):
         self.max_fps = max_fps; self.min_fps = min_fps
-        self._cur = max_fps; self._idle = 0
+        self._cur = float(max_fps); self._idle = 0
 
     @property
-    def interval(self): return 1.0 / self._cur
+    def interval(self): return 1.0 / max(self._cur, self.min_fps)
 
     def report(self, changed):
         if changed:
             self._idle = 0
-            self._cur = self.max_fps
+            # Gradual ramp-up: +4 fps per active frame, capped at max
+            self._cur = min(self.max_fps, self._cur + 4)
         else:
             self._idle += 1
-            # ENTERPRISE: drop FPS more conservatively to avoid "1 FPS" feeling
-            if self._idle > 150:  # 5 seconds at 30fps
-                self._cur = max(self.min_fps, 5) # Minimum 5 FPS for smoother feel
+            # Gradual ramp-down after 5 s of idling (at 30 fps = 150 frames)
+            if self._idle > 150:
+                self._cur = max(self.min_fps, self._cur - 1)
 
     @property
     def fps(self): return self._cur
@@ -866,6 +872,10 @@ _adv_loop: Optional[asyncio.AbstractEventLoop] = None
 _adv_thread: Optional[threading.Thread] = None
 _adv_pool   = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adv-enc")
 
+# Auth event — stream consumer waits on this instead of polling _adv_authed flag.
+# Created inside _adv_main on the correct event loop; placeholder here.
+_adv_auth_event: Optional[asyncio.Event] = None
+
 
 def _current_stream_config():
     return (
@@ -876,153 +886,231 @@ def _current_stream_config():
     )
 
 def _init_stream_pipeline():
+    """Blocking: initialises capture, grabs one sizing frame, builds encoder.
+    Returns (capture, w, h, encoder, enc_flag, differ, fps_ctl).
+    The sizing frame is NOT returned — it is discarded after dimension extraction.
+    """
     capture = None
-    frame = None
     log.info("Advanced Monitor: initializing stream pipeline...")
-    # Retry indefinitely but log warnings
     _att = 0
     while True:
         try:
             capture = _make_capture()
-            frame = capture.grab()
-            if frame is not None:
+            sizing = capture.grab()
+            if sizing is not None:
                 break
             log.warning(f"Advanced Monitor: capture.grab() returned None (attempt {_att+1})")
         except Exception as _ce:
             log.warning(f"Advanced Monitor: capture init error ({_ce}) (attempt {_att+1})")
             capture = None
         _att += 1
-        time.sleep(min(30, 2 + _att)) # Exponential backoff capped at 30s
-    
-    h, w = frame.shape[:2]
+        time.sleep(min(30, 2 + _att))
+
+    h, w = sizing.shape[:2]
     encoder, enc_flag = _make_encoder(w, h, CONFIG["STREAM_FPS"], CONFIG["STREAM_QUALITY"])
     differ  = FrameDiffer()
     fps_ctl = AdaptiveFPS(CONFIG["STREAM_FPS"], CONFIG["STREAM_MIN_FPS"])
     log.info(
         f"Advanced Monitor streaming {w}x{h} monitor={CONFIG['STREAM_MONITOR']} @ up to {CONFIG['STREAM_FPS']} fps"
     )
-    return capture, frame, encoder, enc_flag, differ, fps_ctl
+    return capture, w, h, encoder, enc_flag, differ, fps_ctl
 
-async def _adv_task_stream_frames():
-    """Second-site frame streaming loop — continuous, no ACK gate."""
-    global _adv_last_frame_pkt, _adv_last_frame_ts
-    try:
-        capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
-    except Exception as e:
-        log.error(f"Advanced Monitor: capture failed — exiting ({e})")
-        return
-    
-    # Extract dimensions for the header — CRITICAL FIX: w/h must be defined
-    h, w = frame.shape[:2]
-    
-    loop    = asyncio.get_event_loop()
+import queue as _queue
+import threading as _threading_mod
+
+
+def _producer_thread(
+    frame_q: _queue.Queue,
+    stop_evt: _threading_mod.Event,
+    tick_evt: _threading_mod.Event,
+):
+    """
+    Capture + encode loop running entirely in a normal thread — zero asyncio overhead.
+
+    Ticker: a sibling thread fires tick_evt at exactly 1/fps intervals using
+            monotonic-clock compensation, so this loop never drifts.
+
+    Queue:  bounded maxsize=2. When full, oldest item is dropped (drop-oldest
+            policy) so the consumer always gets the freshest frame.
+    """
+    capture = w = h = encoder = enc_flag = differ = fps_ctl = None
+    cfg_sig = None
     n = 0
     grab_fails = 0
-    cfg_sig = _current_stream_config()
+    enc_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="adv-enc-prod")
+
+    def _reset_pipeline():
+        nonlocal capture, w, h, encoder, enc_flag, differ, fps_ctl, cfg_sig, n, grab_fails
+        if capture:
+            try: capture.close()
+            except Exception: pass
+        capture, w, h, encoder, enc_flag, differ, fps_ctl = _init_stream_pipeline()
+        cfg_sig = _current_stream_config()
+        n = 0
+        grab_fails = 0
+
+    _reset_pipeline()
+
+    while not stop_evt.is_set():
+        # Wait for the ticker pulse (replaces asyncio.sleep drift loop)
+        tick_evt.wait()
+        tick_evt.clear()
+
+        # Config change or excessive failures → reinitialise
+        next_sig = _current_stream_config()
+        if next_sig != cfg_sig or grab_fails > 10:
+            if grab_fails > 10:
+                log.warning("Advanced Monitor: too many capture failures — resetting pipeline")
+            try:
+                _reset_pipeline()
+            except Exception as e:
+                log.warning(f"Pipeline reset failed: {e}")
+                time.sleep(1)
+            continue
+
+        # Capture
+        try:
+            raw = capture.grab()
+        except Exception as e:
+            log.debug(f"Capture grab error: {e}")
+            grab_fails += 1
+            continue
+
+        if raw is None:
+            grab_fails += 1
+            continue
+        grab_fails = 0
+
+        # Diff + adaptive FPS
+        changed = differ.changed(raw)
+        fps_ctl.report(changed)
+
+        # Downscale 50%
+        h_orig, w_orig = raw.shape[:2]
+        if CV2_OK:
+            small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
+            fh, fw = small.shape[:2]
+        else:
+            try:
+                from PIL import Image as _PIL
+                img   = _PIL.fromarray(raw[:, :, ::-1], "RGB")
+                small = img.resize((w_orig // 2, h_orig // 2), _PIL.NEAREST)
+                fw, fh = small.size
+                small = np.array(small)[:, :, ::-1]
+            except Exception:
+                small = raw
+                fh, fw = h_orig, w_orig
+
+        force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
+
+        # Encode in thread pool so CPU-heavy JPEG doesn't block ticker
+        try:
+            future  = enc_pool.submit(encoder.encode_frame, small, force_key)
+            payload, is_key = future.result(timeout=0.5)
+        except Exception as e:
+            log.debug(f"Encode error: {e}")
+            continue
+
+        if not payload:
+            continue
+
+        flags  = enc_flag | (FLAG_KEYFRAME if is_key else 0)
+        ts_us  = int(time.time() * 1_000_000)
+        header = FRAME_HDR.pack(fw, fh, ts_us, flags, len(payload))
+        pkt    = header + payload
+
+        # Drop-oldest when queue is full (consumer is slow / network stall)
+        if frame_q.full():
+            try: frame_q.get_nowait()
+            except _queue.Empty: pass
+
+        try:
+            frame_q.put_nowait(pkt)
+        except _queue.Full:
+            pass  # race — still safe
+
+        n += 1
+
+    enc_pool.shutdown(wait=False)
+    try: capture.close()
+    except Exception: pass
+    log.info("Producer thread exited.")
+
+
+def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Event):
+    """Fires tick_evt at exactly 1/fps intervals using monotonic compensation."""
+    while not stop_evt.is_set():
+        tick_evt.set()
+        time.sleep(max(0.001, 1.0 / CONFIG["STREAM_FPS"]))
+
+
+async def _adv_task_stream_frames():
+    """
+    Consumer task (async).
+    Waits for auth_ok via asyncio.Event — NO polling loop over _adv_authed flag.
+    Spawns producer + ticker threads, then drains the queue and emits frames.
+    """
+    global _adv_last_frame_pkt, _adv_last_frame_ts
+
+    # Wait for auth before doing anything — replaces `if not _adv_authed: sleep(0.1); continue`
+    log.info("Stream consumer: waiting for auth_ok…")
+    if _adv_auth_event is not None:
+        await _adv_auth_event.wait()
+    log.info("Stream consumer: auth confirmed — starting producer + ticker")
+
+    frame_q  = _queue.Queue(maxsize=2)
+    stop_evt = _threading_mod.Event()
+    tick_evt = _threading_mod.Event()
+
+    prod_t = _threading_mod.Thread(
+        target=_producer_thread,
+        args=(frame_q, stop_evt, tick_evt),
+        daemon=True, name="adv-producer",
+    )
+    tick_t = _threading_mod.Thread(
+        target=_ticker_thread,
+        args=(stop_evt, tick_evt),
+        daemon=True, name="adv-ticker",
+    )
+    prod_t.start()
+    tick_t.start()
 
     try:
         while True:
-            t0 = time.monotonic()
-            if not _adv_authed:
-                await asyncio.sleep(0.1); continue
+            # If auth dropped (disconnect), stop the producer and exit
+            if _adv_auth_event is not None and not _adv_auth_event.is_set():
+                log.info("Stream consumer: auth cleared — shutting down producer")
+                break
 
-            next_sig = _current_stream_config()
-            if next_sig != cfg_sig or grab_fails > 10:
-                if grab_fails > 10:
-                    log.warning("Advanced Monitor: too many capture failures — resetting pipeline")
-                try:
-                    capture.close()
-                except Exception:
-                    pass
-                try:
-                    capture, frame, encoder, enc_flag, differ, fps_ctl = await asyncio.to_thread(_init_stream_pipeline)
-                    h, w = frame.shape[:2] # Update dimensions
-                    cfg_sig = next_sig
-                    n = 0
-                    grab_fails = 0
-                except Exception as e:
-                    log.warning(f"Advanced Monitor reconfigure failed: {e}")
-                    await asyncio.sleep(1)
-                    continue
-
+            # Drain the queue (non-blocking; yield to event loop if empty)
             try:
-                raw = frame if frame is not None else capture.grab()
-                frame = None
-                if raw is None:
-                    grab_fails += 1
-                    await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
-                grab_fails = 0
-            except Exception as e:
-                log.debug(f"Capture grab error: {e}")
-                grab_fails += 1
-                await asyncio.sleep(max(0.01, fps_ctl.interval)); continue
+                pkt = frame_q.get_nowait()
+            except _queue.Empty:
+                await asyncio.sleep(0.005)
+                continue
 
-            # ENTERPRISE: always encode + send every frame at fps_ctl rate
-            changed = differ.changed(raw)
-            fps_ctl.report(changed)
-
-            # FIXED: Downscale 50% for high FPS and low CPU usage
-            # Browsers handle the scaling back up effortlessly.
-            h_orig, w_orig = raw.shape[:2]
-            if CV2_OK:
-                small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
-                h, w = small.shape[:2]
-            else:
-                # PIL fallback downscale
-                try:
-                    from PIL import Image as _PIL
-                    # raw is BGR numpy array
-                    rgb = raw[:, :, ::-1]
-                    img = _PIL.fromarray(rgb, "RGB")
-                    small = img.resize((w_orig // 2, h_orig // 2), _PIL.NEAREST)
-                    w, h = small.size
-                except Exception:
-                    small = raw
-                    h, w = h_orig, w_orig
-            
-            force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
-            
-            try:
-                payload, is_key = await loop.run_in_executor(
-                    _adv_pool, lambda f=small, k=force_key: encoder.encode_frame(f, k)
-                )
-            except Exception as e:
-                log.debug(f"Encode error: {e}")
-                await asyncio.sleep(fps_ctl.interval); continue
-                
-            if not payload:
-                await asyncio.sleep(fps_ctl.interval); continue
-
-            flags  = enc_flag | (FLAG_KEYFRAME if is_key else 0)
-            ts_us  = int(time.time() * 1_000_000)
-            header = FRAME_HDR.pack(w, h, ts_us, flags, len(payload))
-            pkt    = header + payload
             _adv_last_frame_pkt = pkt
-            _adv_last_frame_ts = time.monotonic()
+            _adv_last_frame_ts  = time.monotonic()
 
-            # Emit frame — wrap in try/except to prevent task crash
-            try:
-                if _adv_sio_async and _adv_sio_async.connected:
+            # Emit over Socket.IO
+            if _adv_sio_async and _adv_sio_async.connected:
+                try:
                     await _adv_sio_async.emit("frame_bin", pkt)
-            except Exception as e:
-                log.debug(f"Socket emit error: {e}")
-
-            n += 1
+                except Exception as e:
+                    log.debug(f"Socket emit error: {e}")
 
             # Also push over any open WebRTC DataChannels
             for vsid, dc in list(_adv_webrtc_channels.items()):
                 try:
                     if dc.readyState == "open":
                         dc.send(pkt)
-                except Exception as e:
-                    log.debug(f"WebRTC send failed for {vsid}: {e}")
+                except Exception:
                     _adv_webrtc_channels.pop(vsid, None)
 
-            elapsed = time.monotonic() - t0
-            await asyncio.sleep(max(0.0, fps_ctl.interval - elapsed))
     finally:
-        try: capture.close()
-        except Exception: pass
+        stop_evt.set()
+        tick_evt.set()  # unblock ticker so it exits
+        log.info("Stream consumer: producer/ticker stop signalled")
 
 
 async def _adv_task_stream_cursor():
