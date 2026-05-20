@@ -131,6 +131,22 @@ _console_handler.setFormatter(_log_fmt)
 logging.basicConfig(level=logging.INFO, handlers=[_file_handler, _console_handler])
 log = logging.getLogger("screenconnect")
 
+class SocketIOLogHandler(logging.Handler):
+    """Custom logging handler that emits log records via Socket.IO."""
+    def emit(self, record):
+        if not SOCKETIO_OK or not sio:
+            return
+        try:
+            msg = self.format(record)
+            # Emit to the diagnostics room
+            sio.emit("server_log", {"msg": msg, "level": record.levelname}, room="diagnostics")
+        except Exception:
+            pass
+
+_socket_handler = SocketIOLogHandler()
+_socket_handler.setFormatter(_log_fmt)
+log.addHandler(_socket_handler)
+
 _req_local = threading.local()
 
 def _req_id() -> str:
@@ -1244,6 +1260,22 @@ if SOCKETIO_OK and sio:
         except Exception as e:
             log.error(f"_broadcast_device_list error: {e}")
 
+    @sio.on("join_diagnostics")
+    def on_join_diagnostics(data):
+        key = data.get("admin_key", "")
+        if key == ADMIN_KEY:
+            join_room("diagnostics")
+            log.info(f"Dashboard {request.sid} joined diagnostics room")
+            sio.emit("diagnostics_joined", {"status": "ok"}, room=request.sid)
+        else:
+            log.warning(f"Unauthorized diagnostics join attempt from {request.sid}")
+            sio.emit("diagnostics_joined", {"status": "error", "msg": "Invalid admin key"}, room=request.sid)
+
+    @sio.on("leave_diagnostics")
+    def on_leave_diagnostics(data):
+        leave_room("diagnostics")
+        log.info(f"Dashboard {request.sid} left diagnostics room")
+
     @sio.on("subscribe_stream")
     def on_subscribe_stream(data):
         pass  # legacy no-op
@@ -1262,6 +1294,7 @@ if SOCKETIO_OK and sio:
             from flask_socketio import join_room as _jr
             did = data.get("device_id", "")
             sid = request.sid
+            log.info(f"Viewer {sid} requested to watch device: {did}")
             old_adv_did = _adv_viewer_rooms.get(sid)
 
             if not did:
@@ -1583,6 +1616,8 @@ if SOCKETIO_OK and sio:
         did   = data.get("device_id") or token
         sid   = request.sid
 
+        log.info(f"Agent auth request: did={did} token={token} sid={sid}")
+
         if not token and not did:
             sio.emit("auth_error", {"msg": "Empty token/did"}, room=sid)
             return
@@ -1619,6 +1654,7 @@ if SOCKETIO_OK and sio:
 
         sio.emit("auth_ok", {"role": "agent", "device_id": did}, room=sid)
         sio.emit("viewer_count", {"count": vcount}, room=sid)
+        _audit("agent_auth_ok", device_id=did, viewers=vcount, sid=sid)
 
     @sio.on("agent_auth_ready")
     def on_agent_auth_ready(data):
@@ -1649,6 +1685,14 @@ if SOCKETIO_OK and sio:
         except Exception as e:
             log.warning(f"frame_bin: could not convert to bytes: {e}")
             return
+        
+        # Log every 100 frames to avoid spamming but show it's working
+        with _dev_lock:
+            if did in _devices:
+                fc = _devices[did].get("frame_count", 0) + 1
+                if fc % 100 == 1:
+                    log.info(f"frame_bin: received frame {fc} from {did} ({len(raw)} bytes)")
+
         if len(raw) >= 20:
             import struct as _s
             w, h = _s.unpack_from(">II", raw, 0)
