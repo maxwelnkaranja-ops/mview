@@ -134,12 +134,14 @@ log = logging.getLogger("screenconnect")
 class SocketIOLogHandler(logging.Handler):
     """Custom logging handler that emits log records via Socket.IO."""
     def emit(self, record):
-        if not SOCKETIO_OK or not sio:
+        # Use globals() to avoid NameError if sio is not yet defined
+        _sio = globals().get("sio")
+        if not globals().get("SOCKETIO_OK") or not _sio:
             return
         try:
             msg = self.format(record)
             # Emit to the diagnostics room
-            sio.emit("server_log", {"msg": msg, "level": record.levelname}, room="diagnostics")
+            _sio.emit("server_log", {"msg": msg, "level": record.levelname}, room="diagnostics")
         except Exception:
             pass
 
