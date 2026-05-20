@@ -123,7 +123,7 @@ _log_fmt = logging.Formatter(
     "%(asctime)s  %(levelname)-8s  [%(threadName)s]  %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-_file_handler    = RotatingFileHandler(_LOG_FILE, maxBytes=4 * 1024 * 1024, backupCount=5)
+_file_handler = RotatingFileHandler(_LOG_FILE, maxBytes=4 * 1024 * 1024, backupCount=5)
 _file_handler.setFormatter(_log_fmt)
 _console_handler = logging.StreamHandler()
 _console_handler.setFormatter(_log_fmt)

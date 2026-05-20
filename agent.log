@@ -1,0 +1,126 @@
+2026-05-20 23:22:17,335 [INFO    ] MainThread — ═══ MasterAgent v9.0.0 starting | host=maxiiloh- | pid=19880 ═══
+2026-05-20 23:22:17,348 [INFO    ] sc-main — Screen Connect Agent v9.0.0 starting...
+2026-05-20 23:22:19,350 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:22:26,398 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:22:26,399 [INFO    ] sc-main — Reconnecting in 2.1s...
+2026-05-20 23:22:28,500 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:22:35,533 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:22:35,533 [INFO    ] sc-main — Reconnecting in 4.2s...
+2026-05-20 23:22:39,771 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:22:46,828 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:22:46,828 [INFO    ] sc-main — Reconnecting in 10.2s...
+2026-05-20 23:22:57,016 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:23:04,063 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:23:04,064 [INFO    ] sc-main — Reconnecting in 19.0s...
+2026-05-20 23:23:23,110 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:23:30,161 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:23:30,161 [INFO    ] sc-main — Reconnecting in 33.9s...
+2026-05-20 23:24:04,106 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:24:08,151 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:24:08,151 [INFO    ] sc-main — Reconnecting in 71.9s...
+2026-05-20 23:24:44,093 [INFO    ] MainThread — ═══ MasterAgent v9.0.0 starting | host=maxiiloh- | pid=20048 ═══
+2026-05-20 23:24:44,109 [INFO    ] sc-main — Screen Connect Agent v9.0.0 starting...
+2026-05-20 23:24:46,111 [INFO    ] sc-main — Connecting to http://127.0.0.1:10000...
+2026-05-20 23:24:51,115 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:24:51,115 [INFO    ] sc-main — Reconnecting in 2.5s...
+2026-05-20 23:24:53,581 [INFO    ] sc-main — Connecting to http://127.0.0.1:10000...
+2026-05-20 23:24:58,586 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:24:58,586 [INFO    ] sc-main — Reconnecting in 5.0s...
+2026-05-20 23:25:03,540 [INFO    ] sc-main — Connecting to http://127.0.0.1:10000...
+2026-05-20 23:25:05,563 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:25:05,563 [INFO    ] sc-main — Reconnecting in 10.1s...
+2026-05-20 23:25:15,677 [INFO    ] sc-main — Connecting to http://127.0.0.1:10000...
+2026-05-20 23:25:15,690 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://127.0.0.1:10000
+2026-05-20 23:25:20,050 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:25:25,752 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-20 23:25:27,112 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:25:27,113 [INFO    ] sc-main — Reconnecting in 72.4s...
+2026-05-20 23:25:27,736 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-20 23:25:27,739 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:28,750 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:25:33,820 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:34,823 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:25:39,824 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:40,832 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:25:45,833 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:46,835 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:25:51,837 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:52,850 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:25:57,851 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:25:58,841 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:03,843 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:04,851 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:09,852 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:10,865 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:15,868 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:16,876 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:21,903 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:22,910 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:25,093 [INFO    ] Thread-15 (_handle_eio_message) — Action: monitor
+2026-05-20 23:26:25,093 [INFO    ] Thread-15 (_handle_eio_message) — Monitor start via request_action — forced _adv_viewers=1 (adv socket race fallback)
+2026-05-20 23:26:25,093 [INFO    ] fb-screenshot — Screenshot fallback: starting main-socket frame relay
+2026-05-20 23:26:25,097 [INFO    ] fb-screenshot — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-20 23:26:26,054 [INFO    ] fb-screenshot — Frame buffer build(start): 1920x1080 c=3 n=8.
+2026-05-20 23:26:26,054 [INFO    ] fb-screenshot — Advanced Monitor Capture: DXGI GPU monitor=1 @ 25 fps
+2026-05-20 23:26:26,055 [INFO    ] fb-screenshot — Screenshot fallback: reconfigured monitor=1 fps=25 quality=70
+2026-05-20 23:26:27,911 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:28,917 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:33,919 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:34,929 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:39,494 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:26:39,930 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:40,944 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:45,944 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:46,524 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:26:46,524 [INFO    ] sc-main — Reconnecting in 66.0s...
+2026-05-20 23:26:46,947 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:51,949 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:52,960 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:26:57,961 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:26:58,966 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:03,968 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:04,983 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:09,985 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:10,993 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:15,997 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:17,019 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:22,024 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:23,037 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:28,039 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:29,051 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:34,052 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:35,063 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:40,064 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:41,082 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:46,083 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:47,093 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:52,097 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:52,561 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:27:53,104 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:58,107 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:27:59,132 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:27:59,610 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:27:59,610 [INFO    ] sc-main — Reconnecting in 61.5s...
+2026-05-20 23:28:04,134 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:05,146 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:10,150 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:11,166 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:16,167 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:17,180 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:22,181 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:23,184 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:28,191 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:29,198 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:34,207 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:35,218 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:40,279 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-20 23:28:41,034 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-20 23:28:41,350 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-20 23:28:42,155 [INFO    ] sc-main — Reconnecting in 2.4s...
+2026-05-20 23:28:44,562 [INFO    ] sc-main — Connecting to http://127.0.0.1:10000...
+2026-05-20 23:29:01,066 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:29:05,137 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:29:05,137 [INFO    ] sc-main — Reconnecting in 64.1s...
+2026-05-20 23:30:09,263 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-20 23:30:13,310 [WARNING ] sc-main — Connection error: Connection error
+2026-05-20 23:30:13,311 [INFO    ] sc-main — Reconnecting in 70.4s...

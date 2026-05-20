@@ -1150,8 +1150,9 @@ async def _adv_close_peer(viewer_sid: str):
 
 async def _adv_main(server_url: str, token: str):
     """Async entry for the advanced monitor — mirrors second-site agent main()."""
-    global _adv_sio_async, _adv_authed, _adv_viewers
+    global _adv_sio_async, _adv_authed, _adv_viewers, _adv_auth_event
 
+    _adv_auth_event = asyncio.Event()
     import socketio as _sio_mod
     sio = _sio_mod.AsyncClient(
         reconnection=True, reconnection_attempts=0,
@@ -1162,8 +1163,9 @@ async def _adv_main(server_url: str, token: str):
 
     @sio.event
     async def connect():
-        global _adv_authed
+        global _adv_authed, _adv_auth_event
         _adv_authed = False   # FIX: reset on every reconnect so stream loop re-waits
+        if _adv_auth_event: _adv_auth_event.clear()
         log.info("Advanced Monitor: connected — authenticating…")
         await sio.emit("agent_auth", {
             "token":     token,
@@ -1184,16 +1186,18 @@ async def _adv_main(server_url: str, token: str):
 
     @sio.event
     async def disconnect():
-        global _adv_authed
+        global _adv_authed, _adv_auth_event
         _adv_authed = False
+        if _adv_auth_event: _adv_auth_event.clear()
         log.warning("Advanced Monitor: disconnected — reconnecting…")
         for vsid in list(_adv_webrtc_peers.keys()):
             await _adv_close_peer(vsid)
 
     @sio.on("auth_ok")
     async def on_auth_ok(data):
-        global _adv_authed, _adv_auth_time
+        global _adv_authed, _adv_auth_time, _adv_auth_event
         _adv_authed = True
+        if _adv_auth_event: _adv_auth_event.set()
         _adv_auth_time = time.monotonic()  # FIX: track when auth completed
         log.info(f"Advanced Monitor authenticated. device_id={data.get('device_id','?')}")
         if not WEBRTC_OK:
