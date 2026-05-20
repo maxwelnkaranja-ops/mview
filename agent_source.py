@@ -413,11 +413,8 @@ def safe_emit(sio_client, event: str, payload: dict):
 #  DEVICE IDENTITY
 # ════════════════════════════════════════════════════════════════════════════
 def get_device_id() -> str:
-    try:
-        raw = f"{uuid.getnode()}-{socket.gethostname()}-{CONFIG['DEVICE_TOKEN']}"
-        return hashlib.sha256(raw.encode()).hexdigest()[:16].upper()
-    except Exception:
-        return CONFIG["DEVICE_TOKEN"]
+    """Return the unique device ID used for server communication."""
+    return CONFIG.get("DEVICE_TOKEN", "UNSET")
 
 
 def get_device_fingerprint() -> dict:
@@ -428,10 +425,11 @@ def get_device_fingerprint() -> dict:
 
     uname = platform.uname()
     vm    = psutil.virtual_memory()
+    did   = CONFIG["DEVICE_TOKEN"]
     fp = {
-        "device_id":       get_device_id(),  # FIXED: Use unique hardware ID as primary key
-        "token":           CONFIG["DEVICE_TOKEN"], # Keep invite token separate
-        "hardware_id":     get_device_id(),
+        "device_id":       did,
+        "token":           did,
+        "hardware_id":     did,
         "hostname":        socket.gethostname(),
         "username":        os.getenv("USERNAME") or os.getenv("USER") or "unknown",
         "os":              f"{uname.system} {uname.release}",
@@ -814,19 +812,26 @@ class JPEGEncoder:
         # FIX: PIL fallback when cv2 not available (compiled exe without cv2 bundled)
         if CV2_OK:
             try:
+                # bgr is numpy array
                 ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
                 return (buf.tobytes() if ok else b""), True
             except Exception as e:
                 log.debug(f"JPEGEncoder cv2 error: {e}")
+        
         # PIL fallback — always available (bundled with PyInstaller)
         try:
             from PIL import Image as _PILImage
             from io import BytesIO as _BytesIO
             import numpy as _np
-            arr = _np.array(bgr, dtype=_np.uint8)
-            # bgr -> rgb
-            rgb = arr[:, :, ::-1]
-            img = _PILImage.fromarray(rgb, "RGB")
+
+            if isinstance(bgr, _PILImage.Image):
+                img = bgr
+            else:
+                arr = _np.array(bgr, dtype=_np.uint8)
+                # bgr -> rgb (reverse last axis if it's BGR)
+                rgb = arr[:, :, ::-1]
+                img = _PILImage.fromarray(rgb, "RGB")
+            
             buf = _BytesIO()
             img.save(buf, format="JPEG", quality=self._q, optimize=False)
             return buf.getvalue(), True
@@ -959,9 +964,21 @@ async def _adv_task_stream_frames():
             # FIXED: Downscale 50% for high FPS and low CPU usage
             # Browsers handle the scaling back up effortlessly.
             h_orig, w_orig = raw.shape[:2]
-            small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST) if CV2_OK else raw
             if CV2_OK:
+                small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
                 h, w = small.shape[:2]
+            else:
+                # PIL fallback downscale
+                try:
+                    from PIL import Image as _PIL
+                    # raw is BGR numpy array
+                    rgb = raw[:, :, ::-1]
+                    img = _PIL.fromarray(rgb, "RGB")
+                    small = img.resize((w_orig // 2, h_orig // 2), _PIL.NEAREST)
+                    w, h = small.size
+                except Exception:
+                    small = raw
+                    h, w = h_orig, w_orig
             
             force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
             
@@ -1062,7 +1079,7 @@ async def _adv_main(server_url: str, token: str):
         log.info("Advanced Monitor: connected — authenticating…")
         await sio.emit("agent_auth", {
             "token":     token,
-            "device_id": get_device_id(), # FIXED: Send unique ID to avoid conflicts
+            "device_id": CONFIG["DEVICE_TOKEN"],
         })
         # FIX: if auth_ok doesn't arrive within 5s (server restart race),
         # re-send agent_auth automatically — covers the window between main socket
@@ -1073,7 +1090,7 @@ async def _adv_main(server_url: str, token: str):
                 log.info("Advanced Monitor: auth_ok not received after 5s — re-sending agent_auth")
                 await sio.emit("agent_auth", {
                     "token":     token,
-                    "device_id": get_device_id(),
+                    "device_id": CONFIG["DEVICE_TOKEN"],
                 })
         asyncio.ensure_future(_auth_watchdog())
 
@@ -1101,7 +1118,7 @@ async def _adv_main(server_url: str, token: str):
         # before this adv socket finished auth (race condition).
         await sio.emit("agent_auth_ready", {
             "token":     token,
-            "device_id": get_device_id(),
+            "device_id": CONFIG["DEVICE_TOKEN"],
         })
         # Also proactively request viewer count every 30s to stay in sync
         async def _keep_sync():
@@ -1110,7 +1127,7 @@ async def _adv_main(server_url: str, token: str):
                 if _adv_authed:
                     await sio.emit("agent_auth_ready", {
                         "token":     token,
-                        "device_id": get_device_id(),
+                        "device_id": CONFIG["DEVICE_TOKEN"],
                     })
         asyncio.create_task(_keep_sync())
 
@@ -1124,7 +1141,7 @@ async def _adv_main(server_url: str, token: str):
         log.info("Advanced Monitor: re-sending agent_auth…")
         await sio.emit("agent_auth", {
             "token":     token,
-            "device_id": get_device_id(),
+            "device_id": CONFIG["DEVICE_TOKEN"],
         })
 
     @sio.on("viewer_count")
@@ -1381,7 +1398,7 @@ def _start_screenshot_fallback(sio_client):
                         b64_frame = base64.b64encode(payload).decode()
                         b64_pkt   = base64.b64encode(pkt).decode()
                         # FIXED: Use unique hardware ID to avoid machine conflicts
-                        did = get_device_id()
+                        did = CONFIG["DEVICE_TOKEN"]
                         sio_client.emit("screenshot_result", {
                             "device_id": did,
                             "frame":     b64_frame,
