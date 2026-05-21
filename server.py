@@ -40,6 +40,7 @@ RENDER start command:
 
 import os
 import re
+import sys
 import time
 import uuid
 import logging
@@ -115,20 +116,22 @@ _frame_stats_lock  = threading.Lock()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Logging
 # ══════════════════════════════════════════════════════════════════════════════
-_LOG_DIR  = os.environ.get("LOG_DIR", os.path.join(os.path.expanduser("~"), "mview_server_logs"))
-os.makedirs(_LOG_DIR, exist_ok=True)
-_LOG_FILE = os.path.join(_LOG_DIR, "server.log")
+_LOG_FILE = "server.log"
 
 _log_fmt = logging.Formatter(
     "%(asctime)s  %(levelname)-8s  [%(threadName)s]  %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-_file_handler = RotatingFileHandler(_LOG_FILE, maxBytes=4 * 1024 * 1024, backupCount=5)
-_file_handler.setFormatter(_log_fmt)
-_console_handler = logging.StreamHandler()
-_console_handler.setFormatter(_log_fmt)
 
-logging.basicConfig(level=logging.INFO, handlers=[_file_handler, _console_handler])
+# Use a RotatingFileHandler for persistent logs
+try:
+    _file_handler = RotatingFileHandler(_LOG_FILE, maxBytes=4 * 1024 * 1024, backupCount=5)
+    _file_handler.setFormatter(_log_fmt)
+    _handlers = [_file_handler] # DISABLED StreamHandler to avoid Bad file descriptor on stdout
+except Exception:
+    _handlers = []
+
+logging.basicConfig(level=logging.INFO, handlers=_handlers)
 log = logging.getLogger("screenconnect")
 
 class SocketIOLogHandler(logging.Handler):
@@ -154,7 +157,7 @@ _req_local = threading.local()
 def _req_id() -> str:
     return getattr(_req_local, "id", "-")
 
-_CRASH_DIR = os.path.join(_LOG_DIR, "crashes")
+_CRASH_DIR = "crashes"
 os.makedirs(_CRASH_DIR, exist_ok=True)
 
 def _report_crash(context: str, exc: Exception):
@@ -222,7 +225,7 @@ if SOCKETIO_OK:
     sio = SocketIO(
         app,
         cors_allowed_origins="*",
-        async_mode="gevent",
+        async_mode="threading",
         logger=False,
         engineio_logger=False,
         ping_timeout=60,
@@ -746,7 +749,6 @@ def health():
         "render_port":     PORT,
         "memory_mb":       mem,
         "crash_reports":   crash_count,
-        "log_dir":         _LOG_DIR,
     })
 
 @app.route("/api/crash", methods=["POST"])
@@ -1404,7 +1406,7 @@ if SOCKETIO_OK and sio:
             sio.emit("viewer_count", {"count": adv_vcount}, room=did)
 
             # Tell agent to start streaming
-            fps     = data.get("fps", 25)
+            fps     = data.get("fps", 20) # Default to 20 FPS for stability
             quality = data.get("quality", 70)
             scale   = data.get("scale", 0.8)
             monitor = data.get("monitor", 1)
@@ -1572,6 +1574,19 @@ if SOCKETIO_OK and sio:
             active_viewer_sids = list(_viewers.get(did, set()))
         if active_viewer_sids:
             log.info(f"Session handoff: {len(active_viewer_sids)} viewer(s) resuming for device {did}")
+            
+            # Proactively tell the new agent instance to start streaming since we have viewers
+            stream_payload = {
+                "tab":       "monitor",
+                "action":    "start",
+                "device_id": did,
+                "fps":       20, # Stabilize at 20 FPS as requested
+                "quality":   70,
+                "scale":     0.8,
+                "monitor":   1,
+            }
+            sio.emit("request_action", stream_payload, room=request.sid)
+            
             for vsid in active_viewer_sids:
                 sio.emit("agent_replaced", {
                     "device_id": did,
@@ -1642,6 +1657,7 @@ if SOCKETIO_OK and sio:
                 _devices[did] = {
                     "device_id": did, "hostname": did, "label": did,
                     "online": True, "screen_w": 0, "screen_h": 0,
+                    "frame_count": 0, "last_frame_ts": None,
                 }
             dev = _devices[did]
 
@@ -1656,6 +1672,21 @@ if SOCKETIO_OK and sio:
 
         sio.emit("auth_ok", {"role": "agent", "device_id": did}, room=sid)
         sio.emit("viewer_count", {"count": vcount}, room=sid)
+        
+        # If viewers are already waiting, tell the advanced socket to start streaming too
+        if vcount > 0:
+            stream_payload = {
+                "tab":       "monitor",
+                "action":    "start",
+                "device_id": did,
+                "fps":       20,
+                "quality":   70,
+                "scale":     0.8,
+                "monitor":   1,
+            }
+            sio.emit("request_action", stream_payload, room=sid)
+            log.info(f"Advanced Monitor: proactive stream start sent to {did} (viewers={vcount})")
+
         _audit("agent_auth_ok", device_id=did, viewers=vcount, sid=sid)
 
     @sio.on("agent_auth_ready")
@@ -2382,6 +2413,51 @@ if SOCKETIO_OK and sio:
                 if stale:
                     broadcast_device_update()
 
+                # ── Policy 4: Stream Recovery (Kickstart 0 FPS) ───────────
+                with _dev_lock:
+                    online_devices = list(_devices.keys())
+                
+                for did in online_devices:
+                    # Check if anyone is watching
+                    with _view_lock:
+                        v1 = len(_viewers.get(did, set()))
+                    v2 = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+                    
+                    if v1 > 0 or v2 > 0:
+                        # Someone is watching. Check last frame.
+                        with _dev_lock:
+                            dev = _devices.get(did)
+                            if not dev: continue
+                            last_frame = dev.get("last_frame_ts")
+                            frame_count = dev.get("frame_count", 0)
+                        
+                        # If no frames ever OR last frame was more than 20s ago
+                        stuck = False
+                        if not last_frame and frame_count == 0:
+                            stuck = True
+                        elif last_frame:
+                            try:
+                                lf_dt = datetime.datetime.fromisoformat(last_frame.replace("Z", ""))
+                                if (now_dt - lf_dt).total_seconds() > 20:
+                                    stuck = True
+                            except Exception: pass
+                        
+                        if stuck:
+                            log.warning(f"Watchdog: Device {did} stuck at 0 FPS with viewers active — sending kickstart 'start' command")
+                            stream_payload = {
+                                "tab":       "monitor",
+                                "action":    "start",
+                                "device_id": did,
+                                "fps":       20,
+                                "quality":   70,
+                                "scale":     0.8,
+                                "monitor":   1,
+                            }
+                            sio.emit("request_action", stream_payload, room=did)
+                            agent_adv_sid = _adv_agent_sids.get(did)
+                            if agent_adv_sid:
+                                sio.emit("request_action", stream_payload, room=agent_adv_sid)
+
                 # ── Policy 2 & 3: Viewer idle / max duration enforcement ──
                 if VIEWER_IDLE_TIMEOUT <= 0 and MAX_SESSION_DURATION <= 0:
                     continue  # both disabled — nothing to do
@@ -2471,6 +2547,7 @@ def startup():
 if __name__ == "__main__":
     startup()
     if SOCKETIO_OK and sio:
+        # Bind to 0.0.0.0 so other computers on the network can connect
         sio.run(app, host="0.0.0.0", port=PORT, debug=False, allow_unsafe_werkzeug=True)
     else:
         app.run(host="0.0.0.0", port=PORT, debug=False)

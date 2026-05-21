@@ -1,0 +1,618 @@
+2026-05-21 12:20:29  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 12:20:29  INFO      [MainThread]  ======================================================================
+2026-05-21 12:20:29  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 12:20:29  INFO      [MainThread]  ======================================================================
+2026-05-21 12:20:29  INFO      [MainThread]    Port:               10000
+2026-05-21 12:20:29  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 12:20:29  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 12:20:29  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 12:20:29  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 12:20:29  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 12:20:29  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 12:20:29  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 12:20:29  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 12:20:29  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 12:20:29  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 12:20:29  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 12:20:29  INFO      [MainThread]  ======================================================================
+2026-05-21 12:20:29  INFO      [MainThread]    RENDER start:
+2026-05-21 12:20:29  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 12:20:29  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 12:20:29  INFO      [MainThread]  ======================================================================
+2026-05-21 12:20:29  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:10000
+2026-05-21 12:20:29  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 12:20:36  INFO      [Thread-3 (process_request_thread)]  Socket connected: rzT8ISyN9Hn8tPVAAAAB
+2026-05-21 12:20:36  INFO      [Thread-8 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (MV-1986392E2951A9C7D035) sid=rzT8ISyN9Hn8tPVAAAAB
+2026-05-21 12:20:36  INFO      [Thread-8 (_handle_event_internal)]  AUDIT: agent_online  {'device_id': 'MV-1986392E2951A9C7D035', 'label': 'maxiiloh-', 'ip': '192.168.0.100', 'agent_version': '9.0.0'}
+2026-05-21 12:20:39  INFO      [Thread-9 (process_request_thread)]  Supabase connected.
+2026-05-21 12:20:40  INFO      [Thread-9 (process_request_thread)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 12:20:40  INFO      [Thread-9 (process_request_thread)]  127.0.0.1 - - [21/May/2026 12:20:40] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-21 12:20:40  INFO      [Thread-8 (_handle_event_internal)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 12:20:41  INFO      [Thread-8 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 12:20:41  INFO      [Thread-8 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 12:20:41  INFO      [Thread-8 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 12:20:42  INFO      [Thread-11 (process_request_thread)]  Socket connected: WPCn9lOQkWlToMCZAAAD
+2026-05-21 12:20:42  INFO      [Thread-15 (_handle_event_internal)]  Agent auth request: did=MV-1986392E2951A9C7D035 token=MV-1986392E2951A9C7D035 sid=WPCn9lOQkWlToMCZAAAD
+2026-05-21 12:20:42  INFO      [Thread-15 (_handle_event_internal)]  Advanced Monitor: agent MV-1986392E2951A9C7D035 registered with sid=WPCn9lOQkWlToMCZAAAD
+2026-05-21 12:20:42  INFO      [Thread-15 (_handle_event_internal)]  AUDIT: agent_auth_ok  {'device_id': 'MV-1986392E2951A9C7D035', 'viewers': 0, 'sid': 'WPCn9lOQkWlToMCZAAAD'}
+2026-05-21 12:20:43  INFO      [Thread-18 (_handle_event_internal)]  frame_bin: received frame 1 from MV-1986392E2951A9C7D035 (110031 bytes)
+2026-05-21 12:20:43  INFO      [Thread-18 (_handle_event_internal)]  frame_bin: FIRST frame from agent MV-1986392E2951A9C7D035 — ADV SOCKET streaming active!
+2026-05-21 12:20:48  INFO      [Thread-118 (_handle_event_internal)]  frame_bin: received frame 101 from MV-1986392E2951A9C7D035 (112028 bytes)
+2026-05-21 12:20:53  INFO      [Thread-220 (_handle_event_internal)]  frame_bin: received frame 201 from MV-1986392E2951A9C7D035 (112158 bytes)
+2026-05-21 12:20:58  INFO      [Thread-321 (_handle_event_internal)]  frame_bin: received frame 301 from MV-1986392E2951A9C7D035 (111620 bytes)
+2026-05-21 12:21:03  INFO      [Thread-424 (_handle_event_internal)]  frame_bin: received frame 401 from MV-1986392E2951A9C7D035 (114575 bytes)
+2026-05-21 12:21:09  INFO      [Thread-524 (_handle_event_internal)]  frame_bin: received frame 501 from MV-1986392E2951A9C7D035 (111671 bytes)
+2026-05-21 12:21:14  INFO      [Thread-626 (_handle_event_internal)]  frame_bin: received frame 601 from MV-1986392E2951A9C7D035 (119793 bytes)
+2026-05-21 12:21:14  INFO      [Thread-629 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 100.0}
+2026-05-21 12:21:19  INFO      [Thread-728 (_handle_event_internal)]  frame_bin: received frame 701 from MV-1986392E2951A9C7D035 (120688 bytes)
+2026-05-21 12:21:24  INFO      [Thread-831 (_handle_event_internal)]  frame_bin: received frame 801 from MV-1986392E2951A9C7D035 (120236 bytes)
+2026-05-21 12:21:29  INFO      [Thread-931 (_handle_event_internal)]  frame_bin: received frame 901 from MV-1986392E2951A9C7D035 (120229 bytes)
+2026-05-21 12:21:35  INFO      [Thread-1033 (_handle_event_internal)]  frame_bin: received frame 1001 from MV-1986392E2951A9C7D035 (120234 bytes)
+2026-05-21 12:21:40  INFO      [Thread-1134 (_handle_event_internal)]  frame_bin: received frame 1101 from MV-1986392E2951A9C7D035 (120228 bytes)
+2026-05-21 12:21:45  INFO      [Thread-1237 (_handle_event_internal)]  frame_bin: received frame 1201 from MV-1986392E2951A9C7D035 (120458 bytes)
+2026-05-21 12:21:50  INFO      [Thread-1337 (_handle_event_internal)]  frame_bin: received frame 1301 from MV-1986392E2951A9C7D035 (120456 bytes)
+2026-05-21 12:21:55  INFO      [Thread-1439 (_handle_event_internal)]  frame_bin: received frame 1401 from MV-1986392E2951A9C7D035 (120459 bytes)
+2026-05-21 12:21:59  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 12:22:00  ERROR     [Thread-1524 (process_request_thread)]  Exception on /health [GET]
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 752, in health
+    "log_dir":         _LOG_DIR,
+                       ^^^^^^^^
+NameError: name '_LOG_DIR' is not defined. Did you mean: '_LOG_FILE'?
+2026-05-21 12:22:00  INFO      [Thread-1524 (process_request_thread)]  127.0.0.1 - - [21/May/2026 12:22:00] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2026-05-21 12:22:00  INFO      [Thread-1542 (_handle_event_internal)]  frame_bin: received frame 1501 from MV-1986392E2951A9C7D035 (120467 bytes)
+2026-05-21 12:22:04  ERROR     [Thread-1619 (process_request_thread)]  Exception on /status [GET]
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 752, in health
+    "log_dir":         _LOG_DIR,
+                       ^^^^^^^^
+NameError: name '_LOG_DIR' is not defined. Did you mean: '_LOG_FILE'?
+2026-05-21 12:22:04  INFO      [Thread-1619 (process_request_thread)]  127.0.0.1 - - [21/May/2026 12:22:04] "[35m[1mGET /status HTTP/1.1[0m" 500 -
+2026-05-21 12:22:05  INFO      [Thread-1645 (_handle_event_internal)]  frame_bin: received frame 1601 from MV-1986392E2951A9C7D035 (120466 bytes)
+2026-05-21 12:22:10  INFO      [Thread-1746 (_handle_event_internal)]  frame_bin: received frame 1701 from MV-1986392E2951A9C7D035 (120460 bytes)
+2026-05-21 12:22:16  INFO      [Thread-1847 (_handle_event_internal)]  frame_bin: received frame 1801 from MV-1986392E2951A9C7D035 (120466 bytes)
+2026-05-21 12:22:21  INFO      [Thread-1949 (_handle_event_internal)]  frame_bin: received frame 1901 from MV-1986392E2951A9C7D035 (120463 bytes)
+2026-05-21 12:22:26  INFO      [Thread-2051 (_handle_event_internal)]  frame_bin: received frame 2001 from MV-1986392E2951A9C7D035 (120467 bytes)
+2026-05-21 12:22:31  INFO      [Thread-2152 (_handle_event_internal)]  frame_bin: received frame 2101 from MV-1986392E2951A9C7D035 (120466 bytes)
+2026-05-21 12:22:36  INFO      [Thread-2253 (_handle_event_internal)]  frame_bin: received frame 2201 from MV-1986392E2951A9C7D035 (120452 bytes)
+2026-05-21 12:22:41  INFO      [Thread-2355 (_handle_event_internal)]  frame_bin: received frame 2301 from MV-1986392E2951A9C7D035 (120458 bytes)
+2026-05-21 12:22:46  INFO      [Thread-2457 (_handle_event_internal)]  frame_bin: received frame 2401 from MV-1986392E2951A9C7D035 (120457 bytes)
+2026-05-21 12:22:51  INFO      [Thread-2558 (_handle_event_internal)]  frame_bin: received frame 2501 from MV-1986392E2951A9C7D035 (120454 bytes)
+2026-05-21 12:22:56  INFO      [Thread-2660 (_handle_event_internal)]  frame_bin: received frame 2601 from MV-1986392E2951A9C7D035 (120465 bytes)
+2026-05-21 12:23:02  INFO      [Thread-2761 (_handle_event_internal)]  frame_bin: received frame 2701 from MV-1986392E2951A9C7D035 (120466 bytes)
+2026-05-21 12:23:07  INFO      [Thread-2863 (_handle_event_internal)]  frame_bin: received frame 2801 from MV-1986392E2951A9C7D035 (120468 bytes)
+2026-05-21 12:23:12  INFO      [Thread-2964 (_handle_event_internal)]  frame_bin: received frame 2901 from MV-1986392E2951A9C7D035 (120460 bytes)
+2026-05-21 12:23:17  INFO      [Thread-3066 (_handle_event_internal)]  frame_bin: received frame 3001 from MV-1986392E2951A9C7D035 (120464 bytes)
+2026-05-21 12:23:22  INFO      [Thread-3167 (_handle_event_internal)]  frame_bin: received frame 3101 from MV-1986392E2951A9C7D035 (120469 bytes)
+2026-05-21 12:23:27  INFO      [Thread-3269 (_handle_event_internal)]  frame_bin: received frame 3201 from MV-1986392E2951A9C7D035 (120463 bytes)
+2026-05-21 12:23:32  INFO      [Thread-3370 (_handle_event_internal)]  frame_bin: received frame 3301 from MV-1986392E2951A9C7D035 (120465 bytes)
+2026-05-21 12:23:37  INFO      [Thread-3498 (_handle_event_internal)]  frame_bin: received frame 3401 from MV-1986392E2951A9C7D035 (120456 bytes)
+2026-05-21 12:23:45  INFO      [Thread-3751 (_handle_event_internal)]  frame_bin: received frame 3501 from MV-1986392E2951A9C7D035 (98287 bytes)
+2026-05-21 13:03:00  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 13:03:00  INFO      [MainThread]  ======================================================================
+2026-05-21 13:03:00  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 13:03:00  INFO      [MainThread]  ======================================================================
+2026-05-21 13:03:00  INFO      [MainThread]    Port:               10000
+2026-05-21 13:03:00  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 13:03:00  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 13:03:00  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 13:03:00  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 13:03:00  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 13:03:00  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 13:03:00  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 13:03:00  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 13:03:00  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 13:03:00  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 13:03:00  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 13:03:00  INFO      [MainThread]  ======================================================================
+2026-05-21 13:03:00  INFO      [MainThread]    RENDER start:
+2026-05-21 13:03:00  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 13:03:00  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 13:03:00  INFO      [MainThread]  ======================================================================
+2026-05-21 13:03:00  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 13:03:00  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 13:03:05  INFO      [Thread-3 (process_request_thread)]  Supabase connected.
+2026-05-21 13:03:05  ERROR     [Thread-3 (process_request_thread)]  Exception on /status [GET]
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 752, in health
+    "log_dir":         _LOG_DIR,
+                       ^^^^^^^^
+NameError: name '_LOG_DIR' is not defined. Did you mean: '_LOG_FILE'?
+2026-05-21 13:03:05  INFO      [Thread-3 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:03:05] "[35m[1mGET /status HTTP/1.1[0m" 500 -
+2026-05-21 13:03:06  INFO      [Thread-4 (process_request_thread)]  Socket connected: 2rOUruapyKNhmTxXAAAB
+2026-05-21 13:03:06  INFO      [Thread-9 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (MV-1986392E2951A9C7D035) sid=2rOUruapyKNhmTxXAAAB
+2026-05-21 13:03:06  INFO      [Thread-9 (_handle_event_internal)]  AUDIT: agent_online  {'device_id': 'MV-1986392E2951A9C7D035', 'label': 'maxiiloh-', 'ip': '192.168.0.100', 'agent_version': '9.0.0'}
+2026-05-21 13:03:08  INFO      [Thread-11 (process_request_thread)]  Socket connected: hzhLFqwS97tB-KAwAAAD
+2026-05-21 13:03:08  INFO      [Thread-15 (_handle_event_internal)]  Agent auth request: did=MV-1986392E2951A9C7D035 token=MV-1986392E2951A9C7D035 sid=hzhLFqwS97tB-KAwAAAD
+2026-05-21 13:03:08  INFO      [Thread-15 (_handle_event_internal)]  Advanced Monitor: agent MV-1986392E2951A9C7D035 registered with sid=hzhLFqwS97tB-KAwAAAD
+2026-05-21 13:03:08  INFO      [Thread-15 (_handle_event_internal)]  AUDIT: agent_auth_ok  {'device_id': 'MV-1986392E2951A9C7D035', 'viewers': 0, 'sid': 'hzhLFqwS97tB-KAwAAAD'}
+2026-05-21 13:03:09  INFO      [Thread-10 (process_request_thread)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 13:03:09  INFO      [Thread-10 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:03:09] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-21 13:03:09  INFO      [Thread-9 (_handle_event_internal)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 13:03:09  INFO      [Thread-9 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:03:10  INFO      [Thread-9 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:03:11  INFO      [Thread-9 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:04:30  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 13:04:30  ERROR     [Thread-45 (process_request_thread)]  Exception on /health [GET]
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 752, in health
+    })
+       
+NameError: name '_LOG_DIR' is not defined. Did you mean: '_LOG_FILE'?
+2026-05-21 13:04:30  INFO      [Thread-45 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:04:30] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2026-05-21 13:04:35  INFO      [Thread-46 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:04:35] "GET /socket.io/?transport=polling&EIO=4&t=1779357875.7319953 HTTP/1.1" 200 -
+2026-05-21 13:04:35  INFO      [Thread-48 (process_request_thread)]  Socket connected: ttYyOr-AZ8k9TTeJAAAF
+2026-05-21 13:04:35  INFO      [Thread-51 (_handle_event_internal)]  Viewer ttYyOr-AZ8k9TTeJAAAF requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:04:35  INFO      [Thread-51 (_handle_event_internal)]  Viewer ttYyOr-AZ8k9TTeJAAAF watching device MV-1986392E2951A9C7D035
+2026-05-21 13:04:35  INFO      [Thread-53 (_handle_event_internal)]  frame_bin_relay: FIRST frame from MV-1986392E2951A9C7D035 via MAIN SOCKET fallback
+2026-05-21 13:04:38  INFO      [Thread-142 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:04:47  INFO      [Thread-465 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 100.0}
+2026-05-21 13:04:48  INFO      [Thread-516 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:04:50  INFO      [Thread-48 (process_request_thread)]  Viewer ttYyOr-AZ8k9TTeJAAAF cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:04:50  INFO      [Thread-48 (process_request_thread)]  Socket disconnected: ttYyOr-AZ8k9TTeJAAAF
+2026-05-21 13:04:50  INFO      [Thread-48 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:04:50] "GET /socket.io/?transport=websocket&EIO=4&sid=ojsaxHeVSgvGExBcAAAE&t=1779357875.739181 HTTP/1.1" 200 -
+2026-05-21 13:19:51  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 13:19:51  INFO      [MainThread]  ======================================================================
+2026-05-21 13:19:51  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 13:19:51  INFO      [MainThread]  ======================================================================
+2026-05-21 13:19:51  INFO      [MainThread]    Port:               10000
+2026-05-21 13:19:51  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 13:19:51  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 13:19:51  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 13:19:51  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 13:19:51  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 13:19:51  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 13:19:51  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 13:19:51  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 13:19:51  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 13:19:51  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 13:19:51  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 13:19:51  INFO      [MainThread]  ======================================================================
+2026-05-21 13:19:51  INFO      [MainThread]    RENDER start:
+2026-05-21 13:19:51  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 13:19:51  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 13:19:51  INFO      [MainThread]  ======================================================================
+2026-05-21 13:19:51  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 13:19:51  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 13:19:55  INFO      [Thread-3 (process_request_thread)]  Socket connected: rfroLEIGNO-KjdIBAAAB
+2026-05-21 13:19:55  INFO      [Thread-8 (_handle_event_internal)]  Agent auth request: did=MV-1986392E2951A9C7D035 token=MV-1986392E2951A9C7D035 sid=rfroLEIGNO-KjdIBAAAB
+2026-05-21 13:19:56  INFO      [Thread-9 (process_request_thread)]  Socket connected: SwRgBjqvg-e8HpL-AAAD
+2026-05-21 13:19:56  INFO      [Thread-13 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (MV-1986392E2951A9C7D035) sid=SwRgBjqvg-e8HpL-AAAD
+2026-05-21 13:19:56  INFO      [Thread-13 (_handle_event_internal)]  AUDIT: agent_online  {'device_id': 'MV-1986392E2951A9C7D035', 'label': 'maxiiloh-', 'ip': '192.168.0.100', 'agent_version': '9.0.0'}
+2026-05-21 13:19:57  INFO      [Thread-8 (_handle_event_internal)]  Advanced Monitor: agent MV-1986392E2951A9C7D035 registered with sid=rfroLEIGNO-KjdIBAAAB
+2026-05-21 13:19:57  INFO      [Thread-8 (_handle_event_internal)]  AUDIT: agent_auth_ok  {'device_id': 'MV-1986392E2951A9C7D035', 'viewers': 0, 'sid': 'rfroLEIGNO-KjdIBAAAB'}
+2026-05-21 13:19:59  INFO      [Thread-14 (process_request_thread)]  Supabase connected.
+2026-05-21 13:20:01  INFO      [Thread-13 (_handle_event_internal)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 13:20:01  INFO      [Thread-14 (process_request_thread)]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-21 13:20:01  INFO      [Thread-14 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:20:01] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-21 13:20:01  INFO      [Thread-13 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:20:01  INFO      [Thread-20 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:20:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 13:20:02  INFO      [Thread-13 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:20:03  INFO      [Thread-13 (_handle_event_internal)]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-21 13:20:03  INFO      [Thread-21 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 93.0}
+2026-05-21 13:20:14  INFO      [Thread-24 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:20:14] "GET /socket.io/?transport=polling&EIO=4&t=1779358813.9973884 HTTP/1.1" 200 -
+2026-05-21 13:20:14  INFO      [Thread-26 (process_request_thread)]  Socket connected: 9w8-8w9Bfo87VzXAAAAF
+2026-05-21 13:20:14  INFO      [Thread-29 (_handle_event_internal)]  Viewer 9w8-8w9Bfo87VzXAAAAF requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:20:14  INFO      [Thread-29 (_handle_event_internal)]  Viewer 9w8-8w9Bfo87VzXAAAAF watching device MV-1986392E2951A9C7D035
+2026-05-21 13:20:17  INFO      [Thread-32 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:20:27  INFO      [Thread-35 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:20:37  INFO      [Thread-40 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:20:44  INFO      [Thread-26 (process_request_thread)]  Viewer 9w8-8w9Bfo87VzXAAAAF cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:20:44  INFO      [Thread-26 (process_request_thread)]  Socket disconnected: 9w8-8w9Bfo87VzXAAAAF
+2026-05-21 13:20:44  INFO      [Thread-26 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:20:44] "GET /socket.io/?transport=websocket&EIO=4&sid=0LNRytVbf22nAZBWAAAE&t=1779358814.0069685 HTTP/1.1" 200 -
+2026-05-21 13:21:21  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 13:21:21  INFO      [Thread-54 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:21:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:22:20  INFO      [Thread-95 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:22:20] "GET /socket.io/?transport=polling&EIO=4&t=1779358940.8386235 HTTP/1.1" 200 -
+2026-05-21 13:22:20  INFO      [Thread-97 (process_request_thread)]  Socket connected: G_A-me7YBZEYpiGJAAAH
+2026-05-21 13:22:20  INFO      [Thread-100 (_handle_event_internal)]  Viewer G_A-me7YBZEYpiGJAAAH requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:22:20  INFO      [Thread-100 (_handle_event_internal)]  Viewer G_A-me7YBZEYpiGJAAAH watching device MV-1986392E2951A9C7D035
+2026-05-21 13:22:20  INFO      [Thread-101 (_handle_event_internal)]  join_dashboard from G_A-me7YBZEYpiGJAAAH
+2026-05-21 13:22:27  INFO      [Thread-104 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:22:37  INFO      [Thread-108 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:22:47  INFO      [Thread-111 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:22:57  INFO      [Thread-115 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:23:00  INFO      [Thread-97 (process_request_thread)]  Viewer G_A-me7YBZEYpiGJAAAH cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:23:00  INFO      [Thread-97 (process_request_thread)]  Socket disconnected: G_A-me7YBZEYpiGJAAAH
+2026-05-21 13:23:00  INFO      [Thread-97 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:23:00] "GET /socket.io/?transport=websocket&EIO=4&sid=3d4Ena6Cw452BLTXAAAG&t=1779358940.8476803 HTTP/1.1" 200 -
+2026-05-21 13:25:21  INFO      [Thread-160 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:25:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:29:21  INFO      [Thread-329 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:29:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:30:01  INFO      [Thread-343 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:30:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 13:33:21  INFO      [Thread-404 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:33:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:36:35  INFO      [Thread-703 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 95.9}
+2026-05-21 13:37:21  INFO      [Thread-975 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:37:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:40:01  INFO      [Thread-1114 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:40:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 13:41:21  INFO      [Thread-1214 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:41:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:45:21  INFO      [Thread-1460 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:45:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:46:03  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 13:46:03  INFO      [MainThread]  ======================================================================
+2026-05-21 13:46:03  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 13:46:03  INFO      [MainThread]  ======================================================================
+2026-05-21 13:46:03  INFO      [MainThread]    Port:               10000
+2026-05-21 13:46:03  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 13:46:03  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 13:46:03  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 13:46:03  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 13:46:03  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 13:46:03  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 13:46:03  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 13:46:03  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 13:46:03  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 13:46:03  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 13:46:03  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 13:46:03  INFO      [MainThread]  ======================================================================
+2026-05-21 13:46:03  INFO      [MainThread]    RENDER start:
+2026-05-21 13:46:03  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 13:46:03  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 13:46:03  INFO      [MainThread]  ======================================================================
+2026-05-21 13:46:03  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 13:46:03  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 13:46:37  INFO      [Thread-1485 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:46:37] "GET /socket.io/?transport=polling&EIO=4&t=1779360397.8141003 HTTP/1.1" 200 -
+2026-05-21 13:46:37  INFO      [Thread-1487 (process_request_thread)]  Socket connected: 4Ge28_whvr4rfOtCAAAJ
+2026-05-21 13:46:37  INFO      [Thread-1490 (_handle_event_internal)]  Viewer 4Ge28_whvr4rfOtCAAAJ requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:46:37  INFO      [Thread-1490 (_handle_event_internal)]  Viewer 4Ge28_whvr4rfOtCAAAJ watching device MV-1986392E2951A9C7D035
+2026-05-21 13:46:43  INFO      [Thread-1492 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 95.0}
+2026-05-21 13:46:47  INFO      [Thread-1493 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:46:57  INFO      [Thread-1497 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:47:07  INFO      [Thread-1500 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:47:07  INFO      [Thread-1487 (process_request_thread)]  Viewer 4Ge28_whvr4rfOtCAAAJ cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:47:07  INFO      [Thread-1487 (process_request_thread)]  Socket disconnected: 4Ge28_whvr4rfOtCAAAJ
+2026-05-21 13:47:07  INFO      [Thread-1487 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:47:07] "GET /socket.io/?transport=websocket&EIO=4&sid=hXb9W87YA0h5pG1yAAAI&t=1779360397.8242092 HTTP/1.1" 200 -
+2026-05-21 13:47:32  INFO      [Thread-1508 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:47:32] "GET /socket.io/?transport=polling&EIO=4&t=1779360452.6974747 HTTP/1.1" 200 -
+2026-05-21 13:47:32  INFO      [Thread-1510 (process_request_thread)]  Socket connected: aiz7e-Dz3iNUWkiIAAAL
+2026-05-21 13:47:32  INFO      [Thread-1513 (_handle_event_internal)]  Viewer aiz7e-Dz3iNUWkiIAAAL requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:47:32  INFO      [Thread-1513 (_handle_event_internal)]  Viewer aiz7e-Dz3iNUWkiIAAAL watching device MV-1986392E2951A9C7D035
+2026-05-21 13:47:33  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 13:47:33  INFO      [Thread-1514 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:47:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:47:37  INFO      [Thread-1517 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:47:47  INFO      [Thread-1519 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:47:57  INFO      [Thread-1524 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:48:02  INFO      [Thread-1510 (process_request_thread)]  Viewer aiz7e-Dz3iNUWkiIAAAL cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:48:02  INFO      [Thread-1510 (process_request_thread)]  Socket disconnected: aiz7e-Dz3iNUWkiIAAAL
+2026-05-21 13:48:02  INFO      [Thread-1510 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:48:02] "GET /socket.io/?transport=websocket&EIO=4&sid=4suR1-ZbCWNkRbLrAAAK&t=1779360452.703906 HTTP/1.1" 200 -
+2026-05-21 13:49:21  INFO      [Thread-1731 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:49:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:50:01  INFO      [Thread-2020 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:50:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 13:50:48  INFO      [Thread-2194 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:50:48] "GET /socket.io/?transport=polling&EIO=4&t=1779360648.7463446 HTTP/1.1" 200 -
+2026-05-21 13:50:48  INFO      [Thread-2196 (process_request_thread)]  Socket connected: lMR8x9zegz8ew9wTAAAN
+2026-05-21 13:50:48  INFO      [Thread-2199 (_handle_event_internal)]  Viewer lMR8x9zegz8ew9wTAAAN requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:50:48  INFO      [Thread-2199 (_handle_event_internal)]  Viewer lMR8x9zegz8ew9wTAAAN watching device MV-1986392E2951A9C7D035
+2026-05-21 13:50:57  INFO      [Thread-2203 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:51:07  INFO      [Thread-2211 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:51:17  INFO      [Thread-2271 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:51:18  INFO      [Thread-2196 (process_request_thread)]  Viewer lMR8x9zegz8ew9wTAAAN cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:51:18  INFO      [Thread-2196 (process_request_thread)]  Socket disconnected: lMR8x9zegz8ew9wTAAAN
+2026-05-21 13:51:18  INFO      [Thread-2196 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:51:18] "GET /socket.io/?transport=websocket&EIO=4&sid=LU7DXsTMNWBIjHuQAAAM&t=1779360648.7529743 HTTP/1.1" 200 -
+2026-05-21 13:51:33  INFO      [Thread-2320 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:51:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:53:21  INFO      [Thread-2377 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:53:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:55:04  INFO      [Thread-2412 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:55:04] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 13:55:14  INFO      [Thread-2416 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:55:14] "GET /api/stream-stats HTTP/1.1" 200 -
+2026-05-21 13:55:33  INFO      [Thread-2423 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:55:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:55:34  INFO      [Thread-2424 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:55:34] "GET /socket.io/?transport=polling&EIO=4&t=1779360934.9056485 HTTP/1.1" 200 -
+2026-05-21 13:55:34  INFO      [Thread-2426 (process_request_thread)]  Socket connected: 52kUIovFb5KnRnh_AAAP
+2026-05-21 13:55:34  INFO      [Thread-2429 (_handle_event_internal)]  Viewer 52kUIovFb5KnRnh_AAAP requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:55:34  INFO      [Thread-2429 (_handle_event_internal)]  Viewer 52kUIovFb5KnRnh_AAAP watching device MV-1986392E2951A9C7D035
+2026-05-21 13:55:37  INFO      [Thread-2432 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:55:47  INFO      [Thread-2492 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:55:47  INFO      [Thread-2493 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 98.9}
+2026-05-21 13:55:57  INFO      [Thread-2498 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:56:04  INFO      [Thread-2426 (process_request_thread)]  Viewer 52kUIovFb5KnRnh_AAAP cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:56:04  INFO      [Thread-2426 (process_request_thread)]  Socket disconnected: 52kUIovFb5KnRnh_AAAP
+2026-05-21 13:56:04  INFO      [Thread-2426 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:56:04] "GET /socket.io/?transport=websocket&EIO=4&sid=Dtpap_SMfP4fISBtAAAO&t=1779360934.9351068 HTTP/1.1" 200 -
+2026-05-21 13:57:21  INFO      [Thread-2532 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:57:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:58:04  INFO      [Thread-2811 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:58:04] "GET /socket.io/?transport=polling&EIO=4&t=1779361084.5261438 HTTP/1.1" 200 -
+2026-05-21 13:58:04  INFO      [Thread-2813 (process_request_thread)]  Socket connected: eNG-cNbbBqsjtABfAAAR
+2026-05-21 13:58:04  INFO      [Thread-2816 (_handle_event_internal)]  Viewer eNG-cNbbBqsjtABfAAAR requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:58:04  INFO      [Thread-2816 (_handle_event_internal)]  Viewer eNG-cNbbBqsjtABfAAAR watching device MV-1986392E2951A9C7D035
+2026-05-21 13:58:07  INFO      [Thread-2818 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:58:17  INFO      [Thread-2822 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:58:27  INFO      [Thread-2825 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:58:34  INFO      [Thread-2813 (process_request_thread)]  Viewer eNG-cNbbBqsjtABfAAAR cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:58:34  INFO      [Thread-2813 (process_request_thread)]  Socket disconnected: eNG-cNbbBqsjtABfAAAR
+2026-05-21 13:58:34  INFO      [Thread-2813 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:58:34] "GET /socket.io/?transport=websocket&EIO=4&sid=CJcJeCQM64tpDx2xAAAQ&t=1779361084.5322032 HTTP/1.1" 200 -
+2026-05-21 13:58:50  WARNING   [Thread-2832 (process_request_thread)]  [36f37a26] Unauthorised admin access: path=/api/server-stats ip=127.0.0.1
+2026-05-21 13:58:50  INFO      [Thread-2832 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:58:50] "[31m[1mGET /api/server-stats HTTP/1.1[0m" 401 -
+2026-05-21 13:59:00  INFO      [Thread-2837 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:00] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 13:59:11  INFO      [Thread-2840 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:11] "GET /socket.io/?transport=polling&EIO=4&t=1779361151.864025 HTTP/1.1" 200 -
+2026-05-21 13:59:11  INFO      [Thread-2842 (process_request_thread)]  Socket connected: MCuxstXD2V-gvRGPAAAT
+2026-05-21 13:59:11  INFO      [Thread-2845 (_handle_event_internal)]  Viewer MCuxstXD2V-gvRGPAAAT requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 13:59:11  INFO      [Thread-2845 (_handle_event_internal)]  Viewer MCuxstXD2V-gvRGPAAAT watching device MV-1986392E2951A9C7D035
+2026-05-21 13:59:17  INFO      [Thread-2850 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:59:18  INFO      [Thread-2851 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:18] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 13:59:27  INFO      [Thread-2853 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:59:29  INFO      [Thread-2854 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:29] "GET /api/stream-stats HTTP/1.1" 200 -
+2026-05-21 13:59:33  INFO      [Thread-2857 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 13:59:37  INFO      [Thread-2860 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 13:59:41  INFO      [Thread-2842 (process_request_thread)]  Viewer MCuxstXD2V-gvRGPAAAT cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 13:59:41  INFO      [Thread-2842 (process_request_thread)]  Socket disconnected: MCuxstXD2V-gvRGPAAAT
+2026-05-21 13:59:41  INFO      [Thread-2842 (process_request_thread)]  127.0.0.1 - - [21/May/2026 13:59:41] "GET /socket.io/?transport=websocket&EIO=4&sid=Lp9LpTc5D8CVe1oKAAAS&t=1779361151.868042 HTTP/1.1" 200 -
+2026-05-21 14:00:01  INFO      [Thread-2867 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:00:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 14:01:03  INFO      [Thread-2887 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:01:03] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:01:21  INFO      [Thread-2893 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:01:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:01:22  INFO      [Thread-2895 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:01:22] "GET /socket.io/?transport=polling&EIO=4&t=1779361282.3129807 HTTP/1.1" 200 -
+2026-05-21 14:01:22  INFO      [Thread-2897 (process_request_thread)]  Socket connected: iFXi-0cA_ajteNDxAAAV
+2026-05-21 14:01:22  INFO      [Thread-2900 (_handle_event_internal)]  Viewer iFXi-0cA_ajteNDxAAAV requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:01:22  INFO      [Thread-2900 (_handle_event_internal)]  Viewer iFXi-0cA_ajteNDxAAAV watching device MV-1986392E2951A9C7D035
+2026-05-21 14:01:27  INFO      [Thread-2904 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:01:37  INFO      [Thread-2908 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:01:39  INFO      [Thread-2909 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 91.4}
+2026-05-21 14:01:47  INFO      [Thread-2931 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:01:52  INFO      [Thread-2897 (process_request_thread)]  Viewer iFXi-0cA_ajteNDxAAAV cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:01:52  INFO      [Thread-2897 (process_request_thread)]  Socket disconnected: iFXi-0cA_ajteNDxAAAV
+2026-05-21 14:01:52  INFO      [Thread-2897 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:01:52] "GET /socket.io/?transport=websocket&EIO=4&sid=pj9MtebFLql23lijAAAU&t=1779361282.3195915 HTTP/1.1" 200 -
+2026-05-21 14:02:16  INFO      [Thread-3265 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:02:16] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:02:26  INFO      [Thread-3325 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:02:26] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:02:38  INFO      [Thread-3331 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:02:38] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:03:26  INFO      [Thread-3365 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:03:26] "GET /socket.io/?transport=polling&EIO=4&t=1779361406.9095333 HTTP/1.1" 200 -
+2026-05-21 14:03:26  INFO      [Thread-3367 (process_request_thread)]  Socket connected: -vVngivbqq5LXU-OAAAX
+2026-05-21 14:03:26  INFO      [Thread-3370 (_handle_event_internal)]  Viewer -vVngivbqq5LXU-OAAAX requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:03:26  INFO      [Thread-3370 (_handle_event_internal)]  Viewer -vVngivbqq5LXU-OAAAX watching device MV-1986392E2951A9C7D035
+2026-05-21 14:03:27  INFO      [Thread-3374 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:03:33  INFO      [Thread-3376 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:03:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:03:37  INFO      [Thread-3379 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:03:47  INFO      [Thread-3382 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:03:56  INFO      [Thread-3367 (process_request_thread)]  Viewer -vVngivbqq5LXU-OAAAX cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:03:56  INFO      [Thread-3367 (process_request_thread)]  Socket disconnected: -vVngivbqq5LXU-OAAAX
+2026-05-21 14:03:56  INFO      [Thread-3367 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:03:56] "GET /socket.io/?transport=websocket&EIO=4&sid=wc5m32vXI7FJDbhQAAAW&t=1779361406.9135454 HTTP/1.1" 200 -
+2026-05-21 14:04:04  INFO      [Thread-3388 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:04:04] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:04:42  INFO      [Thread-3400 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:04:42] "GET /socket.io/?transport=polling&EIO=4&t=1779361482.0332937 HTTP/1.1" 200 -
+2026-05-21 14:04:42  INFO      [Thread-3402 (process_request_thread)]  Socket connected: Bb6sfwcDiTFdz4PkAAAZ
+2026-05-21 14:04:42  INFO      [Thread-3405 (_handle_event_internal)]  Viewer Bb6sfwcDiTFdz4PkAAAZ requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:04:42  INFO      [Thread-3405 (_handle_event_internal)]  Viewer Bb6sfwcDiTFdz4PkAAAZ watching device MV-1986392E2951A9C7D035
+2026-05-21 14:04:47  INFO      [Thread-3412 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:04:57  INFO      [Thread-3416 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:05:07  INFO      [Thread-3419 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:05:12  INFO      [Thread-3402 (process_request_thread)]  Viewer Bb6sfwcDiTFdz4PkAAAZ cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:05:12  INFO      [Thread-3402 (process_request_thread)]  Socket disconnected: Bb6sfwcDiTFdz4PkAAAZ
+2026-05-21 14:05:12  INFO      [Thread-3402 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:05:12] "GET /socket.io/?transport=websocket&EIO=4&sid=xgPlvv9CVfmielvvAAAY&t=1779361482.037811 HTTP/1.1" 200 -
+2026-05-21 14:05:21  INFO      [Thread-3424 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:05:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:07:33  INFO      [Thread-4311 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:07:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:07:57  INFO      [Thread-4664 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:07:57] "[33mGET /api/server-stats%20. HTTP/1.1[0m" 404 -
+2026-05-21 14:07:57  INFO      [Thread-4665 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:07:57] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-05-21 14:09:21  INFO      [Thread-5411 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:09:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:10:01  INFO      [Thread-5424 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:10:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 14:11:33  INFO      [Thread-5689 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:11:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:12:52  INFO      [Thread-5727 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 100.0}
+2026-05-21 14:13:21  INFO      [Thread-5738 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:13:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:15:33  INFO      [Thread-5779 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:15:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:16:10  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 14:16:10  INFO      [MainThread]  ======================================================================
+2026-05-21 14:16:10  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 14:16:10  INFO      [MainThread]  ======================================================================
+2026-05-21 14:16:10  INFO      [MainThread]    Port:               10000
+2026-05-21 14:16:10  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 14:16:10  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 14:16:10  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 14:16:10  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 14:16:10  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 14:16:10  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 14:16:10  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 14:16:10  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 14:16:10  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 14:16:10  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 14:16:10  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 14:16:10  INFO      [MainThread]  ======================================================================
+2026-05-21 14:16:10  INFO      [MainThread]    RENDER start:
+2026-05-21 14:16:10  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 14:16:10  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 14:16:10  INFO      [MainThread]  ======================================================================
+2026-05-21 14:16:10  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 14:16:10  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 14:16:59  INFO      [Thread-5807 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:16:59] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 14:17:20  INFO      [Thread-5814 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:17:20] "GET /socket.io/?transport=polling&EIO=4&t=1779362240.0390313 HTTP/1.1" 200 -
+2026-05-21 14:17:20  INFO      [Thread-5816 (process_request_thread)]  Socket connected: hRy-UScWR2kjs9-aAAAb
+2026-05-21 14:17:20  INFO      [Thread-5819 (_handle_event_internal)]  Viewer hRy-UScWR2kjs9-aAAAb requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:17:20  INFO      [Thread-5819 (_handle_event_internal)]  Viewer hRy-UScWR2kjs9-aAAAb watching device MV-1986392E2951A9C7D035
+2026-05-21 14:17:21  INFO      [Thread-5825 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:17:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:17:27  INFO      [Thread-5827 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:17:37  INFO      [Thread-5831 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:17:40  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 14:17:40  INFO      [Thread-5833 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:17:40] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:17:47  INFO      [Thread-5835 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:17:50  INFO      [Thread-5816 (process_request_thread)]  Viewer hRy-UScWR2kjs9-aAAAb cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:17:50  INFO      [Thread-5816 (process_request_thread)]  Socket disconnected: hRy-UScWR2kjs9-aAAAb
+2026-05-21 14:17:50  INFO      [Thread-5816 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:17:50] "GET /socket.io/?transport=websocket&EIO=4&sid=pEMDsmyWOvbMMMwvAAAa&t=1779362240.0477028 HTTP/1.1" 200 -
+2026-05-21 14:19:16  INFO      [Thread-5862 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 95.4}
+2026-05-21 14:20:01  INFO      [Thread-5879 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:20:01] "GET /status HTTP/1.1" 200 -
+2026-05-21 14:20:06  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 14:20:06  INFO      [MainThread]  ======================================================================
+2026-05-21 14:20:06  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 14:20:06  INFO      [MainThread]  ======================================================================
+2026-05-21 14:20:06  INFO      [MainThread]    Port:               10000
+2026-05-21 14:20:06  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 14:20:06  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 14:20:06  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 14:20:06  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 14:20:06  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 14:20:06  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 14:20:06  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 14:20:06  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 14:20:06  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 14:20:06  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 14:20:06  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 14:20:06  INFO      [MainThread]  ======================================================================
+2026-05-21 14:20:06  INFO      [MainThread]    RENDER start:
+2026-05-21 14:20:06  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 14:20:06  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 14:20:06  INFO      [MainThread]  ======================================================================
+2026-05-21 14:20:06  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 14:20:06  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 14:20:17  INFO      [Thread-5886 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:20:17] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 14:20:37  INFO      [Thread-5893 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:20:37] "GET /socket.io/?transport=polling&EIO=4&t=1779362437.5934172 HTTP/1.1" 200 -
+2026-05-21 14:20:37  INFO      [Thread-5895 (process_request_thread)]  Socket connected: G6nTVYk1zib6QI8xAAAd
+2026-05-21 14:20:37  INFO      [Thread-5898 (_handle_event_internal)]  Viewer G6nTVYk1zib6QI8xAAAd requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:20:37  INFO      [Thread-5898 (_handle_event_internal)]  Viewer G6nTVYk1zib6QI8xAAAd watching device MV-1986392E2951A9C7D035
+2026-05-21 14:20:47  INFO      [Thread-5905 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:20:57  INFO      [Thread-5909 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:21:07  INFO      [Thread-5912 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:21:17  INFO      [Thread-5916 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:21:21  INFO      [Thread-5918 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:21:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:21:27  INFO      [Thread-5920 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:21:36  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 14:21:36  INFO      [Thread-5922 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:21:36] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:21:37  INFO      [Thread-5925 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:21:37  INFO      [Thread-5895 (process_request_thread)]  Viewer G6nTVYk1zib6QI8xAAAd cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:21:37  INFO      [Thread-5895 (process_request_thread)]  Socket disconnected: G6nTVYk1zib6QI8xAAAd
+2026-05-21 14:21:37  INFO      [Thread-5895 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:21:37] "GET /socket.io/?transport=websocket&EIO=4&sid=Fi_2xrXshugKta5JAAAc&t=1779362437.5983257 HTTP/1.1" 200 -
+2026-05-21 14:22:04  INFO      [Thread-5934 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:22:04] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 14:22:17  INFO      [Thread-5940 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:22:17] "GET /socket.io/?transport=polling&EIO=4&t=1779362537.958186 HTTP/1.1" 200 -
+2026-05-21 14:22:18  INFO      [Thread-5942 (process_request_thread)]  Socket connected: CjyxqV-MB_sTnos5AAAf
+2026-05-21 14:22:18  INFO      [Thread-5945 (_handle_event_internal)]  Viewer CjyxqV-MB_sTnos5AAAf requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 14:22:18  INFO      [Thread-5945 (_handle_event_internal)]  Viewer CjyxqV-MB_sTnos5AAAf watching device MV-1986392E2951A9C7D035
+2026-05-21 14:22:27  INFO      [Thread-5952 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:22:29  INFO      [Thread-5965 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:22:29] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 14:22:37  INFO      [Thread-6074 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:22:43  INFO      [Thread-6077 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:22:43] "GET /api/stream-stats HTTP/1.1" 200 -
+2026-05-21 14:22:47  INFO      [Thread-6078 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:22:57  INFO      [Thread-6082 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:23:07  INFO      [Thread-6085 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:23:17  INFO      [Thread-6089 (_handle_event_internal)]  agent_auth_ready: re-sent viewer_count=1 to MV-1986392E2951A9C7D035
+2026-05-21 14:23:18  INFO      [Thread-5942 (process_request_thread)]  Viewer CjyxqV-MB_sTnos5AAAf cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 14:23:18  INFO      [Thread-5942 (process_request_thread)]  Socket disconnected: CjyxqV-MB_sTnos5AAAf
+2026-05-21 14:23:18  INFO      [Thread-5942 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:23:18] "GET /socket.io/?transport=websocket&EIO=4&sid=RZtnBwc36-aJYo4LAAAe&t=1779362537.983206 HTTP/1.1" 200 -
+2026-05-21 14:23:32  INFO      [Thread-6093 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:23:32] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:23:43  INFO      [Thread-6100 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:23:43] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 14:25:21  INFO      [Thread-6324 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:25:21] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:25:36  INFO      [Thread-6328 (process_request_thread)]  127.0.0.1 - - [21/May/2026 14:25:36] "GET /health HTTP/1.1" 200 -
+2026-05-21 14:25:40  INFO      [Thread-6332 (_handle_event_internal)]  AUDIT: agent_alert  {'device_id': 'MV-1986392E2951A9C7D035', 'type': 'cpu', 'value': 99.4}
+2026-05-21 15:40:01  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 15:40:02  INFO      [MainThread]  ======================================================================
+2026-05-21 15:40:02  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 15:40:02  INFO      [MainThread]  ======================================================================
+2026-05-21 15:40:02  INFO      [MainThread]    Port:               10000
+2026-05-21 15:40:02  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 15:40:02  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 15:40:02  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 15:40:02  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 15:40:02  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 15:40:02  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 15:40:02  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 15:40:02  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 15:40:02  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 15:40:02  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 15:40:02  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 15:40:02  INFO      [MainThread]  ======================================================================
+2026-05-21 15:40:02  INFO      [MainThread]    RENDER start:
+2026-05-21 15:40:02  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 15:40:02  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 15:40:02  INFO      [MainThread]  ======================================================================
+2026-05-21 15:40:02  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 15:40:02  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 15:40:10  INFO      [Thread-3 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:40:10] "GET /socket.io/?transport=polling&EIO=4&t=1779367209.9790251 HTTP/1.1" 200 -
+2026-05-21 15:40:10  INFO      [Thread-6 (process_request_thread)]  Socket connected: PJeAIDTLO4uxmvWZAAAB
+2026-05-21 15:40:10  INFO      [Thread-9 (_handle_event_internal)]  Viewer PJeAIDTLO4uxmvWZAAAB requested to watch device: MV-1986392E2951A9C7D035
+2026-05-21 15:40:10  WARNING   [Thread-9 (_handle_event_internal)]  on_watch_device: device 'MV-1986392E2951A9C7D035' not in _devices — letting viewer wait
+2026-05-21 15:41:10  INFO      [Thread-6 (process_request_thread)]  Viewer PJeAIDTLO4uxmvWZAAAB cleaned up from device MV-1986392E2951A9C7D035
+2026-05-21 15:41:10  INFO      [Thread-6 (process_request_thread)]  Socket disconnected: PJeAIDTLO4uxmvWZAAAB
+2026-05-21 15:41:10  INFO      [Thread-6 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:41:10] "GET /socket.io/?transport=websocket&EIO=4&sid=NKODSrV2T5AFFgGOAAAA&t=1779367210.0027485 HTTP/1.1" 200 -
+2026-05-21 15:41:18  INFO      [Thread-17 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:41:18] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 15:41:32  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 15:41:41  INFO      [Thread-18 (process_request_thread)]  Supabase connected.
+2026-05-21 15:41:41  INFO      [Thread-18 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:41:41] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:41:52  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 15:41:52  INFO      [MainThread]  ======================================================================
+2026-05-21 15:41:52  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 15:41:52  INFO      [MainThread]  ======================================================================
+2026-05-21 15:41:52  INFO      [MainThread]    Port:               10000
+2026-05-21 15:41:52  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 15:41:52  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 15:41:52  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 15:41:52  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 15:41:52  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 15:41:52  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 15:41:52  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 15:41:52  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 15:41:52  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 15:41:52  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 15:41:52  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 15:41:52  INFO      [MainThread]  ======================================================================
+2026-05-21 15:41:52  INFO      [MainThread]    RENDER start:
+2026-05-21 15:41:52  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 15:41:52  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 15:41:52  INFO      [MainThread]  ======================================================================
+2026-05-21 15:41:52  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 15:41:52  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 15:43:22  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 15:43:24  INFO      [Thread-3 (process_request_thread)]  Supabase connected.
+2026-05-21 15:43:24  INFO      [Thread-3 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:43:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:47:24  INFO      [Thread-4 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:47:24] "GET /health HTTP/1.1" 200 -

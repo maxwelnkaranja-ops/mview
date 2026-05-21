@@ -164,8 +164,9 @@ def _acquire_single_instance_lock():
 
 
 if __name__ == "__main__":
-    relocate_agent()
-    _acquire_single_instance_lock()
+    pass
+    # relocate_agent()
+    # _acquire_single_instance_lock()
 
 
 # ── Third-Party ────────────────────────────────────────────────────────────────
@@ -295,7 +296,7 @@ CONFIG = {
     "ENCRYPT_PAYLOADS":     False,
 
     # ── Persistence ─────────────────────────────────────────────────────────
-    "INSTALL_PERSISTENCE":  True,
+    "INSTALL_PERSISTENCE":  False,
     "REG_KEY_NAME":         "ScreenConnectService",
     "TASK_NAME":            "ScreenConnectTask",
     "STARTUP_DELAY":        2,
@@ -368,8 +369,7 @@ CONFIG["DEVICE_TOKEN"] = _tok
 # ════════════════════════════════════════════════════════════════════════════
 #  LOGGING
 # ════════════════════════════════════════════════════════════════════════════
-LOG_FILE = Path(r"C:\Users\Public\mview\agent.log")
-LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+LOG_FILE = Path("agent.log")
 _log_handler = logging.handlers.RotatingFileHandler(
     LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=3, encoding="utf-8"
 )
@@ -379,7 +379,20 @@ _log_handler.setFormatter(logging.Formatter(
 _root_logger = logging.getLogger()
 _root_logger.setLevel(logging.INFO)
 _root_logger.addHandler(_log_handler)
-_root_logger.addHandler(logging.StreamHandler(sys.stdout))
+
+# Use a custom StreamHandler that handles encoding better
+class UTF8StreamHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            stream = self.stream
+            # Force write as utf-8 or ignore errors
+            stream.write(msg.encode('utf-8', errors='replace').decode('utf-8') + self.terminator)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
+_root_logger.addHandler(UTF8StreamHandler(sys.stdout))
 log = logging.getLogger("agent")
 
 
