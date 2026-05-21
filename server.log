@@ -616,3 +616,111 @@ NameError: name '_LOG_DIR' is not defined. Did you mean: '_LOG_FILE'?
 2026-05-21 15:43:24  INFO      [Thread-3 (process_request_thread)]  Supabase connected.
 2026-05-21 15:43:24  INFO      [Thread-3 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:43:24] "GET /health HTTP/1.1" 200 -
 2026-05-21 15:47:24  INFO      [Thread-4 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:47:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:49:20  INFO      [Thread-5 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:49:20] "GET /api/server-stats HTTP/1.1" 200 -
+2026-05-21 15:49:33  INFO      [Thread-6 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:49:33] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:51:24  INFO      [Thread-7 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:51:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:55:24  INFO      [Thread-8 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:55:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 15:59:24  INFO      [Thread-9 (process_request_thread)]  127.0.0.1 - - [21/May/2026 15:59:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:03:24  INFO      [Thread-10 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:03:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:07:24  INFO      [Thread-11 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:07:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:11:24  INFO      [Thread-12 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:11:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:15:24  INFO      [Thread-13 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:15:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:19:24  INFO      [Thread-14 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:19:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:23:24  INFO      [Thread-15 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:23:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:27:24  INFO      [Thread-16 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:27:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:30:54  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 16:30:54  INFO      [MainThread]  ======================================================================
+2026-05-21 16:30:54  INFO      [MainThread]    Screen Connect Server  v10.0.0  — ENTERPRISE EDITION
+2026-05-21 16:30:54  INFO      [MainThread]  ======================================================================
+2026-05-21 16:30:54  INFO      [MainThread]    Port:               10000
+2026-05-21 16:30:54  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 16:30:54  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 16:30:54  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 16:30:54  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 16:30:54  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 16:30:54  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 16:30:54  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 16:30:54  INFO      [MainThread]    Stream relay:       ISOLATED — per-device view rooms
+2026-05-21 16:30:54  INFO      [MainThread]    Session handoff:    ENABLED — viewers auto-resume on agent reconnect
+2026-05-21 16:30:54  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 16:30:54  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 16:30:54  INFO      [MainThread]  ======================================================================
+2026-05-21 16:30:54  INFO      [MainThread]    RENDER start:
+2026-05-21 16:30:54  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 16:30:54  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 16:30:54  INFO      [MainThread]  ======================================================================
+2026-05-21 16:30:54  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 16:30:54  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 16:31:24  INFO      [Thread-17 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:31:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:32:24  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 16:32:24  INFO      [Thread-18 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:32:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:35:16  INFO      [Thread-19 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:35:16] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 16:35:24  INFO      [Thread-20 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:35:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:36:24  INFO      [Thread-21 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:36:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:39:24  INFO      [Thread-22 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:39:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:43:24  INFO      [Thread-23 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:43:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:44:53  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 16:44:53  INFO      [MainThread]  ======================================================================
+2026-05-21 16:44:53  INFO      [MainThread]    Screen Connect Server  v10.0.0  ### ENTERPRISE EDITION
+2026-05-21 16:44:53  INFO      [MainThread]  ======================================================================
+2026-05-21 16:44:53  INFO      [MainThread]    Port:               10000
+2026-05-21 16:44:53  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 16:44:53  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 16:44:53  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 16:44:53  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 16:44:53  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 16:44:53  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 16:44:53  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 16:44:53  INFO      [MainThread]    Stream relay:       ISOLATED ### per-device view rooms
+2026-05-21 16:44:53  INFO      [MainThread]    Session handoff:    ENABLED ### viewers auto-resume on agent reconnect
+2026-05-21 16:44:53  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 16:44:53  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 16:44:53  INFO      [MainThread]  ======================================================================
+2026-05-21 16:44:53  INFO      [MainThread]    RENDER start:
+2026-05-21 16:44:53  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 16:44:53  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 16:44:53  INFO      [MainThread]  ======================================================================
+2026-05-21 16:44:53  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 16:44:53  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 16:45:07  INFO      [Thread-24 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:45:07] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:46:08  INFO      [MainThread]  flask-cors loaded.
+2026-05-21 16:46:09  INFO      [MainThread]  ======================================================================
+2026-05-21 16:46:09  INFO      [MainThread]    Screen Connect Server  v10.0.0  ### ENTERPRISE EDITION
+2026-05-21 16:46:09  INFO      [MainThread]  ======================================================================
+2026-05-21 16:46:09  INFO      [MainThread]    Port:               10000
+2026-05-21 16:46:09  INFO      [MainThread]    Heartbeat ttl:      35s
+2026-05-21 16:46:09  INFO      [MainThread]    Agent exclusive:    True
+2026-05-21 16:46:09  INFO      [MainThread]    Max viewers/device: unlimited
+2026-05-21 16:46:09  INFO      [MainThread]    Viewer idle kick:   disableds
+2026-05-21 16:46:09  INFO      [MainThread]    Max session dur:    unlimiteds
+2026-05-21 16:46:09  INFO      [MainThread]    Rate limit:         120 req/min per IP (all routes)
+2026-05-21 16:46:09  INFO      [MainThread]    Webhook:            disabled
+2026-05-21 16:46:09  INFO      [MainThread]    Stream relay:       ISOLATED ### per-device view rooms
+2026-05-21 16:46:09  INFO      [MainThread]    Session handoff:    ENABLED ### viewers auto-resume on agent reconnect
+2026-05-21 16:46:09  INFO      [MainThread]    Viewer kick API:    POST /api/viewer/<sid>/kick  (admin key required)
+2026-05-21 16:46:09  INFO      [MainThread]    Live sessions API:  GET  /api/sessions/live      (admin key required)
+2026-05-21 16:46:09  INFO      [MainThread]  ======================================================================
+2026-05-21 16:46:09  INFO      [MainThread]    RENDER start:
+2026-05-21 16:46:09  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-21 16:46:09  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-21 16:46:09  INFO      [MainThread]  ======================================================================
+2026-05-21 16:46:09  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-21 16:46:09  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-21 16:46:25  INFO      [Thread-25 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:46:25] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:46:26  INFO      [Thread-26 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:46:26] "GET /api/devices HTTP/1.1" 200 -
+2026-05-21 16:47:24  INFO      [Thread-27 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:47:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:47:39  INFO      [self-ping]  Self-ping loop started: http://127.0.0.1:10000/health every 240s
+2026-05-21 16:47:39  INFO      [Thread-28 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:47:39] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:48:54  INFO      [Thread-1 (_watchdog_loop)]  Watchdog Health: Mem=71MB, Threads=3, Devices=0
+2026-05-21 16:51:24  INFO      [Thread-29 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:51:24] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:51:39  INFO      [Thread-30 (process_request_thread)]  127.0.0.1 - - [21/May/2026 16:51:39] "GET /health HTTP/1.1" 200 -
+2026-05-21 16:53:54  INFO      [Thread-1 (_watchdog_loop)]  Watchdog Health: Mem=71MB, Threads=3, Devices=0
