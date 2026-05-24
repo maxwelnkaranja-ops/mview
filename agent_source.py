@@ -281,6 +281,8 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
+    # For Local LAN testing: Use http://YOUR_PC_IP:10000
+    # For Render live: Use https://your-app.onrender.com
     "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
@@ -529,11 +531,12 @@ def _get_monitor_geometry(monitor_idx: int = 1):
     except Exception:
         return {"left": 0, "top": 0, "width": 1920, "height": 1080}
 
-def _to_monitor_absolute(x, y, monitor_idx: int | None = None):
+def _to_monitor_absolute(x, y, monitor_idx: int | None = None, w: int | None = None, h: int | None = None):
     """Map viewer-relative monitor coordinates to OS absolute desktop coordinates."""
     try:
         # Handle cases where x or y might be NaN or invalid from a black-screen dashboard
         fx, fy = float(x), float(y)
+        fw, fh = float(w or 0), float(h or 0)
         # Use math.isinf/isnan if numpy isn't available
         import math
         if math.isinf(fx) or math.isnan(fx) or math.isinf(fy) or math.isnan(fy):
@@ -543,18 +546,18 @@ def _to_monitor_absolute(x, y, monitor_idx: int | None = None):
 
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
     
-    # If the input is in 0..1 range (normalized), scale it
-    # We check if both are in 0..1 range. If the dashboard sends pixels like 800, 600, 
-    # they won't trigger this block.
-    if 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0 and mon["width"] > 1:
+    # If the dashboard sent its canvas dimensions (w, h), calculate ratios
+    if fw > 0 and fh > 0:
+        rx = int((fx / fw) * (mon["width"] - 1))
+        ry = int((fy / fh) * (mon["height"] - 1))
+    # Else if the input is in 0..1 range (normalized), scale it
+    elif 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0 and mon["width"] > 1:
         rx = int(fx * (mon["width"] - 1))
         ry = int(fy * (mon["height"] - 1))
-        # log.debug(f"Mapped normalized ({fx:.3f}, {fy:.3f}) to monitor pixels ({rx}, {ry})")
     else:
         # Fallback for pixel coordinates (if dashboard sends them)
         rx = max(0, min(int(fx), max(0, mon["width"] - 1)))
         ry = max(0, min(int(fy), max(0, mon["height"] - 1)))
-        # log.debug(f"Mapped pixel ({fx}, {fy}) to monitor pixels ({rx}, {ry})")
         
     return mon["left"] + rx, mon["top"] + ry
 
@@ -1187,6 +1190,10 @@ async def _adv_main(server_url: str, token: str):
     """Async entry for the advanced monitor — mirrors second-site agent main()."""
     global _adv_sio_async, _adv_authed, _adv_viewers, _adv_auth_event
 
+    # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
+    if "192.168." in server_url or "10.0." in server_url or "localhost" in server_url:
+        server_url = server_url.replace("https://", "http://")
+
     _adv_auth_event = asyncio.Event()
     import socketio as _sio_mod
     sio = _sio_mod.AsyncClient(
@@ -1199,9 +1206,9 @@ async def _adv_main(server_url: str, token: str):
     @sio.event
     async def connect():
         global _adv_authed, _adv_auth_event
-        _adv_authed = False   # FIX: reset on every reconnect so stream loop re-waits
+        _adv_authed = False
         if _adv_auth_event: _adv_auth_event.clear()
-        log.info("Advanced Monitor: connected — authenticating…")
+        log.info(f"Advanced Monitor: connected — authenticating…")
         await sio.emit("agent_auth", {
             "token":     token,
             "device_id": CONFIG["DEVICE_TOKEN"],
@@ -1288,7 +1295,12 @@ async def _adv_main(server_url: str, token: str):
         """Second-site input event handler — absolute pixel coords, ultra-fast win32 path."""
         evt = data.get("type")
         try:
-            mx, my = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
+            mx, my = _to_monitor_absolute(
+                data.get("x", 0), 
+                data.get("y", 0),
+                w=data.get("w"),
+                h=data.get("h")
+            )
             
             # Use win32api for ultra-low latency mouse movement if available
             if evt == "mouse_move":
@@ -4335,9 +4347,15 @@ class ScreenConnectAgent:
             sio = sys_monitor = heartbeat = keylogger = clipboard = alerts = None
             try:
                 sio, sys_monitor, heartbeat, keylogger, clipboard, alerts = self._make_client()
-                log.info(f"Connecting to {CONFIG['SERVER_URL']}...")
+                
+                # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
+                url = CONFIG["SERVER_URL"]
+                if "192.168." in url or "10.0." in url or "localhost" in url:
+                    url = url.replace("https://", "http://")
+                
+                log.info(f"Connecting to {url}...")
                 sio.connect(
-                    CONFIG["SERVER_URL"],
+                    url,
                     transports=["websocket", "polling"],
                     wait_timeout=30,
                     socketio_path="/socket.io",

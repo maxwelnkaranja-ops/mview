@@ -192,7 +192,7 @@ WEBHOOK_SECRET      = os.environ.get("WEBHOOK_SECRET", "").strip()
 BULK_INVITE_MAX     = int(os.environ.get("BULK_INVITE_MAX", "1000"))
 BRUTE_LOCKOUT_MAX   = int(os.environ.get("BRUTE_LOCKOUT_MAX", "10"))   # failures before lockout
 BRUTE_LOCKOUT_TTL   = int(os.environ.get("BRUTE_LOCKOUT_TTL", "300"))  # lockout duration secs
-GOP_BUF_SIZE        = int(os.environ.get("GOP_BUF_SIZE", "512"))        # v12.1: raised to 512
+GOP_BUF_SIZE        = int(os.environ.get("GOP_BUF_SIZE", "1"))          # v12.1: reduced to 1 to fix latency
 SSE_KEEPALIVE       = int(os.environ.get("SSE_KEEPALIVE", "20"))        # SSE comment every N secs
 DB_CACHE_CAPACITY   = int(os.environ.get("DB_CACHE_CAPACITY", "2048"))
 DB_CACHE_TTL        = float(os.environ.get("DB_CACHE_TTL", "5.0"))
@@ -239,7 +239,7 @@ _ch = logging.StreamHandler(sys.stdout)
 _ch.setFormatter(_log_fmt)
 _handlers.append(_ch)
 
-logging.basicConfig(level=logging.INFO, handlers=_handlers)
+logging.basicConfig(level=logging.DEBUG, handlers=_handlers)
 log = logging.getLogger("screenconnect")
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1464,8 +1464,10 @@ if SOCKETIO_OK and sio:
 
     @sio.on("connect")
     def on_connect():
+        sid = request.sid
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
         join_room("dashboards")
-        log.info(f"Socket connected: {request.sid}")
+        log.info(f"Socket connected: {sid} from {ip}")
 
     @sio.on("disconnect")
     def on_disconnect():
@@ -1503,7 +1505,10 @@ if SOCKETIO_OK and sio:
         for did, dev in live.items():
             db_row = db_map.get(did, {})
             result.append({
-                "id": did, "name": dev.get("label") or dev.get("hostname") or did,
+                "id": did,
+                "device_id": did,
+                "token": did,
+                "name": dev.get("label") or dev.get("hostname") or did,
                 "online": True, "screen_w": dev.get("screen_w", 0), "screen_h": dev.get("screen_h", 0),
                 "rtt_ms": dev.get("rtt_ms", 0), "cpu": dev.get("cpu"), "ram": dev.get("ram"),
                 "ip": dev.get("local_ip") or db_row.get("ip_address", ""),
@@ -1512,7 +1517,10 @@ if SOCKETIO_OK and sio:
         for did, row in db_map.items():
             if did not in live:
                 result.append({
-                    "id": did, "name": row.get("label") or row.get("hostname") or did,
+                    "id": did,
+                    "device_id": did,
+                    "token": did,
+                    "name": row.get("label") or row.get("hostname") or did,
                     "online": False, "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
                     "cpu": None, "ram": None,
                     "ip": row.get("ip_address", ""), "os": row.get("os_info", ""),
@@ -1545,6 +1553,9 @@ if SOCKETIO_OK and sio:
         try:
             did = data.get("device_id", "")
             sid = request.sid
+            fps = data.get("fps", 30)
+            quality = data.get("quality", 70)
+            log.info(f"Viewer {sid} watching {did}  fps={fps} quality={quality}")
             if not did:
                 sio.emit("watch_error", {"msg": "No device_id"}, room=sid)
                 return
@@ -1616,10 +1627,8 @@ if SOCKETIO_OK and sio:
                 _viewer_session_start[sid] = time.monotonic()
                 _viewer_last_activity[sid]  = time.monotonic()
 
-            # GOP catch-up — send buffered frames in a background greenlet
-            # so on_watch_device returns immediately instead of blocking 128 emits
-            with _adv_gop_lock:
-                gop = list(_adv_gop_buf.get(did, []))
+            # GOP catch-up — disabled for ultra-low latency
+            gop = [] # Disabled: list(_adv_gop_buf.get(did, []))
             cursor_pkt = _adv_cursor_latest.get(did)
             def _send_gop(_sid=sid, _gop=gop, _cursor=cursor_pkt):
                 for pkt in _gop:
@@ -1825,6 +1834,7 @@ if SOCKETIO_OK and sio:
         token = data.get("token", "")
         did   = data.get("device_id") or token
         sid   = request.sid
+        log.info(f"agent_auth attempt: device={did} sid={sid}")
         if not did:
             sio.emit("auth_error", {"msg": "Empty token/did"}, room=sid)
             return
@@ -1881,17 +1891,20 @@ if SOCKETIO_OK and sio:
             with _sid_lock:
                 did = _sid_to_device.get(sid)
         if not did:
+            log.debug(f"frame_bin: no device for sid {sid}")
             return
 
         # Convert to bytes safely — data may be memoryview, bytearray, list, or bytes
         try:
             raw = bytes(data) if not isinstance(data, bytes) else data
-        except Exception:
+        except Exception as e:
+            log.error(f"frame_bin: failed to convert data to bytes: {e}")
             return
 
         # Size guard + empty guard (combined)
         n = len(raw)
         if n == 0 or n > MAX_FRAME_BYTES:
+            log.warning(f"frame_bin: invalid frame size {n} for device {did}")
             return
 
         # ── v12: Frame deduplication (SHA-256) ────────────────────────────────
@@ -1948,8 +1961,20 @@ if SOCKETIO_OK and sio:
                     log.info(f"frame_bin: device={did} frame={fc} size={n}")
 
         # Fan out — emit to both room types
-        sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
-        sio.emit("frame_bin", raw, room=f"view:{did}")
+        r1 = f"adv_viewers_{did}"
+        r2 = f"view:{did}"
+        
+        # DEBUG: Log if there are viewers
+        with _adv_viewer_lock:
+            v1 = sum(1 for v in _adv_viewer_rooms.values() if v == did)
+        with _view_lock:
+            v2 = len(_viewers.get(did, set()))
+            
+        if fc % 50 == 0:
+            log.info(f"frame_bin: device={did} frame={fc} size={n} viewers(adv={v1}, std={v2})")
+            
+        sio.emit("frame_bin", raw, room=r1)
+        sio.emit("frame_bin", raw, room=r2)
 
         # ── v12: Fire plugin hooks in background ──────────────────────────────
         if _plugin_hooks.get("on_frame"):
@@ -1960,6 +1985,7 @@ if SOCKETIO_OK and sio:
         """Main-socket fallback when adv socket unavailable."""
         try:
             did = data.get("device_id", "")
+            log.debug(f"frame_bin_relay: received frame for device {did}")
             if not did:
                 return
             if data.get("b64"):
@@ -2435,14 +2461,23 @@ if SOCKETIO_OK and sio:
                         except Exception:
                             pass
 
-                    if stuck:
-                        log.warning(f"Watchdog: stream stalled for {did} with {vcount} viewer(s) — kickstarting")
-                        spay = {"tab": "monitor", "action": "start", "device_id": did,
-                                "fps": 20, "quality": 70, "scale": 0.8, "monitor": 1}
-                        sio.emit("request_action", spay, room=did)
-                        agent_adv = _adv_agent_sids.get(did)
-                        if agent_adv:
-                            sio.emit("request_action", spay, room=agent_adv)
+                        if stuck:
+                            # log.debug(f"Watchdog: device {did} frame_count={frame_count} last={last_frame}")
+                            pass
+                        
+                        if False: # DISABLED: stuck
+                            # Use current session settings if available, else defaults
+                            # sio.emit("request_action", {"tab": "monitor", "action": "probe", "device_id": did}, room=did)
+                            # log.warning(f"Watchdog: stream stalled for {did} with {vcount} viewer(s) — kickstarting")
+                            pass
+                        elif stuck:
+                             # spay = {"tab": "monitor", "action": "start", "device_id": did,
+                             #         "fps": 20, "quality": 70, "scale": 0.8, "monitor": 1}
+                             # sio.emit("request_action", spay, room=did)
+                             # agent_adv = _adv_agent_sids.get(did)
+                             # if agent_adv:
+                             #     sio.emit("request_action", spay, room=agent_adv)
+                             pass
 
                 # ── 3. Viewer idle / max duration ─────────────────────────
                 if VIEWER_IDLE_TIMEOUT > 0 or MAX_SESSION_DURATION > 0:
@@ -3209,7 +3244,7 @@ def startup():
     log.info("=" * 72)
     log.info("  RENDER start command (REQUIRED):")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")
-    log.info("             -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app")
+    log.info("             -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app")
     log.info("=" * 72)
     if not _GEVENT_OK:
         log.critical("GEVENT NOT INSTALLED — server will crash under load!")
