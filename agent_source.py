@@ -282,7 +282,7 @@ def _read_token_from_trailer() -> str:
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
-    "DEVICE_TOKEN":         "UNSET",
+    "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "9.0.0",   # ENTERPRISE ULTRA build
@@ -295,7 +295,7 @@ CONFIG = {
     "STREAM_MIN_FPS":       5,          # drop to 5fps on static screens
     "STREAM_QUALITY":       75,         # JPEG quality
     "STREAM_MONITOR":       1,
-    "STREAM_MODE":          "video",    # "video" or "screenshot"
+    "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
@@ -380,7 +380,10 @@ if not _tok:
 
 # If still no token — auto-generate unique device ID from hardware (global deploy mode)
 if not _tok:
-    _tok = _derive_device_id()
+    if CONFIG.get("DEVICE_TOKEN") and CONFIG["DEVICE_TOKEN"] != "UNSET":
+        _tok = CONFIG["DEVICE_TOKEN"]
+    else:
+        _tok = _derive_device_id()
 
 CONFIG["DEVICE_TOKEN"] = _tok
 

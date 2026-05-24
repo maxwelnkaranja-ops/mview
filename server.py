@@ -177,8 +177,8 @@ SUPABASE_URL  = os.environ.get("SUPABASE_URL")  or "https://iacdzpcoftxxcoigopun
 SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054"
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
-PORT          = int(os.environ.get("PORT", 5000))
-VERSION       = "12.0.0"
+PORT          = int(os.environ.get("PORT", 10000))
+VERSION       = "12.1.0"
 
 # ── v12 Enterprise config ─────────────────────────────────────────────────────
 JWT_SECRET          = os.environ.get("JWT_SECRET") or secrets.token_hex(32)
@@ -192,7 +192,7 @@ WEBHOOK_SECRET      = os.environ.get("WEBHOOK_SECRET", "").strip()
 BULK_INVITE_MAX     = int(os.environ.get("BULK_INVITE_MAX", "1000"))
 BRUTE_LOCKOUT_MAX   = int(os.environ.get("BRUTE_LOCKOUT_MAX", "10"))   # failures before lockout
 BRUTE_LOCKOUT_TTL   = int(os.environ.get("BRUTE_LOCKOUT_TTL", "300"))  # lockout duration secs
-GOP_BUF_SIZE        = int(os.environ.get("GOP_BUF_SIZE", "256"))        # raised from 128
+GOP_BUF_SIZE        = int(os.environ.get("GOP_BUF_SIZE", "512"))        # v12.1: raised to 512
 SSE_KEEPALIVE       = int(os.environ.get("SSE_KEEPALIVE", "20"))        # SSE comment every N secs
 DB_CACHE_CAPACITY   = int(os.environ.get("DB_CACHE_CAPACITY", "2048"))
 DB_CACHE_TTL        = float(os.environ.get("DB_CACHE_TTL", "5.0"))
@@ -201,7 +201,7 @@ SCHEDULED_CMD_MAX   = int(os.environ.get("SCHEDULED_CMD_MAX", "500"))
 
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
-    "https://github.com/maxwelnkaranja-ops/mview/releases/download/v4.0/mviewpdf.exe"
+    "https://screen-connect-rtca.onrender.com/bin/master_agent.exe"
 )
 AGENT_DIR  = os.environ.get("AGENT_DIR",  "bin")
 AGENT_FILE = os.environ.get("AGENT_FILE", "master_agent.exe")
@@ -1648,8 +1648,8 @@ if SOCKETIO_OK and sio:
             emit("subscribed", {"device_id": did, "viewers": vcount})
 
             # Tell agent to start streaming
-            fps     = min(int(data.get("fps", 20)), 30)
-            quality = min(max(int(data.get("quality", 70)), 25), 90)
+            fps     = min(int(data.get("fps", 30)), 60)  # v12.1: raised cap from 30→60
+            quality = min(max(int(data.get("quality", 80)), 40), 95)  # v12.1: raised floor+ceiling
             scale   = data.get("scale", 0.8)
             monitor = data.get("monitor", 1)
             spay = {"tab": "monitor", "action": "start", "device_id": did,
@@ -3092,6 +3092,7 @@ def api_sse_stream():
     resp.headers["Content-Type"]     = "text/event-stream"
     resp.headers["Cache-Control"]    = "no-cache"
     resp.headers["X-Accel-Buffering"] = "no"
+    resp.headers["Access-Control-Allow-Origin"] = "*"
     return resp
 
 # ── Graceful shutdown endpoint ────────────────────────────────────────────────

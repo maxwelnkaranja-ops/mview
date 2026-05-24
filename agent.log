@@ -2930,3 +2930,66 @@
 2026-05-21 14:24:21,922 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
 2026-05-21 14:24:21,924 [INFO    ] DXCamera — Output recovery succeeded after 42 attempt(s).
 2026-05-21 14:24:21,925 [INFO    ] DXCamera — Output recovery: 1080x1920@90 -> 1080x1920@90, region=(0, 0, 1080, 1920).
+2026-05-24 14:22:03,300 [INFO    ] MainThread — ═══ MasterAgent v9.0.0 starting | host=maxiiloh- | pid=18896 ═══
+2026-05-24 14:22:03,308 [INFO    ] sc-main — Screen Connect Agent v9.0.0 starting...
+2026-05-24 14:22:05,310 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-24 14:22:07,387 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-24 14:22:07,419 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=12.1.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 14:22:09,471 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-24 14:22:11,470 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-24 14:22:11,785 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-24 14:22:11,785 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-24 14:22:11,787 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-1986392E2951A9C7D035
+2026-05-24 14:22:11,787 [INFO    ] adv-monitor — Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay
+2026-05-24 14:22:11,788 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-24 14:22:11,788 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-24 14:22:11,797 [INFO    ] adv-producer — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-24 14:22:14,923 [INFO    ] adv-producer — Frame buffer build(start): 1920x1080 c=3 n=8.
+2026-05-24 14:22:14,925 [INFO    ] adv-producer — Advanced Monitor Capture: DXGI GPU monitor=1 @ 20 fps
+2026-05-24 14:22:15,007 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-24 14:22:15,008 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=75
+2026-05-24 14:22:15,008 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 20 fps
+2026-05-24 14:36:14,169 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting
+2026-05-24 15:24:18,201 [INFO    ] MainThread — ═══ MasterAgent v9.0.0 starting | host=maxiiloh- | pid=6048 ═══
+2026-05-24 15:24:18,235 [INFO    ] sc-main — Screen Connect Agent v9.0.0 starting...
+2026-05-24 15:24:20,239 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-24 15:24:22,385 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-24 15:24:22,445 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=12.1.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 15:24:30,892 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-24 15:24:32,879 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-24 15:24:33,227 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-24 15:24:33,227 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-24 15:24:33,228 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-1986392E2951A9C7D035
+2026-05-24 15:24:33,229 [INFO    ] adv-monitor — Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay
+2026-05-24 15:24:33,229 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-24 15:24:33,229 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-24 15:24:33,231 [INFO    ] adv-producer — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-24 15:24:33,384 [INFO    ] adv-producer — Frame buffer build(start): 1080x1920 c=3 n=8.
+2026-05-24 15:24:33,385 [INFO    ] adv-producer — Advanced Monitor Capture: DXGI GPU monitor=1 @ 20 fps
+2026-05-24 15:24:33,615 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-24 15:24:33,615 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=75
+2026-05-24 15:24:33,615 [INFO    ] adv-producer — Advanced Monitor streaming 1080x1920 monitor=1 @ up to 20 fps
+2026-05-24 15:30:37,893 [INFO    ] MainThread — ═══ MasterAgent v9.0.0 starting | host=maxiiloh- | pid=13444 ═══
+2026-05-24 15:30:37,901 [INFO    ] sc-main — Screen Connect Agent v9.0.0 starting...
+2026-05-24 15:30:39,904 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-24 15:30:42,002 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-24 15:30:42,043 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=12.1.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 15:30:44,717 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-24 15:30:46,704 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-24 15:30:46,964 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-24 15:30:46,964 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-24 15:30:46,966 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-24 15:30:46,966 [INFO    ] adv-monitor — Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay
+2026-05-24 15:30:46,966 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-24 15:30:46,967 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-24 15:30:46,971 [INFO    ] adv-producer — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-24 15:30:47,078 [INFO    ] adv-producer — Frame buffer build(start): 1080x1920 c=3 n=8.
+2026-05-24 15:30:47,080 [INFO    ] adv-producer — Advanced Monitor Capture: DXGI GPU monitor=1 @ 20 fps
+2026-05-24 15:30:47,175 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-24 15:30:47,177 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=75
+2026-05-24 15:30:47,177 [INFO    ] adv-producer — Advanced Monitor streaming 1080x1920 monitor=1 @ up to 20 fps
+2026-05-24 15:33:17,199 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting
+2026-05-24 15:34:46,391 [INFO    ] adv-monitor — Advanced Monitor: all viewers disconnected — stream paused
+2026-05-24 15:34:47,073 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting
+2026-05-24 15:35:29,752 [INFO    ] adv-monitor — Advanced Monitor: all viewers disconnected — stream paused
+2026-05-24 15:35:37,252 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting

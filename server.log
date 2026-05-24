@@ -1670,3 +1670,641 @@ OSError: [WinError 10048] Only one usage of each socket address (protocol/networ
 2026-05-24 12:31:35  INFO      [Dummy-13]  127.0.0.1 - - [2026-05-24 12:31:35] "GET /health HTTP/1.1" 200 653 0.002617
 2026-05-24 12:32:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=47MB
 2026-05-24 12:35:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 12:35:35] "GET /health HTTP/1.1" 200 653 0.001507
+2026-05-24 12:37:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=47MB
+2026-05-24 12:39:35  INFO      [Dummy-15]  127.0.0.1 - - [2026-05-24 12:39:35] "GET /health HTTP/1.1" 200 653 0.002522
+2026-05-24 12:42:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=45MB
+2026-05-24 12:43:35  INFO      [Dummy-16]  127.0.0.1 - - [2026-05-24 12:43:35] "GET /health HTTP/1.1" 200 653 0.004858
+2026-05-24 12:47:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 12:47:35  INFO      [Dummy-17]  127.0.0.1 - - [2026-05-24 12:47:35] "GET /health HTTP/1.1" 200 653 0.003533
+2026-05-24 12:51:35  INFO      [Dummy-18]  127.0.0.1 - - [2026-05-24 12:51:35] "GET /health HTTP/1.1" 200 653 0.003630
+2026-05-24 12:52:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 12:55:35  INFO      [Dummy-19]  127.0.0.1 - - [2026-05-24 12:55:35] "GET /health HTTP/1.1" 200 653 0.001000
+2026-05-24 12:57:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 12:59:35  INFO      [Dummy-20]  127.0.0.1 - - [2026-05-24 12:59:35] "GET /health HTTP/1.1" 200 653 0.001002
+2026-05-24 13:02:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:03:35  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 13:03:35] "GET /health HTTP/1.1" 200 653 0.003120
+2026-05-24 13:07:07  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:07:35  INFO      [Dummy-22]  127.0.0.1 - - [2026-05-24 13:07:35] "GET /health HTTP/1.1" 200 653 0.003576
+2026-05-24 13:11:35  INFO      [Dummy-23]  127.0.0.1 - - [2026-05-24 13:11:35] "GET /health HTTP/1.1" 200 653 0.003808
+2026-05-24 13:12:08  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:15:35  INFO      [Dummy-24]  127.0.0.1 - - [2026-05-24 13:15:35] "GET /health HTTP/1.1" 200 653 0.002851
+2026-05-24 13:17:08  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:19:35  INFO      [Dummy-25]  127.0.0.1 - - [2026-05-24 13:19:35] "GET /health HTTP/1.1" 200 653 0.002568
+2026-05-24 13:22:08  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:23:35  INFO      [Dummy-26]  127.0.0.1 - - [2026-05-24 13:23:35] "GET /health HTTP/1.1" 200 653 0.003593
+2026-05-24 13:27:08  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:27:35  INFO      [Dummy-27]  127.0.0.1 - - [2026-05-24 13:27:35] "GET /health HTTP/1.1" 200 653 0.002700
+2026-05-24 13:31:35  INFO      [Dummy-28]  127.0.0.1 - - [2026-05-24 13:31:35] "GET /health HTTP/1.1" 200 653 0.002550
+2026-05-24 13:32:08  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:35:35  INFO      [Dummy-29]  127.0.0.1 - - [2026-05-24 13:35:35] "GET /health HTTP/1.1" 200 653 0.002230
+2026-05-24 13:37:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:39:35  INFO      [Dummy-30]  127.0.0.1 - - [2026-05-24 13:39:35] "GET /health HTTP/1.1" 200 653 0.001986
+2026-05-24 13:42:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:43:35  INFO      [Dummy-31]  127.0.0.1 - - [2026-05-24 13:43:35] "GET /health HTTP/1.1" 200 653 0.003083
+2026-05-24 13:47:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:47:35  INFO      [Dummy-32]  127.0.0.1 - - [2026-05-24 13:47:35] "GET /health HTTP/1.1" 200 653 0.001503
+2026-05-24 13:51:35  INFO      [Dummy-33]  127.0.0.1 - - [2026-05-24 13:51:35] "GET /health HTTP/1.1" 200 653 0.003542
+2026-05-24 13:52:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:55:35  INFO      [Dummy-34]  127.0.0.1 - - [2026-05-24 13:55:35] "GET /health HTTP/1.1" 200 653 0.004351
+2026-05-24 13:57:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 13:59:35  INFO      [Dummy-35]  127.0.0.1 - - [2026-05-24 13:59:35] "GET /health HTTP/1.1" 200 653 0.001596
+2026-05-24 14:02:09  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 14:03:35  INFO      [Dummy-36]  127.0.0.1 - - [2026-05-24 14:03:35] "GET /health HTTP/1.1" 200 653 0.002553
+2026-05-24 14:07:10  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 14:07:36  INFO      [Dummy-37]  127.0.0.1 - - [2026-05-24 14:07:36] "GET /health HTTP/1.1" 200 653 0.003059
+2026-05-24 14:11:36  INFO      [Dummy-38]  127.0.0.1 - - [2026-05-24 14:11:36] "GET /health HTTP/1.1" 200 653 0.004521
+2026-05-24 14:12:10  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 14:15:36  INFO      [Dummy-39]  127.0.0.1 - - [2026-05-24 14:15:36] "GET /health HTTP/1.1" 200 653 0.002573
+2026-05-24 14:17:10  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=38MB
+2026-05-24 14:18:32  INFO      [MainThread]  ========================================================================
+2026-05-24 14:18:32  INFO      [MainThread]    Screen Connect Server  v12.1.0  - ENTERPRISE ULTRA
+2026-05-24 14:18:32  INFO      [MainThread]  ========================================================================
+2026-05-24 14:18:32  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-24 14:18:32  INFO      [MainThread]    Async mode:            gevent
+2026-05-24 14:18:32  INFO      [MainThread]    Port:                  10000
+2026-05-24 14:18:32  INFO      [MainThread]    Heartbeat TTL:         35s
+2026-05-24 14:18:32  INFO      [MainThread]    Agent exclusive:       True
+2026-05-24 14:18:32  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-24 14:18:32  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-24 14:18:32  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-24 14:18:32  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-24 14:18:32  INFO      [MainThread]    Max frame size:        4MB
+2026-05-24 14:18:32  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-24 14:18:32  INFO      [MainThread]    Frame dedup (SHA-256): False
+2026-05-24 14:18:32  INFO      [MainThread]    GOP buffer size:       512 frames
+2026-05-24 14:18:32  INFO      [MainThread]    JWT enabled:           True
+2026-05-24 14:18:32  INFO      [MainThread]    TOTP enabled:          False
+2026-05-24 14:18:32  INFO      [MainThread]    Redis scale-out:       False
+2026-05-24 14:18:32  INFO      [MainThread]    Org isolation:         False
+2026-05-24 14:18:32  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-24 14:18:32  INFO      [MainThread]    Signed webhooks:       False
+2026-05-24 14:18:32  INFO      [MainThread]    Webhook:               disabled
+2026-05-24 14:18:32  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-24 14:18:32  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-24 14:18:32  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-24 14:18:32  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-24 14:18:32  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-24 14:18:32  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-24 14:18:32  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-24 14:18:32  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-24 14:18:32  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-24 14:18:32  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-24 14:18:32  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-24 14:18:32  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-24 14:18:32  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 14:18:32  INFO      [MainThread]  ========================================================================
+2026-05-24 14:18:32  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-24 14:18:32  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-24 14:18:32  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
+2026-05-24 14:18:32  INFO      [MainThread]  ========================================================================
+2026-05-24 14:18:32  CRITICAL  [MainThread]  Unhandled exception
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 3224, in <module>
+    sio.run(app, host="0.0.0.0", port=PORT, debug=False, allow_unsafe_werkzeug=True)
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\flask_socketio\__init__.py", line 740, in run
+    self.wsgi_server.serve_forever()
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\baseserver.py", line 398, in serve_forever
+    self.start()
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\baseserver.py", line 336, in start
+    self.init_socket()
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\pywsgi.py", line 1668, in init_socket
+    StreamServer.init_socket(self)
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\server.py", line 173, in init_socket
+    self.socket = self.get_listener(self.address, self.backlog, self.family)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\server.py", line 185, in get_listener
+    return _tcp_listener(address, backlog=backlog, reuse_addr=cls.reuse_addr, family=family)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\server.py", line 264, in _tcp_listener
+    sock.bind(address)
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\venv_stable\Lib\site-packages\gevent\_socketcommon.py", line 547, in bind
+    return self._sock.bind(address)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted: ('0.0.0.0', 10000)
+2026-05-24 14:18:32  ERROR     [MainThread]  CRASH in global_exc_hook: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted: ('0.0.0.0', 10000)
+2026-05-24 14:19:36  INFO      [Dummy-40]  127.0.0.1 - - [2026-05-24 14:19:36] "GET /health HTTP/1.1" 200 653 0.006671
+2026-05-24 14:20:43  INFO      [MainThread]  ========================================================================
+2026-05-24 14:20:43  INFO      [MainThread]    Screen Connect Server  v12.1.0  - ENTERPRISE ULTRA
+2026-05-24 14:20:43  INFO      [MainThread]  ========================================================================
+2026-05-24 14:20:43  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-24 14:20:43  INFO      [MainThread]    Async mode:            gevent
+2026-05-24 14:20:43  INFO      [MainThread]    Port:                  10000
+2026-05-24 14:20:43  INFO      [MainThread]    Heartbeat TTL:         35s
+2026-05-24 14:20:43  INFO      [MainThread]    Agent exclusive:       True
+2026-05-24 14:20:43  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-24 14:20:43  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-24 14:20:43  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-24 14:20:43  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-24 14:20:43  INFO      [MainThread]    Max frame size:        4MB
+2026-05-24 14:20:43  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-24 14:20:43  INFO      [MainThread]    Frame dedup (SHA-256): False
+2026-05-24 14:20:43  INFO      [MainThread]    GOP buffer size:       512 frames
+2026-05-24 14:20:43  INFO      [MainThread]    JWT enabled:           True
+2026-05-24 14:20:43  INFO      [MainThread]    TOTP enabled:          False
+2026-05-24 14:20:43  INFO      [MainThread]    Redis scale-out:       False
+2026-05-24 14:20:43  INFO      [MainThread]    Org isolation:         False
+2026-05-24 14:20:43  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-24 14:20:43  INFO      [MainThread]    Signed webhooks:       False
+2026-05-24 14:20:43  INFO      [MainThread]    Webhook:               disabled
+2026-05-24 14:20:43  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-24 14:20:43  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-24 14:20:43  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-24 14:20:43  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-24 14:20:43  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-24 14:20:43  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-24 14:20:43  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-24 14:20:43  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-24 14:20:43  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-24 14:20:43  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-24 14:20:43  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-24 14:20:43  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-24 14:20:43  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 14:20:43  INFO      [MainThread]  ========================================================================
+2026-05-24 14:20:43  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-24 14:20:43  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-24 14:20:43  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
+2026-05-24 14:20:43  INFO      [MainThread]  ========================================================================
+2026-05-24 14:21:03  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-24 14:21:03] "POST /api/invite HTTP/1.1" 201 629 0.032072
+2026-05-24 14:21:06  INFO      [Dummy-2]  Supabase connected.
+2026-05-24 14:21:08  INFO      [Dummy-2]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices "HTTP/2 201 Created"
+2026-05-24 14:22:07  INFO      [Dummy-3]  Socket connected: sabK1-UP-VA3Wwk_AAAB
+2026-05-24 14:22:07  INFO      [Dummy-4]  Agent ONLINE: maxiiloh- (MV-1986392E2951A9C7D035) sid=sabK1-UP-VA3Wwk_AAAB
+2026-05-24 14:22:07  INFO      [Dummy-5]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 201 Created"
+2026-05-24 14:22:08  INFO      [Dummy-6]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 14:22:08  INFO      [Dummy-7]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 14:22:08  INFO      [Dummy-8]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 14:22:09  INFO      [Dummy-9]  127.0.0.1 - - [2026-05-24 14:22:09] "POST /agent/checkin HTTP/1.1" 200 359 0.001115
+2026-05-24 14:22:09  INFO      [Dummy-10]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-24 14:22:11  INFO      [Dummy-11]  Socket connected: EQ6bJYwyk3gScWYwAAAD
+2026-05-24 14:22:11  INFO      [Dummy-12]  Advanced Monitor auth OK: device=MV-1986392E2951A9C7D035 sid=EQ6bJYwyk3gScWYwAAAD
+2026-05-24 14:22:13  INFO      [Dummy-13]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-24 14:22:13  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 14:22:13] "GET /health HTTP/1.1" 200 652 0.022601
+2026-05-24 14:22:13  INFO      [Dummy-15]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=4 mem=113MB
+2026-05-24 14:22:15  INFO      [Dummy-16]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1 size=58478
+2026-05-24 14:22:40  INFO      [Dummy-17]  frame_bin: device=MV-1986392E2951A9C7D035 frame=500 size=58159
+2026-05-24 14:23:06  INFO      [Dummy-18]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1000 size=59703
+2026-05-24 14:23:32  INFO      [Dummy-19]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1500 size=52096
+2026-05-24 14:23:35  INFO      [Dummy-20]  127.0.0.1 - - [2026-05-24 14:23:35] "GET /status HTTP/1.1" 200 653 0.002897
+2026-05-24 14:23:55  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:23:55] "GET /dashboard.html HTTP/1.1" 200 384455 0.114667
+2026-05-24 14:23:55  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:23:55] "GET /config.js HTTP/1.1" 200 2092 0.002778
+2026-05-24 14:23:58  INFO      [Dummy-22]  frame_bin: device=MV-1986392E2951A9C7D035 frame=2000 size=54064
+2026-05-24 14:24:07  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:07] "GET /@vite/client HTTP/1.1" 404 567 0.002565
+2026-05-24 14:24:30  INFO      [Dummy-23]  frame_bin: device=MV-1986392E2951A9C7D035 frame=2500 size=51703
+2026-05-24 14:24:57  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:57] "GET /dashboard.html HTTP/1.1" 304 413 0.003540
+2026-05-24 14:24:57  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:57] "GET /config.js HTTP/1.1" 200 1177 0.002509
+2026-05-24 14:24:57  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:57] "GET /$%7Bh.src%7D HTTP/1.1" 404 532 0.002007
+2026-05-24 14:24:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:58] "GET /status HTTP/1.1" 200 653 0.003506
+2026-05-24 14:24:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:58] "GET /@vite/client HTTP/1.1" 404 567 0.001508
+2026-05-24 14:24:58  INFO      [Dummy-24]  Socket connected: S_sERbS9hS_GBl4JAAAF
+2026-05-24 14:24:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:58] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:24:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:24:58] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:25:06  INFO      [Dummy-25]  frame_bin: device=MV-1986392E2951A9C7D035 frame=3000 size=58184
+2026-05-24 14:25:08  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:08] "GET /status HTTP/1.1" 200 653 0.003026
+2026-05-24 14:25:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:09] "GET /api/devices HTTP/1.1" 200 705 0.001340
+2026-05-24 14:25:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:18] "GET /status HTTP/1.1" 200 653 0.001000
+2026-05-24 14:25:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:19] "GET /api/devices HTTP/1.1" 200 705 0.015664
+2026-05-24 14:25:22  INFO      [Dummy-26]  127.0.0.1 - - [2026-05-24 14:25:22] "GET /api/stream-stats HTTP/1.1" 200 489 0.002544
+2026-05-24 14:25:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:28] "GET /status HTTP/1.1" 200 653 0.007061
+2026-05-24 14:25:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:29] "GET /api/devices HTTP/1.1" 200 705 0.001813
+2026-05-24 14:25:38  INFO      [Dummy-27]  frame_bin: device=MV-1986392E2951A9C7D035 frame=3500 size=60374
+2026-05-24 14:25:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:38] "GET /status HTTP/1.1" 200 653 0.002508
+2026-05-24 14:25:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:39] "GET /api/devices HTTP/1.1" 200 705 0.001998
+2026-05-24 14:25:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:48] "GET /status HTTP/1.1" 200 653 0.001998
+2026-05-24 14:25:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:49] "GET /api/devices HTTP/1.1" 200 705 0.002004
+2026-05-24 14:25:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:58] "GET /status HTTP/1.1" 200 653 0.003532
+2026-05-24 14:25:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:25:59] "GET /api/devices HTTP/1.1" 200 705 0.002008
+2026-05-24 14:26:08  INFO      [Dummy-28]  frame_bin: device=MV-1986392E2951A9C7D035 frame=4000 size=64785
+2026-05-24 14:26:08  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:08] "GET /status HTTP/1.1" 200 653 0.006562
+2026-05-24 14:26:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:09] "GET /api/devices HTTP/1.1" 200 705 0.001002
+2026-05-24 14:26:13  INFO      [Dummy-29]  127.0.0.1 - - [2026-05-24 14:26:13] "GET /health HTTP/1.1" 200 653 0.003049
+2026-05-24 14:26:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:18] "GET /status HTTP/1.1" 200 653 0.003998
+2026-05-24 14:26:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:19] "GET /api/devices HTTP/1.1" 200 705 0.001505
+2026-05-24 14:26:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:28] "GET /status HTTP/1.1" 200 653 0.003477
+2026-05-24 14:26:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:29] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:26:35  INFO      [Dummy-30]  frame_bin: device=MV-1986392E2951A9C7D035 frame=4500 size=68969
+2026-05-24 14:26:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:38] "GET /status HTTP/1.1" 200 653 0.002943
+2026-05-24 14:26:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:39] "GET /api/devices HTTP/1.1" 200 705 0.000996
+2026-05-24 14:26:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:48] "GET /status HTTP/1.1" 200 653 0.003531
+2026-05-24 14:26:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:49] "GET /api/devices HTTP/1.1" 200 705 0.000999
+2026-05-24 14:26:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:58] "GET /status HTTP/1.1" 200 653 0.002532
+2026-05-24 14:26:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:26:59] "GET /api/devices HTTP/1.1" 200 705 0.002522
+2026-05-24 14:27:03  INFO      [Dummy-31]  127.0.0.1 - - [2026-05-24 14:27:03] "GET /api/stream-stats HTTP/1.1" 200 489 0.000999
+2026-05-24 14:27:08  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:08] "GET /status HTTP/1.1" 200 653 0.001504
+2026-05-24 14:27:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:09] "GET /api/devices HTTP/1.1" 200 705 0.000997
+2026-05-24 14:27:10  INFO      [Dummy-32]  frame_bin: device=MV-1986392E2951A9C7D035 frame=5000 size=57065
+2026-05-24 14:27:13  INFO      [Dummy-15]  Watchdog health | devices=1 viewers=0 gop_bufs=1 threads=7 mem=143MB
+2026-05-24 14:27:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:18] "GET /status HTTP/1.1" 200 653 0.003540
+2026-05-24 14:27:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:19] "GET /api/devices HTTP/1.1" 200 705 0.000998
+2026-05-24 14:27:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:28] "GET /status HTTP/1.1" 200 653 0.006037
+2026-05-24 14:27:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:29] "GET /api/devices HTTP/1.1" 200 705 0.001001
+2026-05-24 14:27:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:38] "GET /status HTTP/1.1" 200 653 0.002507
+2026-05-24 14:27:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:39] "GET /api/devices HTTP/1.1" 200 705 0.001022
+2026-05-24 14:27:44  INFO      [Dummy-33]  frame_bin: device=MV-1986392E2951A9C7D035 frame=5500 size=62965
+2026-05-24 14:27:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:48] "GET /status HTTP/1.1" 200 653 0.000997
+2026-05-24 14:27:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:49] "GET /api/devices HTTP/1.1" 200 705 0.000998
+2026-05-24 14:27:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:58] "GET /status HTTP/1.1" 200 653 0.003853
+2026-05-24 14:27:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:27:59] "GET /api/devices HTTP/1.1" 200 705 0.001018
+2026-05-24 14:28:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:09] "GET /status HTTP/1.1" 200 653 0.006094
+2026-05-24 14:28:10  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:10] "GET /api/devices HTTP/1.1" 200 705 0.001000
+2026-05-24 14:28:16  INFO      [Dummy-34]  frame_bin: device=MV-1986392E2951A9C7D035 frame=6000 size=60953
+2026-05-24 14:28:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:18] "GET /status HTTP/1.1" 200 653 0.005592
+2026-05-24 14:28:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:19] "GET /api/devices HTTP/1.1" 200 705 0.001008
+2026-05-24 14:28:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:28] "GET /status HTTP/1.1" 200 653 0.003301
+2026-05-24 14:28:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:29] "GET /api/devices HTTP/1.1" 200 705 0.000997
+2026-05-24 14:28:34  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:34] "GET /dashboard.html HTTP/1.1" 304 413 0.003965
+2026-05-24 14:28:34  INFO      [Dummy-24]  Socket disconnected: S_sERbS9hS_GBl4JAAAF
+2026-05-24 14:28:34  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:34] "GET /config.js HTTP/1.1" 200 1177 0.002018
+2026-05-24 14:28:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:38] "GET /status HTTP/1.1" 200 653 0.002795
+2026-05-24 14:28:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:38] "GET /@vite/client HTTP/1.1" 404 567 0.001513
+2026-05-24 14:28:38  INFO      [Dummy-35]  Socket connected: sk4SCW7jqvvWieu-AAAH
+2026-05-24 14:28:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:39] "GET /api/devices HTTP/1.1" 200 705 0.002078
+2026-05-24 14:28:40  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:40] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:28:45  INFO      [Dummy-36]  frame_bin: device=MV-1986392E2951A9C7D035 frame=6500 size=72048
+2026-05-24 14:28:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:49] "GET /status HTTP/1.1" 200 653 0.002020
+2026-05-24 14:28:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:49] "GET /api/devices HTTP/1.1" 200 705 0.001009
+2026-05-24 14:28:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:59] "GET /status HTTP/1.1" 200 653 0.000000
+2026-05-24 14:28:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:28:59] "GET /api/devices HTTP/1.1" 200 705 0.001079
+2026-05-24 14:29:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:09] "GET /status HTTP/1.1" 200 653 0.002000
+2026-05-24 14:29:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:09] "GET /api/devices HTTP/1.1" 200 705 0.002053
+2026-05-24 14:29:12  INFO      [Dummy-37]  frame_bin: device=MV-1986392E2951A9C7D035 frame=7000 size=56528
+2026-05-24 14:29:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:19] "GET /status HTTP/1.1" 200 653 0.002050
+2026-05-24 14:29:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:19] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:29:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:29] "GET /status HTTP/1.1" 200 653 0.005238
+2026-05-24 14:29:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:29] "GET /api/devices HTTP/1.1" 200 705 0.001773
+2026-05-24 14:29:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:39] "GET /status HTTP/1.1" 200 653 0.002020
+2026-05-24 14:29:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:39] "GET /api/devices HTTP/1.1" 200 705 0.001009
+2026-05-24 14:29:39  INFO      [Dummy-38]  frame_bin: device=MV-1986392E2951A9C7D035 frame=7500 size=59893
+2026-05-24 14:29:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:49] "GET /status HTTP/1.1" 200 653 0.001428
+2026-05-24 14:29:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:49] "GET /api/devices HTTP/1.1" 200 705 0.001020
+2026-05-24 14:29:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:59] "GET /status HTTP/1.1" 200 653 0.005696
+2026-05-24 14:29:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:29:59] "GET /api/devices HTTP/1.1" 200 705 0.000531
+2026-05-24 14:30:08  INFO      [Dummy-39]  frame_bin: device=MV-1986392E2951A9C7D035 frame=8000 size=59819
+2026-05-24 14:30:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:09] "GET /status HTTP/1.1" 200 653 0.004558
+2026-05-24 14:30:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:09] "GET /api/devices HTTP/1.1" 200 705 0.001994
+2026-05-24 14:30:13  INFO      [Dummy-40]  127.0.0.1 - - [2026-05-24 14:30:13] "GET /health HTTP/1.1" 200 653 0.002528
+2026-05-24 14:30:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:19] "GET /status HTTP/1.1" 200 653 0.003066
+2026-05-24 14:30:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:19] "GET /api/devices HTTP/1.1" 200 705 0.001061
+2026-05-24 14:30:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:29] "GET /status HTTP/1.1" 200 653 0.003514
+2026-05-24 14:30:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:29] "GET /api/devices HTTP/1.1" 200 705 0.001532
+2026-05-24 14:30:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:39] "GET /status HTTP/1.1" 200 653 0.003036
+2026-05-24 14:30:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:39] "GET /api/devices HTTP/1.1" 200 705 0.002054
+2026-05-24 14:30:40  INFO      [Dummy-41]  frame_bin: device=MV-1986392E2951A9C7D035 frame=8500 size=55269
+2026-05-24 14:30:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:49] "GET /status HTTP/1.1" 200 653 0.002544
+2026-05-24 14:30:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:49] "GET /api/devices HTTP/1.1" 200 705 0.002529
+2026-05-24 14:30:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:59] "GET /status HTTP/1.1" 200 653 0.003109
+2026-05-24 14:30:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:30:59] "GET /api/devices HTTP/1.1" 200 705 0.002634
+2026-05-24 14:31:07  INFO      [Dummy-42]  frame_bin: device=MV-1986392E2951A9C7D035 frame=9000 size=55529
+2026-05-24 14:31:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:09] "GET /status HTTP/1.1" 200 653 0.002082
+2026-05-24 14:31:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:09] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 14:31:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:19] "GET /status HTTP/1.1" 200 653 0.002544
+2026-05-24 14:31:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:19] "GET /api/devices HTTP/1.1" 200 705 0.001074
+2026-05-24 14:31:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:29] "GET /status HTTP/1.1" 200 653 0.003541
+2026-05-24 14:31:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:29] "GET /api/devices HTTP/1.1" 200 705 0.000730
+2026-05-24 14:31:33  INFO      [Dummy-43]  frame_bin: device=MV-1986392E2951A9C7D035 frame=9500 size=55511
+2026-05-24 14:31:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:39] "GET /status HTTP/1.1" 200 653 0.004553
+2026-05-24 14:31:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:39] "GET /api/devices HTTP/1.1" 200 705 0.001250
+2026-05-24 14:31:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:49] "GET /status HTTP/1.1" 200 653 0.002018
+2026-05-24 14:31:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:49] "GET /api/devices HTTP/1.1" 200 705 0.002015
+2026-05-24 14:31:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:59] "GET /status HTTP/1.1" 200 653 0.003642
+2026-05-24 14:31:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:31:59] "GET /api/devices HTTP/1.1" 200 705 0.001191
+2026-05-24 14:32:03  INFO      [Dummy-44]  frame_bin: device=MV-1986392E2951A9C7D035 frame=10000 size=59672
+2026-05-24 14:32:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:09] "GET /status HTTP/1.1" 200 653 0.002999
+2026-05-24 14:32:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:09] "GET /api/devices HTTP/1.1" 200 706 0.002031
+2026-05-24 14:32:14  INFO      [Dummy-15]  Watchdog health | devices=1 viewers=1 gop_bufs=1 threads=7 mem=148MB
+2026-05-24 14:32:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:19] "GET /status HTTP/1.1" 200 653 0.001003
+2026-05-24 14:32:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:19] "GET /api/devices HTTP/1.1" 200 706 0.001505
+2026-05-24 14:32:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:29] "GET /status HTTP/1.1" 200 653 0.003331
+2026-05-24 14:32:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:29] "GET /api/devices HTTP/1.1" 200 706 0.001747
+2026-05-24 14:32:30  INFO      [Dummy-45]  frame_bin: device=MV-1986392E2951A9C7D035 frame=10500 size=60359
+2026-05-24 14:32:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:39] "GET /status HTTP/1.1" 200 653 0.003527
+2026-05-24 14:32:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:39] "GET /api/devices HTTP/1.1" 200 706 0.000645
+2026-05-24 14:32:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:49] "GET /status HTTP/1.1" 200 653 0.004459
+2026-05-24 14:32:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:49] "GET /api/devices HTTP/1.1" 200 706 0.002026
+2026-05-24 14:32:57  INFO      [Dummy-46]  frame_bin: device=MV-1986392E2951A9C7D035 frame=11000 size=60795
+2026-05-24 14:32:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:59] "GET /status HTTP/1.1" 200 653 0.002002
+2026-05-24 14:32:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:32:59] "GET /api/devices HTTP/1.1" 200 706 0.001003
+2026-05-24 14:33:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:09] "GET /status HTTP/1.1" 200 653 0.003551
+2026-05-24 14:33:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:09] "GET /api/devices HTTP/1.1" 200 706 0.003033
+2026-05-24 14:33:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:19] "GET /status HTTP/1.1" 200 653 0.002021
+2026-05-24 14:33:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:19] "GET /api/devices HTTP/1.1" 200 706 0.001012
+2026-05-24 14:33:26  INFO      [Dummy-47]  frame_bin: device=MV-1986392E2951A9C7D035 frame=11500 size=61266
+2026-05-24 14:33:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:29] "GET /status HTTP/1.1" 200 653 0.001624
+2026-05-24 14:33:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:29] "GET /api/devices HTTP/1.1" 200 706 0.001008
+2026-05-24 14:33:37  INFO      [Dummy-48]  127.0.0.1 - - [2026-05-24 14:33:37] "GET /status HTTP/1.1" 200 653 0.004612
+2026-05-24 14:33:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:39] "GET /status HTTP/1.1" 200 653 0.004507
+2026-05-24 14:33:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:39] "GET /api/devices HTTP/1.1" 200 706 0.002163
+2026-05-24 14:33:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:49] "GET /status HTTP/1.1" 200 653 0.002817
+2026-05-24 14:33:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:49] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:33:52  INFO      [Dummy-49]  frame_bin: device=MV-1986392E2951A9C7D035 frame=12000 size=61388
+2026-05-24 14:33:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:59] "GET /status HTTP/1.1" 200 653 0.001505
+2026-05-24 14:33:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:33:59] "GET /api/devices HTTP/1.1" 200 706 0.001192
+2026-05-24 14:34:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:09] "GET /status HTTP/1.1" 200 653 0.003027
+2026-05-24 14:34:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:09] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:34:13  INFO      [Dummy-50]  127.0.0.1 - - [2026-05-24 14:34:13] "GET /health HTTP/1.1" 200 653 0.002022
+2026-05-24 14:34:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:19] "GET /status HTTP/1.1" 200 653 0.003221
+2026-05-24 14:34:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:19] "GET /api/devices HTTP/1.1" 200 706 0.001429
+2026-05-24 14:34:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:29] "GET /status HTTP/1.1" 200 653 0.001508
+2026-05-24 14:34:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:29] "GET /api/devices HTTP/1.1" 200 706 0.001540
+2026-05-24 14:34:29  INFO      [Dummy-51]  frame_bin: device=MV-1986392E2951A9C7D035 frame=12500 size=53107
+2026-05-24 14:34:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:39] "GET /status HTTP/1.1" 200 653 0.002028
+2026-05-24 14:34:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:39] "GET /api/devices HTTP/1.1" 200 706 0.000999
+2026-05-24 14:34:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:49] "GET /status HTTP/1.1" 200 653 0.005508
+2026-05-24 14:34:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:49] "GET /api/devices HTTP/1.1" 200 706 0.002510
+2026-05-24 14:34:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:59] "GET /status HTTP/1.1" 200 653 0.023191
+2026-05-24 14:34:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:34:59] "GET /api/devices HTTP/1.1" 200 706 0.001504
+2026-05-24 14:35:10  INFO      [Dummy-52]  frame_bin: device=MV-1986392E2951A9C7D035 frame=13000 size=73484
+2026-05-24 14:35:12  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:12] "GET /status HTTP/1.1" 200 653 0.002506
+2026-05-24 14:35:12  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:12] "GET /api/devices HTTP/1.1" 200 707 0.002016
+2026-05-24 14:35:20  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:20] "GET /status HTTP/1.1" 200 653 0.001997
+2026-05-24 14:35:22  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:22] "GET /api/devices HTTP/1.1" 200 707 0.000503
+2026-05-24 14:35:24  INFO      [Dummy-53]  127.0.0.1 - - [2026-05-24 14:35:24] "GET /api/stream-stats HTTP/1.1" 200 491 0.000503
+2026-05-24 14:35:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:29] "GET /status HTTP/1.1" 200 653 0.000513
+2026-05-24 14:35:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:29] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:35:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:39] "GET /status HTTP/1.1" 200 653 0.001516
+2026-05-24 14:35:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:39] "GET /api/devices HTTP/1.1" 200 706 0.001512
+2026-05-24 14:35:40  INFO      [Dummy-54]  frame_bin: device=MV-1986392E2951A9C7D035 frame=13500 size=49970
+2026-05-24 14:35:47  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:47] "GET /dashboard.html HTTP/1.1" 200 384543 0.011189
+2026-05-24 14:35:47  INFO      [Dummy-35]  Socket disconnected: sk4SCW7jqvvWieu-AAAH
+2026-05-24 14:35:47  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:47] "GET /config.js HTTP/1.1" 200 1177 0.002023
+2026-05-24 14:35:47  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:47] "GET /status HTTP/1.1" 200 653 0.002014
+2026-05-24 14:35:47  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:47] "GET /@vite/client HTTP/1.1" 404 567 0.001513
+2026-05-24 14:35:48  INFO      [Dummy-55]  Socket connected: EsEYTWxS7LRDtLfkAAAJ
+2026-05-24 14:35:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:48] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:35:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:48] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:35:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:58] "GET /status HTTP/1.1" 200 653 0.001019
+2026-05-24 14:35:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:35:58] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 14:36:05  INFO      [Dummy-56]  frame_bin: device=MV-1986392E2951A9C7D035 frame=14000 size=47213
+2026-05-24 14:36:08  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:08] "GET /status HTTP/1.1" 200 653 0.003615
+2026-05-24 14:36:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:09] "GET /api/devices HTTP/1.1" 200 706 0.002016
+2026-05-24 14:36:14  INFO      [Dummy-57]  Viewer EsEYTWxS7LRDtLfkAAAJ watching MV-1986392E2951A9C7D035  fps=60 quality=85
+2026-05-24 14:36:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:18] "GET /status HTTP/1.1" 200 653 0.005111
+2026-05-24 14:36:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:19] "GET /api/devices HTTP/1.1" 200 706 0.002022
+2026-05-24 14:36:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:28] "GET /status HTTP/1.1" 200 653 0.003330
+2026-05-24 14:36:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:29] "GET /api/devices HTTP/1.1" 200 706 0.000998
+2026-05-24 14:36:38  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:38] "GET /status HTTP/1.1" 200 653 0.002091
+2026-05-24 14:36:39  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:39] "GET /api/devices HTTP/1.1" 200 706 0.002543
+2026-05-24 14:36:48  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:48] "GET /status HTTP/1.1" 200 653 0.004022
+2026-05-24 14:36:49  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:49] "GET /api/devices HTTP/1.1" 200 706 0.002021
+2026-05-24 14:36:50  INFO      [Dummy-58]  frame_bin: device=MV-1986392E2951A9C7D035 frame=14500 size=83462
+2026-05-24 14:36:58  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:58] "GET /status HTTP/1.1" 200 653 0.003375
+2026-05-24 14:36:59  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:36:59] "GET /api/devices HTTP/1.1" 200 706 0.001507
+2026-05-24 14:37:08  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:08] "GET /status HTTP/1.1" 200 653 0.016548
+2026-05-24 14:37:09  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:09] "GET /api/devices HTTP/1.1" 200 706 0.008261
+2026-05-24 14:37:14  INFO      [Dummy-15]  Watchdog health | devices=1 viewers=1 gop_bufs=1 threads=7 mem=161MB
+2026-05-24 14:37:18  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:18] "GET /status HTTP/1.1" 200 653 0.003005
+2026-05-24 14:37:19  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:19] "GET /api/devices HTTP/1.1" 200 706 0.001999
+2026-05-24 14:37:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:28] "GET /status HTTP/1.1" 200 654 0.003169
+2026-05-24 14:37:29  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 14:37:29] "GET /api/devices HTTP/1.1" 200 706 0.001000
+2026-05-24 15:24:10  INFO      [MainThread]  ========================================================================
+2026-05-24 15:24:10  INFO      [MainThread]    Screen Connect Server  v12.1.0  - ENTERPRISE ULTRA
+2026-05-24 15:24:10  INFO      [MainThread]  ========================================================================
+2026-05-24 15:24:10  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-24 15:24:10  INFO      [MainThread]    Async mode:            gevent
+2026-05-24 15:24:10  INFO      [MainThread]    Port:                  10000
+2026-05-24 15:24:10  INFO      [MainThread]    Heartbeat TTL:         35s
+2026-05-24 15:24:10  INFO      [MainThread]    Agent exclusive:       True
+2026-05-24 15:24:10  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-24 15:24:10  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-24 15:24:10  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-24 15:24:10  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-24 15:24:10  INFO      [MainThread]    Max frame size:        4MB
+2026-05-24 15:24:10  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-24 15:24:10  INFO      [MainThread]    Frame dedup (SHA-256): False
+2026-05-24 15:24:10  INFO      [MainThread]    GOP buffer size:       512 frames
+2026-05-24 15:24:10  INFO      [MainThread]    JWT enabled:           True
+2026-05-24 15:24:10  INFO      [MainThread]    TOTP enabled:          False
+2026-05-24 15:24:10  INFO      [MainThread]    Redis scale-out:       False
+2026-05-24 15:24:10  INFO      [MainThread]    Org isolation:         False
+2026-05-24 15:24:10  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-24 15:24:10  INFO      [MainThread]    Signed webhooks:       False
+2026-05-24 15:24:10  INFO      [MainThread]    Webhook:               disabled
+2026-05-24 15:24:10  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-24 15:24:10  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-24 15:24:10  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-24 15:24:10  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-24 15:24:10  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-24 15:24:10  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-24 15:24:10  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-24 15:24:10  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-24 15:24:10  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-24 15:24:10  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-24 15:24:10  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-24 15:24:10  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-24 15:24:10  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 15:24:10  INFO      [MainThread]  ========================================================================
+2026-05-24 15:24:10  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-24 15:24:10  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-24 15:24:10  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
+2026-05-24 15:24:10  INFO      [MainThread]  ========================================================================
+2026-05-24 15:24:22  INFO      [Dummy-1]  Socket connected: rYpv5FFsWYjj5GFwAAAB
+2026-05-24 15:24:22  INFO      [Dummy-2]  Agent ONLINE: maxiiloh- (MV-1986392E2951A9C7D035) sid=rYpv5FFsWYjj5GFwAAAB
+2026-05-24 15:24:30  INFO      [Dummy-3]  Supabase connected.
+2026-05-24 15:24:30  INFO      [Dummy-4]  127.0.0.1 - - [2026-05-24 15:24:30] "POST /agent/checkin HTTP/1.1" 200 359 0.002342
+2026-05-24 15:24:33  INFO      [Dummy-3]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-24 15:24:33  INFO      [Dummy-5]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-24 15:24:33  INFO      [Dummy-6]  Socket connected: Ng9RXLA-XyLu4TdxAAAD
+2026-05-24 15:24:33  INFO      [Dummy-7]  Advanced Monitor auth OK: device=MV-1986392E2951A9C7D035 sid=Ng9RXLA-XyLu4TdxAAAD
+2026-05-24 15:24:33  INFO      [Dummy-8]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:24:33  INFO      [Dummy-9]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:24:33  INFO      [Dummy-10]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:24:33  INFO      [Dummy-11]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1 size=102471
+2026-05-24 15:24:42  INFO      [Dummy-12]  127.0.0.1 - - [2026-05-24 15:24:42] "GET /api/devices HTTP/1.1" 200 704 0.000000
+2026-05-24 15:24:59  INFO      [Dummy-13]  frame_bin: device=MV-1986392E2951A9C7D035 frame=500 size=96056
+2026-05-24 15:25:24  INFO      [Dummy-14]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1000 size=92995
+2026-05-24 15:25:40  INFO      [Dummy-15]  127.0.0.1 - - [2026-05-24 15:25:40] "GET /api/stream-stats HTTP/1.1" 200 490 0.000511
+2026-05-24 15:25:40  INFO      [Dummy-16]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-24 15:25:40  INFO      [Dummy-17]  127.0.0.1 - - [2026-05-24 15:25:40] "GET /health HTTP/1.1" 200 652 0.034204
+2026-05-24 15:25:50  INFO      [Dummy-18]  127.0.0.1 - - [2026-05-24 15:25:50] "GET /status HTTP/1.1" 200 653 0.002523
+2026-05-24 15:25:50  INFO      [Dummy-19]  frame_bin: device=MV-1986392E2951A9C7D035 frame=1500 size=92630
+2026-05-24 15:26:15  INFO      [Dummy-20]  frame_bin: device=MV-1986392E2951A9C7D035 frame=2000 size=93065
+2026-05-24 15:26:41  INFO      [Dummy-21]  frame_bin: device=MV-1986392E2951A9C7D035 frame=2500 size=93065
+2026-05-24 15:27:06  INFO      [Dummy-22]  frame_bin: device=MV-1986392E2951A9C7D035 frame=3000 size=89759
+2026-05-24 15:27:31  INFO      [Dummy-23]  frame_bin: device=MV-1986392E2951A9C7D035 frame=3500 size=89790
+2026-05-24 15:27:58  INFO      [Dummy-24]  frame_bin: device=MV-1986392E2951A9C7D035 frame=4000 size=45410
+2026-05-24 15:28:26  INFO      [Dummy-25]  frame_bin: device=MV-1986392E2951A9C7D035 frame=4500 size=92939
+2026-05-24 15:28:46  INFO      [Dummy-26]  Watchdog health | devices=1 viewers=0 gop_bufs=1 threads=4 mem=165MB
+2026-05-24 15:28:52  INFO      [Dummy-27]  frame_bin: device=MV-1986392E2951A9C7D035 frame=5000 size=88743
+2026-05-24 15:29:18  INFO      [Dummy-28]  frame_bin: device=MV-1986392E2951A9C7D035 frame=5500 size=96676
+2026-05-24 15:29:40  INFO      [Dummy-29]  127.0.0.1 - - [2026-05-24 15:29:40] "GET /health HTTP/1.1" 200 653 0.002522
+2026-05-24 15:29:44  INFO      [Dummy-30]  frame_bin: device=MV-1986392E2951A9C7D035 frame=6000 size=93767
+2026-05-24 15:30:10  INFO      [Dummy-31]  frame_bin: device=MV-1986392E2951A9C7D035 frame=6500 size=91450
+2026-05-24 15:30:26  INFO      [MainThread]  ========================================================================
+2026-05-24 15:30:26  INFO      [MainThread]    Screen Connect Server  v12.1.0  - ENTERPRISE ULTRA
+2026-05-24 15:30:26  INFO      [MainThread]  ========================================================================
+2026-05-24 15:30:26  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-24 15:30:26  INFO      [MainThread]    Async mode:            gevent
+2026-05-24 15:30:26  INFO      [MainThread]    Port:                  10000
+2026-05-24 15:30:26  INFO      [MainThread]    Heartbeat TTL:         35s
+2026-05-24 15:30:26  INFO      [MainThread]    Agent exclusive:       True
+2026-05-24 15:30:26  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-24 15:30:26  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-24 15:30:26  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-24 15:30:26  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-24 15:30:26  INFO      [MainThread]    Max frame size:        4MB
+2026-05-24 15:30:26  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-24 15:30:26  INFO      [MainThread]    Frame dedup (SHA-256): False
+2026-05-24 15:30:26  INFO      [MainThread]    GOP buffer size:       512 frames
+2026-05-24 15:30:26  INFO      [MainThread]    JWT enabled:           True
+2026-05-24 15:30:26  INFO      [MainThread]    TOTP enabled:          False
+2026-05-24 15:30:26  INFO      [MainThread]    Redis scale-out:       False
+2026-05-24 15:30:26  INFO      [MainThread]    Org isolation:         False
+2026-05-24 15:30:26  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-24 15:30:26  INFO      [MainThread]    Signed webhooks:       False
+2026-05-24 15:30:26  INFO      [MainThread]    Webhook:               disabled
+2026-05-24 15:30:26  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-24 15:30:26  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-24 15:30:26  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-24 15:30:26  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-24 15:30:26  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-24 15:30:26  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-24 15:30:26  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-24 15:30:26  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-24 15:30:26  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-24 15:30:26  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-24 15:30:26  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-24 15:30:26  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-24 15:30:26  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 15:30:26  INFO      [MainThread]  ========================================================================
+2026-05-24 15:30:26  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-24 15:30:26  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-24 15:30:26  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
+2026-05-24 15:30:26  INFO      [MainThread]  ========================================================================
+2026-05-24 15:30:41  INFO      [Dummy-1]  Socket connected: qdq2i-PT7zXkRDOrAAAB
+2026-05-24 15:30:42  INFO      [Dummy-2]  Agent ONLINE: maxiiloh- (MV-5F3B23-8BD7A7-4B1392) sid=qdq2i-PT7zXkRDOrAAAB
+2026-05-24 15:30:44  INFO      [Dummy-3]  Supabase connected.
+2026-05-24 15:30:44  INFO      [Dummy-4]  127.0.0.1 - - [2026-05-24 15:30:44] "POST /agent/checkin HTTP/1.1" 200 359 0.002523
+2026-05-24 15:30:45  INFO      [Dummy-3]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-24 15:30:45  INFO      [Dummy-5]  HTTP Request: POST https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?on_conflict=device_id "HTTP/2 200 OK"
+2026-05-24 15:30:46  INFO      [Dummy-6]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:30:46  INFO      [Dummy-7]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:30:46  INFO      [Dummy-8]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:30:46  INFO      [Dummy-9]  Socket connected: 7juzt8kztTtH6kvcAAAD
+2026-05-24 15:30:46  INFO      [Dummy-10]  Advanced Monitor auth OK: device=MV-5F3B23-8BD7A7-4B1392 sid=7juzt8kztTtH6kvcAAAD
+2026-05-24 15:30:47  INFO      [Dummy-11]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=1 size=92945
+2026-05-24 15:31:12  INFO      [Dummy-12]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=500 size=91452
+2026-05-24 15:31:38  INFO      [Dummy-13]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=1000 size=91355
+2026-05-24 15:31:51  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:51] "GET /dashboard.html HTTP/1.1" 200 382690 0.296644
+2026-05-24 15:31:51  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:51] "GET /config.js HTTP/1.1" 200 1177 0.001994
+2026-05-24 15:31:53  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:53] "GET /status HTTP/1.1" 200 652 0.034988
+2026-05-24 15:31:54  INFO      [Dummy-15]  Socket connected: d6ZxcaMa60HThzfEAAAF
+2026-05-24 15:31:55  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:55] "GET /api/devices HTTP/1.1" 200 705 0.001527
+2026-05-24 15:31:55  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:55] "GET /api/devices HTTP/1.1" 200 705 0.001004
+2026-05-24 15:31:56  INFO      [Dummy-16]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-24 15:31:56  INFO      [Dummy-17]  127.0.0.1 - - [2026-05-24 15:31:56] "GET /health HTTP/1.1" 200 652 0.002513
+2026-05-24 15:31:58  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:31:58] "GET /@vite/client HTTP/1.1" 404 567 0.001518
+2026-05-24 15:32:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:05] "GET /status HTTP/1.1" 200 652 0.001999
+2026-05-24 15:32:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:05] "GET /api/devices HTTP/1.1" 200 705 0.001537
+2026-05-24 15:32:06  INFO      [Dummy-18]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=1500 size=29564
+2026-05-24 15:32:09  INFO      [Dummy-19]  127.0.0.1 - - [2026-05-24 15:32:09] "GET /status HTTP/1.1" 200 653 0.002517
+2026-05-24 15:32:15  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:15] "GET /status HTTP/1.1" 200 653 0.002517
+2026-05-24 15:32:15  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:15] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 15:32:16  INFO      [Dummy-20]  127.0.0.1 - - [2026-05-24 15:32:16] "GET /api/stream-stats HTTP/1.1" 200 489 0.001017
+2026-05-24 15:32:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:25] "GET /status HTTP/1.1" 200 653 0.000999
+2026-05-24 15:32:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:25] "GET /api/devices HTTP/1.1" 200 705 0.001004
+2026-05-24 15:32:28  INFO      [Dummy-21]  127.0.0.1 - - [2026-05-24 15:32:28] "GET /api/devices HTTP/1.1" 200 705 0.001017
+2026-05-24 15:32:33  INFO      [Dummy-22]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=2000 size=24486
+2026-05-24 15:32:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:35] "GET /status HTTP/1.1" 200 653 0.002514
+2026-05-24 15:32:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:35] "GET /api/devices HTTP/1.1" 200 705 0.002005
+2026-05-24 15:32:45  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:45] "GET /status HTTP/1.1" 200 653 0.002020
+2026-05-24 15:32:45  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:45] "GET /api/devices HTTP/1.1" 200 705 0.001001
+2026-05-24 15:32:53  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:53] "GET /dashboard.html HTTP/1.1" 304 414 0.002517
+2026-05-24 15:32:53  INFO      [Dummy-15]  Socket disconnected: d6ZxcaMa60HThzfEAAAF
+2026-05-24 15:32:53  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:53] "GET /config.js HTTP/1.1" 200 1177 0.001001
+2026-05-24 15:32:53  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:53] "GET /status HTTP/1.1" 200 653 0.002004
+2026-05-24 15:32:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:54] "GET /@vite/client HTTP/1.1" 404 567 0.000999
+2026-05-24 15:32:54  INFO      [Dummy-23]  Socket connected: AbCapoygiaWnCrp6AAAH
+2026-05-24 15:32:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:54] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 15:32:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:32:54] "GET /api/devices HTTP/1.1" 200 705 0.001027
+2026-05-24 15:33:02  INFO      [Dummy-24]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=2500 size=24486
+2026-05-24 15:33:04  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:04] "GET /status HTTP/1.1" 200 653 0.003506
+2026-05-24 15:33:04  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:04] "GET /api/devices HTTP/1.1" 200 705 0.000504
+2026-05-24 15:33:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:14] "GET /status HTTP/1.1" 200 653 0.000999
+2026-05-24 15:33:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:14] "GET /api/devices HTTP/1.1" 200 705 0.001501
+2026-05-24 15:33:17  INFO      [Dummy-25]  Viewer AbCapoygiaWnCrp6AAAH watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-24 15:33:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:24] "GET /status HTTP/1.1" 200 653 0.004035
+2026-05-24 15:33:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:25] "GET /api/devices HTTP/1.1" 200 705 0.002736
+2026-05-24 15:33:28  INFO      [Dummy-26]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=3000 size=24486
+2026-05-24 15:33:34  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:34] "GET /status HTTP/1.1" 200 653 0.003502
+2026-05-24 15:33:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:35] "GET /api/devices HTTP/1.1" 200 705 0.001508
+2026-05-24 15:33:42  INFO      [Dummy-27]  Watchdog health | devices=1 viewers=1 gop_bufs=1 threads=6 mem=129MB
+2026-05-24 15:33:44  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:44] "GET /status HTTP/1.1" 200 653 0.001992
+2026-05-24 15:33:46  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:46] "GET /api/devices HTTP/1.1" 200 705 0.002996
+2026-05-24 15:33:55  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:55] "GET /status HTTP/1.1" 200 653 0.048586
+2026-05-24 15:33:57  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:33:57] "GET /api/devices HTTP/1.1" 200 705 0.001518
+2026-05-24 15:34:01  INFO      [Dummy-28]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=3500 size=80732
+2026-05-24 15:34:04  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:04] "GET /status HTTP/1.1" 200 653 0.004507
+2026-05-24 15:34:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:05] "GET /api/devices HTTP/1.1" 200 705 0.001004
+2026-05-24 15:34:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:14] "GET /status HTTP/1.1" 200 653 0.003002
+2026-05-24 15:34:15  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:15] "GET /api/devices HTTP/1.1" 200 705 0.002632
+2026-05-24 15:34:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:24] "GET /status HTTP/1.1" 200 653 0.002526
+2026-05-24 15:34:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:25] "GET /api/devices HTTP/1.1" 200 705 0.004549
+2026-05-24 15:34:33  INFO      [Dummy-29]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=4000 size=68592
+2026-05-24 15:34:34  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:34] "GET /status HTTP/1.1" 200 653 0.004508
+2026-05-24 15:34:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:35] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 15:34:44  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:44] "GET /status HTTP/1.1" 200 653 0.002168
+2026-05-24 15:34:45  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:45] "GET /api/devices HTTP/1.1" 200 705 0.000997
+2026-05-24 15:34:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:54] "GET /status HTTP/1.1" 200 653 0.001995
+2026-05-24 15:34:55  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:34:55] "GET /api/devices HTTP/1.1" 200 705 0.002077
+2026-05-24 15:35:04  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:04] "GET /status HTTP/1.1" 200 653 0.003009
+2026-05-24 15:35:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:05] "GET /api/devices HTTP/1.1" 200 705 0.001514
+2026-05-24 15:35:11  INFO      [Dummy-30]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=4500 size=73165
+2026-05-24 15:35:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:14] "GET /status HTTP/1.1" 200 653 0.004035
+2026-05-24 15:35:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:14] "GET /api/devices HTTP/1.1" 200 705 0.001512
+2026-05-24 15:35:17  INFO      [Dummy-31]  Viewer AbCapoygiaWnCrp6AAAH watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-24 15:35:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:24] "GET /status HTTP/1.1" 200 653 0.003517
+2026-05-24 15:35:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:25] "GET /api/devices HTTP/1.1" 200 705 0.001511
+2026-05-24 15:35:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:35] "GET /status HTTP/1.1" 200 653 0.003519
+2026-05-24 15:35:45  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:45] "GET /status HTTP/1.1" 200 653 0.002501
+2026-05-24 15:35:47  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:47] "GET /api/devices HTTP/1.1" 200 705 0.000000
+2026-05-24 15:35:47  INFO      [Dummy-32]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5000 size=78012
+2026-05-24 15:35:55  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:55] "GET /status HTTP/1.1" 200 653 0.002504
+2026-05-24 15:35:56  INFO      [Dummy-33]  127.0.0.1 - - [2026-05-24 15:35:56] "GET /health HTTP/1.1" 200 653 0.001005
+2026-05-24 15:35:57  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:35:57] "GET /api/devices HTTP/1.1" 200 706 0.000000
+2026-05-24 15:36:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:05] "GET /status HTTP/1.1" 200 653 0.028772
+2026-05-24 15:36:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:05] "GET /api/devices HTTP/1.1" 200 706 0.000999
+2026-05-24 15:36:14  INFO      [Dummy-34]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5500 size=67592
+2026-05-24 15:36:15  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:15] "GET /status HTTP/1.1" 200 653 0.001508
+2026-05-24 15:36:15  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:15] "GET /api/devices HTTP/1.1" 200 705 0.001503
+2026-05-24 15:36:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:24] "GET /status HTTP/1.1" 200 653 0.002997
+2026-05-24 15:36:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:24] "GET /api/devices HTTP/1.1" 200 705 0.002015
+2026-05-24 15:36:34  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:34] "GET /status HTTP/1.1" 200 653 0.002997
+2026-05-24 15:36:34  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:34] "GET /api/devices HTTP/1.1" 200 706 0.001001
+2026-05-24 15:36:44  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:44] "GET /status HTTP/1.1" 200 653 0.005077
+2026-05-24 15:36:45  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:45] "GET /api/devices HTTP/1.1" 200 706 0.003106
+2026-05-24 15:36:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:54] "GET /status HTTP/1.1" 200 653 0.003563
+2026-05-24 15:36:54  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:36:54] "GET /api/devices HTTP/1.1" 200 706 0.001021
+2026-05-24 15:37:04  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:04] "GET /status HTTP/1.1" 200 653 0.001508
+2026-05-24 15:37:05  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:05] "GET /api/devices HTTP/1.1" 200 706 0.001541
+2026-05-24 15:37:05  INFO      [Dummy-35]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6000 size=76002
+2026-05-24 15:37:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:14] "GET /status HTTP/1.1" 200 653 0.004562
+2026-05-24 15:37:14  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:14] "GET /api/devices HTTP/1.1" 200 706 0.001505
+2026-05-24 15:37:24  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:24] "GET /status HTTP/1.1" 200 653 0.003020
+2026-05-24 15:37:25  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:25] "GET /api/devices HTTP/1.1" 200 706 0.002526
+2026-05-24 15:37:34  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:34] "GET /status HTTP/1.1" 200 653 0.002011
+2026-05-24 15:37:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 15:37:35] "GET /api/devices HTTP/1.1" 200 706 0.000998
+2026-05-24 15:37:41  INFO      [Dummy-23]  Socket disconnected: AbCapoygiaWnCrp6AAAH
+2026-05-24 15:37:48  INFO      [Dummy-36]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6500 size=84537
+2026-05-24 15:38:13  INFO      [Dummy-37]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7000 size=84535
+2026-05-24 15:38:38  INFO      [Dummy-38]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7500 size=84535
+2026-05-24 15:38:42  INFO      [Dummy-27]  Watchdog health | devices=1 viewers=0 gop_bufs=1 threads=6 mem=164MB
+2026-05-24 15:39:03  INFO      [Dummy-39]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8000 size=84534
+2026-05-24 15:39:29  INFO      [Dummy-40]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8500 size=84538
+2026-05-24 15:39:54  INFO      [Dummy-41]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9000 size=84538
+2026-05-24 15:39:57  INFO      [Dummy-42]  127.0.0.1 - - [2026-05-24 15:39:57] "GET /health HTTP/1.1" 200 653 0.001213
+2026-05-24 15:40:19  INFO      [Dummy-43]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9500 size=84539
+2026-05-24 15:40:44  INFO      [Dummy-44]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10000 size=84539
+2026-05-24 15:41:10  INFO      [Dummy-45]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10500 size=84525
+2026-05-24 15:41:35  INFO      [Dummy-46]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11000 size=84525
+2026-05-24 15:42:05  INFO      [Dummy-47]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11500 size=81350
+2026-05-24 15:42:12  INFO      [Dummy-48]  127.0.0.1 - - [2026-05-24 15:42:12] "GET /status HTTP/1.1" 200 653 0.003528
+2026-05-24 15:42:37  INFO      [Dummy-49]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12000 size=78770
+2026-05-24 15:43:04  INFO      [Dummy-50]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12500 size=87067
+2026-05-24 15:43:32  INFO      [Dummy-51]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=13000 size=74341
+2026-05-24 15:43:42  INFO      [Dummy-27]  Watchdog health | devices=1 viewers=0 gop_bufs=1 threads=6 mem=164MB
+2026-05-24 15:43:54  WARNING   [Dummy-1]  Agent offline: maxiiloh- (MV-5F3B23-8BD7A7-4B1392)
+2026-05-24 15:43:54  INFO      [Dummy-1]  Socket disconnected: qdq2i-PT7zXkRDOrAAAB
+2026-05-24 15:43:54  INFO      [Dummy-9]  Socket disconnected: 7juzt8kztTtH6kvcAAAD
+2026-05-24 15:43:56  INFO      [Dummy-52]  HTTP Request: PATCH https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?device_id=eq.MV-5F3B23-8BD7A7-4B1392 "HTTP/2 200 OK"
+2026-05-24 15:43:56  INFO      [Dummy-53]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:43:56  INFO      [Dummy-54]  HTTP Request: GET https://iacdzpcoftxxcoigopun.supabase.co/rest/v1/devices?select=%2A&order=created_at.desc "HTTP/2 200 OK"
+2026-05-24 15:43:57  INFO      [Dummy-55]  127.0.0.1 - - [2026-05-24 15:43:57] "GET /health HTTP/1.1" 200 653 0.005015
