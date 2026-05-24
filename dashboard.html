@@ -8155,6 +8155,7 @@ function boot(){
     const ts_ms=Number((BigInt(tH)*4294967296n+BigInt(tL))/1000n);
     latMs=Math.max(0,Math.min(9999,Math.round(Date.now()-ts_ms)));
     bIn+=buf.byteLength; fCount++;
+    if (fCount % 100 === 1) console.log("Dashboard received frame", fCount, "size", buf.byteLength);
     // FIX: relayout on every dim change AND on first frame (scrW===0) so canvas is sized+shown
     if(w>0&amp;&amp;h>0&amp;&amp;(w!==scrW||h!==scrH||scrW===0)){scrW=w;scrH=h;relayout();}
     // Show canvas immediately on first real frame

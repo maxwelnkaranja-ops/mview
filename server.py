@@ -2473,6 +2473,23 @@ if SOCKETIO_OK and sio:
                     for ip in stale_ips:
                         _rate_buckets.pop(ip, None)
 
+                # ── 6. Stream Stats Broadcast ─────────────────────────────
+                with _frame_stats_lock:
+                    for did, dq in list(_frame_stats.items()):
+                        if not dq: continue
+                        now_t  = time.time()
+                        recent = [b for t, b in dq if now_t - t < 5.0]
+                        fps    = len(recent) / 5.0 if recent else 0
+                        kbps   = sum(recent) / (5.0 * 1024) if recent else 0
+                        stats_payload = {
+                            "device_id": did,
+                            "actual_fps": round(fps, 1),
+                            "kbps": round(kbps, 1),
+                            "ts": utcnow()
+                        }
+                        sio.emit("stream_stats", stats_payload, room=f"view:{did}")
+                        sio.emit("stream_stats", stats_payload, room=f"adv_viewers_{did}")
+
                 # ── 5. Periodic health log ────────────────────────────────
                 if int(now_mono) % 300 < 15:
                     try:

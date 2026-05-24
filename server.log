@@ -1607,3 +1607,66 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^^^^
 OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted: ('0.0.0.0', 10000)
 2026-05-24 11:53:25  ERROR     [MainThread]  CRASH in global_exc_hook: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted: ('0.0.0.0', 10000)
+2026-05-24 11:53:57  INFO      [MainThread]  ========================================================================
+2026-05-24 11:53:57  INFO      [MainThread]    Screen Connect Server  v12.0.0  - ENTERPRISE ULTRA
+2026-05-24 11:53:57  INFO      [MainThread]  ========================================================================
+2026-05-24 11:53:57  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-24 11:53:57  INFO      [MainThread]    Async mode:            gevent
+2026-05-24 11:53:57  INFO      [MainThread]    Port:                  10000
+2026-05-24 11:53:57  INFO      [MainThread]    Heartbeat TTL:         35s
+2026-05-24 11:53:57  INFO      [MainThread]    Agent exclusive:       True
+2026-05-24 11:53:57  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-24 11:53:57  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-24 11:53:57  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-24 11:53:57  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-24 11:53:57  INFO      [MainThread]    Max frame size:        4MB
+2026-05-24 11:53:57  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-24 11:53:57  INFO      [MainThread]    Frame dedup (SHA-256): False
+2026-05-24 11:53:57  INFO      [MainThread]    GOP buffer size:       256 frames
+2026-05-24 11:53:57  INFO      [MainThread]    JWT enabled:           True
+2026-05-24 11:53:57  INFO      [MainThread]    TOTP enabled:          False
+2026-05-24 11:53:57  INFO      [MainThread]    Redis scale-out:       False
+2026-05-24 11:53:57  INFO      [MainThread]    Org isolation:         False
+2026-05-24 11:53:57  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-24 11:53:57  INFO      [MainThread]    Signed webhooks:       False
+2026-05-24 11:53:57  INFO      [MainThread]    Webhook:               disabled
+2026-05-24 11:53:57  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-24 11:53:57  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-24 11:53:57  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-24 11:53:57  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-24 11:53:57  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-24 11:53:57  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-24 11:53:57  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-24 11:53:57  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-24 11:53:57  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-24 11:53:57  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-24 11:53:57  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-24 11:53:57  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-24 11:53:57  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-24 11:53:57  INFO      [MainThread]  ========================================================================
+2026-05-24 11:53:57  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-24 11:53:57  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-24 11:53:57  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
+2026-05-24 11:53:57  INFO      [MainThread]  ========================================================================
+2026-05-24 11:54:10  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-24 11:54:10] "GET /api/devices HTTP/1.1" 200 368 0.003739
+2026-05-24 11:55:27  INFO      [Dummy-2]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-24 11:55:35  INFO      [Dummy-3]  Supabase connected.
+2026-05-24 11:55:35  INFO      [Dummy-3]  127.0.0.1 - - [2026-05-24 11:55:35] "GET /health HTTP/1.1" 200 651 7.671909
+2026-05-24 11:57:05  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=2 mem=111MB
+2026-05-24 11:59:35  INFO      [Dummy-5]  127.0.0.1 - - [2026-05-24 11:59:35] "GET /health HTTP/1.1" 200 653 0.003290
+2026-05-24 12:02:05  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=111MB
+2026-05-24 12:03:35  INFO      [Dummy-6]  127.0.0.1 - - [2026-05-24 12:03:35] "GET /health HTTP/1.1" 200 653 0.003180
+2026-05-24 12:07:05  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=111MB
+2026-05-24 12:07:35  INFO      [Dummy-7]  127.0.0.1 - - [2026-05-24 12:07:35] "GET /health HTTP/1.1" 200 653 0.001998
+2026-05-24 12:11:35  INFO      [Dummy-8]  127.0.0.1 - - [2026-05-24 12:11:35] "GET /health HTTP/1.1" 200 654 0.002560
+2026-05-24 12:12:05  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=111MB
+2026-05-24 12:15:35  INFO      [Dummy-9]  127.0.0.1 - - [2026-05-24 12:15:35] "GET /health HTTP/1.1" 200 654 0.003574
+2026-05-24 12:17:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=110MB
+2026-05-24 12:19:35  INFO      [Dummy-10]  127.0.0.1 - - [2026-05-24 12:19:35] "GET /health HTTP/1.1" 200 654 0.003045
+2026-05-24 12:22:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=84MB
+2026-05-24 12:23:35  INFO      [Dummy-11]  127.0.0.1 - - [2026-05-24 12:23:35] "GET /health HTTP/1.1" 200 653 0.002050
+2026-05-24 12:27:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=50MB
+2026-05-24 12:27:35  INFO      [Dummy-12]  127.0.0.1 - - [2026-05-24 12:27:35] "GET /health HTTP/1.1" 200 653 0.003556
+2026-05-24 12:31:35  INFO      [Dummy-13]  127.0.0.1 - - [2026-05-24 12:31:35] "GET /health HTTP/1.1" 200 653 0.002617
+2026-05-24 12:32:06  INFO      [Dummy-4]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=47MB
+2026-05-24 12:35:35  INFO      [Dummy-14]  127.0.0.1 - - [2026-05-24 12:35:35] "GET /health HTTP/1.1" 200 653 0.001507
