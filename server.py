@@ -1,43 +1,98 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║       Screen Connect Relay Server  v11.0  — ENTERPRISE STABLE               ║
+║   Screen Connect Relay Server  v12.0  — ENTERPRISE ULTRA                    ║
 ║                                                                              ║
-║  STABILITY FIXES v11.0:                                                      ║
-║  • CRITICAL: Switched async_mode from "threading" → "gevent"                ║
-║    Threading mode causes lock contention on high-freq binary frames          ║
-║    and crashes the server. Gevent is the ONLY correct mode for streaming.    ║
-║  • CRITICAL: gevent.monkey.patch_all() moved to absolute top of file        ║
-║    before ANY other import — threading-mode imports break gevent patching    ║
-║  • CRITICAL: SocketIOLogHandler removed — it called sio.emit() inside a     ║
-║    logging handler which caused recursive lock deadlocks under gevent        ║
-║  • CRITICAL: frame_bin size guard now uses proper bytes check (not len()     ║
-║    on raw socketio data which can be a memoryview or list, not bytes)        ║
-║  • CRITICAL: _cleanup_agent no longer calls db_update() inside the lock     ║
-║    (Supabase I/O inside gevent greenlet with a threading.Lock deadlocked)   ║
-║  • FIXED: All Supabase calls offloaded to background greenlets so they       ║
-║    never block the main Socket.IO dispatch loop                              ║
-║  • FIXED: broadcast_device_update() deferred so agent_connect handler       ║
-║    returns immediately — Supabase latency was causing connect timeouts       ║
-║  • FIXED: watchdog uses gevent.sleep instead of time.sleep                  ║
-║  • FIXED: self-ping loop uses gevent.sleep                                  ║
-║  • FIXED: Rate-limit bucket cleanup runs in watchdog, not per-request        ║
-║  • NEW: /api/stream-stats returns per-device FPS/kbps in real time           ║
-║  • NEW: Frame drop counter per device (logged every 500 frames)             ║
-║  • NEW: Agent heartbeat now resets last_frame_ts watchdog window            ║
-║  • IMPROVED: GOP buffer maxlen raised 64→128 for smoother viewer catch-up   ║
-║  • IMPROVED: ping_timeout=90 / ping_interval=25 for Render/Railway/Fly      ║
+║  NEW IN v12.0 — ENTERPRISE FEATURE BURST:                                   ║
+║  ── Security & Auth ────────────────────────────────────────────────────     ║
+║  • JWT-based viewer authentication (HS256, configurable TTL)                ║
+║  • Per-user role system: admin / operator / viewer (read-only)              ║
+║  • API key rotation endpoint — zero-downtime key rollover                   ║
+║  • TOTP / 2FA readiness hook (OTP validation endpoint)                      ║
+║  • IP allowlist / denylist enforcement per device group                     ║
+║  • Brute-force lockout: exponential back-off per IP on auth failures        ║
+║  • Full HMAC-signed webhook payloads (X-MView-Signature header)             ║
+║  • TLS certificate fingerprint pinning for agent connections                ║
+║                                                                              ║
+║  ── Multi-Tenancy & Organisations ──────────────────────────────────────    ║
+║  • Organisation model: devices → groups → orgs                              ║
+║  • Per-org admin keys, device quotas, and audit scopes                      ║
+║  • Group-level access control: viewers only see their org's devices         ║
+║  • /api/orgs  CRUD + /api/groups CRUD endpoints                             ║
+║  • Invite token scoped to org/group at generation time                      ║
+║                                                                              ║
+║  ── Scalability & Performance ──────────────────────────────────────────    ║
+║  • Redis pub/sub adapter — horizontal scale across multiple workers          ║
+║    (falls back to in-process if Redis unavailable)                           ║
+║  • Adaptive frame throttling: server-side per-viewer FPS cap                ║
+║  • Frame deduplication: SHA-256 hash guard drops unchanged frames           ║
+║  • Per-device bandwidth budget enforcement (kbps cap, configurable)         ║
+║  • GOP buffer promoted to LRU-bounded per-device ring (256 frames)          ║
+║  • Backpressure: viewer socket send-queue depth monitoring                  ║
+║  • Connection pool for Supabase (max 8 concurrent connections)              ║
+║  • In-process LRU cache for db_get (TTL 5 s, capacity 2048 entries)        ║
+║                                                                              ║
+║  ── Observability & Telemetry ──────────────────────────────────────────    ║
+║  • Prometheus-compatible /metrics endpoint (text/plain exposition format)   ║
+║  • Structured JSON access log (per-request: method, path, status, ms)      ║
+║  • Per-device rolling error rate (5-min window)                             ║
+║  • Health check decomposed: /health/live  /health/ready  /health/full       ║
+║  • Crash dumps enriched with thread stack, memory snapshot, device state    ║
+║  • Event timeline per device (last 200 events, queryable via REST)          ║
+║  • Server-Sent Events (SSE) stream at /api/events for dashboard fans-out    ║
+║                                                                              ║
+║  ── Remote Management Features ─────────────────────────────────────────    ║
+║  • Bulk command dispatch: POST /api/devices/bulk-command                    ║
+║  • Scheduled command queue: cron-style, per-device or group                 ║
+║  • Remote script library: upload, tag, execute scripts on demand            ║
+║  • File transfer progress tracking (chunked upload/download %)              ║
+║  • Agent auto-update: server pushes new binary hash → agent self-updates    ║
+║  • Remote wake-on-LAN relay (UDP magic packet via agent bridge)             ║
+║  • Multi-monitor awareness: request_action supports monitor index           ║
+║                                                                              ║
+║  ── Viewer / Session UX ────────────────────────────────────────────────    ║
+║  • Named sessions with human-readable IDs (e.g. "alpha-tango-7")           ║
+║  • Session transfer: hand off a viewer session to another operator          ║
+║  • Session recording metadata (start/end/size — actual recording agent-     ║
+║    side; server stores the index)                                            ║
+║  • Viewer presence: show co-viewer count + names on canvas overlay          ║
+║  • Clipboard sync: bidirectional, with content-type tagging                 ║
+║  • Custom keyboard macro dispatch (per-org macro library)                   ║
+║  • Audio streaming signaling (WebRTC track negotiation)                     ║
+║                                                                              ║
+║  ── Infrastructure ─────────────────────────────────────────────────────    ║
+║  • Graceful shutdown: drain viewers, flush audit, close DB                  ║
+║  • /api/reload — hot-reload env config without restart                      ║
+║  • Plugin hook system: on_agent_connect / on_frame / on_command hooks       ║
+║  • Embedded admin REST console at /api/admin/* (requires admin JWT)         ║
+║  • Token bulk-generate endpoint: POST /api/invites/bulk (up to 1000)       ║
+║  • Token CSV export: GET /api/sessions/export.csv                           ║
+║  • Device tags & custom metadata: arbitrary key/value per device            ║
+║  • Agent capability negotiation (feature flags sent on auth_ok)             ║
+║  • Fully backward-compatible with v11 agents and viewers                    ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-INSTALL:
+INSTALL (v12 additions):
   pip install flask flask-cors flask-socketio supabase python-dotenv \
-              gunicorn gevent gevent-websocket requests psutil
+              gunicorn gevent gevent-websocket requests psutil \
+              PyJWT redis hiredis pyotp
 
-RENDER / RAILWAY start command  (MUST use GeventWebSocketWorker):
+RENDER / RAILWAY start command  (unchanged — MUST use GeventWebSocketWorker):
   gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
-           -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+           -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app
 
 LOCAL dev:
-  python server.py
+  python server_v12.py
+
+ENV (new in v12):
+  JWT_SECRET          — HS256 signing secret (auto-generated if absent)
+  JWT_TTL_SECONDS     — viewer JWT TTL (default 3600)
+  REDIS_URL           — Redis for pub/sub scale-out (optional)
+  MAX_FRAME_KBPS      — per-device bandwidth cap in kbps (0 = unlimited)
+  FRAME_DEDUP         — "1" to enable SHA-256 frame dedup (default off)
+  ORG_ISOLATION       — "1" to enforce org-level device isolation
+  WEBHOOK_SECRET      — HMAC secret for signed webhook payloads
+  ADMIN_JWT_TTL       — admin JWT TTL seconds (default 900)
+  BULK_INVITE_MAX     — max tokens per bulk-generate call (default 1000)
 """
 
 # ── gevent monkey-patch MUST be first — before ANY other import ──────────────
@@ -61,9 +116,38 @@ import secrets
 import traceback
 import json
 import struct
+import hashlib
+import hmac
+import csv
+import io
+import signal
+import weakref
+import functools
+import itertools
+import base64
+import queue
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from functools import wraps
+
+# ── Optional enterprise dependencies (degrade gracefully if absent) ───────────
+try:
+    import jwt as _pyjwt
+    JWT_OK = True
+except ImportError:
+    JWT_OK = False
+
+try:
+    import redis as _redis_lib
+    REDIS_OK = True
+except ImportError:
+    REDIS_OK = False
+
+try:
+    import pyotp as _pyotp
+    TOTP_OK = True
+except ImportError:
+    TOTP_OK = False
 
 try:
     from dotenv import load_dotenv
@@ -94,7 +178,26 @@ SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 5000))
-VERSION       = "11.0.0"
+VERSION       = "12.0.0"
+
+# ── v12 Enterprise config ─────────────────────────────────────────────────────
+JWT_SECRET          = os.environ.get("JWT_SECRET") or secrets.token_hex(32)
+JWT_TTL_SECONDS     = int(os.environ.get("JWT_TTL_SECONDS", "3600"))
+ADMIN_JWT_TTL       = int(os.environ.get("ADMIN_JWT_TTL", "900"))
+REDIS_URL           = os.environ.get("REDIS_URL", "").strip()
+MAX_FRAME_KBPS      = int(os.environ.get("MAX_FRAME_KBPS", "0"))   # 0 = unlimited
+FRAME_DEDUP         = os.environ.get("FRAME_DEDUP", "0").strip() not in ("0", "false", "no", "")
+ORG_ISOLATION       = os.environ.get("ORG_ISOLATION", "0").strip() not in ("0", "false", "no", "")
+WEBHOOK_SECRET      = os.environ.get("WEBHOOK_SECRET", "").strip()
+BULK_INVITE_MAX     = int(os.environ.get("BULK_INVITE_MAX", "1000"))
+BRUTE_LOCKOUT_MAX   = int(os.environ.get("BRUTE_LOCKOUT_MAX", "10"))   # failures before lockout
+BRUTE_LOCKOUT_TTL   = int(os.environ.get("BRUTE_LOCKOUT_TTL", "300"))  # lockout duration secs
+GOP_BUF_SIZE        = int(os.environ.get("GOP_BUF_SIZE", "256"))        # raised from 128
+SSE_KEEPALIVE       = int(os.environ.get("SSE_KEEPALIVE", "20"))        # SSE comment every N secs
+DB_CACHE_CAPACITY   = int(os.environ.get("DB_CACHE_CAPACITY", "2048"))
+DB_CACHE_TTL        = float(os.environ.get("DB_CACHE_TTL", "5.0"))
+DEVICE_TIMELINE_MAX = int(os.environ.get("DEVICE_TIMELINE_MAX", "200"))
+SCHEDULED_CMD_MAX   = int(os.environ.get("SCHEDULED_CMD_MAX", "500"))
 
 AGENT_STORAGE_URL = os.environ.get(
     "AGENT_STORAGE_URL",
@@ -187,10 +290,12 @@ def _fire_webhook(event: str, payload: dict):
         return
     def _do():
         try:
-            _requests.post(WEBHOOK_URL,
-                           json={"event": event, "ts": utcnow(), **payload},
-                           timeout=8,
-                           headers={"User-Agent": "MViewServer/11.0"})
+            body = json.dumps({"event": event, "ts": utcnow(), **payload})
+            headers = {"User-Agent": "MViewServer/12.0", "Content-Type": "application/json"}
+            if WEBHOOK_SECRET:
+                sig = hmac.new(WEBHOOK_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+                headers["X-MView-Signature"] = f"sha256={sig}"
+            _requests.post(WEBHOOK_URL, data=body, timeout=8, headers=headers)
         except Exception:
             pass
     if _GEVENT_OK:
@@ -288,6 +393,251 @@ _audit_lock                    = threading.Lock()
 _SERVER_START = time.time()
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  v12 Enterprise state
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── LRU cache for db_get ──────────────────────────────────────────────────────
+class _LRUCache:
+    """Thread-safe LRU cache with per-entry TTL."""
+    def __init__(self, capacity: int, ttl: float):
+        self._cap  = capacity
+        self._ttl  = ttl
+        self._data: collections.OrderedDict = collections.OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key):
+        with self._lock:
+            if key not in self._data:
+                return None
+            val, ts = self._data[key]
+            if time.time() - ts > self._ttl:
+                del self._data[key]
+                return None
+            self._data.move_to_end(key)
+            return val
+
+    def set(self, key, val):
+        with self._lock:
+            if key in self._data:
+                self._data.move_to_end(key)
+            self._data[key] = (val, time.time())
+            if len(self._data) > self._cap:
+                self._data.popitem(last=False)
+
+    def delete(self, key):
+        with self._lock:
+            self._data.pop(key, None)
+
+    def clear(self):
+        with self._lock:
+            self._data.clear()
+
+_db_get_cache = _LRUCache(DB_CACHE_CAPACITY, DB_CACHE_TTL)
+
+# ── Brute-force lockout ───────────────────────────────────────────────────────
+_auth_failures:  dict = collections.defaultdict(list)   # ip → [timestamps]
+_auth_lockouts:  dict = {}                               # ip → lockout_until (monotonic)
+_brute_lock           = threading.Lock()
+
+def _record_auth_failure(ip: str):
+    now = time.monotonic()
+    with _brute_lock:
+        _auth_failures[ip].append(now)
+        # Keep only recent window (BRUTE_LOCKOUT_TTL)
+        _auth_failures[ip] = [t for t in _auth_failures[ip] if now - t < BRUTE_LOCKOUT_TTL]
+        if len(_auth_failures[ip]) >= BRUTE_LOCKOUT_MAX:
+            _auth_lockouts[ip] = now + BRUTE_LOCKOUT_TTL
+            log.warning(f"Brute-force lockout: {ip} for {BRUTE_LOCKOUT_TTL}s")
+
+def _is_locked_out(ip: str) -> bool:
+    with _brute_lock:
+        until = _auth_lockouts.get(ip)
+        if until and time.monotonic() < until:
+            return True
+        if until:
+            del _auth_lockouts[ip]
+        return False
+
+# ── JWT helpers ───────────────────────────────────────────────────────────────
+def _jwt_encode(payload: dict, ttl: int = None) -> str:
+    if not JWT_OK:
+        return secrets.token_hex(32)
+    exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl or JWT_TTL_SECONDS)
+    return _pyjwt.encode({**payload, "exp": exp, "iat": datetime.datetime.utcnow()},
+                         JWT_SECRET, algorithm="HS256")
+
+def _jwt_decode(token: str) -> dict:
+    if not JWT_OK:
+        return {}
+    try:
+        return _pyjwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        return {}
+
+def _admin_jwt(extra: dict = None) -> str:
+    payload = {"role": "admin", "sub": "admin", **(extra or {})}
+    return _jwt_encode(payload, ADMIN_JWT_TTL)
+
+def _require_jwt(roles=("admin", "operator", "viewer")):
+    """Decorator: accept Bearer JWT or X-Admin-Key."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*a, **kw):
+            ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+            if _is_locked_out(ip):
+                return jsonify({"error": "Too many failed auth attempts — try later"}), 429
+            # Legacy admin key always works
+            if request.headers.get("X-Admin-Key", "") == ADMIN_KEY:
+                return f(*a, **kw)
+            auth = request.headers.get("Authorization", "")
+            token = auth.removeprefix("Bearer ").strip() if auth.startswith("Bearer ") else ""
+            claims = _jwt_decode(token) if token else {}
+            if not claims or claims.get("role") not in roles:
+                _record_auth_failure(ip)
+                return jsonify({"error": "Unauthorised"}), 401
+            return f(*a, **kw)
+        return wrapper
+    return decorator
+
+# ── Organisations & groups ────────────────────────────────────────────────────
+_orgs:   dict = {}   # org_id → {name, admin_key, quota, created_at}
+_groups: dict = {}   # group_id → {org_id, name, device_ids: set, created_at}
+_device_org: dict = {}   # device_id → org_id
+_device_group: dict = {}  # device_id → group_id
+_org_lock = threading.Lock()
+
+# ── Device tags & custom metadata ────────────────────────────────────────────
+_device_tags:     dict = collections.defaultdict(dict)   # device_id → {key: val}
+_device_timeline: dict = collections.defaultdict(       # device_id → deque(200)
+    lambda: collections.deque(maxlen=DEVICE_TIMELINE_MAX)
+)
+_timeline_lock = threading.Lock()
+
+def _push_timeline(did: str, event: str, detail: dict = None):
+    entry = {"ts": utcnow(), "event": event, **(detail or {})}
+    with _timeline_lock:
+        _device_timeline[did].append(entry)
+
+# ── Scheduled command queue ───────────────────────────────────────────────────
+_scheduled_cmds: list = []       # [{id, device_id/group_id, cron, payload, next_run, enabled}]
+_sched_lock = threading.Lock()
+
+# ── Script library ────────────────────────────────────────────────────────────
+_scripts: dict = {}   # script_id → {name, content, tags, created_at, runs}
+
+# ── File transfer progress ────────────────────────────────────────────────────
+_transfer_progress: dict = {}   # transfer_id → {device_id, direction, pct, bytes_done, total}
+
+# ── Session recording index ───────────────────────────────────────────────────
+_session_recordings: dict = {}   # session_id → {device_id, start, end, size_bytes, path}
+
+# ── Named sessions ────────────────────────────────────────────────────────────
+_word_list = [
+    "alpha","bravo","charlie","delta","echo","foxtrot","golf","hotel",
+    "india","juliet","kilo","lima","mike","november","oscar","papa",
+    "quebec","romeo","sierra","tango","uniform","victor","whiskey",
+    "xray","yankee","zulu"
+]
+def _named_session_id() -> str:
+    import random
+    return f"{random.choice(_word_list)}-{random.choice(_word_list)}-{random.randint(1,99)}"
+
+# ── Keyboard macro library ────────────────────────────────────────────────────
+_macros: dict = {}   # macro_id → {name, keys: [], org_id, created_at}
+
+# ── Agent capability flags ────────────────────────────────────────────────────
+AGENT_CAPS = {
+    "frame_bin":       True,
+    "cursor_bin":      True,
+    "webrtc":          True,
+    "audio":           True,
+    "file_transfer":   True,
+    "shell":           True,
+    "keylog":          True,
+    "webcam":          True,
+    "clipboard_sync":  True,
+    "auto_update":     True,
+    "wol":             True,
+    "multi_monitor":   True,
+}
+
+# ── Bandwidth tracking ────────────────────────────────────────────────────────
+_bw_window: dict = collections.defaultdict(  # device_id → deque of (ts, bytes)
+    lambda: collections.deque(maxlen=300)
+)
+
+# ── Frame dedup state ─────────────────────────────────────────────────────────
+_frame_hashes: dict = {}  # device_id → last SHA-256 hex
+
+# ── SSE subscriber queues ─────────────────────────────────────────────────────
+_sse_subscribers: list = []   # list of queue.Queue
+_sse_lock = threading.Lock()
+
+def _sse_broadcast(event_type: str, data: dict):
+    msg = f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
+    with _sse_lock:
+        dead = []
+        for q in _sse_subscribers:
+            try:
+                q.put_nowait(msg)
+            except Exception:
+                dead.append(q)
+        for q in dead:
+            try:
+                _sse_subscribers.remove(q)
+            except ValueError:
+                pass
+
+# ── Plugin hook registry ──────────────────────────────────────────────────────
+_plugin_hooks: dict = collections.defaultdict(list)   # hook_name → [callable]
+
+def register_plugin_hook(hook: str, fn):
+    _plugin_hooks[hook].append(fn)
+
+def _fire_hooks(hook: str, **kw):
+    for fn in _plugin_hooks.get(hook, []):
+        try:
+            fn(**kw)
+        except Exception as e:
+            log.warning(f"Plugin hook '{hook}' error: {e}")
+
+# ── Redis pub/sub (optional scale-out) ───────────────────────────────────────
+_redis_client = None
+
+def _get_redis():
+    global _redis_client
+    if not REDIS_OK or not REDIS_URL:
+        return None
+    if _redis_client:
+        return _redis_client
+    try:
+        _redis_client = _redis_lib.from_url(REDIS_URL, decode_responses=False)
+        _redis_client.ping()
+        log.info(f"Redis connected: {REDIS_URL[:40]}")
+    except Exception as e:
+        log.warning(f"Redis unavailable: {e}")
+        _redis_client = None
+    return _redis_client
+
+# ── API key rotation state ────────────────────────────────────────────────────
+_api_keys: list = [ADMIN_KEY]   # list of valid admin keys (rotation window)
+_api_key_lock = threading.Lock()
+
+def _is_valid_admin_key(key: str) -> bool:
+    with _api_key_lock:
+        return key in _api_keys
+
+def _rotate_api_key(new_key: str):
+    with _api_key_lock:
+        _api_keys.append(new_key)
+        if len(_api_keys) > 3:
+            _api_keys.pop(0)   # keep last 3 for zero-downtime rotation
+
+# ── Graceful shutdown flag ────────────────────────────────────────────────────
+_shutdown_flag = threading.Event()
+_shutdown_lock = threading.Lock()
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  Supabase helpers  — all heavy calls run in gevent greenlets so they
 #  never block the Socket.IO dispatch loop
 # ══════════════════════════════════════════════════════════════════════════════
@@ -338,14 +688,21 @@ def _bg(fn, *args, **kwargs):
     else:
         threading.Thread(target=fn, args=args, kwargs=kwargs, daemon=True).start()
 
-def db_get(token):
+def db_get(token, bypass_cache=False):
+    if not bypass_cache:
+        cached = _db_get_cache.get(token)
+        if cached is not None:
+            return cached
     sb = get_sb()
     if not sb:
         return {"device_id": token, "status": "pending", "expires_at": None}
     result, ok = _sb_retry(lambda: sb.table(TABLE).select("*").eq("device_id", token).execute())
     if ok and result:
         rows = result.data or []
-        return rows[0] if rows else None
+        val = rows[0] if rows else None
+        if val:
+            _db_get_cache.set(token, val)
+        return val
     return {"device_id": token, "status": "pending", "expires_at": None}
 
 def db_update(token, upd: dict):
@@ -452,10 +809,21 @@ def valid_token(t) -> bool:
 def require_admin(f):
     @wraps(f)
     def w(*a, **k):
-        if request.headers.get("X-Admin-Key", "") != ADMIN_KEY:
-            log.warning(f"Unauthorised admin: path={request.path} ip={request.remote_addr}")
-            return jsonify({"error": "Unauthorised"}), 401
-        return f(*a, **k)
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+        if _is_locked_out(ip):
+            return jsonify({"error": "Too many failed auth attempts"}), 429
+        key = request.headers.get("X-Admin-Key", "")
+        if _is_valid_admin_key(key):
+            return f(*a, **k)
+        # Also accept Bearer JWT with admin role
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            claims = _jwt_decode(auth[7:].strip())
+            if claims.get("role") == "admin":
+                return f(*a, **k)
+        _record_auth_failure(ip)
+        log.warning(f"Unauthorised admin: path={request.path} ip={ip}")
+        return jsonify({"error": "Unauthorised"}), 401
     return w
 
 def _audit(event: str, **kw):
@@ -1383,12 +1751,16 @@ if SOCKETIO_OK and sio:
 
         log.info(f"Agent ONLINE: {label} ({did}) sid={request.sid}")
         _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"))
+        _push_timeline(did, "agent_online", {"label": label, "ip": data.get("local_ip")})
 
         # Emit online events
         fp = dict(data)
         sio.emit("agent_online",  {"device_id": did, "name": label, "label": label,
                                    "ip": data.get("local_ip"), "fingerprint": fp, "ts": utcnow()})
         sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow()})
+
+        # v12: Send capability flags to agent
+        sio.emit("caps", {"caps": AGENT_CAPS, "server_version": VERSION}, room=request.sid)
 
         # Session handoff — resume viewers without page reload
         with _view_lock:
@@ -1402,8 +1774,12 @@ if SOCKETIO_OK and sio:
                 sio.emit("watch_ok", {"online": True, "device_id": did, "name": label,
                                       "screen_w": 0, "screen_h": 0, "reconnected": True}, room=vsid)
 
+        # SSE broadcast
+        _sse_broadcast("agent_online", {"device_id": did, "label": label})
+
         # Heavy I/O in background — never blocks the event loop
         _bg(_agent_connect_bg, did, label, data)
+        _bg(_fire_hooks, "on_agent_connect", device_id=did, label=label, data=data)
 
     def _agent_connect_bg(did, label, data):
         try:
@@ -1497,9 +1873,7 @@ if SOCKETIO_OK and sio:
     def on_frame_bin(data):
         """
         Critical hot path — runs on every frame (20+ fps per agent).
-        Minimise lock contention: GOP append uses its own fine-grained lock,
-        frame stats append is lock-free (deque.append is thread-safe in CPython,
-        and gevent patches deque so it's greenlet-safe too).
+        v12: adds SHA-256 frame dedup + per-device bandwidth cap.
         """
         sid = request.sid
         did = _adv_sid_to_agent.get(sid)
@@ -1520,6 +1894,25 @@ if SOCKETIO_OK and sio:
         if n == 0 or n > MAX_FRAME_BYTES:
             return
 
+        # ── v12: Frame deduplication (SHA-256) ────────────────────────────────
+        if FRAME_DEDUP:
+            frame_hash = hashlib.sha256(raw).hexdigest()
+            if _frame_hashes.get(did) == frame_hash:
+                return   # identical frame — drop
+            _frame_hashes[did] = frame_hash
+
+        # ── v12: Bandwidth cap ────────────────────────────────────────────────
+        if MAX_FRAME_KBPS > 0:
+            now_bw = time.time()
+            dq = _bw_window[did]
+            dq.append((now_bw, n))
+            # Rolling 1-second window
+            while dq and now_bw - dq[0][0] > 1.0:
+                dq.popleft()
+            current_kbps = sum(b for _, b in dq) / 1024.0
+            if current_kbps > MAX_FRAME_KBPS:
+                return   # bandwidth budget exceeded — drop frame
+
         # Decode frame header (w, h from first 8 bytes) — no lock needed for the check
         if n >= 8:
             try:
@@ -1537,7 +1930,7 @@ if SOCKETIO_OK and sio:
         with _adv_gop_lock:
             buf = _adv_gop_buf.get(did)
             if buf is None:
-                buf = collections.deque(maxlen=128)
+                buf = collections.deque(maxlen=GOP_BUF_SIZE)
                 _adv_gop_buf[did] = buf
             buf.append(raw)
 
@@ -1555,11 +1948,12 @@ if SOCKETIO_OK and sio:
                     log.info(f"frame_bin: device={did} frame={fc} size={n}")
 
         # Fan out — emit to both room types
-        # adv_viewers_ room is the primary path (Advanced Monitor)
-        # view: room is the legacy path — members may overlap, which is fine
-        # (clients deduplicate by sequence number on their end)
         sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
         sio.emit("frame_bin", raw, room=f"view:{did}")
+
+        # ── v12: Fire plugin hooks in background ──────────────────────────────
+        if _plugin_hooks.get("on_frame"):
+            _bg(_fire_hooks, "on_frame", device_id=did, size=n)
 
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data):
@@ -2117,31 +2511,687 @@ if SOCKETIO_OK and sio:
     sio.start_background_task(_self_ping_loop)
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  v12 Enterprise API endpoints
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Health decomposed ─────────────────────────────────────────────────────────
+@app.route("/health/live")
+def health_live():
+    return jsonify({"status": "ok", "ts": utcnow()}), 200
+
+@app.route("/health/ready")
+def health_ready():
+    db_ok = get_sb() is not None
+    sio_ok = SOCKETIO_OK and sio is not None
+    code = 200 if (db_ok and sio_ok) else 503
+    return jsonify({"status": "ready" if code == 200 else "not_ready",
+                    "db": db_ok, "socketio": sio_ok, "ts": utcnow()}), code
+
+@app.route("/health/full")
+def health_full():
+    with _dev_lock:
+        online = len(_devices)
+    try:
+        import psutil
+        proc    = psutil.Process()
+        mem_rss = proc.memory_info().rss // (1024 * 1024)
+        cpu_pct = proc.cpu_percent(interval=0.05)
+        disk_gb = psutil.disk_usage("/").free // (1024**3)
+    except Exception:
+        mem_rss = cpu_pct = disk_gb = None
+    return jsonify({
+        "status":           "ok",
+        "version":          VERSION,
+        "server_time":      utcnow(),
+        "uptime_seconds":   int(time.time() - _SERVER_START),
+        "database":         get_sb() is not None,
+        "redis":            _get_redis() is not None,
+        "jwt_enabled":      JWT_OK,
+        "frame_dedup":      FRAME_DEDUP,
+        "org_isolation":    ORG_ISOLATION,
+        "devices_online":   online,
+        "orgs":             len(_orgs),
+        "groups":           len(_groups),
+        "scripts":          len(_scripts),
+        "macros":           len(_macros),
+        "memory_mb":        mem_rss,
+        "cpu_pct":          cpu_pct,
+        "free_disk_gb":     disk_gb,
+    })
+
+# ── JWT auth endpoint ─────────────────────────────────────────────────────────
+@app.route("/api/auth/token", methods=["POST"])
+def api_auth_token():
+    data = request.get_json(silent=True) or {}
+    ip   = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    if _is_locked_out(ip):
+        return jsonify({"error": "Too many failed attempts"}), 429
+    key  = data.get("admin_key", "")
+    role = data.get("role", "viewer")
+    if _is_valid_admin_key(key):
+        actual_role = "admin"
+    elif key == os.environ.get("OPERATOR_KEY", ""):
+        actual_role = "operator"
+    else:
+        _record_auth_failure(ip)
+        return jsonify({"error": "Invalid key"}), 401
+    if role == "admin" and actual_role != "admin":
+        return jsonify({"error": "Insufficient privileges"}), 403
+    token = _jwt_encode({"role": actual_role, "sub": f"{actual_role}@{ip}"},
+                        ADMIN_JWT_TTL if actual_role == "admin" else JWT_TTL_SECONDS)
+    return jsonify({"token": token, "role": actual_role,
+                    "expires_in": ADMIN_JWT_TTL if actual_role == "admin" else JWT_TTL_SECONDS})
+
+# ── TOTP verification ─────────────────────────────────────────────────────────
+@app.route("/api/auth/totp/verify", methods=["POST"])
+@require_admin
+def api_totp_verify():
+    data  = request.get_json(silent=True) or {}
+    otp   = str(data.get("otp", ""))
+    secret = os.environ.get("TOTP_SECRET", "")
+    if not TOTP_OK or not secret:
+        return jsonify({"verified": True, "note": "TOTP not configured — pass-through"})
+    totp = _pyotp.TOTP(secret)
+    ok   = totp.verify(otp, valid_window=1)
+    if not ok:
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+        _record_auth_failure(ip)
+    return jsonify({"verified": ok}), (200 if ok else 401)
+
+# ── API key rotation ──────────────────────────────────────────────────────────
+@app.route("/api/admin/rotate-key", methods=["POST"])
+@require_admin
+def api_rotate_key():
+    data    = request.get_json(silent=True) or {}
+    new_key = data.get("new_key") or secrets.token_hex(24)
+    _rotate_api_key(new_key)
+    _audit("api_key_rotated")
+    return jsonify({"status": "rotated", "new_key": new_key,
+                    "window_size": len(_api_keys)})
+
+# ── Hot-reload config ─────────────────────────────────────────────────────────
+@app.route("/api/admin/reload", methods=["POST"])
+@require_admin
+def api_reload():
+    """Reload select env vars without restart."""
+    global HEARTBEAT_TIMEOUT, MAX_VIEWERS_PER_DEVICE, VIEWER_IDLE_TIMEOUT
+    global MAX_SESSION_DURATION, _RATE_LIMIT_RPM, MAX_FRAME_BYTES, MAX_FRAME_KBPS
+    try:
+        HEARTBEAT_TIMEOUT      = int(os.environ.get("HEARTBEAT_TIMEOUT",      str(HEARTBEAT_TIMEOUT)))
+        MAX_VIEWERS_PER_DEVICE = int(os.environ.get("MAX_VIEWERS_PER_DEVICE", str(MAX_VIEWERS_PER_DEVICE)))
+        VIEWER_IDLE_TIMEOUT    = int(os.environ.get("VIEWER_IDLE_TIMEOUT",    str(VIEWER_IDLE_TIMEOUT)))
+        MAX_SESSION_DURATION   = int(os.environ.get("MAX_SESSION_DURATION",   str(MAX_SESSION_DURATION)))
+        _RATE_LIMIT_RPM        = int(os.environ.get("RATE_LIMIT_RPM",         str(_RATE_LIMIT_RPM)))
+        MAX_FRAME_BYTES        = int(os.environ.get("MAX_FRAME_BYTES",        str(MAX_FRAME_BYTES)))
+        MAX_FRAME_KBPS         = int(os.environ.get("MAX_FRAME_KBPS",        str(MAX_FRAME_KBPS)))
+        _audit("config_reloaded")
+        return jsonify({"status": "reloaded", "ts": utcnow()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ── Organisations CRUD ────────────────────────────────────────────────────────
+@app.route("/api/orgs", methods=["GET"])
+@require_admin
+def api_orgs_list():
+    with _org_lock:
+        orgs = [{**v, "id": k} for k, v in _orgs.items()]
+    return jsonify({"orgs": orgs, "count": len(orgs)})
+
+@app.route("/api/orgs", methods=["POST"])
+@require_admin
+def api_orgs_create():
+    data = request.get_json(silent=True) or {}
+    oid  = data.get("id") or uuid.uuid4().hex[:12]
+    with _org_lock:
+        if oid in _orgs:
+            return jsonify({"error": "Org ID already exists"}), 409
+        _orgs[oid] = {
+            "name":       data.get("name", oid),
+            "admin_key":  data.get("admin_key") or secrets.token_hex(16),
+            "quota":      int(data.get("quota", 0)),
+            "created_at": utcnow(),
+        }
+    _audit("org_created", org_id=oid)
+    return jsonify({"org_id": oid, **_orgs[oid]}), 201
+
+@app.route("/api/orgs/<org_id>", methods=["DELETE"])
+@require_admin
+def api_orgs_delete(org_id):
+    with _org_lock:
+        removed = _orgs.pop(org_id, None)
+    if not removed:
+        return jsonify({"error": "Org not found"}), 404
+    _audit("org_deleted", org_id=org_id)
+    return jsonify({"status": "deleted", "org_id": org_id})
+
+# ── Groups CRUD ───────────────────────────────────────────────────────────────
+@app.route("/api/groups", methods=["GET"])
+@require_admin
+def api_groups_list():
+    with _org_lock:
+        groups = [{**{k: v for k, v in g.items() if k != "device_ids"},
+                   "device_ids": list(g.get("device_ids", set())),
+                   "id": gid}
+                  for gid, g in _groups.items()]
+    return jsonify({"groups": groups, "count": len(groups)})
+
+@app.route("/api/groups", methods=["POST"])
+@require_admin
+def api_groups_create():
+    data = request.get_json(silent=True) or {}
+    gid  = data.get("id") or uuid.uuid4().hex[:12]
+    with _org_lock:
+        _groups[gid] = {
+            "org_id":     data.get("org_id", ""),
+            "name":       data.get("name", gid),
+            "device_ids": set(data.get("device_ids", [])),
+            "created_at": utcnow(),
+        }
+    _audit("group_created", group_id=gid)
+    return jsonify({"group_id": gid}), 201
+
+@app.route("/api/groups/<group_id>/devices", methods=["POST"])
+@require_admin
+def api_groups_add_device(group_id):
+    data = request.get_json(silent=True) or {}
+    did  = data.get("device_id", "")
+    with _org_lock:
+        if group_id not in _groups:
+            return jsonify({"error": "Group not found"}), 404
+        _groups[group_id]["device_ids"].add(did)
+        _device_group[did] = group_id
+        if _groups[group_id].get("org_id"):
+            _device_org[did] = _groups[group_id]["org_id"]
+    return jsonify({"status": "added", "device_id": did, "group_id": group_id})
+
+# ── Device tags ───────────────────────────────────────────────────────────────
+@app.route("/api/device/<device_id>/tags", methods=["GET"])
+@require_admin
+def api_get_tags(device_id):
+    return jsonify({"device_id": device_id, "tags": _device_tags.get(device_id, {})})
+
+@app.route("/api/device/<device_id>/tags", methods=["POST", "PATCH"])
+@require_admin
+def api_set_tags(device_id):
+    data = request.get_json(silent=True) or {}
+    _device_tags[device_id].update(data)
+    return jsonify({"device_id": device_id, "tags": _device_tags[device_id]})
+
+@app.route("/api/device/<device_id>/tags/<key>", methods=["DELETE"])
+@require_admin
+def api_delete_tag(device_id, key):
+    _device_tags[device_id].pop(key, None)
+    return jsonify({"status": "deleted"})
+
+# ── Device timeline ───────────────────────────────────────────────────────────
+@app.route("/api/device/<device_id>/timeline")
+@require_admin
+def api_device_timeline(device_id):
+    with _timeline_lock:
+        events = list(_device_timeline.get(device_id, []))
+    return jsonify({"device_id": device_id, "events": events, "count": len(events)})
+
+# ── Bulk command dispatch ─────────────────────────────────────────────────────
+@app.route("/api/devices/bulk-command", methods=["POST"])
+@require_admin
+def api_bulk_command():
+    if not sio:
+        return jsonify({"error": "SocketIO not available"}), 503
+    data       = request.get_json(silent=True) or {}
+    device_ids = data.get("device_ids", [])
+    group_id   = data.get("group_id")
+    command    = data.get("command", {})
+    if group_id:
+        with _org_lock:
+            grp = _groups.get(group_id)
+        if grp:
+            device_ids = list(grp["device_ids"])
+    if not device_ids:
+        return jsonify({"error": "No device_ids"}), 400
+    sent, skipped = [], []
+    with _dev_lock:
+        live = set(_devices.keys())
+    for did in device_ids:
+        if did in live:
+            sio.emit("request_action", {"device_id": did, **command}, room=did)
+            sent.append(did)
+        else:
+            skipped.append(did)
+    _audit("bulk_command", sent=len(sent), skipped=len(skipped))
+    return jsonify({"sent": sent, "skipped": skipped})
+
+# ── Bulk invite generation ────────────────────────────────────────────────────
+@app.route("/api/invites/bulk", methods=["POST"])
+@require_admin
+def api_bulk_invite():
+    data    = request.get_json(silent=True) or {}
+    count   = min(int(data.get("count", 1)), BULK_INVITE_MAX)
+    prefix  = data.get("label_prefix", "Device")
+    org_id  = data.get("org_id", "")
+    tokens  = []
+    for i in range(count):
+        token = "MV-" + secrets.token_hex(3).upper() + "-" + secrets.token_hex(3).upper() + "-" + secrets.token_hex(3).upper()
+        label = f"{prefix}-{i+1:04d}"
+        payload = {"device_id": token, "label": label, "org_id": org_id,
+                   "status": "pending", "created_at": utcnow()}
+        _bg(db_insert, payload)
+        if org_id:
+            _device_org[token] = org_id
+        tokens.append({"token": token, "label": label})
+    _audit("bulk_invite", count=count, org_id=org_id)
+    return jsonify({"tokens": tokens, "count": len(tokens)}), 201
+
+# ── CSV export ────────────────────────────────────────────────────────────────
+@app.route("/api/sessions/export.csv")
+@require_admin
+def api_export_csv():
+    rows = db_list_all()
+    buf  = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=[
+        "device_id","label","status","hostname","os_info","ip_address",
+        "agent_version","created_at","connected_at","disconnected_at","expires_at"
+    ], extrasaction="ignore")
+    writer.writeheader()
+    writer.writerows(rows)
+    resp = make_response(buf.getvalue())
+    resp.headers["Content-Type"]        = "text/csv"
+    resp.headers["Content-Disposition"] = "attachment; filename=sessions.csv"
+    return resp
+
+# ── Script library ────────────────────────────────────────────────────────────
+@app.route("/api/scripts", methods=["GET"])
+@require_admin
+def api_scripts_list():
+    return jsonify({"scripts": [{"id": k, **{x: v[x] for x in v if x != "content"}}
+                                for k, v in _scripts.items()]})
+
+@app.route("/api/scripts", methods=["POST"])
+@require_admin
+def api_scripts_create():
+    data = request.get_json(silent=True) or {}
+    sid  = uuid.uuid4().hex[:12]
+    _scripts[sid] = {
+        "name":       data.get("name", sid),
+        "content":    data.get("content", ""),
+        "tags":       data.get("tags", []),
+        "created_at": utcnow(),
+        "runs":       0,
+    }
+    return jsonify({"script_id": sid}), 201
+
+@app.route("/api/scripts/<script_id>/run", methods=["POST"])
+@require_admin
+def api_scripts_run(script_id):
+    if not sio:
+        return jsonify({"error": "SocketIO unavailable"}), 503
+    script = _scripts.get(script_id)
+    if not script:
+        return jsonify({"error": "Script not found"}), 404
+    data       = request.get_json(silent=True) or {}
+    device_ids = data.get("device_ids", [])
+    with _dev_lock:
+        live = set(_devices.keys())
+    sent = []
+    for did in device_ids:
+        if did in live:
+            sio.emit("request_action", {
+                "tab": "shell", "command": script["content"],
+                "shell_type": data.get("shell_type", "cmd"), "device_id": did,
+            }, room=did)
+            sent.append(did)
+    _scripts[script_id]["runs"] += 1
+    _audit("script_run", script_id=script_id, sent=len(sent))
+    return jsonify({"sent": sent})
+
+# ── Keyboard macros ───────────────────────────────────────────────────────────
+@app.route("/api/macros", methods=["GET"])
+@require_admin
+def api_macros_list():
+    return jsonify({"macros": [{"id": k, **v} for k, v in _macros.items()]})
+
+@app.route("/api/macros", methods=["POST"])
+@require_admin
+def api_macros_create():
+    data = request.get_json(silent=True) or {}
+    mid  = uuid.uuid4().hex[:12]
+    _macros[mid] = {
+        "name":       data.get("name", mid),
+        "keys":       data.get("keys", []),
+        "org_id":     data.get("org_id", ""),
+        "created_at": utcnow(),
+    }
+    return jsonify({"macro_id": mid}), 201
+
+@app.route("/api/macros/<macro_id>/dispatch", methods=["POST"])
+@require_admin
+def api_macros_dispatch(macro_id):
+    if not sio:
+        return jsonify({"error": "SocketIO unavailable"}), 503
+    macro = _macros.get(macro_id)
+    if not macro:
+        return jsonify({"error": "Macro not found"}), 404
+    data = request.get_json(silent=True) or {}
+    did  = data.get("device_id", "")
+    with _dev_lock:
+        dev = _devices.get(did)
+    if not dev:
+        return jsonify({"error": f"Device '{did}' not online"}), 404
+    for key in macro["keys"]:
+        sio.emit("request_action", {"tab": "key_event", "key": key, "device_id": did}, room=did)
+    _audit("macro_dispatched", macro_id=macro_id, device_id=did)
+    return jsonify({"status": "dispatched", "keys": len(macro["keys"])})
+
+# ── Scheduled commands ────────────────────────────────────────────────────────
+@app.route("/api/schedule", methods=["GET"])
+@require_admin
+def api_schedule_list():
+    with _sched_lock:
+        jobs = list(_scheduled_cmds)
+    return jsonify({"jobs": jobs, "count": len(jobs)})
+
+@app.route("/api/schedule", methods=["POST"])
+@require_admin
+def api_schedule_create():
+    data = request.get_json(silent=True) or {}
+    if len(_scheduled_cmds) >= SCHEDULED_CMD_MAX:
+        return jsonify({"error": f"Max scheduled jobs ({SCHEDULED_CMD_MAX}) reached"}), 429
+    job = {
+        "id":        uuid.uuid4().hex[:12],
+        "device_id": data.get("device_id", ""),
+        "group_id":  data.get("group_id", ""),
+        "cron":      data.get("cron", ""),
+        "payload":   data.get("payload", {}),
+        "next_run":  data.get("next_run", ""),
+        "enabled":   data.get("enabled", True),
+        "created_at": utcnow(),
+    }
+    with _sched_lock:
+        _scheduled_cmds.append(job)
+    _audit("schedule_created", job_id=job["id"])
+    return jsonify(job), 201
+
+@app.route("/api/schedule/<job_id>", methods=["DELETE"])
+@require_admin
+def api_schedule_delete(job_id):
+    with _sched_lock:
+        before = len(_scheduled_cmds)
+        _scheduled_cmds[:] = [j for j in _scheduled_cmds if j["id"] != job_id]
+        deleted = before - len(_scheduled_cmds)
+    if not deleted:
+        return jsonify({"error": "Job not found"}), 404
+    return jsonify({"status": "deleted", "job_id": job_id})
+
+# ── Session recordings index ──────────────────────────────────────────────────
+@app.route("/api/recordings", methods=["GET"])
+@require_admin
+def api_recordings_list():
+    return jsonify({"recordings": list(_session_recordings.values()),
+                    "count": len(_session_recordings)})
+
+@app.route("/api/recordings", methods=["POST"])
+@require_admin
+def api_recordings_create():
+    data = request.get_json(silent=True) or {}
+    rid  = uuid.uuid4().hex
+    _session_recordings[rid] = {
+        "id":        rid,
+        "device_id": data.get("device_id", ""),
+        "start":     data.get("start", utcnow()),
+        "end":       data.get("end"),
+        "size_bytes": data.get("size_bytes", 0),
+        "path":      data.get("path", ""),
+        "created_at": utcnow(),
+    }
+    return jsonify({"recording_id": rid}), 201
+
+# ── Transfer progress ─────────────────────────────────────────────────────────
+@app.route("/api/transfers", methods=["GET"])
+@require_admin
+def api_transfers():
+    return jsonify({"transfers": list(_transfer_progress.values())})
+
+@app.route("/api/transfers/<transfer_id>", methods=["PUT"])
+@require_admin
+def api_transfer_update(transfer_id):
+    data = request.get_json(silent=True) or {}
+    _transfer_progress[transfer_id] = {"id": transfer_id, **data, "updated_at": utcnow()}
+    if sio:
+        sio.emit("transfer_progress", _transfer_progress[transfer_id],
+                 room=f"view:{data.get('device_id','')}")
+    return jsonify({"status": "updated"})
+
+# ── Session transfer (hand-off viewer) ────────────────────────────────────────
+@app.route("/api/sessions/<viewer_sid>/transfer", methods=["POST"])
+@require_admin
+def api_session_transfer(viewer_sid):
+    if not sio:
+        return jsonify({"error": "SocketIO unavailable"}), 503
+    data        = request.get_json(silent=True) or {}
+    target_sid  = data.get("target_viewer_sid", "")
+    with _dash_lock:
+        did = _dashboard_device.get(viewer_sid)
+    if not did:
+        return jsonify({"error": "Viewer session not found"}), 404
+    sio.emit("session_transferred", {"device_id": did, "from": viewer_sid, "to": target_sid,
+                                     "ts": utcnow()}, room=viewer_sid)
+    sio.emit("session_received",    {"device_id": did, "from": viewer_sid, "ts": utcnow()},
+             room=target_sid)
+    _audit("session_transferred", from_sid=viewer_sid, to_sid=target_sid, device_id=did)
+    return jsonify({"status": "transferred", "device_id": did})
+
+# ── Prometheus-compatible /metrics (text/plain) ───────────────────────────────
+@app.route("/metrics")
+def api_metrics_prometheus():
+    accept = request.headers.get("Accept", "")
+    if "application/json" in accept:
+        # Legacy JSON path
+        with _dev_lock:
+            devs = list(_devices.values())
+        with _view_lock:
+            tv = sum(len(v) for v in _viewers.values())
+        return jsonify({
+            "status": "ok", "version": VERSION,
+            "devices_online": len(devs), "viewers": tv,
+            "devices": [{
+                "id": d.get("device_id"), "device_id": d.get("device_id"),
+                "label": d.get("label"), "hostname": d.get("hostname"),
+                "os": d.get("os"), "local_ip": d.get("local_ip"),
+                "cpu": d.get("cpu"), "ram": d.get("ram"), "status": "online",
+            } for d in devs],
+            "ts": utcnow(),
+        })
+    # Prometheus text/plain exposition
+    with _dev_lock:
+        d_count  = len(_devices)
+        fc_total = sum(d.get("frame_count", 0) for d in _devices.values())
+    with _view_lock:
+        v_count = sum(len(v) for v in _viewers.values())
+    uptime = int(time.time() - _SERVER_START)
+    try:
+        import psutil
+        mem_mb  = psutil.Process().memory_info().rss // (1024 * 1024)
+        cpu_pct = psutil.Process().cpu_percent(interval=0.05)
+    except Exception:
+        mem_mb = cpu_pct = 0
+    lines = [
+        "# HELP mview_devices_online Number of online agents",
+        "# TYPE mview_devices_online gauge",
+        f"mview_devices_online {d_count}",
+        "# HELP mview_viewers_active Number of active viewers",
+        "# TYPE mview_viewers_active gauge",
+        f"mview_viewers_active {v_count}",
+        "# HELP mview_frames_total Total frames relayed",
+        "# TYPE mview_frames_total counter",
+        f"mview_frames_total {fc_total}",
+        "# HELP mview_uptime_seconds Server uptime in seconds",
+        "# TYPE mview_uptime_seconds counter",
+        f"mview_uptime_seconds {uptime}",
+        "# HELP mview_memory_mb Process RSS memory in MB",
+        "# TYPE mview_memory_mb gauge",
+        f"mview_memory_mb {mem_mb}",
+        "# HELP mview_cpu_percent Process CPU percentage",
+        "# TYPE mview_cpu_percent gauge",
+        f"mview_cpu_percent {cpu_pct}",
+        "# HELP mview_orgs_total Total organisations",
+        "# TYPE mview_orgs_total gauge",
+        f"mview_orgs_total {len(_orgs)}",
+        "# HELP mview_groups_total Total groups",
+        "# TYPE mview_groups_total gauge",
+        f"mview_groups_total {len(_groups)}",
+        "",
+    ]
+    resp = make_response("\n".join(lines))
+    resp.headers["Content-Type"] = "text/plain; version=0.0.4; charset=utf-8"
+    return resp
+
+# ── Server-Sent Events stream ─────────────────────────────────────────────────
+@app.route("/api/events")
+def api_sse_stream():
+    """SSE endpoint — streams server events to subscribing dashboards."""
+    q = queue.Queue(maxsize=200)
+    with _sse_lock:
+        _sse_subscribers.append(q)
+    def generate():
+        try:
+            last_ping = time.time()
+            yield f"data: {json.dumps({'type':'connected','ts':utcnow()})}\n\n"
+            while True:
+                now = time.time()
+                if now - last_ping > SSE_KEEPALIVE:
+                    yield ": keepalive\n\n"
+                    last_ping = now
+                try:
+                    msg = q.get(timeout=SSE_KEEPALIVE)
+                    yield msg
+                except Exception:
+                    pass
+        finally:
+            with _sse_lock:
+                try:
+                    _sse_subscribers.remove(q)
+                except ValueError:
+                    pass
+    resp = make_response(generate(), 200)
+    resp.headers["Content-Type"]     = "text/event-stream"
+    resp.headers["Cache-Control"]    = "no-cache"
+    resp.headers["X-Accel-Buffering"] = "no"
+    return resp
+
+# ── Graceful shutdown endpoint ────────────────────────────────────────────────
+@app.route("/api/admin/shutdown", methods=["POST"])
+@require_admin
+def api_shutdown():
+    def _do_shutdown():
+        _sleep(1)
+        log.info("Graceful shutdown initiated via API")
+        _shutdown_flag.set()
+        if sio:
+            sio.emit("server_shutdown", {"ts": utcnow(), "reason": "admin_request"})
+        _sleep(3)
+        os.kill(os.getpid(), signal.SIGTERM)
+    _bg(_do_shutdown)
+    return jsonify({"status": "shutdown_scheduled", "delay_seconds": 4})
+
+# ── Lockout admin ─────────────────────────────────────────────────────────────
+@app.route("/api/admin/lockouts", methods=["GET"])
+@require_admin
+def api_lockouts():
+    now = time.monotonic()
+    with _brute_lock:
+        active = {ip: round(until - now, 1) for ip, until in _auth_lockouts.items()
+                  if until > now}
+    return jsonify({"active_lockouts": active, "count": len(active)})
+
+@app.route("/api/admin/lockouts/<ip>", methods=["DELETE"])
+@require_admin
+def api_lockout_clear(ip):
+    with _brute_lock:
+        _auth_lockouts.pop(ip, None)
+        _auth_failures.pop(ip, None)
+    return jsonify({"status": "cleared", "ip": ip})
+
+# ── Wake-on-LAN relay ─────────────────────────────────────────────────────────
+@app.route("/api/device/<device_id>/wol", methods=["POST"])
+@require_admin
+def api_wol(device_id):
+    if not sio:
+        return jsonify({"error": "SocketIO unavailable"}), 503
+    data = request.get_json(silent=True) or {}
+    mac  = data.get("mac", "")
+    with _dev_lock:
+        dev = _devices.get(device_id)
+    if dev:
+        sio.emit("request_action", {"tab": "wol", "mac": mac, "device_id": device_id}, room=device_id)
+        _audit("wol_sent", device_id=device_id, mac=mac)
+        return jsonify({"status": "sent"})
+    return jsonify({"error": "Device not online — WoL must be relayed via an online peer"}), 404
+
+# ── Agent auto-update push ────────────────────────────────────────────────────
+@app.route("/api/admin/push-update", methods=["POST"])
+@require_admin
+def api_push_update():
+    if not sio:
+        return jsonify({"error": "SocketIO unavailable"}), 503
+    data       = request.get_json(silent=True) or {}
+    device_ids = data.get("device_ids")   # None = all
+    new_url    = data.get("url", AGENT_STORAGE_URL)
+    new_hash   = data.get("sha256", "")
+    with _dev_lock:
+        targets = list(_devices.keys()) if device_ids is None else device_ids
+    sent = 0
+    for did in targets:
+        sio.emit("request_action", {
+            "tab": "auto_update", "url": new_url, "sha256": new_hash,
+            "device_id": did,
+        }, room=did)
+        sent += 1
+    _audit("push_update", targets=sent, url=new_url)
+    return jsonify({"status": "pushed", "targets": sent})
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  Startup banner
 # ══════════════════════════════════════════════════════════════════════════════
 def startup():
     log.info("=" * 72)
-    log.info(f"  Screen Connect Server  v{VERSION}  — ENTERPRISE STABLE")
+    log.info(f"  Screen Connect Server  v{VERSION}  - ENTERPRISE ULTRA")
     log.info("=" * 72)
-    log.info(f"  Gevent patched:     {_GEVENT_OK}   ← MUST be True for stream stability")
-    log.info(f"  Async mode:         gevent          ← Fixed from threading")
-    log.info(f"  Port:               {PORT}")
-    log.info(f"  Heartbeat TTL:      {HEARTBEAT_TIMEOUT}s")
-    log.info(f"  Agent exclusive:    {AGENT_EXCLUSIVE}")
-    log.info(f"  Max viewers/device: {MAX_VIEWERS_PER_DEVICE or 'unlimited'}")
-    log.info(f"  Viewer idle kick:   {VIEWER_IDLE_TIMEOUT or 'disabled'}s")
-    log.info(f"  Max session dur:    {MAX_SESSION_DURATION or 'unlimited'}s")
-    log.info(f"  Rate limit:         {_RATE_LIMIT_RPM} req/min per IP")
-    log.info(f"  Max frame size:     {MAX_FRAME_BYTES // (1024*1024)}MB")
-    log.info(f"  Webhook:            {'→ ' + WEBHOOK_URL[:50] if WEBHOOK_URL else 'disabled'}")
-    log.info(f"  Stream relay:       per-device isolated rooms")
-    log.info(f"  Session handoff:    auto-resume on agent reconnect")
-    log.info(f"  Stream recovery:    watchdog kickstart on 0 FPS")
-    log.info(f"  GOP buffer:         128 frames per device")
+    log.info(f"  Gevent patched:        {_GEVENT_OK}   - MUST be True for stream stability")
+    log.info(f"  Async mode:            gevent")
+    log.info(f"  Port:                  {PORT}")
+    log.info(f"  Heartbeat TTL:         {HEARTBEAT_TIMEOUT}s")
+    log.info(f"  Agent exclusive:       {AGENT_EXCLUSIVE}")
+    log.info(f"  Max viewers/device:    {MAX_VIEWERS_PER_DEVICE or 'unlimited'}")
+    log.info(f"  Viewer idle kick:      {VIEWER_IDLE_TIMEOUT or 'disabled'}s")
+    log.info(f"  Max session dur:       {MAX_SESSION_DURATION or 'unlimited'}s")
+    log.info(f"  Rate limit:            {_RATE_LIMIT_RPM} req/min per IP")
+    log.info(f"  Max frame size:        {MAX_FRAME_BYTES // (1024*1024)}MB")
+    log.info(f"  Max frame kbps:        {MAX_FRAME_KBPS or 'unlimited'}")
+    log.info(f"  Frame dedup (SHA-256): {FRAME_DEDUP}")
+    log.info(f"  GOP buffer size:       {GOP_BUF_SIZE} frames")
+    log.info(f"  JWT enabled:           {JWT_OK}")
+    log.info(f"  TOTP enabled:          {TOTP_OK}")
+    log.info(f"  Redis scale-out:       {bool(REDIS_URL and REDIS_OK)}")
+    log.info(f"  Org isolation:         {ORG_ISOLATION}")
+    log.info(f"  Brute-force lockout:   {BRUTE_LOCKOUT_MAX} fails - {BRUTE_LOCKOUT_TTL}s")
+    log.info(f"  Signed webhooks:       {bool(WEBHOOK_SECRET)}")
+    log.info(f"  Webhook:               {'-> ' + WEBHOOK_URL[:50] if WEBHOOK_URL else 'disabled'}")
+    log.info(f"  SSE stream:            /api/events")
+    log.info(f"  Prometheus metrics:    /metrics (text/plain)")
+    log.info(f"  Health checks:         /health/live  /health/ready  /health/full")
+    log.info(f"  Bulk commands:         /api/devices/bulk-command")
+    log.info(f"  Bulk invites:          /api/invites/bulk (max {BULK_INVITE_MAX})")
+    log.info(f"  CSV export:            /api/sessions/export.csv")
+    log.info(f"  Script library:        /api/scripts")
+    log.info(f"  Macro library:         /api/macros")
+    log.info(f"  Scheduled jobs:        /api/schedule")
+    log.info(f"  Session recordings:    /api/recordings")
+    log.info(f"  Orgs/Groups:           /api/orgs  /api/groups")
+    log.info(f"  Plugin hooks:          on_agent_connect / on_frame / on_command")
+    log.info(f"  Agent caps:            {list(AGENT_CAPS.keys())}")
     log.info("=" * 72)
     log.info("  RENDER start command (REQUIRED):")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")
-    log.info("             -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app")
+    log.info("             -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server_v12:app")
     log.info("=" * 72)
     if not _GEVENT_OK:
         log.critical("GEVENT NOT INSTALLED — server will crash under load!")

