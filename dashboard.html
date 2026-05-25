@@ -4671,6 +4671,539 @@
         box-shadow: 0 0 8px rgba(0,212,170,0.4);
       }
 
+      /* ═══════════════════════════════════════════════════════════════════
+         SYSTEM MONITOR TAB — Complete fix & premium upgrade
+         ═══════════════════════════════════════════════════════════════════ */
+
+      /* Progress ring container */
+      .progress-ring-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+      }
+
+      /* The SVG ring */
+      .progress-ring-svg {
+        transform: rotate(-90deg);
+        width: 64px;
+        height: 64px;
+        overflow: visible;
+        filter: drop-shadow(0 0 6px rgba(0,212,170,0.2));
+      }
+
+      /* Track (background circle) */
+      .progress-ring-track {
+        fill: none;
+        stroke: rgba(255,255,255,0.06);
+        stroke-width: 4;
+        stroke-linecap: round;
+      }
+
+      /* Fill arcs — each metric gets a distinct colour */
+      .progress-ring-fill {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.2,0.64,1), stroke 0.4s var(--ease);
+      }
+      .progress-ring-fill.cpu  { stroke: var(--c-brand); filter: drop-shadow(0 0 4px rgba(0,212,170,0.5)); }
+      .progress-ring-fill.ram  { stroke: var(--c-blue);  filter: drop-shadow(0 0 4px rgba(10,132,255,0.5)); }
+      .progress-ring-fill.disk { stroke: var(--c-orange); filter: drop-shadow(0 0 4px rgba(255,159,10,0.5)); }
+      .progress-ring-fill.bat  { stroke: var(--c-green); filter: drop-shadow(0 0 4px rgba(48,209,88,0.5)); }
+
+      /* Percentage label centred on the ring */
+      .progress-ring-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--mono);
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+        pointer-events: none;
+      }
+
+      /* Gauge card upgrade */
+      .gauge {
+        transition: all 200ms var(--ease-spring-soft);
+        cursor: default;
+      }
+
+      /* Gauge value — big number */
+      .gauge-val {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.05em;
+        color: var(--text-1);
+        line-height: 1.1;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Sub text under gauge value */
+      .gauge-sub {
+        font-size: 10px;
+        color: var(--text-3);
+        letter-spacing: 0;
+        margin-top: 4px;
+        font-family: var(--mono);
+        line-height: 1.4;
+      }
+
+      /* Animate ring on load */
+      @keyframes ringReveal {
+        from { stroke-dashoffset: 163.36; }
+      }
+      .progress-ring-fill { animation: ringReveal 1s var(--ease) forwards; }
+
+      /* High/warn/crit colouring on rings */
+      .progress-ring-fill.cpu.warn   { stroke: var(--c-orange); }
+      .progress-ring-fill.cpu.crit   { stroke: var(--c-red); }
+      .progress-ring-fill.ram.warn   { stroke: var(--c-orange); }
+      .progress-ring-fill.ram.crit   { stroke: var(--c-red); }
+      .progress-ring-fill.disk.warn  { stroke: var(--c-red); }
+      .progress-ring-fill.bat.low    { stroke: var(--c-red); }
+
+      /* Live network bars in system monitor */
+      #sys-live-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 28px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+         CONNECT AGENT MODAL — Complete redesign
+         ═══════════════════════════════════════════════════════════════════ */
+
+      /* Widen the modal slightly so content breathes */
+      #modal .modal { max-width: 520px; }
+
+      /* Form group */
+      .fg {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .fg:last-child { margin-bottom: 0; }
+
+      /* Label */
+      .flbl {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: -0.01em;
+      }
+
+      /* Hint below input */
+      .fhint {
+        font-size: 10.5px;
+        color: rgba(255,255,255,0.22);
+        letter-spacing: -0.01em;
+        line-height: 1.4;
+      }
+
+      /* Inputs inside modal */
+      .finput {
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.09);
+        color: var(--text-1);
+        font-size: 12.5px;
+        font-family: var(--font);
+        letter-spacing: -0.01em;
+        outline: none;
+        transition: all 180ms var(--ease);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      }
+      .finput:focus {
+        border-color: rgba(0,212,170,0.38);
+        background: rgba(0,212,170,0.06);
+        box-shadow: 0 0 0 3px rgba(0,212,170,0.09), inset 0 1px 0 rgba(0,212,170,0.04);
+      }
+      .finput::placeholder { color: rgba(255,255,255,0.2); }
+
+      /* Token display chip */
+      .token-dsp {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        background: rgba(0,212,170,0.07);
+        border: 1px solid rgba(0,212,170,0.2);
+        border-radius: 10px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--c-brand);
+        letter-spacing: 0.02em;
+        word-break: break-all;
+        line-height: 1.5;
+      }
+
+      /* Inline lockbox (token + copy button) */
+      .lbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .lbox input {
+        flex: 1;
+        min-width: 0;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-2);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        outline: none;
+      }
+
+      /* Connection steps list in step-1 */
+      .conn-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 4px 0;
+        margin-top: 4px;
+      }
+      .conn-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        font-size: 12px;
+        color: var(--text-3);
+        letter-spacing: -0.01em;
+        transition: all 200ms var(--ease);
+      }
+
+      /* Step icon circle */
+      .step-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        transition: all 200ms var(--ease);
+      }
+      .step-icon .mi { font-size: 15px; color: var(--text-3); }
+
+      .step-icon.active {
+        background: rgba(0,212,170,0.15);
+        border-color: rgba(0,212,170,0.35);
+        box-shadow: 0 0 14px rgba(0,212,170,0.2);
+      }
+      .step-icon.active .mi { color: var(--c-brand); }
+
+      .step-icon.done {
+        background: rgba(48,209,88,0.12);
+        border-color: rgba(48,209,88,0.3);
+      }
+      .step-icon.done .mi { color: var(--c-green); }
+
+      .step-icon.wait {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.05);
+      }
+      .step-icon.wait .mi { color: rgba(255,255,255,0.18); }
+
+      /* Waiting screen in step-2 */
+      .wait-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 28px 20px 20px;
+        text-align: center;
+      }
+
+      /* Pulsing wifi icon */
+      .wait-pulse {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(0,212,170,0.08);
+        border: 1px solid rgba(0,212,170,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 0 rgba(0,212,170,0.3);
+        animation: waitPulse 2s ease-in-out infinite;
+      }
+      .wait-pulse .mi {
+        font-size: 28px;
+        color: var(--c-brand);
+        font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+      }
+      @keyframes waitPulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(0,212,170,0.25), 0 0 24px rgba(0,212,170,0.1); }
+        50%     { box-shadow: 0 0 0 16px rgba(0,212,170,0), 0 0 40px rgba(0,212,170,0.2); }
+      }
+
+      .wait-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-1);
+        letter-spacing: -0.03em;
+      }
+      .wait-sub {
+        font-size: 11.5px;
+        color: var(--text-3);
+        letter-spacing: -0.01em;
+        line-height: 1.5;
+        max-width: 300px;
+      }
+
+      /* Poll status row */
+      .poll-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        margin-top: 8px;
+      }
+      .poll-row .pdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c-orange);
+        animation: dotBlink 1.5s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+
+      /* Step-dot progress indicators */
+      .modal-steps {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        padding: 10px 0 2px;
+      }
+      .modal-step-dot {
+        height: 5px;
+        width: 5px;
+        border-radius: 99px;
+        background: rgba(255,255,255,0.12);
+        transition: all 250ms var(--ease-spring);
+      }
+      .modal-step-dot.active {
+        background: var(--c-brand);
+        width: 20px;
+        box-shadow: 0 0 8px rgba(0,212,170,0.5);
+      }
+      .modal-step-dot.done {
+        background: var(--c-green);
+      }
+
+      /* Modal header flex */
+      .mhdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+      }
+      .mhdr-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 15px;
+        font-weight: 650;
+        color: var(--text-1);
+        letter-spacing: -0.025em;
+      }
+      .mhdr-title .mi {
+        font-size: 18px;
+        color: var(--c-brand);
+        font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20;
+      }
+
+      /* ibtn (icon button for close etc) */
+      .ibtn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-3);
+        cursor: pointer;
+        transition: all 140ms var(--ease);
+        flex-shrink: 0;
+      }
+      .ibtn:hover {
+        background: rgba(255,255,255,0.09);
+        border-color: rgba(255,255,255,0.13);
+        color: var(--text-1);
+      }
+      /* ─── System monitor toolbar — no overlap fix ─── */
+      #section-system {
+        overflow-y: auto;
+        height: 100%;
+      }
+      /* Ensure sec-hdr always wraps on the access section */
+      #section-access .sec-hdr {
+        flex-wrap: wrap;
+      }
+      /* Gauge row wraps nicely */
+      #section-system > div[style*="display: flex"] {
+        flex-wrap: wrap;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+         SYSTEM MONITOR — 3-row layout: navbar / gauge row / body
+         ═══════════════════════════════════════════════════════════════════ */
+
+      /* Section override — no padding, flex column, fill height */
+      .sys-mon-section {
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+      /* When active via dash-section.active override */
+      .dash-section.sys-mon-section.active {
+        display: flex !important;
+      }
+
+      /* ── ROW 1: Sticky navbar ── */
+      .sys-navbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 22px;
+        height: 52px;
+        min-height: 52px;
+        flex-shrink: 0;
+        background: rgba(6,8,12,0.88);
+        backdrop-filter: blur(40px) saturate(180%);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.02), 0 2px 12px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 10;
+      }
+      /* Teal accent line along the bottom */
+      .sys-navbar::after {
+        content: "";
+        position: absolute;
+        bottom: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(0,212,170,0.25) 40%, rgba(0,212,170,0.25) 60%, transparent);
+        pointer-events: none;
+      }
+      .sys-navbar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .sys-navbar-title {
+        font-size: 13px;
+        font-weight: 650;
+        color: var(--text-1);
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      .sys-navbar-sep {
+        width: 1px;
+        height: 16px;
+        background: rgba(255,255,255,0.1);
+        flex-shrink: 0;
+      }
+      .sys-navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-shrink: 0;
+      }
+      .sys-navbar-divider {
+        width: 1px;
+        height: 20px;
+        background: rgba(255,255,255,0.08);
+        flex-shrink: 0;
+        margin: 0 2px;
+      }
+
+      /* ── ROW 2: Gauge strip — single horizontal row ── */
+      .sys-gauge-row {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.012);
+        overflow-x: auto;
+      }
+      /* Individual gauge card inside the strip */
+      .sys-gauge-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        min-width: 170px;
+        padding: 14px 18px;
+        border-radius: 0 !important;
+        border: none !important;
+        border-right: 1px solid rgba(255,255,255,0.06) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        transition: background 150ms var(--ease);
+      }
+      .sys-gauge-card:last-child { border-right: none !important; }
+      .sys-gauge-card:hover { background: rgba(255,255,255,0.025) !important; }
+      /* Network card has no ring so it's slightly narrower */
+      .sys-gauge-net {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        min-width: 150px;
+        max-width: 200px;
+        justify-content: center;
+      }
+      .sys-gauge-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      /* ── ROW 3: Scrollable body ── */
+      .sys-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 22px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      /* two-col inside body has no top margin needed */
+      .sys-body .two-col { margin: 0; }
+
     </style>
   </head>
 
@@ -5578,328 +6111,148 @@
           
 
           <!-- ══ SYSTEM MONITOR ══════════════════════════════════════════════ -->
-          <section class="dash-section" id="section-system">
-            <div class="sec-hdr">
-              <div>
-                <div class="sec-title">System Monitor</div>
-                <div class="sec-sub" id="sys-sub">
-                  Select a device to begin monitoring
-                </div>
+          <section class="dash-section sys-mon-section" id="section-system">
+
+            <!-- ── ROW 1: Sticky top navbar ── -->
+            <div class="sys-navbar">
+              <div class="sys-navbar-left">
+                <span class="mi" style="color:var(--c-brand);font-size:16px;">developer_board</span>
+                <span class="sys-navbar-title">System Monitor</span>
+                <span class="sys-navbar-sep"></span>
+                <span class="sec-sub" id="sys-sub" style="margin:0;font-size:11px;">Select a device</span>
               </div>
-              <div class="sec-acts">
-                <select
-                  class="sinput"
-                  id="sys-device-sel"
-                  onchange="sysSelectDevice(this.value)"
-                  style="min-width: 200px"
-                >
+              <div class="sys-navbar-right">
+                <select class="sinput" id="sys-device-sel" onchange="sysSelectDevice(this.value)" style="min-width:180px;">
                   <option value="">— Select Device —</option>
                 </select>
-                <button class="btn btn-p" onclick="sysStartMonitor()">
-                  <span class="mi">play_arrow</span>Start Live
-                </button>
-                <button class="btn btn-s" onclick="sysSnapshot()">
-                  <span class="mi">camera</span>Snapshot
-                </button>
-                <button class="btn btn-s" onclick="sysStopMonitor()">
-                  <span class="mi">stop</span>Stop
-                </button>
+                <div class="sys-navbar-divider"></div>
+                <button class="btn btn-p" onclick="sysStartMonitor()"><span class="mi">play_arrow</span>Start Live</button>
+                <button class="btn btn-s" onclick="sysSnapshot()"><span class="mi">camera</span>Snapshot</button>
+                <button class="btn btn-s" onclick="sysStopMonitor()"><span class="mi">stop</span>Stop</button>
               </div>
             </div>
 
-            <!-- Circular progress rings row -->
-            <div
-              style="
-                display: flex;
-                gap: 14px;
-                margin-bottom: 18px;
-                flex-wrap: wrap;
-              "
-            >
-              <div
-                class="gauge"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 16px;
-                  min-width: 220px;
-                  flex: 1;
-                "
-              >
+            <!-- ── ROW 2: Gauge cards — all on one horizontal row ── -->
+            <div class="sys-gauge-row">
+
+              <div class="gauge sys-gauge-card">
                 <div class="progress-ring-wrap">
-                  <svg
-                    class="progress-ring-svg"
-                    viewBox="0 0 60 60"
-                    width="60"
-                    height="60"
-                  >
-                    <circle
-                      class="progress-ring-track"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                    />
-                    <circle
-                      class="progress-ring-fill cpu"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                      stroke-dasharray="163.36"
-                      stroke-dashoffset="163.36"
-                      id="ring-cpu"
-                    />
+                  <svg class="progress-ring-svg" viewBox="0 0 60 60" width="60" height="60">
+                    <circle class="progress-ring-track" cx="30" cy="30" r="26"/>
+                    <circle class="progress-ring-fill cpu" cx="30" cy="30" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36" id="ring-cpu"/>
                   </svg>
                   <span class="progress-ring-label" id="ring-cpu-lbl">—</span>
                 </div>
-                <div>
+                <div class="sys-gauge-info">
                   <div class="gauge-label">CPU Usage</div>
                   <div class="gauge-val" id="sys-cpu">—</div>
                   <div class="gauge-sub" id="sys-cpu-freq">— MHz · — cores</div>
                 </div>
               </div>
-              <div
-                class="gauge"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 16px;
-                  min-width: 220px;
-                  flex: 1;
-                "
-              >
+
+              <div class="gauge sys-gauge-card">
                 <div class="progress-ring-wrap">
-                  <svg
-                    class="progress-ring-svg"
-                    viewBox="0 0 60 60"
-                    width="60"
-                    height="60"
-                  >
-                    <circle
-                      class="progress-ring-track"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                    />
-                    <circle
-                      class="progress-ring-fill ram"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                      stroke-dasharray="163.36"
-                      stroke-dashoffset="163.36"
-                      id="ring-ram"
-                    />
+                  <svg class="progress-ring-svg" viewBox="0 0 60 60" width="60" height="60">
+                    <circle class="progress-ring-track" cx="30" cy="30" r="26"/>
+                    <circle class="progress-ring-fill ram" cx="30" cy="30" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36" id="ring-ram"/>
                   </svg>
                   <span class="progress-ring-label" id="ring-ram-lbl">—</span>
                 </div>
-                <div>
+                <div class="sys-gauge-info">
                   <div class="gauge-label">RAM Usage</div>
                   <div class="gauge-val" id="sys-ram">—</div>
                   <div class="gauge-sub" id="sys-ram-detail">—</div>
                 </div>
               </div>
-              <div
-                class="gauge"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 16px;
-                  min-width: 220px;
-                  flex: 1;
-                "
-              >
+
+              <div class="gauge sys-gauge-card">
                 <div class="progress-ring-wrap">
-                  <svg
-                    class="progress-ring-svg"
-                    viewBox="0 0 60 60"
-                    width="60"
-                    height="60"
-                  >
-                    <circle
-                      class="progress-ring-track"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                    />
-                    <circle
-                      class="progress-ring-fill disk"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                      stroke-dasharray="163.36"
-                      stroke-dashoffset="163.36"
-                      id="ring-disk"
-                    />
+                  <svg class="progress-ring-svg" viewBox="0 0 60 60" width="60" height="60">
+                    <circle class="progress-ring-track" cx="30" cy="30" r="26"/>
+                    <circle class="progress-ring-fill disk" cx="30" cy="30" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36" id="ring-disk"/>
                   </svg>
                   <span class="progress-ring-label" id="ring-disk-lbl">—</span>
                 </div>
-                <div>
+                <div class="sys-gauge-info">
                   <div class="gauge-label">Disk Usage</div>
                   <div class="gauge-val" id="sys-disk">—</div>
                   <div class="gauge-sub" id="sys-disk-detail">—</div>
                 </div>
               </div>
-              <div
-                class="gauge"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 16px;
-                  min-width: 220px;
-                  flex: 1;
-                "
-              >
+
+              <div class="gauge sys-gauge-card">
                 <div class="progress-ring-wrap">
-                  <svg
-                    class="progress-ring-svg"
-                    viewBox="0 0 60 60"
-                    width="60"
-                    height="60"
-                  >
-                    <circle
-                      class="progress-ring-track"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                    />
-                    <circle
-                      class="progress-ring-fill bat"
-                      cx="30"
-                      cy="30"
-                      r="26"
-                      stroke-dasharray="163.36"
-                      stroke-dashoffset="163.36"
-                      id="ring-bat"
-                    />
+                  <svg class="progress-ring-svg" viewBox="0 0 60 60" width="60" height="60">
+                    <circle class="progress-ring-track" cx="30" cy="30" r="26"/>
+                    <circle class="progress-ring-fill bat" cx="30" cy="30" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36" id="ring-bat"/>
                   </svg>
                   <span class="progress-ring-label" id="ring-bat-lbl">—</span>
                 </div>
-                <div>
+                <div class="sys-gauge-info">
                   <div class="gauge-label">Battery</div>
                   <div class="gauge-val" id="sys-battery">—</div>
                   <div class="gauge-sub" id="sys-uptime">Uptime: —</div>
                 </div>
               </div>
-              <div class="gauge" style="min-width: 180px; flex: 1">
+
+              <div class="gauge sys-gauge-card sys-gauge-net">
                 <div class="gauge-label">Network I/O</div>
-                <div
-                  class="gauge-val"
-                  style="font-size: 18px"
-                  id="sys-net-sent"
-                >
-                  ↑ —
-                </div>
+                <div class="gauge-val" style="font-size:18px;" id="sys-net-sent">↑ —</div>
                 <div class="gauge-sub" id="sys-net-recv">↓ —</div>
-                <div
-                  style="display: flex; gap: 6px; margin-top: 10px"
-                  id="sys-live-bars"
-                >
-                  <!-- Animated bars will be injected here by JS -->
-                </div>
+                <div style="display:flex;gap:6px;margin-top:10px;" id="sys-live-bars"></div>
               </div>
+
             </div>
 
-            <div class="two-col">
-              <div class="panel hover-glow">
-                <div class="panel-hdr">
-                  <div class="panel-title">
-                    <span class="mi">memory</span>Per-Core CPU &amp;
-                    Temperatures
-                  </div>
-                  <button class="tbtn" onclick="sysSnapshot()">
-                    <span class="mi">refresh</span>
-                  </button>
-                </div>
-                <div
-                  id="sys-cores-wrap"
-                  style="padding: 12px; min-height: 100px"
-                >
-                  <div
-                    style="
-                      color: var(--text-3);
-                      font-size: 11px;
-                      padding: 24px;
-                      text-align: center;
-                    "
-                  >
-                    Start monitoring to see core data
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="panel hover-glow" style="margin-bottom: 12px">
-                  <div class="panel-hdr">
-                    <div class="panel-title">
-                      <span class="mi">hard_drive</span>Disk Partitions
-                    </div>
-                    <button class="tbtn" onclick="sysRequestDisks()">
-                      <span class="mi">refresh</span>Refresh
-                    </button>
-                  </div>
-                  <div class="tbl-scroll" style="max-height: 180px">
-                    <table class="tbl">
-                      <thead>
-                        <tr>
-                          <th>Drive</th>
-                          <th>FS</th>
-                          <th>Total</th>
-                          <th>Used</th>
-                          <th>Free</th>
-                        </tr>
-                      </thead>
-                      <tbody id="disk-tbody">
-                        <tr>
-                          <td
-                            colspan="5"
-                            style="padding: 14px; color: var(--text-3)"
-                          >
-                            Click Refresh
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+            <!-- ── ROW 3 onwards: panels in scrollable body ── -->
+            <div class="sys-body">
+
+              <div class="two-col">
                 <div class="panel hover-glow">
                   <div class="panel-hdr">
-                    <div class="panel-title">
-                      <span class="mi">lan</span>Network Interfaces
-                    </div>
-                    <button class="tbtn" onclick="sysRequestNetwork()">
-                      <span class="mi">refresh</span>Refresh
-                    </button>
+                    <div class="panel-title"><span class="mi">memory</span>Per-Core CPU &amp; Temperatures</div>
+                    <button class="tbtn" onclick="sysSnapshot()"><span class="mi">refresh</span></button>
                   </div>
-                  <div
-                    id="net-ifaces-wrap"
-                    style="padding: 12px; max-height: 180px; overflow-y: auto"
-                  >
-                    <div
-                      style="
-                        color: var(--text-3);
-                        font-size: 11px;
-                        text-align: center;
-                        padding: 14px;
-                      "
-                    >
-                      Click Refresh
+                  <div id="sys-cores-wrap" style="padding:12px;min-height:100px;">
+                    <div style="color:var(--text-3);font-size:11px;padding:24px;text-align:center;">Start monitoring to see core data</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="panel hover-glow" style="margin-bottom:12px;">
+                    <div class="panel-hdr">
+                      <div class="panel-title"><span class="mi">hard_drive</span>Disk Partitions</div>
+                      <button class="tbtn" onclick="sysRequestDisks()"><span class="mi">refresh</span>Refresh</button>
+                    </div>
+                    <div class="tbl-scroll" style="max-height:180px;">
+                      <table class="tbl">
+                        <thead><tr><th>Drive</th><th>FS</th><th>Total</th><th>Used</th><th>Free</th></tr></thead>
+                        <tbody id="disk-tbody">
+                          <tr><td colspan="5" style="padding:14px;color:var(--text-3);">Click Refresh</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="panel hover-glow">
+                    <div class="panel-hdr">
+                      <div class="panel-title"><span class="mi">lan</span>Network Interfaces</div>
+                      <button class="tbtn" onclick="sysRequestNetwork()"><span class="mi">refresh</span>Refresh</button>
+                    </div>
+                    <div id="net-ifaces-wrap" style="padding:12px;max-height:180px;overflow-y:auto;">
+                      <div style="color:var(--text-3);font-size:11px;text-align:center;padding:14px;">Click Refresh</div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="panel hover-glow">
-              <div class="panel-hdr">
-                <div class="panel-title">
-                  <span class="mi">memory</span>GPU &amp; Hardware Info
+              <div class="panel hover-glow" style="margin-top:14px;">
+                <div class="panel-hdr">
+                  <div class="panel-title"><span class="mi">memory</span>GPU &amp; Hardware Info</div>
+                </div>
+                <div id="sys-gpu-wrap" style="padding:16px;color:var(--text-3);font-size:11px;">
+                  Start a snapshot to see GPU and hardware details.
                 </div>
               </div>
-              <div
-                id="sys-gpu-wrap"
-                style="padding: 16px; color: var(--text-3); font-size: 11px"
-              >
-                Start a snapshot to see GPU and hardware details.
-              </div>
+
             </div>
           </section>
 

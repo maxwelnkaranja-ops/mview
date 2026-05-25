@@ -11853,3 +11853,181 @@ OSError: [WinError 10048] Only one usage of each socket address (protocol/networ
 2026-05-25 00:13:46  INFO      [Dummy-174]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5250 size=97597 viewers(adv=4, std=4)
 2026-05-25 00:13:48  INFO      [Dummy-175]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5300 size=97561 viewers(adv=4, std=4)
 2026-05-25 00:13:50  INFO      [Dummy-176]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5350 size=97615 viewers(adv=4, std=4)
+2026-05-25 00:13:53  INFO      [Dummy-177]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5400 size=97615 viewers(adv=4, std=4)
+2026-05-25 00:13:54  INFO      [Dummy-50]  Watchdog health | devices=1 viewers=4 gop_bufs=1 threads=15 mem=117MB
+2026-05-25 00:13:55  INFO      [Dummy-178]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5450 size=97615 viewers(adv=4, std=4)
+2026-05-25 00:13:58  INFO      [Dummy-179]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5500 size=97590
+2026-05-25 00:13:58  INFO      [Dummy-179]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5500 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:00  INFO      [Dummy-180]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5550 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:04  INFO      [Dummy-181]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5600 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:08  INFO      [Dummy-182]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5650 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:11  INFO      [Dummy-183]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5700 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:14  INFO      [Dummy-184]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5750 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:16  INFO      [Dummy-185]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5800 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:19  INFO      [Dummy-186]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5850 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:21  INFO      [Dummy-187]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5900 size=97590 viewers(adv=4, std=4)
+2026-05-25 00:14:23  INFO      [Dummy-188]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=5950 size=97884 viewers(adv=4, std=4)
+2026-05-25 00:14:26  INFO      [Dummy-189]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6000 size=100975
+2026-05-25 00:14:26  INFO      [Dummy-189]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6000 size=100975 viewers(adv=4, std=4)
+2026-05-25 00:14:31  INFO      [Dummy-190]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6050 size=100975 viewers(adv=4, std=4)
+2026-05-25 00:14:33  INFO      [Dummy-191]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6100 size=100975 viewers(adv=4, std=4)
+2026-05-25 00:14:36  INFO      [Dummy-192]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6150 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:38  INFO      [Dummy-193]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6200 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:41  INFO      [Dummy-194]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6250 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:43  INFO      [Dummy-195]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6300 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:45  INFO      [Dummy-196]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6350 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:46  INFO      [Dummy-197]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6400 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:49  INFO      [Dummy-198]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6450 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:51  INFO      [Dummy-199]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6500 size=100955
+2026-05-25 00:14:51  INFO      [Dummy-199]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6500 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:55  INFO      [Dummy-200]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6550 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:57  INFO      [Dummy-201]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6600 size=100955 viewers(adv=4, std=4)
+2026-05-25 00:14:59  INFO      [Dummy-202]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6650 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:01  INFO      [Dummy-203]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6700 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:04  INFO      [Dummy-204]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6750 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:05  INFO      [Dummy-205]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6800 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:07  INFO      [Dummy-206]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6850 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:09  INFO      [Dummy-207]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6900 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:12  INFO      [Dummy-208]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=6950 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:14  INFO      [Dummy-209]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7000 size=101038
+2026-05-25 00:15:14  INFO      [Dummy-209]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7000 size=101038 viewers(adv=4, std=4)
+2026-05-25 00:15:17  INFO      [Dummy-210]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7050 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:19  INFO      [Dummy-211]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7100 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:22  INFO      [Dummy-212]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7150 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:25  INFO      [Dummy-213]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7200 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:27  INFO      [Dummy-214]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7250 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:30  INFO      [Dummy-215]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7300 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:32  INFO      [Dummy-216]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7350 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:35  INFO      [Dummy-217]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7400 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:37  INFO      [Dummy-218]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7450 size=101380 viewers(adv=4, std=4)
+2026-05-25 00:15:40  INFO      [Dummy-219]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7500 size=101163
+2026-05-25 00:15:40  INFO      [Dummy-219]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7500 size=101163 viewers(adv=4, std=4)
+2026-05-25 00:15:43  INFO      [Dummy-220]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7550 size=101163 viewers(adv=4, std=4)
+2026-05-25 00:15:46  INFO      [Dummy-221]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7600 size=101163 viewers(adv=4, std=4)
+2026-05-25 00:15:48  INFO      [Dummy-222]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7650 size=101163 viewers(adv=4, std=4)
+2026-05-25 00:15:51  INFO      [Dummy-223]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7700 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:54  INFO      [Dummy-224]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7750 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:55  INFO      [Dummy-225]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7800 size=100936 viewers(adv=4, std=4)
+2026-05-25 00:15:58  INFO      [Dummy-226]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7850 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:00  INFO      [Dummy-227]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7900 size=100956 viewers(adv=4, std=4)
+2026-05-25 00:16:03  INFO      [Dummy-228]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=7950 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:05  INFO      [Dummy-229]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8000 size=100943
+2026-05-25 00:16:05  INFO      [Dummy-229]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8000 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:08  INFO      [Dummy-230]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8050 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:11  INFO      [Dummy-231]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8100 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:13  INFO      [Dummy-232]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8150 size=100943 viewers(adv=4, std=4)
+2026-05-25 00:16:16  INFO      [Dummy-233]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8200 size=101213 viewers(adv=4, std=4)
+2026-05-25 00:16:22  INFO      [Dummy-234]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8250 size=102138 viewers(adv=4, std=4)
+2026-05-25 00:16:23  INFO      [Dummy-235]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8300 size=102138 viewers(adv=4, std=4)
+2026-05-25 00:16:26  INFO      [Dummy-236]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8350 size=101213 viewers(adv=4, std=4)
+2026-05-25 00:16:30  INFO      [Dummy-237]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8400 size=101213 viewers(adv=4, std=4)
+2026-05-25 00:16:31  INFO      [Dummy-238]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8450 size=67883 viewers(adv=4, std=4)
+2026-05-25 00:16:34  INFO      [Dummy-239]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8500 size=59175
+2026-05-25 00:16:34  INFO      [Dummy-239]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8500 size=59175 viewers(adv=4, std=4)
+2026-05-25 00:16:35  INFO      [Dummy-240]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8550 size=73050 viewers(adv=4, std=4)
+2026-05-25 00:16:37  INFO      [Dummy-241]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8600 size=60122 viewers(adv=4, std=4)
+2026-05-25 00:16:39  INFO      [Dummy-242]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8650 size=65961 viewers(adv=4, std=4)
+2026-05-25 00:16:41  INFO      [Dummy-243]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8700 size=57551 viewers(adv=4, std=4)
+2026-05-25 00:16:44  INFO      [Dummy-244]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8750 size=66432 viewers(adv=4, std=4)
+2026-05-25 00:16:47  INFO      [Dummy-245]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8800 size=56075 viewers(adv=4, std=4)
+2026-05-25 00:16:49  INFO      [Dummy-246]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8850 size=58285 viewers(adv=4, std=4)
+2026-05-25 00:16:52  INFO      [Dummy-247]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8900 size=66337 viewers(adv=4, std=4)
+2026-05-25 00:16:54  INFO      [Dummy-248]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=8950 size=58516 viewers(adv=4, std=4)
+2026-05-25 00:16:56  INFO      [Dummy-249]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9000 size=77742
+2026-05-25 00:16:56  INFO      [Dummy-249]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9000 size=77742 viewers(adv=4, std=4)
+2026-05-25 00:16:59  INFO      [Dummy-250]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9050 size=58525 viewers(adv=4, std=4)
+2026-05-25 00:17:02  INFO      [Dummy-251]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9100 size=68498 viewers(adv=4, std=4)
+2026-05-25 00:17:04  INFO      [Dummy-252]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9150 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:07  INFO      [Dummy-253]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9200 size=62905 viewers(adv=4, std=4)
+2026-05-25 00:17:10  INFO      [Dummy-254]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9250 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:12  INFO      [Dummy-255]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9300 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:14  INFO      [Dummy-256]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9350 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:17  INFO      [Dummy-257]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9400 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:19  INFO      [Dummy-258]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9450 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:22  INFO      [Dummy-259]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9500 size=62490
+2026-05-25 00:17:22  INFO      [Dummy-259]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9500 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:23  DEBUG     [Dummy-34]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-25 00:17:23  DEBUG     [Dummy-260]  Initializing WebSocket
+2026-05-25 00:17:23  DEBUG     [Dummy-260]  Validating WebSocket request
+2026-05-25 00:17:23  INFO      [Dummy-260]  127.0.0.1 - - [2026-05-25 00:17:23] "GET /health HTTP/1.1" 200 636 0.004548
+2026-05-25 00:17:23  DEBUG     [Dummy-34]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-25 00:17:25  INFO      [Dummy-261]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9550 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:28  INFO      [Dummy-262]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9600 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:30  INFO      [Dummy-263]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9650 size=63067 viewers(adv=4, std=4)
+2026-05-25 00:17:32  INFO      [Dummy-264]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9700 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:34  INFO      [Dummy-265]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9750 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:38  INFO      [Dummy-266]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9800 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:40  INFO      [Dummy-267]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9850 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:42  INFO      [Dummy-268]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9900 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:45  INFO      [Dummy-269]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=9950 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:47  INFO      [Dummy-270]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10000 size=62490
+2026-05-25 00:17:47  INFO      [Dummy-270]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10000 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:50  INFO      [Dummy-271]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10050 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:52  INFO      [Dummy-272]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10100 size=62761 viewers(adv=4, std=4)
+2026-05-25 00:17:55  INFO      [Dummy-273]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10150 size=62490 viewers(adv=4, std=4)
+2026-05-25 00:17:57  INFO      [Dummy-274]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10200 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:00  INFO      [Dummy-275]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10250 size=62491 viewers(adv=4, std=4)
+2026-05-25 00:18:02  INFO      [Dummy-276]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10300 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:05  INFO      [Dummy-277]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10350 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:07  INFO      [Dummy-278]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10400 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:10  INFO      [Dummy-279]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10450 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:12  INFO      [Dummy-280]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10500 size=62499
+2026-05-25 00:18:12  INFO      [Dummy-280]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10500 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:15  INFO      [Dummy-281]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10550 size=62664 viewers(adv=4, std=4)
+2026-05-25 00:18:18  INFO      [Dummy-282]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10600 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:20  INFO      [Dummy-283]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10650 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:23  INFO      [Dummy-284]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10700 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:25  INFO      [Dummy-285]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10750 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:28  INFO      [Dummy-286]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10800 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:30  INFO      [Dummy-287]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10850 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:33  INFO      [Dummy-288]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10900 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:35  INFO      [Dummy-289]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=10950 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:38  INFO      [Dummy-290]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11000 size=62499
+2026-05-25 00:18:38  INFO      [Dummy-290]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11000 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:40  INFO      [Dummy-291]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11050 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:43  INFO      [Dummy-292]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11100 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:46  INFO      [Dummy-293]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11150 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:48  INFO      [Dummy-294]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11200 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:51  INFO      [Dummy-295]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11250 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:53  INFO      [Dummy-296]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11300 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:55  INFO      [Dummy-50]  Watchdog health | devices=1 viewers=4 gop_bufs=1 threads=15 mem=119MB
+2026-05-25 00:18:56  INFO      [Dummy-297]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11350 size=62499 viewers(adv=4, std=4)
+2026-05-25 00:18:58  INFO      [Dummy-298]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11400 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:01  INFO      [Dummy-299]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11450 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:03  INFO      [Dummy-300]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11500 size=62510
+2026-05-25 00:19:03  INFO      [Dummy-300]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11500 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:06  INFO      [Dummy-301]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11550 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:08  INFO      [Dummy-302]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11600 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:11  INFO      [Dummy-303]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11650 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:13  INFO      [Dummy-304]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11700 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:16  INFO      [Dummy-305]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11750 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:19  INFO      [Dummy-306]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11800 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:21  INFO      [Dummy-307]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11850 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:24  INFO      [Dummy-308]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11900 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:26  INFO      [Dummy-309]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=11950 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:29  INFO      [Dummy-310]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12000 size=62510
+2026-05-25 00:19:29  INFO      [Dummy-310]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12000 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:31  INFO      [Dummy-311]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12050 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:34  INFO      [Dummy-312]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12100 size=62510 viewers(adv=4, std=4)
+2026-05-25 00:19:36  DEBUG     [Dummy-53]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:36  DEBUG     [Dummy-53]  Closed WebSocket
+2026-05-25 00:19:36  DEBUG     [Dummy-313]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:36  DEBUG     [Dummy-313]  Closed WebSocket
+2026-05-25 00:19:36  INFO      [Dummy-53]  Socket disconnected: GhxrSlRKu686JDcxAAAT
+2026-05-25 00:19:36  DEBUG     [Dummy-53]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:36  DEBUG     [Dummy-53]  Closed WebSocket
+2026-05-25 00:19:36  INFO      [Dummy-314]  frame_bin: device=MV-5F3B23-8BD7A7-4B1392 frame=12150 size=62510 viewers(adv=3, std=3)
+2026-05-25 00:19:37  DEBUG     [Dummy-315]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-315]  Closed WebSocket
+2026-05-25 00:19:37  DEBUG     [Dummy-10]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-10]  Closed WebSocket
+2026-05-25 00:19:37  INFO      [Dummy-10]  Socket disconnected: 4BZSeYRCCByYu_yRAAAI
+2026-05-25 00:19:37  DEBUG     [Dummy-10]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-10]  Closed WebSocket
+2026-05-25 00:19:37  DEBUG     [Dummy-316]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-316]  Closed WebSocket
+2026-05-25 00:19:37  DEBUG     [Dummy-8]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-8]  Closed WebSocket
+2026-05-25 00:19:37  INFO      [Dummy-8]  Socket disconnected: cKjsTFCkow57fiT3AAAH
+2026-05-25 00:19:37  DEBUG     [Dummy-8]  Failed to write closing frame -> closing socket
+2026-05-25 00:19:37  DEBUG     [Dummy-8]  Closed WebSocket
