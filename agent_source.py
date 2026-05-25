@@ -293,9 +293,9 @@ CONFIG = {
     "RECONNECT_MAX":        60,
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           20,         # target FPS
-    "STREAM_MIN_FPS":       5,          # drop to 5fps on static screens
-    "STREAM_QUALITY":       75,         # JPEG quality
+    "STREAM_FPS":           60,         # target FPS  ← ENTERPRISE BURST: was 20
+    "STREAM_MIN_FPS":       15,         # floor FPS on idle  ← was 5 (caused 5fps drops)
+    "STREAM_QUALITY":       85,         # JPEG quality  ← was 75
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
 
@@ -699,12 +699,17 @@ FLAG_H264     = 0x04
 # ── Adaptive FPS — gradual ramp, no sawtooth ─────────────────────────────
 class AdaptiveFPS:
     """
-    Ramp down slowly (−1 fps per 150 idle frames).
-    Ramp up gradually (+4 fps per changed frame) — never instant snap to max.
-    This prevents the 5→20 fps burst that floods the socket after an idle period.
+    ENTERPRISE BURST v10 — high-speed ramp-up, ultra-slow ramp-down.
+
+    Ramp-up:   +15 fps per changed frame → reaches max in ~3 frames from min.
+    Ramp-down: −1 fps per 450 idle frames → only drops after ~15s of pure idle
+               at 30fps, ensuring no sawtooth during brief pauses.
+    This means the stream stays at max_fps almost always, only backing off
+    during genuine long idle periods to save bandwidth.
     """
     def __init__(self, max_fps, min_fps):
         self.max_fps = max_fps; self.min_fps = min_fps
+        # START at max — no warm-up delay on connect
         self._cur = float(max_fps); self._idle = 0
 
     @property
@@ -713,12 +718,12 @@ class AdaptiveFPS:
     def report(self, changed):
         if changed:
             self._idle = 0
-            # Gradual ramp-up: +4 fps per active frame, capped at max
-            self._cur = min(self.max_fps, self._cur + 4)
+            # Fast ramp-up: +15 fps per active frame → 3 frames to recover from min
+            self._cur = min(self.max_fps, self._cur + 15)
         else:
             self._idle += 1
-            # Gradual ramp-down after 5 s of idling (at 30 fps = 150 frames)
-            if self._idle > 150:
+            # Slow ramp-down: only after 15s of idle at 30fps (450 frames)
+            if self._idle > 450:
                 self._cur = max(self.min_fps, self._cur - 1)
 
     @property
@@ -1023,21 +1028,32 @@ def _producer_thread(
         changed = differ.changed(raw)
         fps_ctl.report(changed)
 
-        # Downscale 50%
+        # ── Scale: use server-requested scale (default 1.0 = full res) ─────
         h_orig, w_orig = raw.shape[:2]
-        if CV2_OK:
-            small = cv2.resize(raw, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
+        scale = float(CONFIG.get("STREAM_SCALE", 1.0))
+        if scale < 0.99 and CV2_OK:
+            # INTER_AREA is best for downscaling — sharpest, no aliasing
+            tw = max(64, int(w_orig * scale))
+            th = max(48, int(h_orig * scale))
+            small = cv2.resize(raw, (tw, th), interpolation=cv2.INTER_AREA)
             fh, fw = small.shape[:2]
-        else:
+        elif scale < 0.99:
             try:
                 from PIL import Image as _PIL
+                import numpy as _np
+                tw = max(64, int(w_orig * scale))
+                th = max(48, int(h_orig * scale))
                 img   = _PIL.fromarray(raw[:, :, ::-1], "RGB")
-                small = img.resize((w_orig // 2, h_orig // 2), _PIL.NEAREST)
+                small = img.resize((tw, th), _PIL.LANCZOS)
                 fw, fh = small.size
-                small = np.array(small)[:, :, ::-1]
+                small = _np.array(small)[:, :, ::-1]
             except Exception:
                 small = raw
                 fh, fw = h_orig, w_orig
+        else:
+            # Full resolution — no downscale
+            small = raw
+            fh, fw = h_orig, w_orig
 
         force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
 
@@ -1076,10 +1092,23 @@ def _producer_thread(
 
 
 def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Event):
-    """Fires tick_evt at exactly 1/fps intervals using monotonic compensation."""
+    """
+    Fires tick_evt at exactly 1/fps intervals using monotonic-clock compensation.
+    ENTERPRISE BURST: uses high-resolution sleep with drift correction so the
+    actual frame rate matches CONFIG['STREAM_FPS'] even under load.
+    """
+    next_tick = time.monotonic()
     while not stop_evt.is_set():
         tick_evt.set()
-        time.sleep(max(0.001, 1.0 / CONFIG["STREAM_FPS"]))
+        target_interval = 1.0 / max(1, CONFIG["STREAM_FPS"])
+        next_tick += target_interval
+        now = time.monotonic()
+        sleep_for = next_tick - now
+        if sleep_for > 0.0005:
+            time.sleep(sleep_for)
+        elif sleep_for < -target_interval:
+            # We've fallen more than one full frame behind — reset clock
+            next_tick = time.monotonic()
 
 
 async def _adv_task_stream_frames():
@@ -1124,7 +1153,7 @@ async def _adv_task_stream_frames():
             try:
                 pkt = frame_q.get_nowait()
             except _queue.Empty:
-                await asyncio.sleep(0.005)
+                await asyncio.sleep(0.002)   # 2ms yield — was 5ms, halved for lower latency
                 continue
 
             _adv_last_frame_pkt = pkt
@@ -1502,11 +1531,15 @@ def _start_screenshot_fallback(sio_client):
                 grab_fails = 0
 
                 h, w = frame.shape[:2]
-                # FIX: PIL fallback when cv2 not available in compiled exe
+                # Use configurable scale (default 1.0 = full res) with INTER_AREA for quality
+                _scale = float(CONFIG.get("STREAM_SCALE", 1.0))
                 if CV2_OK:
-                    # FIXED: Downscale 50% for high FPS and low CPU
-                    h_orig, w_orig = frame.shape[:2]
-                    small = cv2.resize(frame, (w_orig // 2, h_orig // 2), interpolation=cv2.INTER_NEAREST)
+                    if _scale < 0.99:
+                        tw = max(64, int(w * _scale))
+                        th = max(48, int(h * _scale))
+                        small = cv2.resize(frame, (tw, th), interpolation=cv2.INTER_AREA)
+                    else:
+                        small = frame
                     ok, buf = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, quality])
                     payload = buf.tobytes() if ok else None
                     if ok:
@@ -1516,15 +1549,16 @@ def _start_screenshot_fallback(sio_client):
                         from PIL import Image as _PI
                         from io import BytesIO as _BIO
                         import numpy as _np2
-                        # FIXED: Downscale 50% for PIL to save CPU and improve FPS
-                        h_orig, w_orig = frame.shape[:2]
                         rgb = _np2.array(frame)[:, :, ::-1]
                         img = _PI.fromarray(rgb, "RGB")
-                        img = img.resize((w_orig // 2, h_orig // 2), _PI.NEAREST)
+                        if _scale < 0.99:
+                            tw = max(64, int(w * _scale))
+                            th = max(48, int(h * _scale))
+                            img = img.resize((tw, th), _PI.LANCZOS)
                         _bio = _BIO()
                         img.save(_bio, "JPEG", quality=quality)
                         payload = _bio.getvalue()
-                        w, h = img.size # Update dimensions for the header
+                        w, h = img.size
                     except Exception:
                         payload = None
                 if not payload:
@@ -3487,9 +3521,15 @@ class ScreenConnectAgent:
             if tab == "monitor":
                 action = data.get("action", "start")
                 if data.get("fps") is not None:
-                    CONFIG["STREAM_FPS"] = max(1, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))
+                    new_fps = max(1, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))
+                    CONFIG["STREAM_FPS"] = new_fps
+                    # Keep min FPS at least 25% of target to prevent sawtooth drops
+                    CONFIG["STREAM_MIN_FPS"] = max(CONFIG["STREAM_MIN_FPS"], new_fps // 4)
                 if data.get("quality") is not None:
                     CONFIG["STREAM_QUALITY"] = max(25, min(int(data.get("quality", CONFIG["STREAM_QUALITY"])), 95))
+                if data.get("scale") is not None:
+                    # Server sends 0.0–1.0 scale; clamp to safe range
+                    CONFIG["STREAM_SCALE"] = max(0.25, min(float(data.get("scale", 1.0)), 1.0))
                 if data.get("monitor") is not None:
                     CONFIG["STREAM_MONITOR"] = max(1, int(data.get("monitor", CONFIG["STREAM_MONITOR"])))
                 if action == "start":

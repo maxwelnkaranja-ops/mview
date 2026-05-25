@@ -1656,17 +1656,17 @@ if SOCKETIO_OK and sio:
             }, room=sid)
             emit("subscribed", {"device_id": did, "viewers": vcount})
 
-            # Tell agent to start streaming
-            fps     = min(int(data.get("fps", 30)), 60)  # v12.1: raised cap from 30→60
-            quality = min(max(int(data.get("quality", 80)), 40), 95)  # v12.1: raised floor+ceiling
-            scale   = data.get("scale", 0.8)
+            # Tell agent to start streaming — ENTERPRISE BURST settings
+            fps     = min(int(data.get("fps", 60)), 60)          # default 60fps (was 30)
+            quality = min(max(int(data.get("quality", 85)), 40), 95)  # default 85 (was 80)
+            scale   = float(data.get("scale", 1.0))               # default full res (was 0.8)
             monitor = data.get("monitor", 1)
             spay = {"tab": "monitor", "action": "start", "device_id": did,
                     "fps": fps, "quality": quality, "scale": scale, "monitor": monitor}
             sio.emit("request_action", spay, room=did)
             if agent_adv_sid:
                 sio.emit("request_action", spay, room=agent_adv_sid)
-            log.info(f"Viewer {sid} watching {did}  fps={fps} quality={quality}")
+            log.info(f"Viewer {sid} watching {did}  fps={fps} quality={quality} scale={scale}")
 
         except Exception as exc:
             _report_crash("on_watch_device", exc)
@@ -1776,7 +1776,7 @@ if SOCKETIO_OK and sio:
             active_viewers = list(_viewers.get(did, set()))
         if active_viewers:
             spay = {"tab": "monitor", "action": "start", "device_id": did,
-                    "fps": 20, "quality": 70, "scale": 0.8, "monitor": 1}
+                    "fps": 60, "quality": 85, "scale": 1.0, "monitor": 1}  # ENTERPRISE BURST (was fps=20, quality=70, scale=0.8)
             sio.emit("request_action", spay, room=request.sid)
             for vsid in active_viewers:
                 sio.emit("agent_replaced", {"device_id": did, "label": label, "ts": utcnow()}, room=vsid)
@@ -1865,7 +1865,7 @@ if SOCKETIO_OK and sio:
         sio.emit("viewer_count", {"count": vcount}, room=sid)
         if vcount > 0:
             sio.emit("request_action", {"tab": "monitor", "action": "start", "device_id": did,
-                                        "fps": 20, "quality": 70, "scale": 0.8, "monitor": 1}, room=sid)
+                                        "fps": 60, "quality": 85, "scale": 1.0, "monitor": 1}, room=sid)  # ENTERPRISE BURST
         _audit("agent_auth_ok", device_id=did, viewers=vcount)
 
     @sio.on("agent_auth_ready")
@@ -1960,19 +1960,11 @@ if SOCKETIO_OK and sio:
                 if fc == 1 or fc % 500 == 0:
                     log.info(f"frame_bin: device={did} frame={fc} size={n}")
 
-        # Fan out — emit to both room types
+        # Fan out — emit to both room types SYNCHRONOUSLY (no yield between)
+        # This is the critical fix for dashboard/external-viewer sync skew:
+        # both rooms get the exact same frame in the same gevent tick.
         r1 = f"adv_viewers_{did}"
         r2 = f"view:{did}"
-        
-        # DEBUG: Log if there are viewers
-        with _adv_viewer_lock:
-            v1 = sum(1 for v in _adv_viewer_rooms.values() if v == did)
-        with _view_lock:
-            v2 = len(_viewers.get(did, set()))
-            
-        if fc % 50 == 0:
-            log.info(f"frame_bin: device={did} frame={fc} size={n} viewers(adv={v1}, std={v2})")
-            
         sio.emit("frame_bin", raw, room=r1)
         sio.emit("frame_bin", raw, room=r2)
 
@@ -2010,7 +2002,7 @@ if SOCKETIO_OK and sio:
                     pass
             with _adv_gop_lock:
                 if did not in _adv_gop_buf:
-                    _adv_gop_buf[did] = collections.deque(maxlen=128)
+                    _adv_gop_buf[did] = collections.deque(maxlen=GOP_BUF_SIZE)  # consistent with frame_bin handler
                 _adv_gop_buf[did].append(raw)
             with _frame_stats_lock:
                 _frame_stats[did].append((time.time(), len(raw)))
