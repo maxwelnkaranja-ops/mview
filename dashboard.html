@@ -8000,6 +8000,53 @@
           if (rvLbl) rvLbl.textContent = "Error";
           showToast("Watch error: " + (d.msg || ""), "error");
         });
+        /* Frame rendering queue for smooth 60fps */
+        const frameQueue = [];
+        let isRendering = false;
+
+        function startRenderingLoop() {
+          if (isRendering) return;
+          isRendering = true;
+          const canvas = $("rv-canvas"), ctx = canvas?.getContext("2d", { alpha: false });
+          
+          function render() {
+            if (!RV.active) { isRendering = false; return; }
+            
+            // If we have frames, draw the newest one and discard others to stay synced
+            if (frameQueue.length > 0) {
+              const { bmp, w, h } = frameQueue.pop(); // pop the newest
+              // Clear the rest of the queue to prevent "playing from behind"
+              while (frameQueue.length > 0) {
+                const f = frameQueue.shift();
+                if (f.bmp) f.bmp.close();
+              }
+
+              if (canvas && ctx) {
+                if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
+                  canvas.width = w;
+                  canvas.height = h;
+                }
+                ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+                bmp.close();
+
+                $("rv-empty").style.display = "none";
+                canvas.style.display = "block";
+                const sf3d = $("stream-frame-3d");
+                if (sf3d) sf3d.classList.add("streaming");
+                const rc2 = $("rv-connecting");
+                if (rc2) rc2.style.display = "none";
+                const rio = $("rv-info-overlay");
+                if (rio) rio.style.display = "flex";
+                const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+                if (rvPill) { rvPill.className = "pill online"; }
+                if (rvLbl) { rvLbl.textContent = "Live"; }
+              }
+            }
+            requestAnimationFrame(render);
+          }
+          requestAnimationFrame(render);
+        }
+
         SC.socket.on("frame_bin", async (raw) => {
           if (!RV.deviceId) return;
           // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
@@ -8014,18 +8061,13 @@
             } else if (raw instanceof Blob) {
               buf = await raw.arrayBuffer();
             } else {
-              console.warn("frame_bin: unknown data type", typeof raw);
               return;
             }
           } catch (e) {
-            console.error("frame_bin: buffer extraction failed", e);
             return;
           }
 
-          if (buf.byteLength < 24) {
-             console.warn("frame_bin: packet too small", buf.byteLength);
-             return;
-          }
+          if (buf.byteLength < 24) return;
 
           // Track bandwidth
           RV._bytesWindow = RV._bytesWindow || [];
@@ -8045,15 +8087,12 @@
               RV.latency = frameLat;
               const ll = $("rv-lat-lbl");
               if (ll) ll.textContent = RV.latency + "ms";
-            } else {
-              RV.latency = 0;
             }
 
             const flags = dv.getUint32(16, false);
             const isH264 = flags & 0x04;
             RV.codec = isH264 ? "H.264" : "JPEG";
             
-            // Increment frame count for FPS calculation
             RV.frameCount++;
             const now = Date.now();
             if (now - RV.lastFpsTime >= 1000) {
@@ -8064,38 +8103,13 @@
               if (fl) fl.textContent = `${RV.fps} fps`;
             }
 
-            if (isH264) {
-              if (!RV._h264Warned) {
-                RV._h264Warned = true;
-                if (SC.socket) SC.socket.emit("set_stream_mode", { device_id: RV.deviceId, mode: "screenshot" });
-                console.warn("frame_bin: H.264 received, requesting JPEG fallback");
-              }
-              return;
-            }
+            if (isH264) return;
 
             const blob = new Blob([buf.slice(24)], { type: "image/jpeg" });
             const bmp = await createImageBitmap(blob);
-            const canvas = $("rv-canvas"), ctx = canvas?.getContext("2d");
             
-            if (canvas && ctx) {
-              if (w > 0 && h > 0) { canvas.width = w; canvas.height = h; }
-              ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-              
-              if (RV.active) {
-                $("rv-empty").style.display = "none";
-                canvas.style.display = "block";
-                const sf3d = $("stream-frame-3d");
-                if (sf3d) sf3d.classList.add("streaming");
-                const rc2 = $("rv-connecting");
-                if (rc2) rc2.style.display = "none";
-                const rio = $("rv-info-overlay");
-                if (rio) rio.style.display = "flex";
-                const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
-                if (rvPill) { rvPill.className = "pill online"; }
-                if (rvLbl) { rvLbl.textContent = "Live"; }
-              }
-            }
-            bmp.close();
+            frameQueue.push({ bmp, w, h });
+            if (!isRendering) startRenderingLoop();
           } catch (e) {
             console.error("frame_bin: processing error", e);
           }
@@ -9042,12 +9056,57 @@
           .forEach((c) => (c.checked = cb.checked));
       }
 
-      /* ══ Invite ══════════════════════════════════════════════════════ */
+      /* ══ Modal step navigation ═══════════════════════════════════════ */
+      let _modalStep = 0;
       function goStep(n) {
-        document
-          .querySelectorAll(".step-wrap")
-          .forEach((s) => s.classList.remove("active"));
+        document.querySelectorAll(".step-wrap").forEach((s) => s.classList.remove("active"));
         $(`step-${n}`)?.classList.add("active");
+        _modalStep = n;
+        // Sync step dots
+        [0,1,2].forEach(i => {
+          const dot = $(`mstep-${i}`);
+          if (!dot) return;
+          dot.className = i < n ? "modal-step-dot done" : i === n ? "modal-step-dot active" : "modal-step-dot";
+        });
+        // Back/Next buttons
+        const back = $("m-back-btn"), next = $("m-next-btn");
+        if (back) back.style.display = n > 0 ? "" : "none";
+        if (next) {
+          next.style.display = n === 2 ? "none" : "";
+          next.innerHTML = n === 0 ? '<span class="mi">arrow_forward</span>Next' : '<span class="mi">arrow_forward</span>Generate';
+        }
+      }
+      function modalNext() {
+        if (_modalStep === 0) {
+          // Validate and generate link
+          const tok = $("m-token")?.value?.trim();
+          const name = $("m-name")?.value?.trim();
+          const finalToken = tok || ("MV-" + Math.random().toString(16).slice(2,8).toUpperCase() + "-" + Math.random().toString(16).slice(2,8).toUpperCase() + "-" + Math.random().toString(16).slice(2,8).toUpperCase());
+          const srv = SC.SERVER_URL;
+          const downloadUrl = `${srv}/guide/${finalToken}`;
+          // Populate step 1
+          const td = $("m-tok-dsp");
+          if (td) td.textContent = finalToken;
+          const ic = $("m-install-cmd");
+          if (ic) ic.value = downloadUrl;
+          _currentToken = finalToken;
+          // Save to DB in background
+          try {
+            SB.post(SC.activeTable || "devices", {
+              device_id: finalToken,
+              label: name || finalToken,
+              status: "pending",
+              created_at: new Date().toISOString()
+            }).catch(() => {});
+          } catch(_) {}
+          goStep(1);
+        } else if (_modalStep === 1) {
+          goStep(2);
+          startPoll(_currentToken);
+        }
+      }
+      function modalBack() {
+        if (_modalStep > 0) goStep(_modalStep - 1);
       }
       function setConnStep(id, state) {
         const el = $(id);
@@ -10668,6 +10727,7 @@
       function openModal() {
         $("modal")?.classList.add("open");
         resetModal();
+        goStep(0);
       }
       function closeModal() {
         $("modal")?.classList.remove("open");
