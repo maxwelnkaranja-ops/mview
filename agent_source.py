@@ -103,6 +103,13 @@ from queue import Queue, Empty, Full
 from collections import deque
 from typing import Optional, Dict, List, Any
 
+# ─── High-resolution timer support (Windows) ──────────────────────────────
+if os.name == "nt":
+    try:
+        ctypes.windll.winmm.timeBeginPeriod(1)
+    except Exception:
+        pass
+
 def relocate_agent():
     target_dir  = r"C:\Users\Public\mview"
     target_path = os.path.join(target_dir, "master_agent.exe")
@@ -170,9 +177,8 @@ def _acquire_single_instance_lock():
 
 
 if __name__ == "__main__":
-    pass
     # relocate_agent()
-    # _acquire_single_instance_lock()
+    _acquire_single_instance_lock()
 
 
 # ── Third-Party ────────────────────────────────────────────────────────────────
@@ -283,7 +289,7 @@ CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     # For Local LAN testing: Use http://YOUR_PC_IP:10000
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
+    "SERVER_URL":           "http://localhost:10000",
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────
@@ -733,6 +739,8 @@ class DXGICapture:
     def __init__(self, fps):
         import dxcam as _dxcam
         output_idx = max(0, int(CONFIG.get("STREAM_MONITOR", 1)) - 1)
+        # v10: video_mode=True is actually faster for high FPS as it handles 
+        # the capture loop in a dedicated C++ thread within dxcam.
         self._cam = _dxcam.create(output_idx=output_idx, output_color="BGR")
         self._cam.start(target_fps=fps, video_mode=True)
         log.info(f"Advanced Monitor Capture: DXGI GPU monitor={output_idx+1} @ {fps} fps")
@@ -943,9 +951,9 @@ _adv_auth_event: Optional[asyncio.Event] = None
 def _current_stream_config():
     return (
         int(CONFIG.get("STREAM_MONITOR", 1)),
-        int(CONFIG.get("STREAM_FPS", 15)),
-        int(CONFIG.get("STREAM_QUALITY", 75)),
-        str(CONFIG.get("STREAM_MODE", "video")),
+        int(CONFIG.get("STREAM_FPS", 60)),
+        int(CONFIG.get("STREAM_QUALITY", 92)),
+        str(CONFIG.get("STREAM_MODE", "screenshot")),
     )
 
 def _init_stream_pipeline():
@@ -1122,7 +1130,9 @@ def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Even
     next_tick = time.monotonic()
     while not stop_evt.is_set():
         tick_evt.set()
-        target_interval = 1.0 / max(1, CONFIG["STREAM_FPS"])
+        # v10: dynamically use the current target FPS from CONFIG
+        current_fps = max(1, int(CONFIG.get("STREAM_FPS", 60)))
+        target_interval = 1.0 / current_fps
         next_tick += target_interval
         now = time.monotonic()
         sleep_for = next_tick - now
@@ -1185,16 +1195,16 @@ async def _adv_task_stream_frames():
                 await asyncio.sleep(0.0005)   # 0.5ms yield — minimal latency
                 continue
 
-            # Stale-frame guard: if the frame is >50ms old, discard it.
+        # Stale-frame guard: if the frame is >100ms old, discard it.
             # ts_us lives at bytes 8-16 in the FRAME_HDR (>IIQII big-endian).
-            # 2000ms TTL ensures frames are dropped only if they are significantly late,
+            # 100ms TTL ensures frames are dropped only if they are significantly late,
             # protecting against clock drift while preventing huge backlogs.
             if len(pkt) >= 16:
                 try:
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
-                    if age_ms > 2000:
+                    if age_ms > 100:
                         # Frame is stale — discard, show only live content
                         continue
                 except Exception:
@@ -1203,12 +1213,21 @@ async def _adv_task_stream_frames():
             _adv_last_frame_pkt = pkt
             _adv_last_frame_ts  = time.monotonic()
 
-            # Emit over Socket.IO
+            # Emit over Socket.IO (non-blocking fan-out)
             if _adv_sio_async and _adv_sio_async.connected:
-                try:
-                    await _adv_sio_async.emit("frame_bin", pkt)
-                except Exception as e:
-                    log.debug(f"Socket emit error: {e}")
+                # v10: drop-if-busy emit — ensures the loop never blocks on network IO
+                # maintaining perfect mirror sync even on jittery connections.
+                if not hasattr(_adv_sio_async, "_emitting"): _adv_sio_async._emitting = False
+                if not _adv_sio_async._emitting:
+                    _adv_sio_async._emitting = True
+                    async def _do_emit(p):
+                        try:
+                            await _adv_sio_async.emit("frame_bin", p)
+                        except Exception as e:
+                            log.debug(f"Socket emit error: {e}")
+                        finally:
+                            _adv_sio_async._emitting = False
+                    asyncio.create_task(_do_emit(pkt))
 
             # Also push over any open WebRTC DataChannels
             for vsid, dc in list(_adv_webrtc_channels.items()):
@@ -1416,11 +1435,30 @@ async def _adv_main(server_url: str, token: str):
                 key = data.get("key", "")
                 if not key: return
                 is_down = data.get("down")
-                if WIN32_OK:
-                    # Try to use win32api for keys if it's a special key or character
-                    # This is complex, so we'll stick to pyautogui for keys for now
-                    # but ensure _pause=False is always honored.
-                    pass
+                # v10: ultra-fast keyboard path via pynput if available
+                if PYNPUT_OK:
+                    try:
+                        from pynput.keyboard import Controller, Key
+                        kb = Controller()
+                        # Map common special keys
+                        special = {
+                            "Enter": Key.enter, "Backspace": Key.backspace, "Tab": Key.tab,
+                            "Escape": Key.esc, "Delete": Key.delete, "Insert": Key.insert,
+                            "Home": Key.home, "End": Key.end, "PageUp": Key.page_up,
+                            "PageDown": Key.page_down, "ArrowUp": Key.up, "ArrowDown": Key.down,
+                            "ArrowLeft": Key.left, "ArrowRight": Key.right,
+                            "Control": Key.ctrl, "Alt": Key.alt, "Shift": Key.shift,
+                            "Meta": Key.cmd, "CapsLock": Key.caps_lock, "NumLock": Key.num_lock,
+                        }
+                        k_obj = special.get(key, key)
+                        if is_down:
+                            kb.press(k_obj)
+                        else:
+                            kb.release(k_obj)
+                        return
+                    except Exception:
+                        pass
+                # Fallback to pyautogui
                 fn = pyautogui.keyDown if is_down else pyautogui.keyUp
                 fn(key, _pause=False)
                 
@@ -1518,7 +1556,17 @@ async def _adv_main(server_url: str, token: str):
 
     frame_task.add_done_callback(_on_task_done)
     cursor_task.add_done_callback(_on_task_done)
-    await asyncio.gather(frame_task, cursor_task, return_exceptions=True)
+    
+    try:
+        # v10: return_exceptions=False so any task death triggers a full restart
+        await asyncio.gather(frame_task, cursor_task, return_exceptions=False)
+    except Exception as e:
+        log.error(f"Advanced Monitor tasks died: {e}")
+    finally:
+        # Ensure no orphan tasks survive to the next reconnect
+        frame_task.cancel()
+        cursor_task.cancel()
+        log.info("Advanced Monitor: tasks cleaned up")
 
 
 _adv_monitor_started = False  # ensure we only start it once
@@ -2570,15 +2618,15 @@ class ScreenRecorder:
 
         chunk_num  = 0
         frame_time = 1.0 / max(fps, 1)
-
-        with mss.mss() as sct:
-            monitors = sct.monitors
-            mon = monitors[min(monitor_idx, len(monitors) - 1)] if len(monitors) > 1 else monitors[0]
-            w, h = mon["width"], mon["height"]
+        
+        # v10: Use DXGICapture for recording if available (ultra-fast)
+        capture = _make_capture()
+        try:
+            sizing = capture.grab()
+            if sizing is None: raise RuntimeError("Capture grab failed")
+            h, w = sizing.shape[:2]
 
             while not self._stop.is_set():
-                # Collect frames for one chunk
-                buf = io.BytesIO()
                 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
                 tmp_path = os.path.join(tempfile.gettempdir(),
                                         f"mview_rec_{rec_id}_{chunk_num}.mp4")
@@ -2588,10 +2636,9 @@ class ScreenRecorder:
                 while not self._stop.is_set() and time.monotonic() < deadline:
                     t0 = time.monotonic()
                     try:
-                        img = sct.grab(mon)
-                        frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
-                        frame = cv2.resize(frame, (w, h))
-                        vw.write(frame)
+                        frame = capture.grab()
+                        if frame is not None:
+                            vw.write(frame)
                     except Exception as e:
                         log.debug(f"ScreenRecorder frame error: {e}")
                     elapsed = time.monotonic() - t0
@@ -2617,6 +2664,9 @@ class ScreenRecorder:
                 finally:
                     try: os.unlink(tmp_path)
                     except Exception: pass
+        finally:
+            try: capture.close()
+            except: pass
 
         self._sio.emit("recording_done", {
             "device_id": CONFIG["DEVICE_TOKEN"],
@@ -2664,13 +2714,14 @@ class NetworkScanner:
     def ping_sweep(subnet: str, timeout: float = 0.4) -> list:
         """ICMP ping sweep of a /24 (e.g. '192.168.1').
 
-        Uses threading for speed — 254 threads max for a /24.
+        Uses ThreadPoolExecutor for controlled concurrency.
         """
         alive: list = []
         lock = threading.Lock()
 
         def _ping(ip: str):
             try:
+                # v10: use -n 1 -w <ms> for fast ping
                 result = subprocess.run(
                     ["ping", "-n", "1", "-w", str(int(timeout * 1000)), ip],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2
@@ -2681,13 +2732,11 @@ class NetworkScanner:
             except Exception:
                 pass
 
-        threads = []
-        for i in range(1, 255):
-            t = threading.Thread(target=_ping, args=(f"{subnet}.{i}",), daemon=True)
-            threads.append(t)
-            t.start()
-        for t in threads:
-            t.join(timeout=3)
+        # Use max 50 concurrent pings to avoid flooding local network/CPU
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            for i in range(1, 255):
+                executor.submit(_ping, f"{subnet}.{i}")
+        
         return alive
 
     @staticmethod
@@ -2751,13 +2800,13 @@ class NetworkScanner:
 class FileWatcher:
     """Monitors file system paths and emits 'file_change' events to server.
 
-    Uses polling (no watchdog library required). For lower latency on
-    environments with watchdog installed, it will use the Observer API.
+    Uses watchdog library for high-performance, event-driven monitoring.
+    Falls back to polling if watchdog is unavailable.
     """
 
     def __init__(self, sio_client):
         self._sio      = sio_client
-        self._watches: dict = {}   # path → (mtime_map, thread, stop_event)
+        self._watches: dict = {}   # path → (observer, event_handler)
         self._lock     = threading.Lock()
 
     def add_watch(self, path: str, recursive: bool = False,
@@ -2765,16 +2814,51 @@ class FileWatcher:
         with self._lock:
             if path in self._watches:
                 return {"success": False, "error": "already_watching", "path": path}
-            stop = threading.Event()
-            t = threading.Thread(
-                target=self._poll_loop,
-                args=(path, recursive, interval, stop),
-                daemon=True, name=f"fwatch-{path[:20]}",
-            )
-            self._watches[path] = {"stop": stop, "thread": t}
-            t.start()
-        log.info(f"FileWatcher: watching {path} recursive={recursive}")
-        return {"success": True, "path": path}
+            
+            try:
+                from watchdog.observers import Observer
+                from watchdog.events import FileSystemEventHandler
+
+                class _Handler(FileSystemEventHandler):
+                    def __init__(self, sio, did, root):
+                        self.sio = sio; self.did = did; self.root = root
+                    def on_any_event(self, event):
+                        if event.is_directory: return
+                        # Debounce/throttle emits if needed, but for now direct emit
+                        try:
+                            self.sio.emit("file_change", {
+                                "device_id":  self.did,
+                                "watch_path": self.root,
+                                "type":       event.event_type,
+                                "path":       event.src_path,
+                                "ts":         datetime.utcnow().isoformat(),
+                            })
+                        except Exception: pass
+
+                obs = Observer()
+                h   = _Handler(self._sio, CONFIG["DEVICE_TOKEN"], path)
+                obs.schedule(h, path, recursive=recursive)
+                obs.start()
+                self._watches[path] = {"observer": obs, "handler": h}
+                log.info(f"FileWatcher: watching {path} via watchdog (recursive={recursive})")
+                return {"success": True, "path": path, "method": "watchdog"}
+            except Exception as e:
+                log.warning(f"FileWatcher: watchdog failed ({e}), falling back to polling")
+                # ... polling fallback implementation ...
+                # (I'll keep the polling fallback as well)
+                return self._add_watch_polling(path, recursive, interval)
+
+    def _add_watch_polling(self, path, recursive, interval):
+        stop = threading.Event()
+        t = threading.Thread(
+            target=self._poll_loop,
+            args=(path, recursive, interval, stop),
+            daemon=True, name=f"fwatch-poll-{path[:20]}",
+        )
+        self._watches[path] = {"stop": stop, "thread": t}
+        t.start()
+        log.info(f"FileWatcher: watching {path} via polling (recursive={recursive})")
+        return {"success": True, "path": path, "method": "polling"}
 
     def remove_watch(self, path: str) -> dict:
         with self._lock:
@@ -3333,20 +3417,49 @@ class ClipboardMonitor:
 
     def _loop(self):
         poll = CONFIG["CLIPBOARD_POLL_MS"] / 1000.0
-        while self.running:
+        
+        # v10: Use Windows Clipboard Listener if available for instant sync
+        if WIN32_OK:
             try:
-                cur = pyperclip.paste()
-                if cur and cur != self._last:
-                    self._last = cur
-                    self.sio.emit("clipboard_data", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content":   cur[:8192],
-                        "length":    len(cur),
-                        "ts":        datetime.utcnow().isoformat(),
-                    })
-            except Exception:
-                pass
+                import win32gui as _gui, win32con as _con, win32api as _api
+                
+                def _wnd_proc(hwnd, msg, wparam, lparam):
+                    if msg == 0x031D: # WM_CLIPBOARDUPDATE
+                        self._check_clipboard()
+                    return _gui.DefWindowProc(hwnd, msg, wparam, lparam)
+
+                wc = _gui.WNDCLASS()
+                wc.lpfnWndProc = _wnd_proc
+                wc.lpszClassName = f"MViewClip_{random.randint(0,9999)}"
+                hinst = wc.hInstance = _api.GetModuleHandle(None)
+                class_atom = _gui.RegisterClass(wc)
+                hwnd = _gui.CreateWindow(class_atom, "MViewClip", 0, 0, 0, 0, 0, 0, 0, hinst, None)
+                ctypes.windll.user32.AddClipboardFormatListener(hwnd)
+                
+                while self.running:
+                    _gui.PumpWaitingMessages()
+                    time.sleep(0.1)
+                return
+            except Exception as e:
+                log.debug(f"Clipboard listener failed ({e}), falling back to polling")
+
+        while self.running:
+            self._check_clipboard()
             time.sleep(poll)
+
+    def _check_clipboard(self):
+        try:
+            cur = pyperclip.paste()
+            if cur and cur != self._last:
+                self._last = cur
+                self.sio.emit("clipboard_data", {
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "content":   cur[:8192],
+                    "length":    len(cur),
+                    "ts":        datetime.utcnow().isoformat(),
+                })
+        except Exception:
+            pass
 
 
 # ════════════════════════════════════════════════════════════════════════════

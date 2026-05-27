@@ -1,0 +1,8 @@
+{"ts": "2026-05-27T12:46:45.277518", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T12:46:50.313364", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T12:52:37.752342", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T12:59:50.776220", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T12:59:55.969129", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:02:49.865460", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:03:36.010588", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:03:40.349817", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
