@@ -186,7 +186,7 @@ JWT_TTL_SECONDS     = int(os.environ.get("JWT_TTL_SECONDS", "3600"))
 ADMIN_JWT_TTL       = int(os.environ.get("ADMIN_JWT_TTL", "900"))
 REDIS_URL           = os.environ.get("REDIS_URL", "").strip()
 MAX_FRAME_KBPS      = int(os.environ.get("MAX_FRAME_KBPS", "0"))   # 0 = unlimited
-FRAME_DEDUP         = os.environ.get("FRAME_DEDUP", "1").strip() not in ("0", "false", "no", "")  # v13: ON by default
+FRAME_DEDUP         = os.environ.get("FRAME_DEDUP", "0").strip() not in ("0", "false", "no", "")  # v14: OFF by default for "no sparing the gpu"
 ORG_ISOLATION       = os.environ.get("ORG_ISOLATION", "0").strip() not in ("0", "false", "no", "")
 WEBHOOK_SECRET      = os.environ.get("WEBHOOK_SECRET", "").strip()
 BULK_INVITE_MAX     = int(os.environ.get("BULK_INVITE_MAX", "1000"))
@@ -1926,8 +1926,11 @@ if SOCKETIO_OK and sio:
             ts_us = int.from_bytes(raw[8:16], "big")
         except Exception:
             pass
-        # Drop frames >2000ms old — prevents lag while tolerating clock drift.
-        if ts_us and (now_us - ts_us) > 2_000_000:
+        # Drop frames >5000ms old — prevents huge lag while tolerating clock drift.
+        # v14.1: relaxed from 150ms to 5000ms because clock skew across internet is common.
+        if ts_us and abs(now_us - ts_us) > 5_000_000:
+            if fc % 100 == 0:
+                log.warning(f"frame_bin: dropping stale frame from {did} (age={ (now_us-ts_us)/1000 }ms)")
             return
 
         # ── v13: Fast dedup — compare first 64 bytes + size (10x faster than SHA-256) ─

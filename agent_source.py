@@ -294,7 +294,7 @@ CONFIG = {
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
     "STREAM_FPS":           60,         # target FPS — range 30-60 (ENTERPRISE LIVE-SYNC)
-    "STREAM_MIN_FPS":       30,         # floor 30fps — guaranteed minimum, no sawtooth
+    "STREAM_MIN_FPS":       60,         # v14: lock at 60fps, no sparing the gpu
     "STREAM_QUALITY":       92,         # quality 92 — crisp lossless-looking output
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",    # "video" or "screenshot"

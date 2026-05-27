@@ -12031,3 +12031,1465 @@ OSError: [WinError 10048] Only one usage of each socket address (protocol/networ
 2026-05-25 00:19:37  INFO      [Dummy-8]  Socket disconnected: cKjsTFCkow57fiT3AAAH
 2026-05-25 00:19:37  DEBUG     [Dummy-8]  Failed to write closing frame -> closing socket
 2026-05-25 00:19:37  DEBUG     [Dummy-8]  Closed WebSocket
+2026-05-27 13:31:09  INFO      [MainThread]  ========================================================================
+2026-05-27 13:31:10  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-27 13:31:10  INFO      [MainThread]  ========================================================================
+2026-05-27 13:31:10  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-27 13:31:10  INFO      [MainThread]    Async mode:            gevent
+2026-05-27 13:31:10  INFO      [MainThread]    Port:                  10000
+2026-05-27 13:31:10  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-27 13:31:10  INFO      [MainThread]    Agent exclusive:       True
+2026-05-27 13:31:10  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-27 13:31:10  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-27 13:31:10  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-27 13:31:10  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-27 13:31:10  INFO      [MainThread]    Max frame size:        4MB
+2026-05-27 13:31:10  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-27 13:31:10  INFO      [MainThread]    Frame dedup (fast):    True
+2026-05-27 13:31:10  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-27 13:31:10  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-27 13:31:10  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-27 13:31:10  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-27 13:31:10  INFO      [MainThread]    JWT enabled:           True
+2026-05-27 13:31:10  INFO      [MainThread]    TOTP enabled:          False
+2026-05-27 13:31:10  INFO      [MainThread]    Redis scale-out:       False
+2026-05-27 13:31:10  INFO      [MainThread]    Org isolation:         False
+2026-05-27 13:31:10  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-27 13:31:10  INFO      [MainThread]    Signed webhooks:       False
+2026-05-27 13:31:10  INFO      [MainThread]    Webhook:               disabled
+2026-05-27 13:31:10  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-27 13:31:10  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-27 13:31:10  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-27 13:31:10  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-27 13:31:10  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-27 13:31:10  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-27 13:31:10  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-27 13:31:10  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-27 13:31:10  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-27 13:31:10  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-27 13:31:10  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-27 13:31:10  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-27 13:31:10  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-27 13:31:10  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-27 13:31:10  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-27 13:31:10  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-27 13:31:10  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-27 13:31:10  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-27 13:31:10  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-27 13:31:10  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-27 13:31:10  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-27 13:31:10  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-27 13:31:10  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-27 13:31:10  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-27 13:31:10  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-27 13:31:10  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-27 13:31:10  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-27 13:31:10  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-27 13:31:10  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-27 13:31:10  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-27 13:31:10  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-27 13:31:10  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 13:31:10  INFO      [MainThread]  ========================================================================
+2026-05-27 13:31:10  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-27 13:31:10  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-27 13:31:10  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-27 13:31:10  INFO      [MainThread]  ========================================================================
+2026-05-27 13:31:31  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:31:31  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:31:31  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:31:31] "GET /dashboard.html HTTP/1.1" 200 458084 0.092072
+2026-05-27 13:31:31  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:31:31  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:31:31  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:31:31] "GET /config.js HTTP/1.1" 200 1177 0.001000
+2026-05-27 13:31:32  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:31:32  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:31:40  INFO      [Dummy-1]  Supabase connected.
+2026-05-27 13:31:40  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:31:40] "GET /status HTTP/1.1" 200 310 8.474564
+2026-05-27 13:31:40  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:40  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:40  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:40] "GET /@vite/client HTTP/1.1" 404 567 0.002002
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Initializing WebSocket
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Validating WebSocket request
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Attempting to upgrade connection
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  WebSocket request accepted, switching protocols
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Failed to write closing frame -> closing socket
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Closed WebSocket
+2026-05-27 13:31:40  DEBUG     [Dummy-4]  Failed to write closing frame -> closing socket
+2026-05-27 13:31:40  DEBUG     [Dummy-4]  Closed WebSocket
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Failed to write closing frame -> closing socket
+2026-05-27 13:31:40  DEBUG     [Dummy-3]  Closed WebSocket
+2026-05-27 13:31:41  DEBUG     [Dummy-5]  Initializing WebSocket
+2026-05-27 13:31:41  DEBUG     [Dummy-5]  Validating WebSocket request
+2026-05-27 13:31:41  DEBUG     [Dummy-5]  Attempting to upgrade connection
+2026-05-27 13:31:41  DEBUG     [Dummy-5]  WebSocket request accepted, switching protocols
+2026-05-27 13:31:41  INFO      [Dummy-5]  Socket connected: 79kbOSEIENdtiyfDAAAC from 127.0.0.1
+2026-05-27 13:31:41  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:41  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:41  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:41] "GET /api/devices HTTP/1.1" 200 368 0.003018
+2026-05-27 13:31:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:48] "GET /status HTTP/1.1" 200 634 0.002005
+2026-05-27 13:31:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:48] "GET /api/devices HTTP/1.1" 200 368 0.002125
+2026-05-27 13:31:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:58] "GET /status HTTP/1.1" 200 634 0.003035
+2026-05-27 13:31:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:31:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:31:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:31:58] "GET /api/devices HTTP/1.1" 200 368 0.002079
+2026-05-27 13:32:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:08] "GET /status HTTP/1.1" 200 634 0.003052
+2026-05-27 13:32:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:08] "GET /api/devices HTTP/1.1" 200 368 0.001009
+2026-05-27 13:32:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:18] "GET /status HTTP/1.1" 200 634 0.002007
+2026-05-27 13:32:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:18] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:32:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:28] "GET /status HTTP/1.1" 200 634 0.001995
+2026-05-27 13:32:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:28] "GET /api/devices HTTP/1.1" 200 368 0.001504
+2026-05-27 13:32:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:38] "GET /status HTTP/1.1" 200 634 0.003511
+2026-05-27 13:32:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:38] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:32:40  INFO      [Dummy-6]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-27 13:32:40  DEBUG     [Dummy-6]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:32:40  DEBUG     [Dummy-7]  Initializing WebSocket
+2026-05-27 13:32:40  DEBUG     [Dummy-7]  Validating WebSocket request
+2026-05-27 13:32:40  INFO      [Dummy-7]  127.0.0.1 - - [2026-05-27 13:32:40] "GET /health HTTP/1.1" 200 634 0.003018
+2026-05-27 13:32:40  DEBUG     [Dummy-6]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 324
+2026-05-27 13:32:47  INFO      [Dummy-8]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:48] "GET /status HTTP/1.1" 200 634 0.005046
+2026-05-27 13:32:49  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:49  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:49  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:49] "GET /api/devices HTTP/1.1" 200 368 0.000504
+2026-05-27 13:32:52  INFO      [Dummy-9]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:53  INFO      [Dummy-10]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:55  INFO      [Dummy-11]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:57  INFO      [Dummy-12]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:58] "GET /status HTTP/1.1" 200 635 0.003500
+2026-05-27 13:32:58  INFO      [Dummy-13]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:32:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:32:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:32:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:32:58] "GET /api/devices HTTP/1.1" 200 368 0.002504
+2026-05-27 13:33:01  INFO      [Dummy-14]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:02  INFO      [Dummy-15]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:03  INFO      [Dummy-16]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:07  INFO      [Dummy-17]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:08] "GET /status HTTP/1.1" 200 635 0.002023
+2026-05-27 13:33:08  INFO      [Dummy-18]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:08] "GET /api/devices HTTP/1.1" 200 368 0.001503
+2026-05-27 13:33:12  INFO      [Dummy-19]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:13  INFO      [Dummy-20]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:17  INFO      [Dummy-21]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:18] "GET /status HTTP/1.1" 200 635 0.003544
+2026-05-27 13:33:18  INFO      [Dummy-22]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:18] "GET /api/devices HTTP/1.1" 200 368 0.002412
+2026-05-27 13:33:23  INFO      [Dummy-23]  Viewer 79kbOSEIENdtiyfDAAAC watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:33:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:28] "GET /status HTTP/1.1" 200 635 0.005004
+2026-05-27 13:33:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:28] "GET /api/devices HTTP/1.1" 200 368 0.002240
+2026-05-27 13:33:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:38] "GET /status HTTP/1.1" 200 635 0.005036
+2026-05-27 13:33:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:38] "GET /api/devices HTTP/1.1" 200 368 0.002205
+2026-05-27 13:33:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:48] "GET /status HTTP/1.1" 200 635 0.003563
+2026-05-27 13:33:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:48] "GET /api/devices HTTP/1.1" 200 368 0.001006
+2026-05-27 13:33:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:58] "GET /status HTTP/1.1" 200 635 0.002514
+2026-05-27 13:33:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:33:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:33:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:33:58] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:34:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:08] "GET /status HTTP/1.1" 200 635 0.003371
+2026-05-27 13:34:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:08] "GET /api/devices HTTP/1.1" 200 368 0.001505
+2026-05-27 13:34:10  INFO      [Dummy-24]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=4 mem=114MB
+2026-05-27 13:34:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:18] "GET /status HTTP/1.1" 200 635 0.002528
+2026-05-27 13:34:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:18] "GET /api/devices HTTP/1.1" 200 368 0.002025
+2026-05-27 13:34:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:28] "GET /status HTTP/1.1" 200 635 0.002666
+2026-05-27 13:34:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:28] "GET /api/devices HTTP/1.1" 200 368 0.002028
+2026-05-27 13:34:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:38] "GET /status HTTP/1.1" 200 635 0.003555
+2026-05-27 13:34:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:38] "GET /api/devices HTTP/1.1" 200 368 0.003514
+2026-05-27 13:34:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:48] "GET /status HTTP/1.1" 200 635 0.002506
+2026-05-27 13:34:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:48] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:34:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:58] "GET /status HTTP/1.1" 200 635 0.004539
+2026-05-27 13:34:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:34:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:34:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:34:58] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:35:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:08] "GET /status HTTP/1.1" 200 635 0.005507
+2026-05-27 13:35:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:08] "GET /api/devices HTTP/1.1" 200 368 0.001500
+2026-05-27 13:35:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:18] "GET /status HTTP/1.1" 200 635 0.003316
+2026-05-27 13:35:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:18] "GET /api/devices HTTP/1.1" 200 368 0.001508
+2026-05-27 13:35:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:28] "GET /status HTTP/1.1" 200 635 0.002998
+2026-05-27 13:35:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:28] "GET /api/devices HTTP/1.1" 200 368 0.002205
+2026-05-27 13:35:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:38] "GET /status HTTP/1.1" 200 635 0.001514
+2026-05-27 13:35:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:38] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 13:35:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:48] "GET /status HTTP/1.1" 200 635 0.004025
+2026-05-27 13:35:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:48] "GET /api/devices HTTP/1.1" 200 368 0.001033
+2026-05-27 13:35:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:58] "GET /status HTTP/1.1" 200 635 0.002520
+2026-05-27 13:35:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:35:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:35:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:35:58] "GET /api/devices HTTP/1.1" 200 368 0.002016
+2026-05-27 13:36:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:08] "GET /status HTTP/1.1" 200 635 0.003508
+2026-05-27 13:36:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:08] "GET /api/devices HTTP/1.1" 200 368 0.002007
+2026-05-27 13:36:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:18] "GET /status HTTP/1.1" 200 635 0.001004
+2026-05-27 13:36:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:18] "GET /api/devices HTTP/1.1" 200 368 0.001510
+2026-05-27 13:36:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:28] "GET /status HTTP/1.1" 200 635 0.005164
+2026-05-27 13:36:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:28] "GET /api/devices HTTP/1.1" 200 368 0.001020
+2026-05-27 13:36:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:38] "GET /status HTTP/1.1" 200 635 0.003541
+2026-05-27 13:36:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:38] "GET /api/devices HTTP/1.1" 200 368 0.001999
+2026-05-27 13:36:40  DEBUG     [Dummy-6]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:36:40  DEBUG     [Dummy-25]  Initializing WebSocket
+2026-05-27 13:36:40  DEBUG     [Dummy-25]  Validating WebSocket request
+2026-05-27 13:36:40  INFO      [Dummy-25]  127.0.0.1 - - [2026-05-27 13:36:40] "GET /health HTTP/1.1" 200 635 0.002504
+2026-05-27 13:36:40  DEBUG     [Dummy-6]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 325
+2026-05-27 13:36:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:48] "GET /status HTTP/1.1" 200 635 0.002023
+2026-05-27 13:36:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:48] "GET /api/devices HTTP/1.1" 200 368 0.000504
+2026-05-27 13:36:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:58] "GET /status HTTP/1.1" 200 635 0.003995
+2026-05-27 13:36:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:36:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:36:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:36:58] "GET /api/devices HTTP/1.1" 200 368 0.003518
+2026-05-27 13:37:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:08] "GET /status HTTP/1.1" 200 635 0.003516
+2026-05-27 13:37:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:08] "GET /api/devices HTTP/1.1" 200 368 0.002009
+2026-05-27 13:37:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:18] "GET /status HTTP/1.1" 200 635 0.002482
+2026-05-27 13:37:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:18] "GET /api/devices HTTP/1.1" 200 368 0.000504
+2026-05-27 13:37:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:28] "GET /status HTTP/1.1" 200 635 0.002507
+2026-05-27 13:37:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:28] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:37:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:38] "GET /status HTTP/1.1" 200 635 0.006027
+2026-05-27 13:37:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:38] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 13:37:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:48] "GET /status HTTP/1.1" 200 635 0.002524
+2026-05-27 13:37:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:48] "GET /api/devices HTTP/1.1" 200 368 0.002000
+2026-05-27 13:37:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:58] "GET /status HTTP/1.1" 200 635 0.002804
+2026-05-27 13:37:58  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:37:58  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:37:58  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:37:58] "GET /api/devices HTTP/1.1" 200 368 0.004093
+2026-05-27 13:38:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:08] "GET /status HTTP/1.1" 200 635 0.004519
+2026-05-27 13:38:08  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:08  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:08  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:08] "GET /api/devices HTTP/1.1" 200 368 0.001201
+2026-05-27 13:38:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:18] "GET /status HTTP/1.1" 200 635 0.004673
+2026-05-27 13:38:18  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:18  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:18  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:18] "GET /api/devices HTTP/1.1" 200 368 0.001001
+2026-05-27 13:38:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:28] "GET /status HTTP/1.1" 200 635 0.003023
+2026-05-27 13:38:28  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:28  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:28  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:28] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:38:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:38] "GET /status HTTP/1.1" 200 635 0.003526
+2026-05-27 13:38:38  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:38  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:38  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:38] "GET /api/devices HTTP/1.1" 200 368 0.001999
+2026-05-27 13:38:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:48] "GET /status HTTP/1.1" 200 635 0.003944
+2026-05-27 13:38:48  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:38:48  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:38:48  INFO      [Dummy-2]  127.0.0.1 - - [2026-05-27 13:38:48] "GET /api/devices HTTP/1.1" 200 368 0.001001
+2026-05-27 13:39:05  INFO      [MainThread]  ========================================================================
+2026-05-27 13:39:05  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-27 13:39:05  INFO      [MainThread]  ========================================================================
+2026-05-27 13:39:05  INFO      [MainThread]    Gevent patched:        True   - MUST be True for stream stability
+2026-05-27 13:39:05  INFO      [MainThread]    Async mode:            gevent
+2026-05-27 13:39:05  INFO      [MainThread]    Port:                  10000
+2026-05-27 13:39:05  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-27 13:39:05  INFO      [MainThread]    Agent exclusive:       True
+2026-05-27 13:39:05  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-27 13:39:05  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-27 13:39:05  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-27 13:39:05  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-27 13:39:05  INFO      [MainThread]    Max frame size:        4MB
+2026-05-27 13:39:05  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-27 13:39:05  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-27 13:39:05  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-27 13:39:05  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-27 13:39:05  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-27 13:39:05  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-27 13:39:05  INFO      [MainThread]    JWT enabled:           True
+2026-05-27 13:39:05  INFO      [MainThread]    TOTP enabled:          False
+2026-05-27 13:39:05  INFO      [MainThread]    Redis scale-out:       False
+2026-05-27 13:39:05  INFO      [MainThread]    Org isolation:         False
+2026-05-27 13:39:05  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-27 13:39:05  INFO      [MainThread]    Signed webhooks:       False
+2026-05-27 13:39:05  INFO      [MainThread]    Webhook:               disabled
+2026-05-27 13:39:05  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-27 13:39:05  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-27 13:39:05  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-27 13:39:05  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-27 13:39:05  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-27 13:39:05  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-27 13:39:05  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-27 13:39:05  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-27 13:39:05  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-27 13:39:05  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-27 13:39:05  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-27 13:39:05  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-27 13:39:05  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-27 13:39:05  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-27 13:39:05  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-27 13:39:05  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-27 13:39:05  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-27 13:39:05  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-27 13:39:05  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-27 13:39:05  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-27 13:39:05  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-27 13:39:05  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-27 13:39:05  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-27 13:39:05  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-27 13:39:05  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-27 13:39:05  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-27 13:39:05  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-27 13:39:05  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-27 13:39:05  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-27 13:39:05  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-27 13:39:05  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-27 13:39:05  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 13:39:05  INFO      [MainThread]  ========================================================================
+2026-05-27 13:39:05  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-27 13:39:05  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-27 13:39:05  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-27 13:39:05  INFO      [MainThread]  ========================================================================
+2026-05-27 13:39:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:13  INFO      [Dummy-1]  Supabase connected.
+2026-05-27 13:39:13  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:13] "GET /status HTTP/1.1" 200 632 4.515528
+2026-05-27 13:39:13  DEBUG     [Dummy-2]  Initializing WebSocket
+2026-05-27 13:39:13  DEBUG     [Dummy-2]  Validating WebSocket request
+2026-05-27 13:39:13  DEBUG     [Dummy-2]  Attempting to upgrade connection
+2026-05-27 13:39:13  DEBUG     [Dummy-2]  WebSocket request accepted, switching protocols
+2026-05-27 13:39:13  INFO      [Dummy-2]  Socket connected: _mtuyxK-CNHeZDUFAAAB from 127.0.0.1
+2026-05-27 13:39:13  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:13  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:13  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:13] "GET /api/devices HTTP/1.1" 200 368 0.003917
+2026-05-27 13:39:13  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:13  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:13  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:13] "GET /api/devices HTTP/1.1" 200 368 0.003022
+2026-05-27 13:39:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:18] "GET /status HTTP/1.1" 200 634 0.002994
+2026-05-27 13:39:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:18] "GET /api/devices HTTP/1.1" 200 368 0.004018
+2026-05-27 13:39:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:28] "GET /status HTTP/1.1" 200 634 0.003555
+2026-05-27 13:39:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:28] "GET /api/devices HTTP/1.1" 200 368 0.001517
+2026-05-27 13:39:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:38] "GET /status HTTP/1.1" 200 634 0.001517
+2026-05-27 13:39:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:38] "GET /api/devices HTTP/1.1" 200 368 0.001286
+2026-05-27 13:39:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:48] "GET /status HTTP/1.1" 200 634 0.003999
+2026-05-27 13:39:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:48] "GET /api/devices HTTP/1.1" 200 368 0.002003
+2026-05-27 13:39:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:58] "GET /status HTTP/1.1" 200 634 0.004539
+2026-05-27 13:39:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:39:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:39:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:39:58] "GET /api/devices HTTP/1.1" 200 368 0.002721
+2026-05-27 13:40:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:08] "GET /status HTTP/1.1" 200 634 0.001999
+2026-05-27 13:40:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:08] "GET /api/devices HTTP/1.1" 200 368 0.001510
+2026-05-27 13:40:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:18] "GET /status HTTP/1.1" 200 634 0.004025
+2026-05-27 13:40:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:18] "GET /api/devices HTTP/1.1" 200 368 0.001508
+2026-05-27 13:40:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:28] "GET /status HTTP/1.1" 200 634 0.002514
+2026-05-27 13:40:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:28] "GET /api/devices HTTP/1.1" 200 368 0.002007
+2026-05-27 13:40:35  INFO      [Dummy-3]  Self-ping: http://127.0.0.1:10000/health every 240s
+2026-05-27 13:40:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:40:35  DEBUG     [Dummy-4]  Initializing WebSocket
+2026-05-27 13:40:35  DEBUG     [Dummy-4]  Validating WebSocket request
+2026-05-27 13:40:35  INFO      [Dummy-4]  127.0.0.1 - - [2026-05-27 13:40:35] "GET /health HTTP/1.1" 200 634 0.002529
+2026-05-27 13:40:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 324
+2026-05-27 13:40:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:38] "GET /status HTTP/1.1" 200 634 0.001999
+2026-05-27 13:40:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:38] "GET /api/devices HTTP/1.1" 200 368 0.002017
+2026-05-27 13:40:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:48] "GET /status HTTP/1.1" 200 635 0.001998
+2026-05-27 13:40:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:48] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 13:40:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:58] "GET /status HTTP/1.1" 200 635 0.003544
+2026-05-27 13:40:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:40:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:40:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:40:58] "GET /api/devices HTTP/1.1" 200 368 0.003514
+2026-05-27 13:41:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:08] "GET /status HTTP/1.1" 200 635 0.002518
+2026-05-27 13:41:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:08] "GET /api/devices HTTP/1.1" 200 368 0.002583
+2026-05-27 13:41:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:18] "GET /status HTTP/1.1" 200 635 0.004020
+2026-05-27 13:41:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:18] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:41:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:28] "GET /status HTTP/1.1" 200 635 0.001998
+2026-05-27 13:41:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:28] "GET /api/devices HTTP/1.1" 200 368 0.001509
+2026-05-27 13:41:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:38] "GET /status HTTP/1.1" 200 635 0.002506
+2026-05-27 13:41:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:38] "GET /api/devices HTTP/1.1" 200 368 0.002005
+2026-05-27 13:41:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:48] "GET /status HTTP/1.1" 200 635 0.002048
+2026-05-27 13:41:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:48] "GET /api/devices HTTP/1.1" 200 368 0.002102
+2026-05-27 13:41:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:58] "GET /status HTTP/1.1" 200 635 0.004005
+2026-05-27 13:41:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:41:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:41:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:41:58] "GET /api/devices HTTP/1.1" 200 368 0.001007
+2026-05-27 13:42:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:08] "GET /status HTTP/1.1" 200 635 0.002525
+2026-05-27 13:42:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:08] "GET /api/devices HTTP/1.1" 200 368 0.001001
+2026-05-27 13:42:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:18] "GET /status HTTP/1.1" 200 635 0.003519
+2026-05-27 13:42:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:18] "GET /api/devices HTTP/1.1" 200 368 0.002036
+2026-05-27 13:42:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:28] "GET /status HTTP/1.1" 200 635 0.003004
+2026-05-27 13:42:28  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:28  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:28  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:28] "GET /api/devices HTTP/1.1" 200 368 0.000996
+2026-05-27 13:42:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:38] "GET /status HTTP/1.1" 200 635 0.004544
+2026-05-27 13:42:38  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:38  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:38  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:38] "GET /api/devices HTTP/1.1" 200 368 0.001006
+2026-05-27 13:42:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:48] "GET /status HTTP/1.1" 200 635 0.002018
+2026-05-27 13:42:48  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:48  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:48  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:48] "GET /api/devices HTTP/1.1" 200 368 0.001022
+2026-05-27 13:42:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:58] "GET /status HTTP/1.1" 200 635 0.002536
+2026-05-27 13:42:58  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:42:58  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:42:58  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:42:58] "GET /api/devices HTTP/1.1" 200 368 0.001500
+2026-05-27 13:43:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:08] "GET /status HTTP/1.1" 200 635 0.001998
+2026-05-27 13:43:08  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:08  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:08  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:08] "GET /api/devices HTTP/1.1" 200 368 0.000503
+2026-05-27 13:43:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:18] "GET /status HTTP/1.1" 200 635 0.003996
+2026-05-27 13:43:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:18] "GET /api/devices HTTP/1.1" 200 368 0.001527
+2026-05-27 13:43:23  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:23  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:23  DEBUG     [Dummy-2]  Closed WebSocket
+2026-05-27 13:43:23  DEBUG     [Dummy-5]  Failed to write closing frame -> closing socket
+2026-05-27 13:43:23  DEBUG     [Dummy-5]  Closed WebSocket
+2026-05-27 13:43:23  INFO      [Dummy-2]  Socket disconnected: _mtuyxK-CNHeZDUFAAAB
+2026-05-27 13:43:23  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:23] "GET /dashboard.html HTTP/1.1" 200 458453 0.443892
+2026-05-27 13:43:24  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:24  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:24  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:24] "GET /config.js HTTP/1.1" 200 1177 0.000999
+2026-05-27 13:43:24  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:24  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:24  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:24] "GET /status HTTP/1.1" 200 635 0.005001
+2026-05-27 13:43:25  DEBUG     [Dummy-6]  Initializing WebSocket
+2026-05-27 13:43:25  DEBUG     [Dummy-6]  Validating WebSocket request
+2026-05-27 13:43:25  DEBUG     [Dummy-6]  Attempting to upgrade connection
+2026-05-27 13:43:25  DEBUG     [Dummy-6]  WebSocket request accepted, switching protocols
+2026-05-27 13:43:25  INFO      [Dummy-6]  Socket connected: gMcFj3gxvUJ_O48yAAAD from 127.0.0.1
+2026-05-27 13:43:25  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:25  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:25  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:25] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:43:25  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:25  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:25  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:25] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 13:43:29  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:29  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:29  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:29] "GET /@vite/client HTTP/1.1" 404 567 0.001999
+2026-05-27 13:43:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:36] "GET /status HTTP/1.1" 200 635 0.003037
+2026-05-27 13:43:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:36] "GET /api/devices HTTP/1.1" 200 368 0.001510
+2026-05-27 13:43:41  INFO      [Dummy-7]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:46] "GET /status HTTP/1.1" 200 635 0.002997
+2026-05-27 13:43:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:46] "GET /api/devices HTTP/1.1" 200 368 0.002070
+2026-05-27 13:43:46  INFO      [Dummy-8]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:47  INFO      [Dummy-9]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:49  INFO      [Dummy-10]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:51  INFO      [Dummy-11]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:52  INFO      [Dummy-12]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:55  INFO      [Dummy-13]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:56] "GET /status HTTP/1.1" 200 635 0.002516
+2026-05-27 13:43:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:43:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:43:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:43:56] "GET /api/devices HTTP/1.1" 200 368 0.001143
+2026-05-27 13:43:56  INFO      [Dummy-14]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:43:57  INFO      [Dummy-15]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:01  INFO      [Dummy-16]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:02  INFO      [Dummy-17]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:05  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=4 mem=114MB
+2026-05-27 13:44:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:06] "GET /status HTTP/1.1" 200 635 0.003003
+2026-05-27 13:44:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:06] "GET /api/devices HTTP/1.1" 200 368 0.002507
+2026-05-27 13:44:06  INFO      [Dummy-19]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:07  INFO      [Dummy-20]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:11  INFO      [Dummy-21]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:12  INFO      [Dummy-22]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:16] "GET /status HTTP/1.1" 200 635 0.005543
+2026-05-27 13:44:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:16] "GET /api/devices HTTP/1.1" 200 368 0.001505
+2026-05-27 13:44:17  INFO      [Dummy-23]  Viewer gMcFj3gxvUJ_O48yAAAD watching MV-5F3B23-8BD7A7-4B1392  fps=60 quality=85
+2026-05-27 13:44:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:26] "GET /status HTTP/1.1" 200 635 0.003998
+2026-05-27 13:44:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:26] "GET /api/devices HTTP/1.1" 200 368 0.001509
+2026-05-27 13:44:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:44:35  DEBUG     [Dummy-24]  Initializing WebSocket
+2026-05-27 13:44:35  DEBUG     [Dummy-24]  Validating WebSocket request
+2026-05-27 13:44:35  INFO      [Dummy-24]  127.0.0.1 - - [2026-05-27 13:44:35] "GET /health HTTP/1.1" 200 635 0.002516
+2026-05-27 13:44:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 325
+2026-05-27 13:44:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:36] "GET /status HTTP/1.1" 200 635 0.002997
+2026-05-27 13:44:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:36] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:44:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:46] "GET /status HTTP/1.1" 200 635 0.003040
+2026-05-27 13:44:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:46] "GET /api/devices HTTP/1.1" 200 368 0.002502
+2026-05-27 13:44:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:56] "GET /status HTTP/1.1" 200 635 0.002115
+2026-05-27 13:44:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:44:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:44:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:44:56] "GET /api/devices HTTP/1.1" 200 368 0.001502
+2026-05-27 13:45:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:06] "GET /status HTTP/1.1" 200 635 0.002130
+2026-05-27 13:45:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:06] "GET /api/devices HTTP/1.1" 200 368 0.002517
+2026-05-27 13:45:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:16] "GET /status HTTP/1.1" 200 635 0.002512
+2026-05-27 13:45:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:16] "GET /api/devices HTTP/1.1" 200 368 0.001574
+2026-05-27 13:45:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:26] "GET /status HTTP/1.1" 200 635 0.002017
+2026-05-27 13:45:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:26] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 13:45:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:36] "GET /status HTTP/1.1" 200 635 0.000999
+2026-05-27 13:45:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:36] "GET /api/devices HTTP/1.1" 200 368 0.002018
+2026-05-27 13:45:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:46] "GET /status HTTP/1.1" 200 635 0.005047
+2026-05-27 13:45:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:46] "GET /api/devices HTTP/1.1" 200 368 0.001000
+2026-05-27 13:45:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:56] "GET /status HTTP/1.1" 200 635 0.002999
+2026-05-27 13:45:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:45:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:45:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:45:56] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:46:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:06] "GET /status HTTP/1.1" 200 635 0.004520
+2026-05-27 13:46:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:06] "GET /api/devices HTTP/1.1" 200 368 0.001002
+2026-05-27 13:46:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:16] "GET /status HTTP/1.1" 200 635 0.003018
+2026-05-27 13:46:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:16] "GET /api/devices HTTP/1.1" 200 368 0.001503
+2026-05-27 13:46:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:26] "GET /status HTTP/1.1" 200 635 0.004019
+2026-05-27 13:46:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:26] "GET /api/devices HTTP/1.1" 200 368 0.001523
+2026-05-27 13:46:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:36] "GET /status HTTP/1.1" 200 635 0.002520
+2026-05-27 13:46:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:36] "GET /api/devices HTTP/1.1" 200 368 0.002503
+2026-05-27 13:46:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:46] "GET /status HTTP/1.1" 200 635 0.002533
+2026-05-27 13:46:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:46] "GET /api/devices HTTP/1.1" 200 368 0.001509
+2026-05-27 13:46:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:56] "GET /status HTTP/1.1" 200 635 0.002999
+2026-05-27 13:46:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:46:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:46:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:46:56] "GET /api/devices HTTP/1.1" 200 368 0.000794
+2026-05-27 13:47:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:06] "GET /status HTTP/1.1" 200 635 0.004516
+2026-05-27 13:47:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:06] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:47:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:16] "GET /status HTTP/1.1" 200 635 0.004550
+2026-05-27 13:47:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:16] "GET /api/devices HTTP/1.1" 200 368 0.001003
+2026-05-27 13:47:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:26] "GET /status HTTP/1.1" 200 635 0.003572
+2026-05-27 13:47:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:26] "GET /api/devices HTTP/1.1" 200 368 0.000504
+2026-05-27 13:47:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:36] "GET /status HTTP/1.1" 200 635 0.002002
+2026-05-27 13:47:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:36] "GET /api/devices HTTP/1.1" 200 368 0.002028
+2026-05-27 13:47:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:46] "GET /status HTTP/1.1" 200 635 0.002525
+2026-05-27 13:47:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:46] "GET /api/devices HTTP/1.1" 200 368 0.002038
+2026-05-27 13:47:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:56] "GET /status HTTP/1.1" 200 635 0.001998
+2026-05-27 13:47:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:47:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:47:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:47:56] "GET /api/devices HTTP/1.1" 200 368 0.001046
+2026-05-27 13:48:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:06] "GET /status HTTP/1.1" 200 635 0.010451
+2026-05-27 13:48:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:06] "GET /api/devices HTTP/1.1" 200 368 0.003024
+2026-05-27 13:48:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:16] "GET /status HTTP/1.1" 200 635 0.002004
+2026-05-27 13:48:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:16] "GET /api/devices HTTP/1.1" 200 368 0.000513
+2026-05-27 13:48:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:26] "GET /status HTTP/1.1" 200 635 0.002003
+2026-05-27 13:48:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:26] "GET /api/devices HTTP/1.1" 200 368 0.001501
+2026-05-27 13:48:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:48:35  DEBUG     [Dummy-25]  Initializing WebSocket
+2026-05-27 13:48:35  DEBUG     [Dummy-25]  Validating WebSocket request
+2026-05-27 13:48:35  INFO      [Dummy-25]  127.0.0.1 - - [2026-05-27 13:48:35] "GET /health HTTP/1.1" 200 635 0.002520
+2026-05-27 13:48:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 325
+2026-05-27 13:48:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:36] "GET /status HTTP/1.1" 200 635 0.003584
+2026-05-27 13:48:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:36] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:48:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:46] "GET /status HTTP/1.1" 200 635 0.002692
+2026-05-27 13:48:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:46] "GET /api/devices HTTP/1.1" 200 368 0.002531
+2026-05-27 13:48:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:56] "GET /status HTTP/1.1" 200 635 0.001998
+2026-05-27 13:48:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:48:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:48:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:48:56] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 13:49:05  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 13:49:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:06] "GET /status HTTP/1.1" 200 635 0.003559
+2026-05-27 13:49:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:06] "GET /api/devices HTTP/1.1" 200 368 0.000504
+2026-05-27 13:49:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:16] "GET /status HTTP/1.1" 200 635 0.003002
+2026-05-27 13:49:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:16] "GET /api/devices HTTP/1.1" 200 368 0.002000
+2026-05-27 13:49:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:26] "GET /status HTTP/1.1" 200 635 0.002504
+2026-05-27 13:49:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:26] "GET /api/devices HTTP/1.1" 200 368 0.001016
+2026-05-27 13:49:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:36] "GET /status HTTP/1.1" 200 635 0.002000
+2026-05-27 13:49:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:36] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:49:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:46] "GET /status HTTP/1.1" 200 635 0.002509
+2026-05-27 13:49:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:46] "GET /api/devices HTTP/1.1" 200 368 0.001000
+2026-05-27 13:49:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:56] "GET /status HTTP/1.1" 200 635 0.002844
+2026-05-27 13:49:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:49:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:49:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:49:56] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:50:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:06] "GET /status HTTP/1.1" 200 635 0.001935
+2026-05-27 13:50:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:06] "GET /api/devices HTTP/1.1" 200 368 0.002533
+2026-05-27 13:50:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:16] "GET /status HTTP/1.1" 200 635 0.002501
+2026-05-27 13:50:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:16] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 13:50:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:26] "GET /status HTTP/1.1" 200 635 0.002502
+2026-05-27 13:50:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:26] "GET /api/devices HTTP/1.1" 200 368 0.001011
+2026-05-27 13:50:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:36] "GET /status HTTP/1.1" 200 635 0.003508
+2026-05-27 13:50:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:36] "GET /api/devices HTTP/1.1" 200 368 0.001512
+2026-05-27 13:50:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:46] "GET /status HTTP/1.1" 200 635 0.003505
+2026-05-27 13:50:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:46] "GET /api/devices HTTP/1.1" 200 368 0.002004
+2026-05-27 13:50:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:56] "GET /status HTTP/1.1" 200 635 0.002001
+2026-05-27 13:50:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:50:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:50:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:50:56] "GET /api/devices HTTP/1.1" 200 368 0.002007
+2026-05-27 13:51:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:06] "GET /status HTTP/1.1" 200 635 0.002679
+2026-05-27 13:51:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:06] "GET /api/devices HTTP/1.1" 200 368 0.001034
+2026-05-27 13:51:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:16] "GET /status HTTP/1.1" 200 635 0.002885
+2026-05-27 13:51:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:16] "GET /api/devices HTTP/1.1" 200 368 0.000996
+2026-05-27 13:51:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:26] "GET /status HTTP/1.1" 200 635 0.005536
+2026-05-27 13:51:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:26] "GET /api/devices HTTP/1.1" 200 368 0.002003
+2026-05-27 13:51:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:36] "GET /status HTTP/1.1" 200 635 0.001502
+2026-05-27 13:51:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:36] "GET /api/devices HTTP/1.1" 200 368 0.001999
+2026-05-27 13:51:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:46] "GET /status HTTP/1.1" 200 635 0.002586
+2026-05-27 13:51:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:46] "GET /api/devices HTTP/1.1" 200 368 0.001529
+2026-05-27 13:51:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:56] "GET /status HTTP/1.1" 200 635 0.002563
+2026-05-27 13:51:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:51:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:51:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:51:56] "GET /api/devices HTTP/1.1" 200 368 0.001999
+2026-05-27 13:52:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:06] "GET /status HTTP/1.1" 200 635 0.002897
+2026-05-27 13:52:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:06] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 13:52:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:16] "GET /status HTTP/1.1" 200 635 0.002526
+2026-05-27 13:52:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:16] "GET /api/devices HTTP/1.1" 200 368 0.004997
+2026-05-27 13:52:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:26] "GET /status HTTP/1.1" 200 635 0.003572
+2026-05-27 13:52:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:26] "GET /api/devices HTTP/1.1" 200 368 0.002535
+2026-05-27 13:52:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:52:35  DEBUG     [Dummy-26]  Initializing WebSocket
+2026-05-27 13:52:35  DEBUG     [Dummy-26]  Validating WebSocket request
+2026-05-27 13:52:35  INFO      [Dummy-26]  127.0.0.1 - - [2026-05-27 13:52:35] "GET /health HTTP/1.1" 200 635 0.001505
+2026-05-27 13:52:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 325
+2026-05-27 13:52:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:36] "GET /status HTTP/1.1" 200 635 0.003817
+2026-05-27 13:52:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:36] "GET /api/devices HTTP/1.1" 200 368 0.001001
+2026-05-27 13:52:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:46] "GET /status HTTP/1.1" 200 635 0.003001
+2026-05-27 13:52:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:46] "GET /api/devices HTTP/1.1" 200 368 0.001508
+2026-05-27 13:52:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:56] "GET /status HTTP/1.1" 200 635 0.002284
+2026-05-27 13:52:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:52:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:52:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:52:56] "GET /api/devices HTTP/1.1" 200 368 0.002025
+2026-05-27 13:53:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:06] "GET /status HTTP/1.1" 200 635 0.003531
+2026-05-27 13:53:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:06] "GET /api/devices HTTP/1.1" 200 368 0.001388
+2026-05-27 13:53:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:16] "GET /status HTTP/1.1" 200 635 0.002647
+2026-05-27 13:53:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:16] "GET /api/devices HTTP/1.1" 200 368 0.002000
+2026-05-27 13:53:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:26] "GET /status HTTP/1.1" 200 635 0.002521
+2026-05-27 13:53:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:26] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:53:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:36] "GET /status HTTP/1.1" 200 635 0.002507
+2026-05-27 13:53:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:36] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 13:53:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:46] "GET /status HTTP/1.1" 200 635 0.003389
+2026-05-27 13:53:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:46] "GET /api/devices HTTP/1.1" 200 368 0.002000
+2026-05-27 13:53:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:56] "GET /status HTTP/1.1" 200 635 0.002002
+2026-05-27 13:53:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:53:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:53:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:53:56] "GET /api/devices HTTP/1.1" 200 368 0.002001
+2026-05-27 13:54:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:06] "GET /status HTTP/1.1" 200 635 0.002998
+2026-05-27 13:54:06  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 13:54:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:06] "GET /api/devices HTTP/1.1" 200 368 0.002509
+2026-05-27 13:54:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:16] "GET /status HTTP/1.1" 200 635 0.002503
+2026-05-27 13:54:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:16] "GET /api/devices HTTP/1.1" 200 368 0.001998
+2026-05-27 13:54:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:26] "GET /status HTTP/1.1" 200 635 0.003696
+2026-05-27 13:54:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:26] "GET /api/devices HTTP/1.1" 200 368 0.000997
+2026-05-27 13:54:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:36] "GET /status HTTP/1.1" 200 635 0.003000
+2026-05-27 13:54:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:36] "GET /api/devices HTTP/1.1" 200 368 0.001356
+2026-05-27 13:54:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:46] "GET /status HTTP/1.1" 200 635 0.001996
+2026-05-27 13:54:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:46] "GET /api/devices HTTP/1.1" 200 368 0.002525
+2026-05-27 13:54:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:56] "GET /status HTTP/1.1" 200 635 0.002431
+2026-05-27 13:54:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:54:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:54:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:54:56] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 13:55:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:06] "GET /status HTTP/1.1" 200 635 0.001506
+2026-05-27 13:55:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:06] "GET /api/devices HTTP/1.1" 200 368 0.002001
+2026-05-27 13:55:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:16] "GET /status HTTP/1.1" 200 635 0.003013
+2026-05-27 13:55:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:16] "GET /api/devices HTTP/1.1" 200 368 0.002015
+2026-05-27 13:55:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:26] "GET /status HTTP/1.1" 200 635 0.003666
+2026-05-27 13:55:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:26] "GET /api/devices HTTP/1.1" 200 368 0.003624
+2026-05-27 13:55:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:36] "GET /status HTTP/1.1" 200 635 0.003537
+2026-05-27 13:55:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:36] "GET /api/devices HTTP/1.1" 200 368 0.001520
+2026-05-27 13:55:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:46] "GET /status HTTP/1.1" 200 636 0.003349
+2026-05-27 13:55:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:46] "GET /api/devices HTTP/1.1" 200 368 0.002053
+2026-05-27 13:55:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:56] "GET /status HTTP/1.1" 200 636 0.002023
+2026-05-27 13:55:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:55:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:55:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:55:56] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 13:56:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:56:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:56:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:56:06] "GET /status HTTP/1.1" 200 636 0.001530
+2026-05-27 13:56:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:56:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:56:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:56:06] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 13:56:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:56:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:56:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:56:16] "GET /status HTTP/1.1" 200 636 0.003043
+2026-05-27 13:56:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:56:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:56:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:56:16] "GET /api/devices HTTP/1.1" 200 368 0.002026
+2026-05-27 13:56:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 13:56:35  DEBUG     [Dummy-27]  Initializing WebSocket
+2026-05-27 13:56:35  DEBUG     [Dummy-27]  Validating WebSocket request
+2026-05-27 13:56:35  INFO      [Dummy-27]  127.0.0.1 - - [2026-05-27 13:56:35] "GET /health HTTP/1.1" 200 636 0.004080
+2026-05-27 13:56:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 13:57:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:57:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:57:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:57:00] "GET /status HTTP/1.1" 200 636 0.002012
+2026-05-27 13:57:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:57:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:57:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:57:01] "GET /api/devices HTTP/1.1" 200 368 0.001514
+2026-05-27 13:58:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:58:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:58:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:58:00] "GET /status HTTP/1.1" 200 636 0.004411
+2026-05-27 13:58:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:58:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:58:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:58:01] "GET /api/devices HTTP/1.1" 200 368 0.001878
+2026-05-27 13:59:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:59:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:59:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:59:00] "GET /status HTTP/1.1" 200 636 0.001998
+2026-05-27 13:59:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 13:59:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 13:59:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 13:59:00] "GET /api/devices HTTP/1.1" 200 368 0.002053
+2026-05-27 13:59:06  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 14:00:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:00:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:00:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:00:00] "GET /status HTTP/1.1" 200 636 0.002188
+2026-05-27 14:00:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:00:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:00:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:00:00] "GET /api/devices HTTP/1.1" 200 368 0.002032
+2026-05-27 14:00:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:00:35  DEBUG     [Dummy-28]  Initializing WebSocket
+2026-05-27 14:00:35  DEBUG     [Dummy-28]  Validating WebSocket request
+2026-05-27 14:00:35  INFO      [Dummy-28]  127.0.0.1 - - [2026-05-27 14:00:35] "GET /health HTTP/1.1" 200 636 0.003694
+2026-05-27 14:00:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:01:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:01:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:01:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:01:00] "GET /status HTTP/1.1" 200 636 0.001023
+2026-05-27 14:01:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:01:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:01:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:01:00] "GET /api/devices HTTP/1.1" 200 368 0.001110
+2026-05-27 14:02:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:02:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:02:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:02:00] "GET /status HTTP/1.1" 200 636 0.002690
+2026-05-27 14:02:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:02:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:02:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:02:01] "GET /api/devices HTTP/1.1" 200 368 0.001230
+2026-05-27 14:03:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:03:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:03:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:03:00] "GET /status HTTP/1.1" 200 636 0.001000
+2026-05-27 14:03:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:03:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:03:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:03:00] "GET /api/devices HTTP/1.1" 200 368 0.000673
+2026-05-27 14:04:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:04:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:04:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:04:00] "GET /status HTTP/1.1" 200 636 0.002018
+2026-05-27 14:04:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:04:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:04:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:04:00] "GET /api/devices HTTP/1.1" 200 368 0.000998
+2026-05-27 14:04:06  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 14:04:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:04:35  DEBUG     [Dummy-29]  Initializing WebSocket
+2026-05-27 14:04:35  DEBUG     [Dummy-29]  Validating WebSocket request
+2026-05-27 14:04:35  INFO      [Dummy-29]  127.0.0.1 - - [2026-05-27 14:04:35] "GET /health HTTP/1.1" 200 636 0.003671
+2026-05-27 14:04:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:05:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:05:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:05:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:05:00] "GET /status HTTP/1.1" 200 636 0.002372
+2026-05-27 14:05:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:05:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:05:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:05:00] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 14:06:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:06:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:06:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:06:00] "GET /status HTTP/1.1" 200 636 0.005966
+2026-05-27 14:06:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:06:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:06:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:06:01] "GET /api/devices HTTP/1.1" 200 368 0.001510
+2026-05-27 14:07:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:07:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:07:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:07:00] "GET /status HTTP/1.1" 200 636 0.002198
+2026-05-27 14:07:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:07:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:07:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:07:00] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 14:08:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:08:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:08:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:08:00] "GET /status HTTP/1.1" 200 636 0.003938
+2026-05-27 14:08:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:08:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:08:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:08:01] "GET /api/devices HTTP/1.1" 200 368 0.002267
+2026-05-27 14:08:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:08:35  DEBUG     [Dummy-30]  Initializing WebSocket
+2026-05-27 14:08:35  DEBUG     [Dummy-30]  Validating WebSocket request
+2026-05-27 14:08:35  INFO      [Dummy-30]  127.0.0.1 - - [2026-05-27 14:08:35] "GET /health HTTP/1.1" 200 636 0.000000
+2026-05-27 14:08:35  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:09:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:09:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:09:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:09:00] "GET /status HTTP/1.1" 200 636 0.003118
+2026-05-27 14:09:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:09:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:09:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:09:00] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 14:09:06  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 14:10:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:10:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:10:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:10:00] "GET /status HTTP/1.1" 200 636 0.002025
+2026-05-27 14:10:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:10:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:10:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:10:00] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 14:11:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:11:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:11:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:11:00] "GET /status HTTP/1.1" 200 636 0.003047
+2026-05-27 14:11:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:11:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:11:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:11:01] "GET /api/devices HTTP/1.1" 200 368 0.002042
+2026-05-27 14:12:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:12:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:12:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:12:00] "GET /status HTTP/1.1" 200 636 0.000000
+2026-05-27 14:12:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:12:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:12:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:12:00] "GET /api/devices HTTP/1.1" 200 368 0.002008
+2026-05-27 14:12:35  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:12:37  DEBUG     [Dummy-31]  Initializing WebSocket
+2026-05-27 14:12:37  DEBUG     [Dummy-31]  Validating WebSocket request
+2026-05-27 14:12:37  INFO      [Dummy-31]  127.0.0.1 - - [2026-05-27 14:12:37] "GET /health HTTP/1.1" 200 636 0.003050
+2026-05-27 14:12:37  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:13:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:13:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:13:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:13:00] "GET /status HTTP/1.1" 200 636 0.011105
+2026-05-27 14:13:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:13:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:13:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:13:01] "GET /api/devices HTTP/1.1" 200 368 0.001506
+2026-05-27 14:14:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:14:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:14:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:14:00] "GET /status HTTP/1.1" 200 636 0.002017
+2026-05-27 14:14:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:14:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:14:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:14:00] "GET /api/devices HTTP/1.1" 200 368 0.001546
+2026-05-27 14:14:07  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 14:15:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:15:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:15:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:15:00] "GET /status HTTP/1.1" 200 636 0.001000
+2026-05-27 14:15:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:15:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:15:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:15:00] "GET /api/devices HTTP/1.1" 200 368 0.001536
+2026-05-27 14:16:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:16:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:16:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:16:00] "GET /status HTTP/1.1" 200 636 0.003027
+2026-05-27 14:16:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:16:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:16:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:16:00] "GET /api/devices HTTP/1.1" 200 368 0.001073
+2026-05-27 14:16:37  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:16:37  DEBUG     [Dummy-32]  Initializing WebSocket
+2026-05-27 14:16:37  DEBUG     [Dummy-32]  Validating WebSocket request
+2026-05-27 14:16:37  INFO      [Dummy-32]  127.0.0.1 - - [2026-05-27 14:16:37] "GET /health HTTP/1.1" 200 636 0.004234
+2026-05-27 14:16:37  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:17:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:17:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:17:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:17:00] "GET /status HTTP/1.1" 200 636 0.002534
+2026-05-27 14:17:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:17:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:17:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:17:00] "GET /api/devices HTTP/1.1" 200 368 0.002560
+2026-05-27 14:18:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:18:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:18:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:18:00] "GET /status HTTP/1.1" 200 636 0.003541
+2026-05-27 14:18:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:18:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:18:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:18:00] "GET /api/devices HTTP/1.1" 200 368 0.001018
+2026-05-27 14:19:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:19:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:19:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:19:00] "GET /status HTTP/1.1" 200 636 0.002645
+2026-05-27 14:19:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:19:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:19:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:19:01] "GET /api/devices HTTP/1.1" 200 368 0.001002
+2026-05-27 14:19:07  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=114MB
+2026-05-27 14:20:05  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:20:05  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:20:05  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:20:05] "GET /status HTTP/1.1" 200 636 0.002542
+2026-05-27 14:20:05  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:20:05  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:20:05  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:20:05] "GET /api/devices HTTP/1.1" 200 368 0.002225
+2026-05-27 14:20:37  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:20:37  DEBUG     [Dummy-33]  Initializing WebSocket
+2026-05-27 14:20:37  DEBUG     [Dummy-33]  Validating WebSocket request
+2026-05-27 14:20:37  INFO      [Dummy-33]  127.0.0.1 - - [2026-05-27 14:20:37] "GET /health HTTP/1.1" 200 636 0.002505
+2026-05-27 14:20:37  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 326
+2026-05-27 14:21:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:21:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:21:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:21:00] "GET /status HTTP/1.1" 200 636 0.002328
+2026-05-27 14:21:01  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:21:01  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:21:01  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:21:01] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 14:22:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:22:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:22:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:22:00] "GET /status HTTP/1.1" 200 635 0.002017
+2026-05-27 14:22:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:22:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:22:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:22:00] "GET /api/devices HTTP/1.1" 200 368 0.001007
+2026-05-27 14:23:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:23:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:23:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:23:00] "GET /status HTTP/1.1" 200 635 0.004158
+2026-05-27 14:23:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:23:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:23:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:23:00] "GET /api/devices HTTP/1.1" 200 368 0.002131
+2026-05-27 14:24:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:00] "GET /status HTTP/1.1" 200 635 0.002155
+2026-05-27 14:24:00  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:00  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:00  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:00] "GET /api/devices HTTP/1.1" 200 368 0.001007
+2026-05-27 14:24:07  INFO      [Dummy-18]  Watchdog health | devices=0 viewers=1 gop_bufs=0 threads=5 mem=51MB
+2026-05-27 14:24:22  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:22  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:22  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:22] "GET /status HTTP/1.1" 200 635 0.004428
+2026-05-27 14:24:24  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:24  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:24  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:24] "GET /api/devices HTTP/1.1" 200 368 0.000000
+2026-05-27 14:24:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:26] "GET /status HTTP/1.1" 200 635 0.002993
+2026-05-27 14:24:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:26] "GET /api/devices HTTP/1.1" 200 368 0.002000
+2026-05-27 14:24:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:36] "GET /status HTTP/1.1" 200 635 0.003001
+2026-05-27 14:24:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:36] "GET /api/devices HTTP/1.1" 200 368 0.000999
+2026-05-27 14:24:37  DEBUG     [Dummy-3]  Starting new HTTP connection (1): 127.0.0.1:10000
+2026-05-27 14:24:37  DEBUG     [Dummy-34]  Initializing WebSocket
+2026-05-27 14:24:37  DEBUG     [Dummy-34]  Validating WebSocket request
+2026-05-27 14:24:37  INFO      [Dummy-34]  127.0.0.1 - - [2026-05-27 14:24:37] "GET /health HTTP/1.1" 200 635 0.004001
+2026-05-27 14:24:37  DEBUG     [Dummy-3]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 325
+2026-05-27 14:24:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:46] "GET /status HTTP/1.1" 200 635 0.002509
+2026-05-27 14:24:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:46] "GET /api/devices HTTP/1.1" 200 368 0.000996
+2026-05-27 14:24:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:56] "GET /status HTTP/1.1" 200 635 0.003519
+2026-05-27 14:24:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:24:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:24:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:24:56] "GET /api/devices HTTP/1.1" 200 368 0.001506
+2026-05-27 14:25:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:06] "GET /status HTTP/1.1" 200 635 0.003527
+2026-05-27 14:25:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:06] "GET /api/devices HTTP/1.1" 200 368 0.002025
+2026-05-27 14:25:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:16] "GET /status HTTP/1.1" 200 635 0.002003
+2026-05-27 14:25:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:16] "GET /api/devices HTTP/1.1" 200 368 0.002048
+2026-05-27 14:25:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:26] "GET /status HTTP/1.1" 200 635 0.011247
+2026-05-27 14:25:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:26] "GET /api/devices HTTP/1.1" 200 368 0.003528
+2026-05-27 14:25:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:36] "GET /status HTTP/1.1" 200 635 0.002536
+2026-05-27 14:25:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:36] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 14:25:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:46] "GET /status HTTP/1.1" 200 635 0.005061
+2026-05-27 14:25:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:46] "GET /api/devices HTTP/1.1" 200 368 0.002025
+2026-05-27 14:25:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:56] "GET /status HTTP/1.1" 200 635 0.002495
+2026-05-27 14:25:56  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:25:56  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:25:56  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:25:56] "GET /api/devices HTTP/1.1" 200 368 0.001127
+2026-05-27 14:26:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:06] "GET /status HTTP/1.1" 200 635 0.004094
+2026-05-27 14:26:06  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:06  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:06  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:06] "GET /api/devices HTTP/1.1" 200 368 0.003013
+2026-05-27 14:26:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:16] "GET /status HTTP/1.1" 200 635 0.002997
+2026-05-27 14:26:16  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:16  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:16  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:16] "GET /api/devices HTTP/1.1" 200 368 0.002015
+2026-05-27 14:26:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:26] "GET /status HTTP/1.1" 200 635 0.007053
+2026-05-27 14:26:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:26] "GET /api/devices HTTP/1.1" 200 368 0.001195
+2026-05-27 14:26:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:36] "GET /status HTTP/1.1" 200 635 0.000998
+2026-05-27 14:26:36  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:36  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:36  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:36] "GET /api/devices HTTP/1.1" 200 368 0.002012
+2026-05-27 14:26:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:46] "GET /status HTTP/1.1" 200 635 0.003402
+2026-05-27 14:26:46  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:26:46  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:26:46  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:26:46] "GET /api/devices HTTP/1.1" 200 368 0.001004
+2026-05-27 14:27:17  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:27:17  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:27:17  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:27:17] "GET /status HTTP/1.1" 200 635 0.003596
+2026-05-27 14:27:18  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:27:18  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:27:18  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:27:18] "GET /api/devices HTTP/1.1" 200 368 0.001527
+2026-05-27 14:27:19  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:27:19  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:27:19  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:27:19] "GET /api/devices HTTP/1.1" 200 368 0.002542
+2026-05-27 14:27:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:27:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:27:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:27:26] "GET /status HTTP/1.1" 200 635 0.002029
+2026-05-27 14:27:26  DEBUG     [Dummy-1]  Initializing WebSocket
+2026-05-27 14:27:26  DEBUG     [Dummy-1]  Validating WebSocket request
+2026-05-27 14:27:26  INFO      [Dummy-1]  127.0.0.1 - - [2026-05-27 14:27:26] "GET /api/devices HTTP/1.1" 200 368 0.001058

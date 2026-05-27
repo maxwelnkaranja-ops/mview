@@ -8069,6 +8069,15 @@
 
           if (buf.byteLength < 24) return;
 
+          // Strip v13 sequence suffix if present (\xFFSEQ + 4 bytes = 8 bytes total)
+          let cleanBuf = buf;
+          if (buf.byteLength > 32) {
+            const dvEnd = new DataView(buf, buf.byteLength - 8);
+            if (dvEnd.getUint32(0, false) === 0xFF534551) {
+              cleanBuf = buf.slice(0, buf.byteLength - 8);
+            }
+          }
+
           // Track bandwidth
           RV._bytesWindow = RV._bytesWindow || [];
           RV._bytesWindow.push([Date.now(), buf.byteLength]);
@@ -8105,7 +8114,7 @@
 
             if (isH264) return;
 
-            const blob = new Blob([buf.slice(24)], { type: "image/jpeg" });
+            const blob = new Blob([cleanBuf.slice(24)], { type: "image/jpeg" });
             const bmp = await createImageBitmap(blob);
             
             frameQueue.push({ bmp, w, h });
