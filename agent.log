@@ -3263,3 +3263,874 @@
 2026-05-27 16:04:32,721 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
 2026-05-27 16:04:32,728 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
 2026-05-27 16:04:32,728 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-27 16:06:20,637 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-27 16:06:21,651 [INFO    ] sc-main — Reconnecting in 1.0s...
+2026-05-27 16:06:22,723 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:06:25,065 [WARNING ] DXCamera — Desktop duplication access loss/system transition detected (HRESULT=0x887A0026). Triggering output-change recovery.
+2026-05-27 16:06:25,066 [WARNING ] DXCamera — Output change/access loss detected (backend=dxgi, output=1920x1080).
+2026-05-27 16:06:25,067 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:25,068 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:25,079 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:25,079 [INFO    ] DXCamera — Output recovery attempt 1 failed with transient HRESULT=0x80070005; retrying in 0.250s.
+2026-05-27 16:06:25,079 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:06:25,338 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:25,339 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:25,340 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:25,597 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:25,598 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:25,600 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:25,865 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:25,867 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:25,868 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:26,135 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:26,137 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:26,137 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:26,390 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:26,401 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:26,402 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:26,655 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:26,656 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:26,660 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:26,913 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:26,914 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:26,915 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:27,168 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:27,171 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:27,172 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:27,425 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:27,432 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:27,432 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:27,683 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:27,683 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:27,684 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:27,936 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:27,938 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:27,939 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:28,197 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:28,198 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:28,199 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:28,450 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:28,452 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:28,452 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:28,704 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:28,707 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:28,713 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:28,970 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:28,970 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:28,971 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:29,228 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:29,232 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:29,238 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:29,489 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:29,496 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:29,497 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:29,751 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:29,752 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:29,753 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:29,768 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:06:29,768 [INFO    ] sc-main — Reconnecting in 2.5s...
+2026-05-27 16:06:30,005 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:30,007 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:30,007 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:30,008 [INFO    ] DXCamera — Output recovery attempt 20 failed with transient HRESULT=0x80070005; retrying in 0.250s.
+2026-05-27 16:06:30,008 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:06:30,260 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:30,261 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:30,261 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:30,517 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:30,518 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:30,519 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:32,278 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:06:32,522 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:32,525 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:32,525 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:34,530 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:34,531 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:34,533 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:36,534 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:36,534 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:36,534 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:38,536 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:38,537 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:38,541 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:39,304 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:06:39,304 [INFO    ] sc-main — Reconnecting in 4.9s...
+2026-05-27 16:06:40,547 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:40,548 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:40,549 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:42,550 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:42,551 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:42,552 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:44,175 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:06:44,557 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:44,560 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:44,560 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:46,563 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:46,564 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:46,565 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:48,569 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:48,573 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:48,574 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:50,579 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:50,580 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:50,581 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:51,228 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:06:51,228 [INFO    ] sc-main — Reconnecting in 9.6s...
+2026-05-27 16:06:52,582 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:52,586 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:52,587 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:54,590 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:54,590 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:54,592 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:56,593 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:56,594 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:56,600 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:06:58,601 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:06:58,610 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:06:58,610 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:07:00,672 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:07:00,674 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:07:00,676 [INFO    ] DXCamera — Output recovery succeeded after 37 attempt(s).
+2026-05-27 16:07:00,676 [INFO    ] DXCamera — Output recovery: 1920x1080@0 -> 1920x1080@0, region=(0, 0, 1920, 1080).
+2026-05-27 16:07:00,980 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:07:08,030 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:07:08,031 [INFO    ] sc-main — Reconnecting in 19.2s...
+2026-05-27 16:07:27,220 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:07:34,249 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:07:34,249 [INFO    ] sc-main — Reconnecting in 15.2s...
+2026-05-27 16:07:49,438 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:07:56,491 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:07:56,492 [INFO    ] sc-main — Reconnecting in 15.8s...
+2026-05-27 16:08:12,327 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:08:19,377 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:08:19,377 [INFO    ] sc-main — Reconnecting in 19.4s...
+2026-05-27 16:08:38,963 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:08:46,167 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:08:46,168 [INFO    ] sc-main — Reconnecting in 16.8s...
+2026-05-27 16:09:03,010 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:09:10,051 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:09:10,051 [INFO    ] sc-main — Reconnecting in 15.3s...
+2026-05-27 16:09:25,320 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:09:32,365 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:09:32,365 [INFO    ] sc-main — Reconnecting in 15.5s...
+2026-05-27 16:09:47,887 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:09:54,922 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:09:54,926 [INFO    ] sc-main — Reconnecting in 18.9s...
+2026-05-27 16:10:13,817 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:10:34,710 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=23700| server=http://localhost:10000 | device=MV-5F3B23-8B... ═══
+2026-05-27 16:10:35,474 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-27 16:10:37,593 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:10:37,594 [INFO    ] preflight-boot — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:10:37,757 [INFO    ] preflight-boot — Frame buffer build(start): 1920x1080 c=3 n=8.
+2026-05-27 16:10:37,776 [INFO    ] preflight-boot — Advanced Monitor Capture: DXGI GPU monitor=1 @ 60 fps
+2026-05-27 16:10:37,911 [INFO    ] DXCamera — Screen Capture FPS: 14.7427
+2026-05-27 16:10:44,654 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:10:44,654 [INFO    ] sc-main — Reconnecting in 1.1s...
+2026-05-27 16:10:46,045 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:10:47,941 [INFO    ] preflight-boot — Pre-flight: ISSUES: ["server_unreachable:HTTPConnectionPool(host='localhost', port=10000): Read timed out. (read timeout=8)"]
+2026-05-27 16:10:50,496 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:10:58,310 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:10:58,457 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:11:00,546 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-27 16:11:00,726 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-27 16:11:00,797 [ERROR   ] Thread-7 (_loop) — AlertEngine error: / is not a connected namespace.
+2026-05-27 16:11:01,167 [WARNING ] Thread-5 (_loop) — Heartbeat error: / is not a connected namespace.
+2026-05-27 16:11:01,577 [INFO    ] sc-main — Reconnecting in 1.2s...
+2026-05-27 16:11:02,826 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:11:03,199 [WARNING ] adv-monitor — Advanced Monitor loop error: Connection error — retrying in 5s
+2026-05-27 16:11:06,881 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:11:06,881 [INFO    ] sc-main — Reconnecting in 2.0s...
+2026-05-27 16:11:08,976 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:11:10,478 [WARNING ] adv-monitor — Advanced Monitor loop error: Connection error — retrying in 5s
+2026-05-27 16:11:13,039 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:11:13,039 [INFO    ] sc-main — Reconnecting in 5.0s...
+2026-05-27 16:11:15,478 [ERROR   ] adv-monitor — Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000002F205DC29F0>
+2026-05-27 16:11:26,957 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=2364| server=http://localhost:10000 | device=MV-5F3B23-8B... ═══
+2026-05-27 16:11:27,054 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-27 16:11:29,068 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:11:29,080 [INFO    ] preflight-boot — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:11:29,199 [INFO    ] preflight-boot — Frame buffer build(start): 1920x1080 c=3 n=8.
+2026-05-27 16:11:29,202 [INFO    ] preflight-boot — Advanced Monitor Capture: DXGI GPU monitor=1 @ 60 fps
+2026-05-27 16:11:29,260 [INFO    ] DXCamera — Screen Capture FPS: 34.6690
+2026-05-27 16:11:31,147 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:11:31,311 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-27 16:11:31,718 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:11:33,800 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:11:35,755 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-27 16:11:36,005 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:11:36,007 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-27 16:11:36,009 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:11:36,009 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-27 16:11:36,015 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-27 16:11:36,017 [INFO    ] adv-producer — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:11:36,130 [INFO    ] adv-producer — Frame buffer build(start): 1920x1080 c=3 n=8.
+2026-05-27 16:11:36,131 [INFO    ] adv-producer — Advanced Monitor Capture: DXGI GPU monitor=1 @ 60 fps
+2026-05-27 16:11:36,177 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-27 16:11:36,182 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-27 16:11:36,183 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-27 16:13:30,778 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-27 16:13:31,782 [INFO    ] sc-main — Reconnecting in 1.1s...
+2026-05-27 16:13:32,851 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:13:39,889 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:13:39,890 [INFO    ] sc-main — Reconnecting in 2.1s...
+2026-05-27 16:13:41,976 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:13:49,039 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:13:49,039 [INFO    ] sc-main — Reconnecting in 4.9s...
+2026-05-27 16:13:53,939 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:14:00,987 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:14:00,987 [INFO    ] sc-main — Reconnecting in 10.1s...
+2026-05-27 16:14:11,136 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:14:18,170 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:14:18,170 [INFO    ] sc-main — Reconnecting in 15.9s...
+2026-05-27 16:14:20,808 [WARNING ] DXCamera — Desktop duplication access loss/system transition detected (HRESULT=0x887A0026). Triggering output-change recovery.
+2026-05-27 16:14:20,809 [WARNING ] DXCamera — Output change/access loss detected (backend=dxgi, output=1920x1080).
+2026-05-27 16:14:20,809 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:20,819 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:20,822 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:20,822 [INFO    ] DXCamera — Output recovery attempt 1 failed with transient HRESULT=0x80070005; retrying in 0.250s.
+2026-05-27 16:14:20,822 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:14:21,074 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:21,076 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:21,076 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:21,327 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:21,329 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:21,332 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:21,621 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:21,623 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:21,623 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:21,894 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:21,895 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:21,899 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:22,154 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:22,155 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:22,156 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:22,407 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:22,407 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:22,409 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:22,659 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:22,660 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:22,660 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:22,914 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:22,916 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:22,918 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:23,177 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:23,182 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:23,183 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:23,434 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:23,435 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:23,436 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:23,687 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:23,688 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:23,689 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:23,940 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:23,940 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:23,941 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:24,192 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:24,193 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:24,193 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:24,445 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:24,446 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:24,448 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:24,699 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:24,699 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:24,701 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:24,952 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:24,952 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:24,953 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:25,204 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:25,205 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:25,205 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:25,456 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:25,456 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:25,457 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:25,708 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:25,709 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:25,709 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:25,709 [INFO    ] DXCamera — Output recovery attempt 20 failed with transient HRESULT=0x80070005; retrying in 0.250s.
+2026-05-27 16:14:25,709 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:14:25,961 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:25,963 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:25,965 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:26,216 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:26,217 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:26,219 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:28,220 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:28,220 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:28,221 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:30,222 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:30,222 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:30,222 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:32,224 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:32,225 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:32,225 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:34,042 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:14:34,225 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:34,225 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:34,229 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:36,230 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:36,231 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:36,232 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:38,234 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:38,235 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:38,235 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:40,236 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:40,236 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:40,237 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:41,082 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:14:41,082 [INFO    ] sc-main — Reconnecting in 15.5s...
+2026-05-27 16:14:42,238 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:42,239 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:42,240 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:44,240 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:44,241 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:44,241 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:46,246 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:46,246 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:46,249 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:48,250 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:48,251 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:48,251 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:50,252 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:50,252 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:50,253 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:52,254 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:52,255 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:52,256 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:54,256 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:54,259 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:54,260 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:56,263 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:56,263 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:56,264 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:14:56,621 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:14:58,265 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:14:58,265 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:14:58,267 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:00,267 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:00,268 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:00,269 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:02,269 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:02,270 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:02,271 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:02,271 [INFO    ] DXCamera — Output recovery attempt 40 failed with transient HRESULT=0x80070005; retrying in 2.000s.
+2026-05-27 16:15:02,271 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:15:03,669 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:15:03,669 [INFO    ] sc-main — Reconnecting in 16.6s...
+2026-05-27 16:15:04,272 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:04,274 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:04,275 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:06,276 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:06,277 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:06,277 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:08,279 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:08,279 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:08,280 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:10,281 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:10,281 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:10,282 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:12,283 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:12,283 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:12,284 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:14,285 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:14,286 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:14,286 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:16,288 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:16,289 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:16,289 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:18,290 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:18,290 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:18,293 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:20,239 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:15:20,294 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:20,294 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:20,295 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:22,297 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:22,298 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:22,299 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:24,300 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:24,301 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:24,301 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:26,302 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:26,303 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:26,304 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:27,250 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:15:27,250 [INFO    ] sc-main — Reconnecting in 15.3s...
+2026-05-27 16:15:28,304 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:28,305 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:28,306 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:30,307 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:30,308 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:30,309 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:32,310 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:32,311 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:32,312 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:34,313 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:34,313 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:34,314 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:36,315 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:36,315 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:36,315 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:38,317 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:38,318 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:38,318 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:40,319 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:40,320 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:40,321 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:42,322 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:42,323 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:42,325 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:42,325 [INFO    ] DXCamera — Output recovery attempt 60 failed with transient HRESULT=0x80070005; retrying in 2.000s.
+2026-05-27 16:15:42,326 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:15:42,533 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:15:44,326 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:44,326 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:44,326 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:46,328 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:46,329 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:46,329 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:48,330 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:48,332 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:48,333 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:49,553 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:15:49,553 [INFO    ] sc-main — Reconnecting in 18.9s...
+2026-05-27 16:15:50,333 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:50,334 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:50,334 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:52,336 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:52,336 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:52,339 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:54,339 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:54,339 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:54,341 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:56,342 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:56,342 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:56,343 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:15:58,344 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:15:58,345 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:15:58,345 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:00,346 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:00,348 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:00,348 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:02,349 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:02,350 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:02,352 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:04,353 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:04,354 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:04,354 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:06,356 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:06,356 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:06,357 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:08,358 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:08,358 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:08,359 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:08,507 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:16:10,360 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:10,361 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:10,363 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:12,365 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:12,366 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:12,366 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:14,367 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:14,367 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:14,367 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:15,522 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:16:15,522 [INFO    ] sc-main — Reconnecting in 18.7s...
+2026-05-27 16:16:16,370 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:16,370 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:16,370 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:18,372 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:18,373 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:18,373 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:20,374 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:20,375 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:20,376 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:22,377 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:22,379 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:22,380 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:22,380 [INFO    ] DXCamera — Output recovery attempt 80 failed with transient HRESULT=0x80070005; retrying in 2.000s.
+2026-05-27 16:16:22,380 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:16:24,382 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:24,383 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:24,383 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:26,384 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:26,385 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:26,385 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:28,387 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:28,387 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:28,388 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:33,389 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:33,389 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:33,393 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:34,259 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:16:38,395 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:38,397 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:38,398 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:41,316 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:16:41,316 [INFO    ] sc-main — Reconnecting in 17.4s...
+2026-05-27 16:16:43,399 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:43,400 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:43,400 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:48,401 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:48,403 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:48,403 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:53,406 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:53,408 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:53,409 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:58,410 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:16:58,411 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:16:58,411 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:16:58,684 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:17:03,412 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:03,413 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:03,413 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:05,748 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:17:05,748 [INFO    ] sc-main — Reconnecting in 15.6s...
+2026-05-27 16:17:08,415 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:08,416 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:08,417 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:13,417 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:13,420 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:13,421 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:18,423 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:18,423 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:18,424 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:21,354 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:17:23,425 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:23,425 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:23,426 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:25,406 [INFO    ] Thread-35 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:17:25,744 [INFO    ] Thread-38 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:17:26,030 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-27 16:17:26,030 [INFO    ] adv-monitor — Stream consumer: auth cleared — shutting down producer
+2026-05-27 16:17:26,030 [INFO    ] adv-monitor — Stream consumer: producer/ticker stop signalled
+2026-05-27 16:17:27,800 [INFO    ] Thread-35 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:17:27,923 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:17:27,925 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:17:28,427 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:28,428 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:28,430 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:29,776 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-27 16:17:33,431 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:33,432 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:33,432 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:38,434 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:38,436 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:38,437 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:43,437 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:43,439 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:43,440 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:48,441 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:48,443 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:48,445 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:53,446 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:53,448 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:53,449 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:17:53,450 [INFO    ] DXCamera — Output recovery attempt 100 failed with transient HRESULT=0x80070005; retrying in 5.000s.
+2026-05-27 16:17:53,450 [INFO    ] DXCamera — Recovery keeps retrying while transient display transitions are active (exclusive/fullscreen switch, mode switch, session disconnect/reconnect).
+2026-05-27 16:17:58,451 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:17:58,453 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:17:58,456 [INFO    ] DXCamera — DuplicateOutput transient failure (HRESULT=0x80070005).
+2026-05-27 16:18:03,458 [INFO    ] DXCamera — Frame buffer rebuild(output-recovery): 1920x1080 c=3 n=8.
+2026-05-27 16:18:03,463 [INFO    ] DXCamera — DuplicateOutput1 transient failure (HRESULT=0x887A0004); falling back to DuplicateOutput.
+2026-05-27 16:18:03,466 [INFO    ] DXCamera — Output recovery succeeded after 102 attempt(s).
+2026-05-27 16:18:03,466 [INFO    ] DXCamera — Output recovery: 1920x1080@0 -> 1920x1080@0, region=(0, 0, 1920, 1080).
+2026-05-27 16:18:03,557 [INFO    ] DXCamera — Screen Capture FPS: 0.0077
+2026-05-27 16:18:03,559 [INFO    ] adv-producer — Producer thread exited.
+2026-05-27 16:21:21,023 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=17180| server=http://localhost:10000 | device=MV-5F3B23-8B... ═══
+2026-05-27 16:21:21,031 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-27 16:21:23,033 [INFO    ] preflight-boot — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:23,047 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:21:23,060 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:25,132 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:21:25,208 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-27 16:21:25,378 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:21:27,451 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:21:29,410 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-27 16:21:29,678 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:21:29,680 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-27 16:21:29,684 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:21:29,684 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-27 16:21:29,688 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-27 16:21:29,690 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:29,697 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:29,757 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-27 16:21:29,762 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-27 16:21:29,762 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-27 16:21:31,661 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,683 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,699 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,716 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,718 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,738 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,758 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,778 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,785 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,808 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,832 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,841 [WARNING ] adv-producer — Advanced Monitor: too many capture failures — resetting pipeline
+2026-05-27 16:21:31,843 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-27 16:21:31,844 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:31,846 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:31,848 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:31,848 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 1)
+2026-05-27 16:21:34,849 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:34,851 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:34,852 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:34,852 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 2)
+2026-05-27 16:21:38,852 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:38,854 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:38,854 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:38,854 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 3)
+2026-05-27 16:21:43,855 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:43,864 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:43,866 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:43,866 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 4)
+2026-05-27 16:21:49,866 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:49,869 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:49,869 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:49,869 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 5)
+2026-05-27 16:21:56,870 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:21:56,874 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:21:56,875 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:21:56,875 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 6)
+2026-05-27 16:22:04,876 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:04,881 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:04,881 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:04,881 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 7)
+2026-05-27 16:22:13,882 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:13,886 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:13,887 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:13,887 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 8)
+2026-05-27 16:22:23,888 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:23,891 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:23,892 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:23,892 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 9)
+2026-05-27 16:22:33,707 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-27 16:22:33,710 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-27 16:22:33,710 [INFO    ] adv-monitor — Stream consumer: auth cleared — shutting down producer
+2026-05-27 16:22:33,710 [INFO    ] adv-monitor — Stream consumer: producer/ticker stop signalled
+2026-05-27 16:22:34,707 [INFO    ] sc-main — Reconnecting in 1.0s...
+2026-05-27 16:22:34,894 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:34,896 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:34,896 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:34,896 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 10)
+2026-05-27 16:22:35,730 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:22:39,791 [WARNING ] sc-main — Connection error: Connection error
+2026-05-27 16:22:39,791 [INFO    ] sc-main — Reconnecting in 2.1s...
+2026-05-27 16:22:41,459 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:22:41,890 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:22:43,960 [INFO    ] Thread-31 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:22:44,231 [INFO    ] Thread-34 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:22:46,456 [INFO    ] adv-monitor — Advanced Monitor: auth_ok not received after 5s — re-sending agent_auth
+2026-05-27 16:22:46,871 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:22:46,882 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:22:46,897 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:46,900 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:46,900 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:46,900 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 11)
+2026-05-27 16:22:46,910 [INFO    ] Thread-31 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:22:48,880 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-27 16:22:59,901 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:22:59,904 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:22:59,906 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:22:59,906 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 12)
+2026-05-27 16:23:13,907 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:13,909 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:13,910 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:13,910 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 13)
+2026-05-27 16:23:29,710 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=17788| server=http://localhost:10000 | device=MV-5F3B23-8B... ═══
+2026-05-27 16:23:29,718 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-27 16:23:31,720 [INFO    ] preflight-boot — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:31,734 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:23:31,748 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:31,748 [ERROR   ] preflight-boot — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:33,787 [INFO    ] preflight-boot — Pre-flight: ISSUES: ['screen_capture_null']
+2026-05-27 16:23:33,793 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:23:34,049 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:23:36,116 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:23:38,081 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-27 16:23:38,351 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:23:38,352 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-27 16:23:38,354 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:23:38,355 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-27 16:23:38,356 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-27 16:23:38,356 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:38,359 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:38,359 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:38,360 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 1)
+2026-05-27 16:23:41,361 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:41,365 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:41,366 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:41,367 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 2)
+2026-05-27 16:23:45,368 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:45,371 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:45,373 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:45,373 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 3)
+2026-05-27 16:23:50,374 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:50,375 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:50,376 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:50,376 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 4)
+2026-05-27 16:23:56,377 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:23:56,381 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:23:56,381 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:23:56,382 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 5)
+2026-05-27 16:24:03,383 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:24:03,385 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:24:03,385 [ERROR   ] adv-producer — MSSCapture.grab error: Windows graphics function failed (no error provided): BitBlt
+2026-05-27 16:24:03,385 [WARNING ] adv-producer — Advanced Monitor: capture.grab() returned None (attempt 6)
+2026-05-27 16:24:16,210 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=2700| server=http://localhost:10000 | device=MV-5F3B23-8B... ═══
+2026-05-27 16:24:16,223 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-27 16:24:18,225 [INFO    ] preflight-boot — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:24:18,239 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 16:24:18,252 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:24:20,339 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 16:24:20,384 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-27 16:24:20,589 [INFO    ] Thread-6 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 16:24:22,678 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-27 16:24:24,641 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-27 16:24:24,919 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 16:24:24,920 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-27 16:24:24,923 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 16:24:24,924 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-27 16:24:24,927 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-27 16:24:24,927 [INFO    ] adv-producer — Advanced Monitor Capture: forcing MSS CPU capture for stability
+2026-05-27 16:24:24,933 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-27 16:24:24,934 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-27 16:24:24,943 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-27 16:24:24,943 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-27 16:24:26,374 [INFO    ] adv-monitor — Emitting frame_bin: 62018 bytes
+2026-05-27 16:24:28,798 [INFO    ] adv-monitor — Emitting frame_bin: 61834 bytes
+2026-05-27 16:24:29,875 [INFO    ] adv-monitor — Emitting frame_bin: 62054 bytes
+2026-05-27 16:24:31,412 [INFO    ] adv-monitor — Emitting frame_bin: 61912 bytes
+2026-05-27 16:24:32,211 [INFO    ] adv-monitor — Emitting frame_bin: 61731 bytes
+2026-05-27 16:24:33,805 [INFO    ] adv-monitor — Emitting frame_bin: 61959 bytes
+2026-05-27 16:24:36,708 [INFO    ] adv-monitor — Emitting frame_bin: 62108 bytes
+2026-05-27 16:24:39,823 [INFO    ] adv-monitor — Emitting frame_bin: 61986 bytes
+2026-05-27 16:24:41,101 [INFO    ] adv-monitor — Emitting frame_bin: 61607 bytes
+2026-05-27 16:24:42,298 [INFO    ] adv-monitor — Emitting frame_bin: 61497 bytes
+2026-05-27 16:24:43,889 [INFO    ] adv-monitor — Emitting frame_bin: 61762 bytes
+2026-05-27 16:24:43,967 [INFO    ] adv-monitor — Emitting frame_bin: 61760 bytes
+2026-05-27 16:24:47,372 [INFO    ] adv-monitor — Emitting frame_bin: 61658 bytes
+2026-05-27 16:24:52,002 [INFO    ] adv-monitor — Emitting frame_bin: 61987 bytes
+2026-05-27 16:24:53,808 [INFO    ] adv-monitor — Emitting frame_bin: 61808 bytes
+2026-05-27 16:24:57,273 [INFO    ] adv-monitor — Emitting frame_bin: 61867 bytes
+2026-05-27 16:24:59,458 [INFO    ] adv-monitor — Emitting frame_bin: 62081 bytes
+2026-05-27 16:24:59,493 [INFO    ] adv-monitor — Emitting frame_bin: 61378 bytes
+2026-05-27 16:25:00,702 [INFO    ] adv-monitor — Emitting frame_bin: 61972 bytes
+2026-05-27 16:25:01,279 [INFO    ] adv-monitor — Emitting frame_bin: 61939 bytes
+2026-05-27 16:25:08,946 [INFO    ] adv-monitor — Emitting frame_bin: 62077 bytes
+2026-05-27 16:25:09,101 [INFO    ] adv-monitor — Emitting frame_bin: 62144 bytes
+2026-05-27 16:25:10,038 [INFO    ] adv-monitor — Emitting frame_bin: 61344 bytes
+2026-05-27 16:25:10,583 [INFO    ] adv-monitor — Emitting frame_bin: 61903 bytes
+2026-05-27 16:25:11,756 [INFO    ] adv-monitor — Emitting frame_bin: 61448 bytes
+2026-05-27 16:25:11,895 [INFO    ] adv-monitor — Emitting frame_bin: 61389 bytes
+2026-05-27 16:25:12,672 [INFO    ] adv-monitor — Emitting frame_bin: 61892 bytes
+2026-05-27 16:25:13,584 [INFO    ] adv-monitor — Emitting frame_bin: 61855 bytes
+2026-05-27 16:25:16,082 [INFO    ] adv-monitor — Emitting frame_bin: 62197 bytes
+2026-05-27 16:25:17,783 [INFO    ] adv-monitor — Emitting frame_bin: 61791 bytes
+2026-05-27 16:25:20,152 [INFO    ] adv-monitor — Emitting frame_bin: 62045 bytes
+2026-05-27 16:25:20,961 [INFO    ] adv-monitor — Emitting frame_bin: 62471 bytes
+2026-05-27 16:25:22,772 [INFO    ] adv-monitor — Emitting frame_bin: 62053 bytes
+2026-05-27 16:25:25,641 [INFO    ] adv-monitor — Emitting frame_bin: 62214 bytes
+2026-05-27 16:25:27,689 [INFO    ] adv-monitor — Emitting frame_bin: 62245 bytes
+2026-05-27 16:25:28,143 [INFO    ] adv-monitor — Emitting frame_bin: 62180 bytes
+2026-05-27 16:25:28,500 [INFO    ] adv-monitor — Emitting frame_bin: 62092 bytes
+2026-05-27 16:25:30,253 [INFO    ] adv-monitor — Emitting frame_bin: 62288 bytes
+2026-05-27 16:25:30,995 [INFO    ] adv-monitor — Emitting frame_bin: 62004 bytes
+2026-05-27 16:25:34,390 [INFO    ] adv-monitor — Emitting frame_bin: 61763 bytes
+2026-05-27 16:25:38,162 [INFO    ] adv-monitor — Emitting frame_bin: 62115 bytes
+2026-05-27 16:25:41,012 [INFO    ] adv-monitor — Emitting frame_bin: 62140 bytes
+2026-05-27 16:25:41,200 [INFO    ] adv-monitor — Emitting frame_bin: 61664 bytes
+2026-05-27 16:25:44,170 [INFO    ] adv-monitor — Emitting frame_bin: 61815 bytes
+2026-05-27 16:25:50,973 [INFO    ] adv-monitor — Emitting frame_bin: 62015 bytes
+2026-05-27 16:25:55,122 [INFO    ] adv-monitor — Emitting frame_bin: 62119 bytes
+2026-05-27 16:25:57,625 [INFO    ] adv-monitor — Emitting frame_bin: 62094 bytes
+2026-05-27 16:26:00,302 [INFO    ] adv-monitor — Emitting frame_bin: 62271 bytes
+2026-05-27 16:26:02,441 [INFO    ] adv-monitor — Emitting frame_bin: 61794 bytes
+2026-05-27 16:26:02,581 [INFO    ] adv-monitor — Emitting frame_bin: 62217 bytes
+2026-05-27 16:26:04,426 [INFO    ] adv-monitor — Emitting frame_bin: 61860 bytes
+2026-05-27 16:26:06,416 [INFO    ] adv-monitor — Emitting frame_bin: 61827 bytes
+2026-05-27 16:26:09,161 [INFO    ] adv-monitor — Emitting frame_bin: 62148 bytes
+2026-05-27 16:26:11,237 [INFO    ] adv-monitor — Emitting frame_bin: 61619 bytes
+2026-05-27 16:26:12,176 [INFO    ] adv-monitor — Emitting frame_bin: 61773 bytes
+2026-05-27 16:26:13,499 [INFO    ] adv-monitor — Emitting frame_bin: 61502 bytes
+2026-05-27 16:26:14,697 [INFO    ] adv-monitor — Emitting frame_bin: 61742 bytes
+2026-05-27 16:26:17,041 [INFO    ] adv-monitor — Emitting frame_bin: 61513 bytes
+2026-05-27 16:26:19,296 [INFO    ] adv-monitor — Emitting frame_bin: 61766 bytes
+2026-05-27 16:26:22,311 [INFO    ] adv-monitor — Emitting frame_bin: 61896 bytes
+2026-05-27 16:26:22,627 [INFO    ] adv-monitor — Emitting frame_bin: 62285 bytes
+2026-05-27 16:26:23,286 [INFO    ] adv-monitor — Emitting frame_bin: 62261 bytes
+2026-05-27 16:26:27,337 [INFO    ] adv-monitor — Emitting frame_bin: 61840 bytes
+2026-05-27 16:26:28,492 [INFO    ] adv-monitor — Emitting frame_bin: 61862 bytes
+2026-05-27 16:26:41,113 [INFO    ] adv-monitor — Emitting frame_bin: 364401 bytes
+2026-05-27 16:27:07,723 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:21,389 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:22,612 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:25,508 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:26,163 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:36,097 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:49,538 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:27:51,778 [INFO    ] adv-monitor — Emitting frame_bin: 364396 bytes
+2026-05-27 16:28:31,771 [INFO    ] adv-monitor — Emitting frame_bin: 364382 bytes
+2026-05-27 16:28:34,675 [INFO    ] adv-monitor — Emitting frame_bin: 364382 bytes
+2026-05-27 16:29:00,261 [INFO    ] adv-monitor — Emitting frame_bin: 364382 bytes
+2026-05-27 16:29:00,635 [INFO    ] adv-monitor — Emitting frame_bin: 364382 bytes
+2026-05-27 16:29:03,529 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:08,482 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:19,810 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:31,803 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:33,389 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:49,498 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:49,592 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:29:55,857 [INFO    ] adv-monitor — Emitting frame_bin: 364402 bytes
+2026-05-27 16:30:01,111 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:11,872 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:12,993 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:16,925 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:19,744 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:22,281 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:30:34,006 [INFO    ] adv-monitor — Emitting frame_bin: 364383 bytes
+2026-05-27 16:31:53,511 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:32:28,324 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:32:35,681 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:33:03,240 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:33:33,329 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:33:42,971 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:34:33,604 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:34:43,675 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:34:55,700 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:35:21,371 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:35:26,977 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:35:52,851 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:36:01,956 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 16:36:21,685 [INFO    ] adv-monitor — Emitting frame_bin: 244477 bytes
+2026-05-27 23:32:44,500 [ERROR   ] adv-monitor — packet queue is empty, aborting
+2026-05-27 23:32:44,555 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-27 23:32:44,557 [INFO    ] adv-monitor — Stream consumer: auth cleared — shutting down producer
+2026-05-27 23:32:44,557 [INFO    ] adv-monitor — Stream consumer: producer/ticker stop signalled
+2026-05-27 23:32:44,597 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-27 23:32:45,598 [INFO    ] sc-main — Reconnecting in 1.3s...
+2026-05-27 23:32:50,514 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-27 23:32:50,587 [INFO    ] adv-producer — Producer thread exited.
+2026-05-27 23:32:52,574 [INFO    ] Thread-180 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-27 23:32:54,386 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-27 23:32:59,410 [INFO    ] adv-monitor — Advanced Monitor: auth_ok not received after 5s — re-sending agent_auth
+2026-05-27 23:32:59,994 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 23:32:59,994 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-27 23:33:00,039 [INFO    ] Thread-184 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-27 23:33:01,864 [INFO    ] Thread-180 (_handle_eio_message) — Keylogger started.
+2026-05-27 23:33:03,831 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-27 23:33:04,854 [WARNING ] Thread-8 (_loop) — Heartbeat error: / is not a connected namespace.
+2026-05-28 10:01:00,595 [WARNING ] Thread-179 (_read_loop_websocket) — Disconnected from server.
+2026-05-28 10:01:00,557 [ERROR   ] adv-monitor — packet queue is empty, aborting
+2026-05-28 10:01:04,969 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-28 10:01:05,968 [INFO    ] sc-main — Reconnecting in 1.1s...
+2026-05-28 10:01:07,122 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-28 10:01:09,293 [INFO    ] Thread-7915 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-28 10:01:10,959 [INFO    ] Thread-7919 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-28 10:01:12,985 [INFO    ] Thread-7915 (_handle_eio_message) — Keylogger started.
+2026-05-28 10:01:14,962 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-28 10:01:18,597 [WARNING ] Thread-185 (_loop) — Heartbeat error: / is not a connected namespace.
+2026-05-28 10:01:23,430 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-28 10:01:23,436 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392

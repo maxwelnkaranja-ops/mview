@@ -6,3 +6,33 @@
 {"ts": "2026-05-27T13:02:49.865460", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
 {"ts": "2026-05-27T13:03:36.010588", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
 {"ts": "2026-05-27T13:03:40.349817", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:10:31.832477", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:10:53.717530", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:11:31.683579", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:11:35.772410", "event": "agent_alert", "device_id": "MV-5F3B23-8BD7A7-4B1392", "type": "cpu", "value": 96.7}
+{"ts": "2026-05-27T13:11:36.008637", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:17:23.837015", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:17:25.733211", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:17:27.925689", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:21:14.081056", "event": "agent_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:21:25.374213", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:21:29.682921", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:22:44.226046", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:22:46.871689", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:22:46.879374", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:23:22.551102", "event": "agent_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:23:34.044625", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:23:38.354109", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T13:24:09.117271", "event": "agent_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T13:24:20.584357", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T13:24:24.922189", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T20:32:44.571709", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-27T20:32:59.805597", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-27T20:32:59.992656", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T20:32:59.992656", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-27T20:35:44.677141", "event": "agent_alert", "device_id": "MV-5F3B23-8BD7A7-4B1392", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-28T05:14:41.870246", "event": "agent_alert", "device_id": "MV-5F3B23-8BD7A7-4B1392", "type": "cpu", "value": 91.6}
+{"ts": "2026-05-28T07:01:00.559465", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-28T07:01:10.911390", "event": "agent_online", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-28T07:01:23.435856", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
+{"ts": "2026-05-28T07:03:00.610499", "event": "watchdog_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}

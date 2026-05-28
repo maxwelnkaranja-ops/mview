@@ -1926,11 +1926,10 @@ if SOCKETIO_OK and sio:
             ts_us = int.from_bytes(raw[8:16], "big")
         except Exception:
             pass
-        # Drop frames >250ms old — prevents huge lag while tolerating clock drift.
+        # Drop frames >500ms old — prevents huge lag while tolerating clock drift.
         # v14.1: tighter TTL for "perfect sync like a mirror"
-        if ts_us and abs(now_us - ts_us) > 250_000:
-            if fc % 100 == 0:
-                log.warning(f"frame_bin: dropping stale frame from {did} (age={ (now_us-ts_us)/1000 }ms)")
+        if ts_us and abs(now_us - ts_us) > 500_000:
+            log.warning(f"frame_bin: dropping stale frame from {did} (age={ (now_us-ts_us)/1000 }ms)")
             return
 
         # ── v13: Fast dedup — compare first 64 bytes + size (10x faster than SHA-256) ─
