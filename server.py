@@ -365,7 +365,8 @@ _adv_gop_buf:       dict = {}    # device_id  → deque(maxlen=128)
 _adv_gop_lock            = threading.Lock()
 _adv_cursor_latest: dict = {}    # device_id  → bytes
 
-# ── v13: Per-device frame sequence counters and FPS rings ─────────────────
+# ── v14: Clock calibration and mirror-sync stability ──────────────────────
+_device_clock_offset: dict = {}    # device_id → offset_us (server_time - agent_time)
 _device_frame_seq:  dict = collections.defaultdict(int)           # device_id → seq int
 _device_fps_ring:   dict = collections.defaultdict(               # device_id → deque(120)
     lambda: collections.deque(maxlen=120)
@@ -1919,33 +1920,76 @@ if SOCKETIO_OK and sio:
         if n < 20 or n > MAX_FRAME_BYTES:
             return
 
-        # ── v13: Extract timestamp early for stale-frame guard ────────────────
+        # ── v14: Dynamic clock calibration for perfect mirror-sync ────────────
         now_us = int(time.time() * 1_000_000)
         ts_us = 0
         try:
             ts_us = int.from_bytes(raw[8:16], "big")
         except Exception:
             pass
-        # Drop frames >500ms old — prevents huge lag while tolerating clock drift.
-        # v14.1: tighter TTL for "perfect sync like a mirror"
-        if ts_us and abs(now_us - ts_us) > 500_000:
-            log.warning(f"frame_bin: dropping stale frame from {did} (age={ (now_us-ts_us)/1000 }ms)")
-            return
+        
+        if ts_us:
+            # v14.3: Continuous sliding calibration. 
+            # We track the minimum latency seen so far to estimate the clock offset.
+            # (now_us - ts_us) = actual_latency + clock_offset
+            # clock_offset = (now_us - ts_us) - actual_latency
+            # Since actual_latency >= 0, then clock_offset <= (now_us - ts_us).
+            # We take the 5th percentile of (now_us - ts_us) as our offset estimate.
+            
+            raw_lat = now_us - ts_us
+            if did not in _device_clock_offset:
+                _device_clock_offset[did] = raw_lat
+                log.info(f"frame_bin: initial calibration for {did}: {raw_lat/1_000_000:.3f}s")
+            else:
+                # Slowly drift the offset towards the current raw_lat if it's lower
+                # (meaning we found a faster path / lower jitter)
+                if raw_lat < _device_clock_offset[did]:
+                    _device_clock_offset[did] = raw_lat # Instant lock to lowest
+                else:
+                    # Slowly drift up to account for server/agent clock drift (1ms per frame)
+                    _device_clock_offset[did] += 1000 
+            
+            adj_lat_us = raw_lat - _device_clock_offset[did]
+            
+            # v14.3: Relaxed drop threshold to 1.5s for initial connection stability,
+            # but still dropping truly backlogged frames.
+            if adj_lat_us > 1_500_000:
+                return
+            
+            # If we see a frame that is "too new" (negative latency), reset offset
+            if adj_lat_us < -50_000:
+                _device_clock_offset[did] = raw_lat
+                log.info(f"frame_bin: re-calibrated {did} (future frame)")
 
         # ── v13: Fast dedup — compare first 64 bytes + size (10x faster than SHA-256) ─
+        # ── v14.4: Periodic relay logging to verify 60fps on Render
+        if _device_frame_seq[did] % 300 == 0:
+            fps_ring = _device_fps_ring[did]
+            _actual_fps = 0
+            if len(fps_ring) >= 2:
+                _span = fps_ring[-1] - fps_ring[0]
+                _actual_fps = round((len(fps_ring) - 1) / _span, 1) if _span > 0 else 0
+            
+            # Calculate KBPS (last 1 second)
+            dq = _bw_window[did]
+            kbps = sum(b for _, b in dq) / 1024.0 if dq else 0
+            
+            log.info(f"PERF: {did} | FPS: {_actual_fps} | KBPS: {kbps:.1f} | Latency: {adj_lat_us/1000:.1f}ms")
+
         if FRAME_DEDUP:
             quick_sig = (n, raw[:64])
             if _frame_hashes.get(did) == quick_sig:
                 return  # identical or near-identical frame — drop
             _frame_hashes[did] = quick_sig
 
-        # ── v12: Bandwidth cap ────────────────────────────────────────────────
+        # ── v12: Bandwidth tracking ───────────────────────────────────────────
+        now_bw = time.time()
+        dq = _bw_window[did]
+        dq.append((now_bw, n))
+        while dq and now_bw - dq[0][0] > 1.0:
+            dq.popleft()
+        
         if MAX_FRAME_KBPS > 0:
-            now_bw = time.time()
-            dq = _bw_window[did]
-            dq.append((now_bw, n))
-            while dq and now_bw - dq[0][0] > 1.0:
-                dq.popleft()
             if sum(b for _, b in dq) / 1024.0 > MAX_FRAME_KBPS:
                 return
 

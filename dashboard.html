@@ -8048,44 +8048,44 @@
         }
 
         SC.socket.on("frame_bin", async (raw) => {
-          if (!RV.deviceId) return;
-          // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
-          let buf;
           try {
-            if (raw instanceof ArrayBuffer) {
-              buf = raw;
-            } else if (raw && raw.buffer instanceof ArrayBuffer) {
-              buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
-            } else if (Array.isArray(raw)) {
-              buf = new Uint8Array(raw).buffer;
-            } else if (raw instanceof Blob) {
-              buf = await raw.arrayBuffer();
-            } else {
+            if (!RV.active) return;
+            // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
+            let buf;
+            try {
+              if (raw instanceof ArrayBuffer) {
+                buf = raw;
+              } else if (raw && raw.buffer instanceof ArrayBuffer) {
+                buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+              } else if (Array.isArray(raw)) {
+                buf = new Uint8Array(raw).buffer;
+              } else if (raw instanceof Blob) {
+                buf = await raw.arrayBuffer();
+              } else {
+                return;
+              }
+            } catch (e) {
               return;
             }
-          } catch (e) {
-            return;
-          }
 
-          if (buf.byteLength < 24) return;
+            if (buf.byteLength < 24) return;
 
-          // Strip v13 sequence suffix if present (\xFFSEQ + 4 bytes = 8 bytes total)
-          let cleanBuf = buf;
-          if (buf.byteLength > 32) {
-            const dvEnd = new DataView(buf, buf.byteLength - 8);
-            if (dvEnd.getUint32(0, false) === 0xFF534551) {
-              cleanBuf = buf.slice(0, buf.byteLength - 8);
+            // Strip v13 sequence suffix if present (\xFFSEQ + 4 bytes = 8 bytes total)
+            let cleanBuf = buf;
+            if (buf.byteLength > 32) {
+              const dvEnd = new DataView(buf, buf.byteLength - 8);
+              if (dvEnd.getUint32(0, false) === 0xFF534551) {
+                cleanBuf = buf.slice(0, buf.byteLength - 8);
+              }
             }
-          }
 
-          // Track bandwidth
-          RV._bytesWindow = RV._bytesWindow || [];
-          RV._bytesWindow.push([Date.now(), buf.byteLength]);
-          const _bwCutoff = Date.now() - 3000;
-          RV._bytesWindow = RV._bytesWindow.filter(([t]) => t > _bwCutoff);
-          RV.bytesPerSec = RV._bytesWindow.reduce((s, [,b]) => s + b, 0) / 3;
+            // Track bandwidth
+            RV._bytesWindow = RV._bytesWindow || [];
+            RV._bytesWindow.push([Date.now(), buf.byteLength]);
+            const _bwCutoff = Date.now() - 3000;
+            RV._bytesWindow = RV._bytesWindow.filter(([t]) => t > _bwCutoff);
+            RV.bytesPerSec = RV._bytesWindow.reduce((s, [,b]) => s + b, 0) / 3;
 
-          try {
             const dv = new DataView(buf);
             const w = dv.getUint32(0, false), h = dv.getUint32(4, false);
             const tsHi = dv.getUint32(8, false), tsLo = dv.getUint32(12, false);
@@ -8119,8 +8119,8 @@
             
             frameQueue.push({ bmp, w, h });
             if (!isRendering) startRenderingLoop();
-          } catch (e) {
-            console.error("frame_bin: processing error", e);
+          } catch (err) {
+            console.error("Critical frame_bin error", err);
           }
         });
         SC.socket.on("cursor_bin", async (raw) => {

@@ -289,7 +289,7 @@ CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     # For Local LAN testing: Use http://YOUR_PC_IP:10000
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
+    "SERVER_URL":           "http://localhost:10000",
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────
@@ -1203,17 +1203,17 @@ async def _adv_task_stream_frames():
                 await asyncio.sleep(0.0005)   # 0.5ms yield — minimal latency
                 continue
 
-        # Stale-frame guard: if the frame is >100ms old, discard it.
-            # ts_us lives at bytes 8-16 in the FRAME_HDR (>IIQII big-endian).
-            # 100ms TTL ensures frames are dropped only if they are significantly late,
-            # protecting against clock drift while preventing huge backlogs.
+            # Stale-frame guard: if the frame is >500ms old, discard it.
+            # 500ms TTL ensures frames are dropped only if they are significantly late,
+            # protecting against backlog while allowing for heavy encoding times.
             if len(pkt) >= 16:
                 try:
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
-                    if age_ms > 100:
-                        # Frame is stale — discard, show only live content
+                    if age_ms > 500:
+                        if n % 60 == 0:
+                            log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
                 except Exception:
                     pass
