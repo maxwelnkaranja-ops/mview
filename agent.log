@@ -4134,3 +4134,18 @@ client_session: <aiohttp.client.ClientSession object at 0x000002F205DC29F0>
 2026-05-28 10:01:18,597 [WARNING ] Thread-185 (_loop) — Heartbeat error: / is not a connected namespace.
 2026-05-28 10:01:23,430 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
 2026-05-28 10:01:23,436 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-28 12:33:47,585 [WARNING ] Thread-7914 (_read_loop_websocket) — Disconnected from server.
+2026-05-28 12:33:47,593 [ERROR   ] adv-monitor — packet queue is empty, aborting
+2026-05-28 12:33:47,631 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-28 12:33:48,734 [INFO    ] sc-main — Reconnecting in 1.2s...
+2026-05-28 12:33:49,586 [ERROR   ] Thread-7922 (_loop) — AlertEngine error: / is not a connected namespace.
+2026-05-28 12:33:49,895 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-28 12:33:51,946 [INFO    ] Thread-9727 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-28 12:33:59,524 [INFO    ] Thread-9730 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-28 12:34:01,546 [INFO    ] Thread-9727 (_handle_eio_message) — Keylogger started.
+2026-05-28 12:34:03,522 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-28 12:34:14,766 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-28 12:34:14,769 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=MV-5F3B23-8BD7A7-4B1392
+2026-05-28 14:02:19,753 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting
+2026-05-28 14:02:50,158 [INFO    ] adv-monitor — Advanced Monitor: all viewers disconnected — stream paused
+2026-05-28 14:03:10,071 [INFO    ] adv-monitor — Advanced Monitor: viewer connected (count=1) — stream starting

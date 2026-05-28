@@ -289,7 +289,7 @@ CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     # For Local LAN testing: Use http://YOUR_PC_IP:10000
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           "http://localhost:10000",
+    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────

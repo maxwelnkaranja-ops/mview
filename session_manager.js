@@ -15,7 +15,7 @@
  */
 
 const MVIEW_CONFIG = {
-  SERVER_BASE_URL:   window.MVIEW_SERVER_URL || 'http://192.168.0.101:5000',
+  SERVER_BASE_URL:   window.MVIEW_SERVER_URL || 'https://screen-connect-rtca.onrender.com',
   SUPABASE_URL:      'https://iacdzpcoftxxcoigopun.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054',
   POLL_INTERVAL_MS:  3500,
