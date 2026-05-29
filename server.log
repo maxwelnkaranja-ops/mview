@@ -37480,3 +37480,4 @@ ValueError: Invalid async_mode specified
 2026-05-29 17:51:16  WARNING   [Thread-5243 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
 2026-05-29 17:51:16  INFO      [Thread-5243 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:16] "GET /status HTTP/1.1" 200 -
 2026-05-29 17:51:17  INFO      [Thread-5246 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:17] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:51:22  INFO      [Thread-3 (process_request_thread)]  Socket disconnected: b8upU_omU02G7W-aAAAB
