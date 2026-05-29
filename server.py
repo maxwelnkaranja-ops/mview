@@ -2381,6 +2381,25 @@ if SOCKETIO_OK and sio:
             return
         sio.emit("request_action", data, room=did)
 
+    @sio.on("request_action")
+    def on_request_action(data):
+        """Relay direct request_action commands from dashboard to agent."""
+        did = data.get("device_id", "")
+        if not did:
+            return
+        with _dev_lock:
+            dev = _devices.get(did)
+        if not dev:
+            return
+        
+        # Relay to agent (room=did)
+        sio.emit("request_action", data, room=did)
+        
+        # Also relay to adv socket if distinct
+        agent_adv_sid = _adv_agent_sids.get(did)
+        if agent_adv_sid and agent_adv_sid != dev.get("sid"):
+            sio.emit("request_action", data, room=agent_adv_sid)
+
     def _fwd(event_name, tab=None, extra_fn=None):
         """Register a dashboard→agent command forwarder."""
         @sio.on(event_name)

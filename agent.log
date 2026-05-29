@@ -7797,3 +7797,132 @@ client_session: <aiohttp.client.ClientSession object at 0x000002F205DC29F0>
 2026-05-29 17:51:15,499 [INFO    ] adv-monitor — Emitting frame_bin: 68126 bytes
 2026-05-29 17:51:18,381 [ERROR   ] adv-monitor — aiohttp package not installed
 2026-05-29 17:51:20,614 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 21:35:45,632 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=21584| server=https://screen-connect-rtca.onrender.com | device=uqt5uq7... ═══
+2026-05-29 21:35:45,674 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 21:35:47,706 [INFO    ] sc-main — Connecting to https://screen-connect-rtca.onrender.com...
+2026-05-29 21:35:47,756 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:35:49,768 [INFO    ] Thread-3 (_handle_eio_message) — Connected to https://screen-connect-rtca.onrender.com
+2026-05-29 21:35:49,880 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 21:35:50,628 [INFO    ] Thread-3 (_handle_eio_message) — Unified Connection: sending agent_auth for uqt5uq7
+2026-05-29 21:35:51,036 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 21:35:52,348 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 21:35:54,322 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 21:35:54,596 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 21:35:54,600 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 21:35:54,601 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 21:35:54,601 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 21:35:54,604 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:35:54,690 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 21:35:54,696 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=95 (no turbojpeg)
+2026-05-29 21:35:54,697 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 21:35:59,494 [INFO    ] adv-monitor — Emitting frame_bin: 466742 bytes
+2026-05-29 21:36:09,445 [INFO    ] adv-monitor — Emitting frame_bin: 411353 bytes
+2026-05-29 21:36:12,348 [INFO    ] adv-monitor — Emitting frame_bin: 404038 bytes
+2026-05-29 21:36:18,979 [INFO    ] adv-monitor — Emitting frame_bin: 501679 bytes
+2026-05-29 21:36:24,393 [INFO    ] adv-monitor — Emitting frame_bin: 511381 bytes
+2026-05-29 21:36:24,484 [INFO    ] adv-monitor — Emitting frame_bin: 509760 bytes
+2026-05-29 21:36:36,847 [INFO    ] adv-monitor — Emitting frame_bin: 445289 bytes
+2026-05-29 21:36:37,128 [INFO    ] adv-monitor — Emitting frame_bin: 448091 bytes
+2026-05-29 21:37:09,520 [INFO    ] adv-monitor — Emitting frame_bin: 493053 bytes
+2026-05-29 21:37:14,578 [INFO    ] adv-monitor — Emitting frame_bin: 478159 bytes
+2026-05-29 21:37:28,532 [INFO    ] adv-monitor — Emitting frame_bin: 501807 bytes
+2026-05-29 21:37:35,968 [INFO    ] adv-monitor — Emitting frame_bin: 481930 bytes
+2026-05-29 21:37:37,072 [INFO    ] adv-monitor — Emitting frame_bin: 446872 bytes
+2026-05-29 21:37:44,277 [INFO    ] adv-monitor — Emitting frame_bin: 520821 bytes
+2026-05-29 21:38:00,641 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 21:38:01,908 [INFO    ] sc-main — Reconnecting in 1.3s...
+2026-05-29 21:38:03,182 [INFO    ] sc-main — Connecting to https://screen-connect-rtca.onrender.com...
+2026-05-29 21:38:10,016 [INFO    ] Thread-56 (_handle_eio_message) — Connected to https://screen-connect-rtca.onrender.com
+2026-05-29 21:38:10,812 [INFO    ] Thread-56 (_handle_eio_message) — Unified Connection: sending agent_auth for uqt5uq7
+2026-05-29 21:38:11,243 [INFO    ] Thread-61 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 21:38:12,300 [INFO    ] Thread-56 (_handle_eio_message) — Keylogger started.
+2026-05-29 21:38:14,250 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 21:38:14,251 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-29 21:41:29,228 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=20620| server=http://localhost:10000 | device=uqt5uq7... ═══
+2026-05-29 21:41:29,237 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 21:41:31,255 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 21:41:31,264 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:41:33,519 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 21:41:33,761 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 21:41:34,812 [INFO    ] Thread-3 (_handle_eio_message) — Unified Connection: sending agent_auth for uqt5uq7
+2026-05-29 21:41:35,007 [INFO    ] Thread-10 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 21:41:37,079 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 21:41:39,013 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 21:41:39,016 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 21:41:39,017 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 21:41:39,017 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 21:41:39,018 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 21:41:39,026 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:41:39,141 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 21:41:39,143 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=95 (no turbojpeg)
+2026-05-29 21:41:39,143 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 21:42:07,876 [INFO    ] adv-monitor — Emitting frame_bin: 314259 bytes
+2026-05-29 21:42:19,658 [INFO    ] adv-monitor — Emitting frame_bin: 310322 bytes
+2026-05-29 21:42:21,502 [INFO    ] adv-monitor — Emitting frame_bin: 364101 bytes
+2026-05-29 21:43:00,016 [INFO    ] adv-monitor — Emitting frame_bin: 345718 bytes
+2026-05-29 21:43:02,771 [INFO    ] adv-monitor — Emitting frame_bin: 292143 bytes
+2026-05-29 21:43:15,813 [INFO    ] adv-monitor — Emitting frame_bin: 293644 bytes
+2026-05-29 21:43:17,251 [INFO    ] adv-monitor — Emitting frame_bin: 293661 bytes
+2026-05-29 21:43:21,828 [INFO    ] adv-monitor — Emitting frame_bin: 396982 bytes
+2026-05-29 21:43:24,182 [INFO    ] adv-monitor — Emitting frame_bin: 401318 bytes
+2026-05-29 21:43:24,606 [INFO    ] adv-monitor — Emitting frame_bin: 399865 bytes
+2026-05-29 21:44:01,532 [INFO    ] adv-monitor — Emitting frame_bin: 431473 bytes
+2026-05-29 21:45:57,022 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=22820| server=http://localhost:10000 | device=uqt5uq7... ═══
+2026-05-29 21:45:57,351 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 21:45:59,390 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 21:45:59,404 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:46:01,607 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 21:46:01,800 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 21:46:03,409 [INFO    ] Thread-3 (_handle_eio_message) — Unified Connection: sending agent_auth for uqt5uq7
+2026-05-29 21:46:03,770 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 21:46:05,636 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 21:46:07,540 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 21:46:07,562 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 21:46:07,563 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 21:46:07,563 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 21:46:07,630 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 21:46:07,694 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 21:46:07,953 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 21:46:07,954 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=95 (no turbojpeg)
+2026-05-29 21:46:07,955 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 21:46:14,968 [INFO    ] adv-monitor — Emitting frame_bin: 509570 bytes
+2026-05-29 21:46:31,881 [INFO    ] adv-monitor — Emitting frame_bin: 401044 bytes
+2026-05-29 21:46:49,273 [INFO    ] adv-monitor — Emitting frame_bin: 586986 bytes
+2026-05-29 21:47:50,319 [INFO    ] adv-monitor — Emitting frame_bin: 457323 bytes
+2026-05-29 21:48:33,431 [INFO    ] adv-monitor — Emitting frame_bin: 369742 bytes
+2026-05-29 21:48:42,215 [INFO    ] adv-monitor — Emitting frame_bin: 419822 bytes
+2026-05-29 21:48:57,776 [INFO    ] adv-monitor — Emitting frame_bin: 426731 bytes
+2026-05-29 21:49:13,403 [INFO    ] adv-monitor — Emitting frame_bin: 404016 bytes
+2026-05-29 21:49:18,651 [INFO    ] adv-monitor — Emitting frame_bin: 388876 bytes
+2026-05-29 21:49:25,262 [INFO    ] adv-monitor — Emitting frame_bin: 410845 bytes
+2026-05-29 21:49:35,439 [INFO    ] adv-monitor — Emitting frame_bin: 316005 bytes
+2026-05-29 21:49:49,708 [INFO    ] adv-monitor — Emitting frame_bin: 330145 bytes
+2026-05-29 21:49:51,686 [INFO    ] adv-monitor — Emitting frame_bin: 333720 bytes
+2026-05-29 21:49:56,230 [INFO    ] adv-monitor — Emitting frame_bin: 321085 bytes
+2026-05-29 21:50:33,301 [INFO    ] adv-monitor — Emitting frame_bin: 335865 bytes
+2026-05-29 21:50:39,931 [INFO    ] adv-monitor — Emitting frame_bin: 320389 bytes
+2026-05-29 21:50:49,354 [INFO    ] adv-monitor — Emitting frame_bin: 329641 bytes
+2026-05-29 21:50:49,439 [INFO    ] adv-monitor — Emitting frame_bin: 329641 bytes
+2026-05-29 21:51:12,135 [INFO    ] adv-monitor — Emitting frame_bin: 373169 bytes
+2026-05-29 21:51:18,449 [INFO    ] adv-monitor — Emitting frame_bin: 341642 bytes
+2026-05-29 21:51:28,446 [INFO    ] adv-monitor — Emitting frame_bin: 366067 bytes
+2026-05-29 21:51:28,914 [INFO    ] adv-monitor — Emitting frame_bin: 368261 bytes
+2026-05-29 21:51:54,951 [INFO    ] adv-monitor — Emitting frame_bin: 401511 bytes
+2026-05-29 21:51:57,654 [INFO    ] adv-monitor — Emitting frame_bin: 402542 bytes
+2026-05-29 21:52:00,261 [INFO    ] adv-monitor — Emitting frame_bin: 402704 bytes
+2026-05-29 21:52:17,559 [INFO    ] adv-monitor — Emitting frame_bin: 383323 bytes
+2026-05-29 21:52:30,608 [INFO    ] adv-monitor — Emitting frame_bin: 409963 bytes
+2026-05-29 21:52:53,609 [INFO    ] adv-monitor — Emitting frame_bin: 812198 bytes
+2026-05-29 21:52:57,031 [INFO    ] adv-monitor — Emitting frame_bin: 238480 bytes
+2026-05-29 21:52:59,827 [INFO    ] adv-monitor — Emitting frame_bin: 344867 bytes
+2026-05-29 21:53:10,383 [INFO    ] adv-monitor — Emitting frame_bin: 415106 bytes
+2026-05-29 21:53:26,498 [INFO    ] adv-monitor — Emitting frame_bin: 388392 bytes
+2026-05-29 21:53:35,463 [INFO    ] adv-monitor — Emitting frame_bin: 706948 bytes
+2026-05-29 21:53:47,740 [INFO    ] adv-monitor — Emitting frame_bin: 567504 bytes
+2026-05-29 21:53:50,397 [INFO    ] adv-monitor — Emitting frame_bin: 391065 bytes
+2026-05-29 21:54:08,879 [INFO    ] adv-monitor — Emitting frame_bin: 825497 bytes
+2026-05-29 21:54:19,275 [INFO    ] adv-monitor — Emitting frame_bin: 350246 bytes
+2026-05-29 21:54:23,531 [INFO    ] adv-monitor — Emitting frame_bin: 335344 bytes
+2026-05-29 21:54:36,356 [INFO    ] adv-monitor — Emitting frame_bin: 397821 bytes
+2026-05-29 21:54:45,729 [INFO    ] adv-monitor — Emitting frame_bin: 404936 bytes
+2026-05-29 21:55:05,393 [INFO    ] adv-monitor — Emitting frame_bin: 374300 bytes

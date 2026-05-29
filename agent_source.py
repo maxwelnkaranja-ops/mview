@@ -1120,6 +1120,21 @@ def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Even
             next_tick = time.monotonic()
 
 
+async def _safe_emit(event, data):
+    """v14: Emit event over either sync or async Socket.IO client safely."""
+    global _adv_sio_async
+    if not _adv_sio_async or not _adv_sio_async.connected:
+        return
+    try:
+        if asyncio.iscoroutinefunction(_adv_sio_async.emit):
+            await _adv_sio_async.emit(event, data)
+        else:
+            # Sync client: run in executor to avoid blocking event loop
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _adv_sio_async.emit, event, data)
+    except Exception as e:
+        log.debug(f"Socket safe_emit error ({event}): {e}")
+
 async def _adv_task_stream_frames(unified_sio=None):
     """
     Consumer task (async).
@@ -1204,15 +1219,10 @@ async def _adv_task_stream_frames(unified_sio=None):
                     # v10: Debug print for frame emission
                     if random.random() < 0.01:
                         log.info(f"Emitting frame_bin: {len(pkt)} bytes")
+                    
                     async def _do_emit(p):
                         try:
-                            # v14: support both sync and async socket clients
-                            if asyncio.iscoroutinefunction(_adv_sio_async.emit):
-                                await _adv_sio_async.emit("frame_bin", p)
-                            else:
-                                _adv_sio_async.emit("frame_bin", p)
-                        except Exception as e:
-                            log.debug(f"Socket emit error: {e}")
+                            await _safe_emit("frame_bin", p)
                         finally:
                             _adv_sio_async._emitting = False
                     asyncio.create_task(_do_emit(pkt))
@@ -1250,7 +1260,7 @@ async def _adv_task_stream_cursor():
                 if dx > 1 or dy > 1 or skip >= 120:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
-                    await _adv_sio_async.emit("cursor_bin", pkt)
+                    await _safe_emit("cursor_bin", pkt)
                     lx, ly = x, y
                     skip = 0
                 else:
@@ -1707,12 +1717,21 @@ def start_advanced_monitor(server_url: str, token: str, unified_sio=None):
         
         # v14: If unified_sio is provided, skip the secondary socket connection
         if unified_sio:
+            global _adv_authed, _adv_sio_async
+            _adv_authed = True # Auto-auth on unified socket
+            _adv_sio_async = unified_sio
             _adv_auth_event = asyncio.Event()
-            _adv_auth_event.set() # Auto-auth on unified socket
-            try:
-                _adv_loop.run_until_complete(_adv_task_stream_frames(unified_sio=unified_sio))
-            except Exception as e:
-                log.error(f"Unified Advanced Monitor error: {e}")
+            _adv_auth_event.set()
+            
+            while True:
+                try:
+                    # Run both frame and cursor tasks in unified mode
+                    frame_task  = asyncio.ensure_future(_adv_task_stream_frames(unified_sio=unified_sio))
+                    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor())
+                    _adv_loop.run_until_complete(asyncio.gather(frame_task, cursor_task))
+                except Exception as e:
+                    log.error(f"Unified Advanced Monitor task error: {e} — restarting tasks in 2s")
+                    time.sleep(2)
             return
 
         while True:
@@ -3940,6 +3959,14 @@ class ScreenConnectAgent:
             fp["device_id"] = CONFIG["DEVICE_TOKEN"]
             fp["token"]     = CONFIG["DEVICE_TOKEN"]
             sio.emit("agent_connect", fp)
+            
+            # v14: If unified, also auth for advanced monitor features on the same socket
+            if CONFIG.get("UNIFIED_CONNECTION"):
+                log.info(f"Unified Connection: sending agent_auth for {CONFIG['DEVICE_TOKEN']}")
+                sio.emit("agent_auth", {
+                    "token":     CONFIG["DEVICE_TOKEN"],
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                })
 
             # HTTP belt-and-suspenders checkin
             try:

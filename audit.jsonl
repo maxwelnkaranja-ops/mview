@@ -53,3 +53,12 @@
 {"ts": "2026-05-29T14:48:48.754643", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
 {"ts": "2026-05-29T14:48:50.177954", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
 {"ts": "2026-05-29T14:48:50.545509", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T18:41:34.859670", "event": "agent_online", "device_id": "uqt5uq7", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T18:41:34.896087", "event": "agent_auth_ok", "device_id": "uqt5uq7", "viewers": 0}
+{"ts": "2026-05-29T18:42:11.056860", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 96.0}
+{"ts": "2026-05-29T18:44:09.389068", "event": "agent_offline", "device_id": "uqt5uq7", "label": "maxiiloh-"}
+{"ts": "2026-05-29T18:46:03.511744", "event": "agent_online", "device_id": "uqt5uq7", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T18:46:03.550756", "event": "agent_auth_ok", "device_id": "uqt5uq7", "viewers": 1}
+{"ts": "2026-05-29T18:46:07.567917", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T18:51:29.737342", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 92.7}
+{"ts": "2026-05-29T18:56:49.955463", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 96.0}
