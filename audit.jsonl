@@ -22,3 +22,34 @@
 {"ts": "2026-05-28T12:43:02.726943", "event": "agent_auth_ok", "device_id": "MV-5F3B23-8BD7A7-4B1392", "viewers": 0}
 {"ts": "2026-05-28T12:43:33.481398", "event": "agent_alert", "device_id": "MV-5F3B23-8BD7A7-4B1392", "type": "cpu", "value": 94.4}
 {"ts": "2026-05-28T12:43:47.284744", "event": "agent_offline", "device_id": "MV-5F3B23-8BD7A7-4B1392", "label": "maxiiloh-"}
+{"ts": "2026-05-29T14:10:05.217397", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:10:05.987193", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "muX7nzKWPr9nVYv5AAAB"}
+{"ts": "2026-05-29T14:10:05.990384", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:10:09.315610", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 97.2}
+{"ts": "2026-05-29T14:10:10.048772", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 93.5}
+{"ts": "2026-05-29T14:15:16.254704", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-05-29T14:15:33.991727", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:15:38.298962", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-05-29T14:20:56.035160", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:21:08.902707", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "k9gki5U3IBMEk-LzAAAD"}
+{"ts": "2026-05-29T14:21:08.904285", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:21:32.077735", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 94.7}
+{"ts": "2026-05-29T14:29:00.163870", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.4}
+{"ts": "2026-05-29T14:32:58.221004", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:35:24.616485", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 97.5}
+{"ts": "2026-05-29T14:35:51.951457", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:36:06.211385", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "dEkWYEv0idPq4svOAAAB"}
+{"ts": "2026-05-29T14:36:06.212874", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:36:42.789396", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:36:59.524531", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:36:59.657717", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:38:08.002878", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:38:08.036068", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:43:13.000583", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "g6jRV01-zVvGR7zEAAAD"}
+{"ts": "2026-05-29T14:43:13.006643", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.0.100"}
+{"ts": "2026-05-29T14:43:17.164374", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.8}
+{"ts": "2026-05-29T14:43:28.314797", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:43:28.467662", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:48:48.754643", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:48:50.177954", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T14:48:50.545509", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}

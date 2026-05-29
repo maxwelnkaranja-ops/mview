@@ -6399,3 +6399,1401 @@ client_session: <aiohttp.client.ClientSession object at 0x000002F205DC29F0>
 2026-05-28 23:20:13,648 [INFO    ] sc-main — Connecting to http://localhost:10000...
 2026-05-28 23:20:17,725 [WARNING ] sc-main — Connection error: Connection error
 2026-05-28 23:20:17,725 [INFO    ] sc-main — Reconnecting in 17.4s...
+2026-05-29 17:10:00,296 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=7856| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:10:00,380 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:10:01,107 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=21388| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:10:01,157 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:10:02,396 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:10:02,446 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:10:03,176 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:10:03,187 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:10:04,486 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:10:04,632 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:10:05,290 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:10:05,314 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:10:05,381 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:10:06,013 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:10:07,358 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:10:08,108 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:10:09,301 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:10:09,309 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:10,021 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:10:10,023 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:10,327 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:11,031 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:15,327 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:16,032 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:16,331 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:17,034 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:21,333 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:22,035 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:22,343 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:23,044 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:27,344 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:28,047 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:28,358 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:29,074 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:33,360 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:34,075 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:34,373 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:35,089 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:39,376 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:40,090 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:40,391 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:41,106 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:45,392 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:46,107 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:46,398 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:47,115 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:51,400 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:52,116 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:52,407 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:53,132 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:57,408 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:58,132 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:10:58,415 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:10:59,140 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:03,416 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:04,141 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:04,420 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:05,148 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:09,421 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:10,152 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:10,423 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:11,166 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:15,424 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:16,167 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:16,440 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:17,168 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:21,473 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:22,212 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:22,631 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:23,409 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:27,638 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:28,421 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:28,668 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:29,486 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:33,699 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:34,767 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:34,653 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:35,776 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:39,770 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:40,777 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:40,780 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:41,792 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:45,782 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:46,789 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:46,794 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:47,806 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:51,790 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:52,802 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:52,807 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:53,809 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:57,803 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:58,810 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:11:58,810 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:11:59,823 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:03,811 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:04,817 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:04,825 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:05,838 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:09,819 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:10,832 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:10,839 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:11,852 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:15,833 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:16,848 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:16,854 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:17,861 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:21,849 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:22,859 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:22,862 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:23,864 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:27,860 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:28,865 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:28,874 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:29,871 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:33,875 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:34,872 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:34,886 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:35,878 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:39,887 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:40,879 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:40,891 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:41,895 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:45,893 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:46,896 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:46,905 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:47,907 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:51,906 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:52,908 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:52,919 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:53,911 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:57,920 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:58,912 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:12:58,926 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:12:59,923 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:03,927 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:04,924 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:04,941 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:05,931 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:09,942 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:10,932 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:10,950 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:11,945 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:15,951 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:16,946 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:16,954 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:17,956 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:21,955 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:22,957 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:22,971 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:23,969 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:27,972 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:28,970 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:28,989 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:29,972 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:33,990 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:34,974 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:35,001 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:35,983 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:40,002 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:40,984 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:41,011 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:41,997 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:46,012 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:46,998 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:47,020 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:48,002 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:52,022 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:53,003 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:53,038 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:54,014 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:13:58,039 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:59,015 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:13:59,044 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:00,046 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:04,045 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:05,046 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:05,050 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:06,057 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:10,051 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:11,058 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:11,062 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:12,074 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:16,063 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:17,068 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:17,076 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:18,086 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:22,069 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:23,084 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:23,087 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:24,111 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:28,087 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:29,107 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:29,142 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:30,179 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:34,133 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:35,181 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:35,225 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:36,309 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:40,182 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:41,183 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:41,310 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:42,311 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:46,205 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:47,243 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:47,312 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:48,315 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:52,286 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:53,313 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:53,316 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:54,318 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:14:58,321 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:59,319 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:14:59,331 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:00,320 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:04,333 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:05,321 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:05,335 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:06,324 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:10,335 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:11,333 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:11,340 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:12,352 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:16,341 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:17,356 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:22,357 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:23,363 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:28,364 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:29,369 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:29,630 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=3348| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:15:29,639 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:15:31,657 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:15:31,670 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:15:33,726 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:15:33,784 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:15:34,001 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:15:34,370 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:35,385 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:36,046 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:15:38,022 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:15:38,297 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-29 17:15:38,297 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 17:15:38,299 [INFO    ] adv-monitor — Advanced Monitor authenticated. device_id=TEST-AGENT
+2026-05-29 17:15:38,299 [INFO    ] adv-monitor — Advanced Monitor: aiortc not installed — WebRTC disabled, using WebSocket relay
+2026-05-29 17:15:38,300 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 17:15:38,301 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 17:15:38,304 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:15:38,363 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 17:15:38,365 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-29 17:15:38,365 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 17:15:40,386 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:41,391 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:42,912 [INFO    ] adv-monitor — Emitting frame_bin: 173366 bytes
+2026-05-29 17:15:46,393 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:46,990 [INFO    ] adv-monitor — Emitting frame_bin: 173366 bytes
+2026-05-29 17:15:47,408 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:52,410 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:52,560 [INFO    ] adv-monitor — Emitting frame_bin: 173366 bytes
+2026-05-29 17:15:53,410 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:15:56,599 [INFO    ] adv-monitor — Emitting frame_bin: 173366 bytes
+2026-05-29 17:15:56,866 [INFO    ] adv-monitor — Emitting frame_bin: 173366 bytes
+2026-05-29 17:15:58,411 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:15:59,421 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:04,422 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:05,435 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:09,512 [INFO    ] adv-monitor — Emitting frame_bin: 173352 bytes
+2026-05-29 17:16:10,436 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:10,800 [INFO    ] adv-monitor — Emitting frame_bin: 173352 bytes
+2026-05-29 17:16:11,448 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:15,648 [INFO    ] adv-monitor — Emitting frame_bin: 61810 bytes
+2026-05-29 17:16:15,758 [INFO    ] adv-monitor — Emitting frame_bin: 61775 bytes
+2026-05-29 17:16:16,008 [INFO    ] adv-monitor — Emitting frame_bin: 62078 bytes
+2026-05-29 17:16:16,233 [INFO    ] adv-monitor — Emitting frame_bin: 61542 bytes
+2026-05-29 17:16:16,373 [INFO    ] adv-monitor — Emitting frame_bin: 61603 bytes
+2026-05-29 17:16:16,449 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:17,211 [INFO    ] adv-monitor — Emitting frame_bin: 61381 bytes
+2026-05-29 17:16:17,460 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:17,713 [INFO    ] adv-monitor — Emitting frame_bin: 61935 bytes
+2026-05-29 17:16:18,091 [INFO    ] adv-monitor — Emitting frame_bin: 61615 bytes
+2026-05-29 17:16:18,280 [INFO    ] adv-monitor — Emitting frame_bin: 61843 bytes
+2026-05-29 17:16:22,461 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:23,467 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:25,876 [INFO    ] adv-monitor — Emitting frame_bin: 62426 bytes
+2026-05-29 17:16:26,976 [INFO    ] adv-monitor — Emitting frame_bin: 62311 bytes
+2026-05-29 17:16:28,107 [INFO    ] adv-monitor — Emitting frame_bin: 62243 bytes
+2026-05-29 17:16:28,170 [INFO    ] adv-monitor — Emitting frame_bin: 61905 bytes
+2026-05-29 17:16:28,468 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:29,024 [INFO    ] adv-monitor — Emitting frame_bin: 62244 bytes
+2026-05-29 17:16:29,469 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:29,518 [INFO    ] adv-monitor — Emitting frame_bin: 62117 bytes
+2026-05-29 17:16:30,513 [INFO    ] adv-monitor — Emitting frame_bin: 62253 bytes
+2026-05-29 17:16:32,070 [INFO    ] adv-monitor — Emitting frame_bin: 62010 bytes
+2026-05-29 17:16:33,773 [INFO    ] adv-monitor — Emitting frame_bin: 61918 bytes
+2026-05-29 17:16:34,097 [INFO    ] adv-monitor — Emitting frame_bin: 61815 bytes
+2026-05-29 17:16:34,470 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:35,477 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:36,464 [INFO    ] adv-monitor — Emitting frame_bin: 61568 bytes
+2026-05-29 17:16:36,703 [INFO    ] adv-monitor — Emitting frame_bin: 61948 bytes
+2026-05-29 17:16:37,344 [INFO    ] adv-monitor — Emitting frame_bin: 62019 bytes
+2026-05-29 17:16:40,478 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:40,905 [INFO    ] adv-monitor — Emitting frame_bin: 62282 bytes
+2026-05-29 17:16:41,031 [INFO    ] adv-monitor — Emitting frame_bin: 61788 bytes
+2026-05-29 17:16:41,484 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:42,880 [INFO    ] adv-monitor — Emitting frame_bin: 62120 bytes
+2026-05-29 17:16:44,473 [INFO    ] adv-monitor — Emitting frame_bin: 61354 bytes
+2026-05-29 17:16:46,485 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:46,803 [INFO    ] adv-monitor — Emitting frame_bin: 61862 bytes
+2026-05-29 17:16:47,215 [INFO    ] adv-monitor — Emitting frame_bin: 61823 bytes
+2026-05-29 17:16:47,497 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:50,580 [INFO    ] adv-monitor — Emitting frame_bin: 62051 bytes
+2026-05-29 17:16:50,986 [INFO    ] adv-monitor — Emitting frame_bin: 62099 bytes
+2026-05-29 17:16:52,226 [INFO    ] adv-monitor — Emitting frame_bin: 62072 bytes
+2026-05-29 17:16:52,498 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:53,502 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:55,614 [INFO    ] adv-monitor — Emitting frame_bin: 62145 bytes
+2026-05-29 17:16:58,503 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:16:58,570 [INFO    ] adv-monitor — Emitting frame_bin: 62094 bytes
+2026-05-29 17:16:58,972 [INFO    ] adv-monitor — Emitting frame_bin: 61774 bytes
+2026-05-29 17:16:59,506 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:16:59,835 [INFO    ] adv-monitor — Emitting frame_bin: 61938 bytes
+2026-05-29 17:17:00,404 [INFO    ] adv-monitor — Emitting frame_bin: 62132 bytes
+2026-05-29 17:17:01,149 [INFO    ] adv-monitor — Emitting frame_bin: 61008 bytes
+2026-05-29 17:17:02,744 [INFO    ] adv-monitor — Emitting frame_bin: 61638 bytes
+2026-05-29 17:17:04,507 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:05,517 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:05,564 [INFO    ] adv-monitor — Emitting frame_bin: 62162 bytes
+2026-05-29 17:17:06,098 [INFO    ] adv-monitor — Emitting frame_bin: 62109 bytes
+2026-05-29 17:17:09,948 [INFO    ] adv-monitor — Emitting frame_bin: 61695 bytes
+2026-05-29 17:17:10,517 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:11,525 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:12,121 [INFO    ] adv-monitor — Emitting frame_bin: 61171 bytes
+2026-05-29 17:17:16,313 [INFO    ] adv-monitor — Emitting frame_bin: 61821 bytes
+2026-05-29 17:17:16,530 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:17,331 [INFO    ] adv-monitor — Emitting frame_bin: 61246 bytes
+2026-05-29 17:17:17,393 [INFO    ] adv-monitor — Emitting frame_bin: 61342 bytes
+2026-05-29 17:17:17,553 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:18,213 [INFO    ] adv-monitor — Emitting frame_bin: 61196 bytes
+2026-05-29 17:17:18,785 [INFO    ] adv-monitor — Emitting frame_bin: 61600 bytes
+2026-05-29 17:17:19,300 [INFO    ] adv-monitor — Emitting frame_bin: 61560 bytes
+2026-05-29 17:17:21,999 [INFO    ] adv-monitor — Emitting frame_bin: 61307 bytes
+2026-05-29 17:17:22,553 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:22,808 [INFO    ] adv-monitor — Emitting frame_bin: 61760 bytes
+2026-05-29 17:17:23,562 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:23,767 [INFO    ] adv-monitor — Emitting frame_bin: 61357 bytes
+2026-05-29 17:17:25,887 [INFO    ] adv-monitor — Emitting frame_bin: 62274 bytes
+2026-05-29 17:17:25,938 [INFO    ] adv-monitor — Emitting frame_bin: 61871 bytes
+2026-05-29 17:17:28,209 [INFO    ] adv-monitor — Emitting frame_bin: 62054 bytes
+2026-05-29 17:17:28,562 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:29,578 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:32,260 [INFO    ] adv-monitor — Emitting frame_bin: 61504 bytes
+2026-05-29 17:17:34,582 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:35,205 [INFO    ] adv-monitor — Emitting frame_bin: 61692 bytes
+2026-05-29 17:17:35,361 [INFO    ] adv-monitor — Emitting frame_bin: 61698 bytes
+2026-05-29 17:17:35,595 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:35,705 [INFO    ] adv-monitor — Emitting frame_bin: 61670 bytes
+2026-05-29 17:17:38,478 [INFO    ] adv-monitor — Emitting frame_bin: 61785 bytes
+2026-05-29 17:17:38,968 [INFO    ] adv-monitor — Emitting frame_bin: 62117 bytes
+2026-05-29 17:17:40,596 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:41,606 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:42,105 [INFO    ] adv-monitor — Emitting frame_bin: 61891 bytes
+2026-05-29 17:17:43,776 [INFO    ] adv-monitor — Emitting frame_bin: 61780 bytes
+2026-05-29 17:17:45,165 [INFO    ] adv-monitor — Emitting frame_bin: 61601 bytes
+2026-05-29 17:17:46,289 [INFO    ] adv-monitor — Emitting frame_bin: 61635 bytes
+2026-05-29 17:17:46,607 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:47,617 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:51,813 [INFO    ] adv-monitor — Emitting frame_bin: 61793 bytes
+2026-05-29 17:17:52,618 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:53,631 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:54,963 [INFO    ] adv-monitor — Emitting frame_bin: 62112 bytes
+2026-05-29 17:17:56,331 [INFO    ] adv-monitor — Emitting frame_bin: 62070 bytes
+2026-05-29 17:17:56,504 [INFO    ] adv-monitor — Emitting frame_bin: 61626 bytes
+2026-05-29 17:17:58,632 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:17:59,646 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:17:59,709 [INFO    ] adv-monitor — Emitting frame_bin: 62092 bytes
+2026-05-29 17:18:00,628 [INFO    ] adv-monitor — Emitting frame_bin: 62168 bytes
+2026-05-29 17:18:01,747 [INFO    ] adv-monitor — Emitting frame_bin: 61612 bytes
+2026-05-29 17:18:01,827 [INFO    ] adv-monitor — Emitting frame_bin: 61802 bytes
+2026-05-29 17:18:04,279 [INFO    ] adv-monitor — Emitting frame_bin: 62307 bytes
+2026-05-29 17:18:04,646 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:05,649 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:06,327 [INFO    ] adv-monitor — Emitting frame_bin: 62186 bytes
+2026-05-29 17:18:10,649 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:11,496 [INFO    ] adv-monitor — Emitting frame_bin: 61271 bytes
+2026-05-29 17:18:11,653 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:12,721 [INFO    ] adv-monitor — Emitting frame_bin: 61627 bytes
+2026-05-29 17:18:14,519 [INFO    ] adv-monitor — Emitting frame_bin: 61735 bytes
+2026-05-29 17:18:16,652 [INFO    ] adv-monitor — Emitting frame_bin: 61925 bytes
+2026-05-29 17:18:16,654 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:17,659 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:17,786 [INFO    ] adv-monitor — Emitting frame_bin: 61252 bytes
+2026-05-29 17:18:19,057 [INFO    ] adv-monitor — Emitting frame_bin: 61906 bytes
+2026-05-29 17:18:22,659 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:23,661 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:23,786 [INFO    ] adv-monitor — Emitting frame_bin: 61590 bytes
+2026-05-29 17:18:24,838 [INFO    ] adv-monitor — Emitting frame_bin: 62028 bytes
+2026-05-29 17:18:28,662 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:28,944 [INFO    ] adv-monitor — Emitting frame_bin: 62174 bytes
+2026-05-29 17:18:29,353 [INFO    ] adv-monitor — Emitting frame_bin: 62346 bytes
+2026-05-29 17:18:29,665 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:31,920 [INFO    ] adv-monitor — Emitting frame_bin: 61866 bytes
+2026-05-29 17:18:32,079 [INFO    ] adv-monitor — Emitting frame_bin: 62072 bytes
+2026-05-29 17:18:34,667 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:35,684 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:36,107 [INFO    ] adv-monitor — Emitting frame_bin: 62231 bytes
+2026-05-29 17:18:36,402 [INFO    ] adv-monitor — Emitting frame_bin: 62210 bytes
+2026-05-29 17:18:37,625 [INFO    ] adv-monitor — Emitting frame_bin: 62161 bytes
+2026-05-29 17:18:38,156 [INFO    ] adv-monitor — Emitting frame_bin: 62174 bytes
+2026-05-29 17:18:38,577 [INFO    ] adv-monitor — Emitting frame_bin: 62084 bytes
+2026-05-29 17:18:39,986 [INFO    ] adv-monitor — Emitting frame_bin: 62354 bytes
+2026-05-29 17:18:40,144 [INFO    ] adv-monitor — Emitting frame_bin: 61916 bytes
+2026-05-29 17:18:40,363 [INFO    ] adv-monitor — Emitting frame_bin: 62337 bytes
+2026-05-29 17:18:40,593 [INFO    ] adv-monitor — Emitting frame_bin: 62117 bytes
+2026-05-29 17:18:40,609 [INFO    ] adv-monitor — Emitting frame_bin: 62496 bytes
+2026-05-29 17:18:40,685 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:41,694 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:43,412 [INFO    ] adv-monitor — Emitting frame_bin: 62360 bytes
+2026-05-29 17:18:44,896 [INFO    ] adv-monitor — Emitting frame_bin: 61640 bytes
+2026-05-29 17:18:46,695 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:46,937 [INFO    ] adv-monitor — Emitting frame_bin: 61882 bytes
+2026-05-29 17:18:47,371 [INFO    ] adv-monitor — Emitting frame_bin: 61797 bytes
+2026-05-29 17:18:47,704 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:47,751 [INFO    ] adv-monitor — Emitting frame_bin: 61569 bytes
+2026-05-29 17:18:48,083 [INFO    ] adv-monitor — Emitting frame_bin: 62178 bytes
+2026-05-29 17:18:48,647 [INFO    ] adv-monitor — Emitting frame_bin: 62211 bytes
+2026-05-29 17:18:49,138 [INFO    ] adv-monitor — Emitting frame_bin: 61931 bytes
+2026-05-29 17:18:52,705 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:52,781 [INFO    ] adv-monitor — Emitting frame_bin: 61887 bytes
+2026-05-29 17:18:53,718 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:18:54,445 [INFO    ] adv-monitor — Emitting frame_bin: 62036 bytes
+2026-05-29 17:18:55,696 [INFO    ] adv-monitor — Emitting frame_bin: 62239 bytes
+2026-05-29 17:18:56,486 [INFO    ] adv-monitor — Emitting frame_bin: 62212 bytes
+2026-05-29 17:18:57,053 [INFO    ] adv-monitor — Emitting frame_bin: 62062 bytes
+2026-05-29 17:18:57,144 [INFO    ] adv-monitor — Emitting frame_bin: 61998 bytes
+2026-05-29 17:18:57,490 [INFO    ] adv-monitor — Emitting frame_bin: 61348 bytes
+2026-05-29 17:18:58,719 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:18:58,944 [INFO    ] adv-monitor — Emitting frame_bin: 62079 bytes
+2026-05-29 17:18:59,735 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:02,480 [INFO    ] adv-monitor — Emitting frame_bin: 61808 bytes
+2026-05-29 17:19:02,685 [INFO    ] adv-monitor — Emitting frame_bin: 62099 bytes
+2026-05-29 17:19:03,180 [INFO    ] adv-monitor — Emitting frame_bin: 61963 bytes
+2026-05-29 17:19:04,738 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:05,748 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:10,617 [INFO    ] adv-monitor — Emitting frame_bin: 61845 bytes
+2026-05-29 17:19:10,749 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:11,757 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:11,883 [INFO    ] adv-monitor — Emitting frame_bin: 61481 bytes
+2026-05-29 17:19:11,999 [INFO    ] adv-monitor — Emitting frame_bin: 61551 bytes
+2026-05-29 17:19:15,098 [INFO    ] adv-monitor — Emitting frame_bin: 61755 bytes
+2026-05-29 17:19:15,647 [INFO    ] adv-monitor — Emitting frame_bin: 61909 bytes
+2026-05-29 17:19:16,758 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:17,383 [INFO    ] adv-monitor — Emitting frame_bin: 61679 bytes
+2026-05-29 17:19:17,762 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:18,610 [INFO    ] adv-monitor — Emitting frame_bin: 61705 bytes
+2026-05-29 17:19:18,720 [INFO    ] adv-monitor — Emitting frame_bin: 62093 bytes
+2026-05-29 17:19:19,253 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:19:19,254 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:19:19,256 [WARNING ] adv-monitor — Advanced Monitor: disconnected — reconnecting…
+2026-05-29 17:19:19,259 [INFO    ] adv-monitor — Stream consumer: auth cleared — shutting down producer
+2026-05-29 17:19:19,260 [INFO    ] adv-monitor — Stream consumer: producer/ticker stop signalled
+2026-05-29 17:19:19,281 [INFO    ] adv-producer — Producer thread exited.
+2026-05-29 17:19:20,255 [INFO    ] sc-main — Reconnecting in 1.0s...
+2026-05-29 17:19:20,255 [INFO    ] sc-main — Reconnecting in 1.2s...
+2026-05-29 17:19:21,268 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:21,433 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:22,763 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:23,764 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:25,310 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:25,310 [INFO    ] sc-main — Reconnecting in 2.5s...
+2026-05-29 17:19:25,500 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:25,501 [INFO    ] sc-main — Reconnecting in 2.5s...
+2026-05-29 17:19:27,860 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:28,042 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:28,765 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:29,769 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:31,899 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:31,899 [INFO    ] sc-main — Reconnecting in 4.3s...
+2026-05-29 17:19:32,087 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:32,088 [INFO    ] sc-main — Reconnecting in 4.6s...
+2026-05-29 17:19:34,770 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:35,786 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:36,235 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:36,720 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:40,298 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:40,298 [INFO    ] sc-main — Reconnecting in 9.7s...
+2026-05-29 17:19:40,767 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:40,767 [INFO    ] sc-main — Reconnecting in 8.3s...
+2026-05-29 17:19:40,787 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:41,792 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:46,793 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:47,796 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:49,034 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:50,045 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:19:52,797 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:53,080 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:53,080 [INFO    ] sc-main — Reconnecting in 18.5s...
+2026-05-29 17:19:53,811 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:19:54,096 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:19:54,096 [INFO    ] sc-main — Reconnecting in 16.6s...
+2026-05-29 17:19:58,813 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:19:59,817 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:04,818 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:05,825 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:10,718 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:10,950 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:11,668 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:12,000 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:14,769 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:20:14,770 [INFO    ] sc-main — Reconnecting in 16.9s...
+2026-05-29 17:20:15,749 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:20:15,749 [INFO    ] sc-main — Reconnecting in 18.3s...
+2026-05-29 17:20:17,002 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:18,005 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:23,006 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:24,008 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:29,010 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:30,011 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:31,667 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:34,039 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:35,014 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:35,732 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:20:35,732 [INFO    ] sc-main — Reconnecting in 17.9s...
+2026-05-29 17:20:36,047 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:38,130 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:20:38,130 [INFO    ] sc-main — Reconnecting in 15.9s...
+2026-05-29 17:20:41,049 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:42,050 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:47,051 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:48,053 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:52,127 [INFO    ] adv-monitor — Advanced Monitor: connected — authenticating…
+2026-05-29 17:20:53,054 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:20:53,640 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:54,035 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:20:54,056 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:20:55,710 [INFO    ] Thread-217 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:20:56,043 [INFO    ] Thread-222 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:20:58,092 [INFO    ] Thread-217 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:20:59,057 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:00,059 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:00,070 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-29 17:21:04,407 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=3420| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:21:04,417 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:21:05,059 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:06,061 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:06,436 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:21:06,451 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:21:08,561 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:21:08,589 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:21:08,917 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:21:10,982 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:21:11,062 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:12,063 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:12,961 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 17:21:12,962 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:21:12,963 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 17:21:12,964 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 17:21:12,966 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 17:21:12,968 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:21:13,036 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 17:21:13,037 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-29 17:21:13,037 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 17:21:17,065 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:18,067 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:18,597 [INFO    ] adv-monitor — Emitting frame_bin: 350857 bytes
+2026-05-29 17:21:23,068 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:24,071 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:25,235 [INFO    ] adv-monitor — Emitting frame_bin: 355728 bytes
+2026-05-29 17:21:27,055 [INFO    ] adv-monitor — Emitting frame_bin: 332264 bytes
+2026-05-29 17:21:27,986 [INFO    ] adv-monitor — Emitting frame_bin: 359472 bytes
+2026-05-29 17:21:29,074 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:30,083 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:30,185 [INFO    ] adv-monitor — Emitting frame_bin: 368703 bytes
+2026-05-29 17:21:34,732 [INFO    ] adv-monitor — Emitting frame_bin: 373980 bytes
+2026-05-29 17:21:35,085 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:36,085 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:37,543 [INFO    ] adv-monitor — Emitting frame_bin: 271834 bytes
+2026-05-29 17:21:41,090 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:42,118 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:47,120 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:48,124 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:53,127 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:21:54,130 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:21:59,132 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:00,134 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:04,704 [INFO    ] adv-monitor — Emitting frame_bin: 311287 bytes
+2026-05-29 17:22:05,135 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:05,177 [INFO    ] adv-monitor — Emitting frame_bin: 310413 bytes
+2026-05-29 17:22:06,138 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:07,336 [INFO    ] adv-monitor — Emitting frame_bin: 324346 bytes
+2026-05-29 17:22:11,140 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:11,968 [INFO    ] adv-monitor — Emitting frame_bin: 322063 bytes
+2026-05-29 17:22:12,143 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:17,144 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:18,145 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:23,145 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:24,147 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:29,147 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:30,149 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:35,151 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:35,827 [INFO    ] adv-monitor — Emitting frame_bin: 327216 bytes
+2026-05-29 17:22:36,152 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:37,831 [INFO    ] adv-monitor — Emitting frame_bin: 309364 bytes
+2026-05-29 17:22:41,153 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:42,156 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:47,157 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:48,160 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:53,161 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:22:54,163 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:22:59,164 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:00,165 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:03,772 [INFO    ] adv-monitor — Emitting frame_bin: 292989 bytes
+2026-05-29 17:23:05,166 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:06,174 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:11,175 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:12,178 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:17,179 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:18,153 [INFO    ] adv-monitor — Emitting frame_bin: 389247 bytes
+2026-05-29 17:23:18,179 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:23,180 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:24,182 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:25,565 [INFO    ] adv-monitor — Emitting frame_bin: 300500 bytes
+2026-05-29 17:23:29,185 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:30,187 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:35,189 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:36,197 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:41,198 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:42,199 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:47,201 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:48,203 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:53,205 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:54,209 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:23:58,420 [INFO    ] adv-monitor — Emitting frame_bin: 301828 bytes
+2026-05-29 17:23:59,211 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:23:59,554 [INFO    ] adv-monitor — Emitting frame_bin: 339453 bytes
+2026-05-29 17:24:00,214 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:00,483 [INFO    ] adv-monitor — Emitting frame_bin: 354710 bytes
+2026-05-29 17:24:05,273 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:06,320 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:07,053 [INFO    ] adv-monitor — Emitting frame_bin: 368511 bytes
+2026-05-29 17:24:11,323 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:12,331 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:17,335 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:18,340 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:23,343 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:24,346 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:29,346 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:30,348 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:35,349 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:35,956 [INFO    ] adv-monitor — Emitting frame_bin: 273392 bytes
+2026-05-29 17:24:36,354 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:41,358 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:42,360 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:47,361 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:48,367 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:51,508 [INFO    ] adv-monitor — Emitting frame_bin: 328197 bytes
+2026-05-29 17:24:53,246 [INFO    ] adv-monitor — Emitting frame_bin: 333444 bytes
+2026-05-29 17:24:53,369 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:24:54,372 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:24:55,977 [INFO    ] adv-monitor — Emitting frame_bin: 335011 bytes
+2026-05-29 17:24:56,742 [INFO    ] adv-monitor — Emitting frame_bin: 344084 bytes
+2026-05-29 17:24:59,373 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:00,047 [INFO    ] adv-monitor — Emitting frame_bin: 312335 bytes
+2026-05-29 17:25:00,374 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:02,944 [INFO    ] adv-monitor — Emitting frame_bin: 350240 bytes
+2026-05-29 17:25:05,385 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:06,398 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:08,791 [INFO    ] adv-monitor — Emitting frame_bin: 327492 bytes
+2026-05-29 17:25:10,373 [INFO    ] adv-monitor — Emitting frame_bin: 282929 bytes
+2026-05-29 17:25:11,399 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:12,364 [INFO    ] adv-monitor — Emitting frame_bin: 332434 bytes
+2026-05-29 17:25:12,403 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:17,405 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:18,408 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:23,409 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:24,412 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:24,633 [INFO    ] adv-monitor — Emitting frame_bin: 298767 bytes
+2026-05-29 17:25:28,903 [INFO    ] adv-monitor — Emitting frame_bin: 277518 bytes
+2026-05-29 17:25:29,413 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:30,414 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:30,475 [INFO    ] adv-monitor — Emitting frame_bin: 311770 bytes
+2026-05-29 17:25:35,416 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:36,418 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:41,423 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:42,309 [INFO    ] adv-monitor — Emitting frame_bin: 320820 bytes
+2026-05-29 17:25:42,425 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:47,426 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:48,429 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:52,437 [INFO    ] adv-monitor — Emitting frame_bin: 330097 bytes
+2026-05-29 17:25:53,430 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:25:53,821 [INFO    ] adv-monitor — Emitting frame_bin: 348456 bytes
+2026-05-29 17:25:54,435 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:25:59,436 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:00,439 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:05,440 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:06,441 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:11,117 [INFO    ] adv-monitor — Emitting frame_bin: 316101 bytes
+2026-05-29 17:26:11,442 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:12,443 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:12,684 [INFO    ] adv-monitor — Emitting frame_bin: 322826 bytes
+2026-05-29 17:26:17,444 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:18,445 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:23,448 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:24,449 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:25,376 [INFO    ] adv-monitor — Emitting frame_bin: 292071 bytes
+2026-05-29 17:26:29,191 [INFO    ] adv-monitor — Emitting frame_bin: 322121 bytes
+2026-05-29 17:26:29,449 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:30,450 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:30,715 [INFO    ] adv-monitor — Emitting frame_bin: 324356 bytes
+2026-05-29 17:26:35,452 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:36,457 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:41,458 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:42,461 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:47,462 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:48,464 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:51,990 [INFO    ] adv-monitor — Emitting frame_bin: 330181 bytes
+2026-05-29 17:26:53,465 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:26:54,466 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:26:54,951 [INFO    ] adv-monitor — Emitting frame_bin: 335576 bytes
+2026-05-29 17:26:58,499 [INFO    ] adv-monitor — Emitting frame_bin: 336716 bytes
+2026-05-29 17:26:59,467 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:00,469 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:05,470 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:06,473 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:09,953 [INFO    ] adv-monitor — Emitting frame_bin: 277560 bytes
+2026-05-29 17:27:11,350 [INFO    ] adv-monitor — Emitting frame_bin: 286070 bytes
+2026-05-29 17:27:11,475 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:12,480 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:17,481 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:18,482 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:19,242 [INFO    ] adv-monitor — Emitting frame_bin: 308441 bytes
+2026-05-29 17:27:23,483 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:24,484 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:24,883 [INFO    ] adv-monitor — Emitting frame_bin: 314876 bytes
+2026-05-29 17:27:29,485 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:30,487 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:35,488 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:36,489 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:41,491 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:41,549 [INFO    ] adv-monitor — Emitting frame_bin: 302343 bytes
+2026-05-29 17:27:42,492 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:45,172 [INFO    ] adv-monitor — Emitting frame_bin: 327867 bytes
+2026-05-29 17:27:46,097 [INFO    ] adv-monitor — Emitting frame_bin: 325812 bytes
+2026-05-29 17:27:47,494 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:48,496 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:48,912 [INFO    ] adv-monitor — Emitting frame_bin: 299358 bytes
+2026-05-29 17:27:51,581 [INFO    ] adv-monitor — Emitting frame_bin: 299478 bytes
+2026-05-29 17:27:53,178 [INFO    ] adv-monitor — Emitting frame_bin: 298518 bytes
+2026-05-29 17:27:53,498 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:27:54,500 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:27:58,254 [INFO    ] adv-monitor — Emitting frame_bin: 296931 bytes
+2026-05-29 17:27:59,501 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:00,506 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:05,508 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:06,510 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:11,511 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:12,513 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:17,514 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:18,516 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:23,516 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:24,518 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:24,939 [INFO    ] adv-monitor — Emitting frame_bin: 341821 bytes
+2026-05-29 17:28:29,519 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:30,526 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:35,527 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:36,530 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:41,532 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:42,535 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:46,477 [INFO    ] adv-monitor — Emitting frame_bin: 297832 bytes
+2026-05-29 17:28:47,536 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:48,537 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:48,758 [INFO    ] adv-monitor — Emitting frame_bin: 287959 bytes
+2026-05-29 17:28:53,538 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:28:54,542 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:28:59,545 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:00,563 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:01,000 [INFO    ] adv-monitor — Emitting frame_bin: 298342 bytes
+2026-05-29 17:29:01,666 [INFO    ] adv-monitor — Emitting frame_bin: 296673 bytes
+2026-05-29 17:29:05,565 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:06,567 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:09,097 [INFO    ] adv-monitor — Emitting frame_bin: 340927 bytes
+2026-05-29 17:29:11,569 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:12,571 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:15,095 [INFO    ] adv-monitor — Emitting frame_bin: 323888 bytes
+2026-05-29 17:29:17,572 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:18,576 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:19,209 [INFO    ] adv-monitor — Emitting frame_bin: 317753 bytes
+2026-05-29 17:29:21,674 [INFO    ] adv-monitor — Emitting frame_bin: 323287 bytes
+2026-05-29 17:29:23,576 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:24,579 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:29,585 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:30,587 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:35,026 [INFO    ] adv-monitor — Emitting frame_bin: 322459 bytes
+2026-05-29 17:29:35,589 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:36,591 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:38,764 [INFO    ] adv-monitor — Emitting frame_bin: 333706 bytes
+2026-05-29 17:29:38,928 [INFO    ] adv-monitor — Emitting frame_bin: 334922 bytes
+2026-05-29 17:29:39,963 [INFO    ] adv-monitor — Emitting frame_bin: 329669 bytes
+2026-05-29 17:29:41,592 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:42,593 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:47,595 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:48,598 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:53,599 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:29:54,393 [INFO    ] adv-monitor — Emitting frame_bin: 288474 bytes
+2026-05-29 17:29:54,601 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:29:55,847 [INFO    ] adv-monitor — Emitting frame_bin: 292109 bytes
+2026-05-29 17:29:57,650 [INFO    ] adv-monitor — Emitting frame_bin: 297516 bytes
+2026-05-29 17:29:59,602 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:00,607 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:05,454 [INFO    ] adv-monitor — Emitting frame_bin: 318630 bytes
+2026-05-29 17:30:05,608 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:06,611 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:11,614 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:12,616 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:14,053 [INFO    ] adv-monitor — Emitting frame_bin: 302069 bytes
+2026-05-29 17:30:14,409 [INFO    ] adv-monitor — Emitting frame_bin: 316584 bytes
+2026-05-29 17:30:17,617 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:17,856 [INFO    ] adv-monitor — Emitting frame_bin: 349493 bytes
+2026-05-29 17:30:18,618 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:21,128 [INFO    ] adv-monitor — Emitting frame_bin: 342713 bytes
+2026-05-29 17:30:23,619 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:23,636 [INFO    ] adv-monitor — Emitting frame_bin: 291687 bytes
+2026-05-29 17:30:24,620 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:27,361 [INFO    ] adv-monitor — Emitting frame_bin: 355892 bytes
+2026-05-29 17:30:29,621 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:30,623 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:35,624 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:36,626 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:41,627 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:42,629 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:47,630 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:48,636 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:52,204 [INFO    ] adv-monitor — Emitting frame_bin: 291121 bytes
+2026-05-29 17:30:53,637 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:30:54,301 [INFO    ] adv-monitor — Emitting frame_bin: 330134 bytes
+2026-05-29 17:30:54,641 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:30:59,643 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:00,646 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:05,651 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:06,653 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:08,216 [INFO    ] adv-monitor — Emitting frame_bin: 310747 bytes
+2026-05-29 17:31:11,656 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:12,657 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:12,742 [INFO    ] adv-monitor — Emitting frame_bin: 312903 bytes
+2026-05-29 17:31:14,973 [INFO    ] adv-monitor — Emitting frame_bin: 319559 bytes
+2026-05-29 17:31:17,660 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:18,661 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:23,666 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:23,742 [INFO    ] adv-monitor — Emitting frame_bin: 340162 bytes
+2026-05-29 17:31:24,668 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:29,669 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:29,836 [INFO    ] adv-monitor — Emitting frame_bin: 302287 bytes
+2026-05-29 17:31:30,672 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:33,933 [INFO    ] adv-monitor — Emitting frame_bin: 322403 bytes
+2026-05-29 17:31:34,174 [INFO    ] adv-monitor — Emitting frame_bin: 320547 bytes
+2026-05-29 17:31:35,673 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:36,674 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:41,675 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:42,677 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:43,803 [INFO    ] adv-monitor — Emitting frame_bin: 337040 bytes
+2026-05-29 17:31:44,708 [INFO    ] adv-monitor — Emitting frame_bin: 294701 bytes
+2026-05-29 17:31:47,678 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:48,681 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:49,506 [INFO    ] adv-monitor — Emitting frame_bin: 296775 bytes
+2026-05-29 17:31:53,683 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:31:54,685 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:31:55,270 [INFO    ] adv-monitor — Emitting frame_bin: 274851 bytes
+2026-05-29 17:31:59,686 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:00,692 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:05,693 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:06,701 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:11,702 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:12,704 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:13,471 [INFO    ] adv-monitor — Emitting frame_bin: 339491 bytes
+2026-05-29 17:32:17,705 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:18,438 [INFO    ] adv-monitor — Emitting frame_bin: 349014 bytes
+2026-05-29 17:32:18,707 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:23,031 [INFO    ] adv-monitor — Emitting frame_bin: 321230 bytes
+2026-05-29 17:32:23,708 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:24,710 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:25,493 [INFO    ] adv-monitor — Emitting frame_bin: 316246 bytes
+2026-05-29 17:32:29,711 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:30,713 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:35,213 [INFO    ] adv-monitor — Emitting frame_bin: 347291 bytes
+2026-05-29 17:32:35,594 [INFO    ] adv-monitor — Emitting frame_bin: 340424 bytes
+2026-05-29 17:32:35,714 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:36,717 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:41,728 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:42,741 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:48,121 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:49,495 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:32:54,552 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:32:55,770 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:00,784 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:01,818 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:06,824 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:07,841 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:12,846 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:13,867 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:18,912 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:19,940 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:24,941 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:25,946 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:29,598 [INFO    ] adv-monitor — Emitting frame_bin: 359064 bytes
+2026-05-29 17:33:30,948 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:31,950 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:36,954 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:37,969 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:39,385 [INFO    ] adv-monitor — Emitting frame_bin: 319051 bytes
+2026-05-29 17:33:43,026 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:44,090 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:46,848 [INFO    ] adv-monitor — Emitting frame_bin: 321208 bytes
+2026-05-29 17:33:47,350 [INFO    ] adv-monitor — Emitting frame_bin: 325550 bytes
+2026-05-29 17:33:47,931 [INFO    ] adv-monitor — Emitting frame_bin: 325604 bytes
+2026-05-29 17:33:49,097 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:50,118 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:55,165 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:33:56,326 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:33:56,476 [INFO    ] adv-monitor — Emitting frame_bin: 317199 bytes
+2026-05-29 17:34:01,294 [INFO    ] adv-monitor — Emitting frame_bin: 290216 bytes
+2026-05-29 17:34:01,327 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:02,379 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:04,984 [INFO    ] adv-monitor — Emitting frame_bin: 317350 bytes
+2026-05-29 17:34:07,392 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:08,398 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:13,091 [INFO    ] adv-monitor — Emitting frame_bin: 395218 bytes
+2026-05-29 17:34:13,400 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:14,403 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:16,443 [INFO    ] adv-monitor — Emitting frame_bin: 317009 bytes
+2026-05-29 17:34:19,404 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:20,406 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:25,408 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:26,412 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:26,673 [INFO    ] adv-monitor — Emitting frame_bin: 294440 bytes
+2026-05-29 17:34:31,416 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:31,936 [INFO    ] adv-monitor — Emitting frame_bin: 302150 bytes
+2026-05-29 17:34:32,419 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:33,874 [INFO    ] adv-monitor — Emitting frame_bin: 309742 bytes
+2026-05-29 17:34:37,480 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:38,516 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:43,517 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:44,552 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:49,553 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:50,556 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:34:55,557 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:34:56,585 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:01,343 [INFO    ] adv-monitor — Emitting frame_bin: 360934 bytes
+2026-05-29 17:35:01,601 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:01,862 [INFO    ] adv-monitor — Emitting frame_bin: 360773 bytes
+2026-05-29 17:35:02,626 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:07,640 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:08,656 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:13,728 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:14,859 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:19,868 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:20,103 [INFO    ] adv-monitor — Emitting frame_bin: 315871 bytes
+2026-05-29 17:35:20,876 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:25,877 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:26,878 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:29,033 [INFO    ] adv-monitor — Emitting frame_bin: 347585 bytes
+2026-05-29 17:35:31,880 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:32,882 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:34,735 [INFO    ] adv-monitor — Emitting frame_bin: 323791 bytes
+2026-05-29 17:35:36,111 [INFO    ] adv-monitor — Emitting frame_bin: 331019 bytes
+2026-05-29 17:35:37,883 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:38,940 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:39,251 [WARNING ] Thread-216 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:35:39,251 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:35:39,530 [WARNING ] Thread-13 (_loop) — Heartbeat error: / is not a connected namespace.
+2026-05-29 17:35:40,252 [INFO    ] sc-main — Reconnecting in 1.1s...
+2026-05-29 17:35:40,253 [INFO    ] sc-main — Reconnecting in 1.3s...
+2026-05-29 17:35:41,376 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:35:41,552 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:35:43,941 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:44,942 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:45,479 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:35:45,479 [INFO    ] sc-main — Reconnecting in 2.1s...
+2026-05-29 17:35:47,618 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:35:49,943 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:50,944 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:35:51,701 [INFO    ] Thread-533 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:35:51,961 [INFO    ] Thread-538 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:35:54,035 [INFO    ] Thread-533 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:35:55,944 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:35:56,010 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-29 17:35:56,945 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:01,813 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=408| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:36:01,826 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:36:01,946 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:02,947 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:03,840 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:36:03,846 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:36:05,890 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:36:05,957 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:36:06,225 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:36:07,949 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:08,288 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:36:08,952 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:10,259 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 17:36:10,261 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:36:10,263 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 17:36:10,263 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 17:36:10,264 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 17:36:10,267 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:36:10,335 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 17:36:10,336 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=92 (no turbojpeg)
+2026-05-29 17:36:10,336 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 17:36:12,857 [INFO    ] adv-monitor — Emitting frame_bin: 372003 bytes
+2026-05-29 17:36:13,953 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:14,955 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:16,501 [INFO    ] adv-monitor — Emitting frame_bin: 373745 bytes
+2026-05-29 17:36:19,962 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:20,969 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:23,686 [INFO    ] adv-monitor — Emitting frame_bin: 345235 bytes
+2026-05-29 17:36:24,946 [INFO    ] adv-monitor — Emitting frame_bin: 343396 bytes
+2026-05-29 17:36:25,971 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:26,114 [INFO    ] adv-monitor — Emitting frame_bin: 343966 bytes
+2026-05-29 17:36:26,973 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:31,977 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:32,187 [INFO    ] adv-monitor — Emitting frame_bin: 300010 bytes
+2026-05-29 17:36:32,979 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:37,984 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:38,990 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:44,005 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:45,013 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:45,809 [INFO    ] adv-monitor — Emitting frame_bin: 310314 bytes
+2026-05-29 17:36:48,460 [WARNING ] Thread-532 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:36:48,468 [WARNING ] Thread-2 (_read_loop_websocket) — Disconnected from server.
+2026-05-29 17:36:49,465 [INFO    ] sc-main — Reconnecting in 1.2s...
+2026-05-29 17:36:49,474 [INFO    ] sc-main — Reconnecting in 1.1s...
+2026-05-29 17:36:50,065 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:50,614 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:36:50,692 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:36:51,175 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:54,696 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:36:54,696 [INFO    ] sc-main — Reconnecting in 2.4s...
+2026-05-29 17:36:54,773 [WARNING ] sc-main — Connection error: Connection error
+2026-05-29 17:36:54,773 [INFO    ] sc-main — Reconnecting in 2.2s...
+2026-05-29 17:36:56,176 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:36:57,036 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:36:57,090 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:36:57,179 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:36:59,090 [INFO    ] Thread-576 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:36:59,142 [INFO    ] Thread-34 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:36:59,560 [INFO    ] Thread-581 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:36:59,665 [INFO    ] Thread-47 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:37:01,701 [INFO    ] Thread-576 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:37:01,841 [INFO    ] Thread-34 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:37:02,180 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:03,182 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:03,643 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-29 17:37:03,761 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 17:37:03,761 [INFO    ] adv-starter — Advanced Monitor already running — skipping restart
+2026-05-29 17:37:08,185 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:09,191 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:14,193 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:15,195 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:20,196 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:21,197 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:26,198 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:27,205 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:32,207 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:33,209 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:38,210 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:39,211 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:44,225 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:45,243 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:50,260 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:51,347 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:37:56,359 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:37:57,432 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:02,450 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:03,552 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:08,592 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:09,675 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:14,682 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:15,740 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:20,748 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:21,758 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:26,759 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:27,771 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:32,773 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:33,780 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:38,781 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:39,789 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:44,789 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:45,792 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:50,793 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:51,795 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:38:56,796 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:38:57,809 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:02,810 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:03,816 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:08,839 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:09,853 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:14,854 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:15,858 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:20,875 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:21,897 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:26,904 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:27,912 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:32,914 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:33,925 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:38,925 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:39,929 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:44,930 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:45,939 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:50,940 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:51,948 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:39:56,950 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:39:57,963 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:02,965 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:03,966 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:08,967 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:09,980 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:14,982 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:16,001 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:21,003 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:22,014 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:27,016 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:28,020 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:33,021 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:34,039 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:39,046 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:40,056 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:45,057 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:46,069 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:51,070 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:52,074 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:40:57,079 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:40:58,116 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:03,118 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:04,126 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:09,137 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:10,163 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:15,178 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:16,208 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:21,215 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:22,226 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:27,230 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:28,235 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:33,239 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:34,262 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:39,264 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:40,266 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:45,278 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:46,301 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:51,302 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:52,320 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:41:57,324 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:41:58,332 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:03,333 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:04,340 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:09,341 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:10,354 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:15,357 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:16,373 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:21,375 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:22,382 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:27,383 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:28,394 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:33,395 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:34,410 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:39,412 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:40,421 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:45,423 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:46,447 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:51,453 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:52,489 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:42:57,492 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:42:58,557 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:03,584 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:04,613 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:08,257 [INFO    ] MainThread — ═══ MasterAgent v10.0.0 starting | host=maxiiloh- | pid=21388| server=http://localhost:10000 | device=TEST-AGENT... ═══
+2026-05-29 17:43:08,280 [INFO    ] sc-main — Screen Connect Agent v10.0.0 starting...
+2026-05-29 17:43:09,615 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:10,332 [INFO    ] sc-main — Connecting to http://localhost:10000...
+2026-05-29 17:43:10,356 [INFO    ] preflight-boot — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:43:10,635 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:12,445 [INFO    ] Thread-3 (_handle_eio_message) — Connected to http://localhost:10000
+2026-05-29 17:43:12,584 [INFO    ] preflight-boot — Pre-flight: OK
+2026-05-29 17:43:13,022 [INFO    ] Thread-8 (_handle_eio_message) — Server caps received: version=13.0.0 caps=['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:43:15,180 [INFO    ] Thread-3 (_handle_eio_message) — Keylogger started.
+2026-05-29 17:43:15,637 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:16,647 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:17,086 [INFO    ] adv-starter — Unified Connection enabled — using main socket for streaming
+2026-05-29 17:43:17,110 [INFO    ] adv-starter — Advanced Monitor engine started (second-site v2.1 engine)
+2026-05-29 17:43:17,111 [INFO    ] adv-monitor — Stream consumer: waiting for auth_ok…
+2026-05-29 17:43:17,112 [INFO    ] adv-monitor — Stream consumer: auth confirmed — starting producer + ticker
+2026-05-29 17:43:17,143 [INFO    ] adv-producer — Advanced Monitor: initializing stream pipeline...
+2026-05-29 17:43:17,169 [INFO    ] adv-producer — Advanced Monitor Capture: mss CPU monitor=1
+2026-05-29 17:43:17,289 [INFO    ] adv-producer — Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay
+2026-05-29 17:43:17,296 [INFO    ] adv-producer — Advanced Monitor Encoder: JPEG quality=95 (no turbojpeg)
+2026-05-29 17:43:17,298 [INFO    ] adv-producer — Advanced Monitor streaming 1920x1080 monitor=1 @ up to 60 fps
+2026-05-29 17:43:21,651 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:22,673 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:27,709 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:28,745 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:33,746 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:34,575 [INFO    ] adv-monitor — Emitting frame_bin: 412905 bytes
+2026-05-29 17:43:34,775 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:39,778 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:40,780 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:45,783 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:46,787 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:51,794 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:52,805 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:43:57,807 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:43:58,823 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:03,825 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:04,844 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:09,867 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:10,020 [INFO    ] adv-monitor — Emitting frame_bin: 455492 bytes
+2026-05-29 17:44:10,930 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:15,941 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:16,958 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:22,002 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:23,037 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:28,039 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:29,051 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:34,063 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:35,079 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:40,249 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:40,342 [INFO    ] adv-monitor — Emitting frame_bin: 468452 bytes
+2026-05-29 17:44:41,263 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:46,269 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:47,299 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:52,302 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:53,316 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:44:55,968 [INFO    ] adv-monitor — Emitting frame_bin: 449795 bytes
+2026-05-29 17:44:58,327 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:44:59,345 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:02,760 [INFO    ] adv-monitor — Emitting frame_bin: 493567 bytes
+2026-05-29 17:45:04,349 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:05,370 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:10,384 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:11,287 [INFO    ] adv-monitor — Emitting frame_bin: 397329 bytes
+2026-05-29 17:45:11,404 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:16,414 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:17,444 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:20,035 [INFO    ] adv-monitor — Emitting frame_bin: 416034 bytes
+2026-05-29 17:45:22,446 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:23,464 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:28,466 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:29,483 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:34,509 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:35,533 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:40,538 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:41,555 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:46,556 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:47,564 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:49,739 [INFO    ] adv-monitor — Emitting frame_bin: 443411 bytes
+2026-05-29 17:45:52,573 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:53,589 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:45:58,595 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:45:59,627 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:04,634 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:05,659 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:10,821 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:12,240 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:17,467 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:18,874 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:23,989 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:25,152 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:30,297 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:31,609 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:36,681 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:37,899 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:42,954 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:44,034 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:49,055 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:50,155 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:46:55,167 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:46:56,209 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:01,219 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:02,388 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:07,401 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:08,443 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:13,510 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:14,623 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:19,773 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:20,846 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:25,872 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:26,903 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:31,968 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:33,076 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:38,098 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:39,248 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:44,291 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:45,354 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:48,407 [INFO    ] adv-monitor — Emitting frame_bin: 356330 bytes
+2026-05-29 17:47:50,425 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:51,536 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:47:56,601 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:47:57,745 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:02,749 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:03,809 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:08,823 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:09,868 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:11,939 [INFO    ] adv-monitor — Emitting frame_bin: 356329 bytes
+2026-05-29 17:48:14,903 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:16,052 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:21,058 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:22,180 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:23,748 [INFO    ] adv-monitor — Emitting frame_bin: 356329 bytes
+2026-05-29 17:48:27,215 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:27,878 [INFO    ] adv-monitor — Emitting frame_bin: 68813 bytes
+2026-05-29 17:48:28,345 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:30,727 [INFO    ] adv-monitor — Emitting frame_bin: 68470 bytes
+2026-05-29 17:48:33,372 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:33,478 [INFO    ] adv-monitor — Emitting frame_bin: 68254 bytes
+2026-05-29 17:48:33,668 [INFO    ] adv-monitor — Emitting frame_bin: 68851 bytes
+2026-05-29 17:48:34,443 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:35,459 [INFO    ] adv-monitor — Emitting frame_bin: 68250 bytes
+2026-05-29 17:48:36,167 [INFO    ] adv-monitor — Emitting frame_bin: 68301 bytes
+2026-05-29 17:48:38,276 [INFO    ] adv-monitor — Emitting frame_bin: 68049 bytes
+2026-05-29 17:48:39,492 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:40,085 [INFO    ] adv-monitor — Emitting frame_bin: 68720 bytes
+2026-05-29 17:48:40,567 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:40,930 [INFO    ] adv-monitor — Emitting frame_bin: 68292 bytes
+2026-05-29 17:48:45,581 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:46,806 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:51,858 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:52,933 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:57,970 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:48:59,004 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:48:59,393 [INFO    ] adv-monitor — Emitting frame_bin: 68322 bytes
+2026-05-29 17:49:04,041 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:05,175 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:06,271 [INFO    ] adv-monitor — Emitting frame_bin: 68277 bytes
+2026-05-29 17:49:10,206 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:11,288 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:16,092 [INFO    ] adv-monitor — Emitting frame_bin: 67792 bytes
+2026-05-29 17:49:16,325 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:17,391 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:22,422 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:23,465 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:24,222 [INFO    ] adv-monitor — Emitting frame_bin: 68316 bytes
+2026-05-29 17:49:26,191 [INFO    ] adv-monitor — Emitting frame_bin: 68588 bytes
+2026-05-29 17:49:27,156 [INFO    ] adv-monitor — Emitting frame_bin: 68047 bytes
+2026-05-29 17:49:28,489 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:29,570 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:34,601 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:35,744 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:40,761 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:41,856 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:45,302 [INFO    ] adv-monitor — Emitting frame_bin: 68582 bytes
+2026-05-29 17:49:46,877 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:47,944 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:52,641 [INFO    ] adv-monitor — Emitting frame_bin: 68640 bytes
+2026-05-29 17:49:52,952 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:54,018 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:49:57,111 [INFO    ] adv-monitor — Emitting frame_bin: 68368 bytes
+2026-05-29 17:49:59,029 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:49:59,769 [INFO    ] adv-monitor — Emitting frame_bin: 68606 bytes
+2026-05-29 17:50:00,078 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:04,405 [INFO    ] adv-monitor — Emitting frame_bin: 68332 bytes
+2026-05-29 17:50:05,103 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:05,346 [INFO    ] adv-monitor — Emitting frame_bin: 68855 bytes
+2026-05-29 17:50:06,163 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:08,693 [INFO    ] adv-monitor — Emitting frame_bin: 68409 bytes
+2026-05-29 17:50:11,181 [INFO    ] adv-monitor — Emitting frame_bin: 67485 bytes
+2026-05-29 17:50:11,191 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:11,642 [INFO    ] adv-monitor — Emitting frame_bin: 68043 bytes
+2026-05-29 17:50:11,979 [INFO    ] adv-monitor — Emitting frame_bin: 67783 bytes
+2026-05-29 17:50:12,337 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:14,795 [INFO    ] adv-monitor — Emitting frame_bin: 67884 bytes
+2026-05-29 17:50:17,349 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:18,241 [INFO    ] adv-monitor — Emitting frame_bin: 67856 bytes
+2026-05-29 17:50:18,420 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:23,446 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:24,509 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:26,407 [INFO    ] adv-monitor — Emitting frame_bin: 68752 bytes
+2026-05-29 17:50:29,535 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:29,814 [INFO    ] adv-monitor — Emitting frame_bin: 68574 bytes
+2026-05-29 17:50:30,639 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:35,662 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:36,742 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:38,348 [INFO    ] adv-monitor — Emitting frame_bin: 68682 bytes
+2026-05-29 17:50:41,770 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:42,879 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:47,154 [INFO    ] adv-monitor — Emitting frame_bin: 68053 bytes
+2026-05-29 17:50:47,895 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:48,113 [INFO    ] adv-monitor — Emitting frame_bin: 68186 bytes
+2026-05-29 17:50:48,959 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:52,545 [INFO    ] adv-monitor — Emitting frame_bin: 68485 bytes
+2026-05-29 17:50:53,981 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:50:55,079 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:50:55,881 [INFO    ] adv-monitor — Emitting frame_bin: 68973 bytes
+2026-05-29 17:51:00,100 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:51:01,157 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:51:04,989 [INFO    ] adv-monitor — Emitting frame_bin: 68459 bytes
+2026-05-29 17:51:05,344 [INFO    ] adv-monitor — Emitting frame_bin: 68221 bytes
+2026-05-29 17:51:06,183 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:51:07,267 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:51:11,084 [INFO    ] adv-monitor — Emitting frame_bin: 67868 bytes
+2026-05-29 17:51:12,286 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:51:13,354 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s
+2026-05-29 17:51:15,499 [INFO    ] adv-monitor — Emitting frame_bin: 68126 bytes
+2026-05-29 17:51:18,381 [ERROR   ] adv-monitor — aiohttp package not installed
+2026-05-29 17:51:20,614 [WARNING ] adv-monitor — Advanced Monitor loop error: One or more namespaces failed to connect:  — retrying in 5s

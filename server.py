@@ -321,15 +321,19 @@ except ImportError:
     pass
 
 if SOCKETIO_OK:
+    # v14: Dynamic async_mode selection
+    # Prefer gevent if available, fallback to threading for local dev
+    _mode = "gevent" if _GEVENT_OK else "threading"
+    log.info(f"SocketIO: using async_mode={_mode}")
     sio = SocketIO(
         app,
         cors_allowed_origins="*",
-        async_mode="gevent",          # ← THE KEY FIX: must be gevent, not threading
+        async_mode=_mode,
         logger=False,
         engineio_logger=False,
-        ping_timeout=90,              # raised for Render / Railway free tiers
+        ping_timeout=90,
         ping_interval=25,
-        max_http_buffer_size=512 * 1024 * 1024,   # 512 MB — handles 4K frames
+        max_http_buffer_size=512 * 1024 * 1024,
         allow_upgrades=True,
         transports=["websocket", "polling"],
     )
@@ -1622,20 +1626,11 @@ if SOCKETIO_OK and sio:
                 return
 
             # Join viewer rooms
-            join_room(f"adv_viewers_{did}")
-            with _adv_viewer_lock:
-                _adv_viewer_rooms[sid] = did
-
-            old_did = _get_device_for_viewer(sid)
-            if old_did and old_did != did:
-                leave_room(f"view:{old_did}")
-                with _view_lock:
-                    _viewers[old_did].discard(sid)
-                sio.emit("request_action", {"tab": "monitor", "action": "stop", "device_id": old_did}, room=old_did)
-
             join_room(f"view:{did}")
             with _view_lock:
                 _viewers[did].add(sid)
+            with _adv_viewer_lock:
+                _adv_viewer_rooms[sid] = did
             with _dash_lock:
                 _dashboard_device[sid] = did
 
@@ -1670,9 +1665,9 @@ if SOCKETIO_OK and sio:
             }, room=sid)
             emit("subscribed", {"device_id": did, "viewers": vcount})
 
-            # Clamp fps to 30-60 range and quality to 80-95 for live-sync
-            fps     = min(max(int(data.get("fps", 60)), 30), 60)   # 30-60 fps range
-            quality = min(max(int(data.get("quality", 90)), 80), 95)  # 80-95 quality range
+            # v14: Ultra-sync allows up to 120 fps for high-grade monitors
+            fps     = min(max(int(data.get("fps", 60)), 30), 120)  # 30-120 fps range
+            quality = min(max(int(data.get("quality", 90)), 80), 98)  # 80-98 quality range
             scale   = float(data.get("scale", 1.0))               # default full res
             monitor = data.get("monitor", 1)
             spay = {"tab": "monitor", "action": "start", "device_id": did,
@@ -1773,6 +1768,8 @@ if SOCKETIO_OK and sio:
             }
 
         log.info(f"Agent ONLINE: {label} ({did}) sid={request.sid}")
+        # v13: MUST join room(did) so request_action/monitor:start reach the main socket
+        join_room(did)
         _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"))
         _push_timeline(did, "agent_online", {"label": label, "ip": data.get("local_ip")})
 
@@ -2048,11 +2045,10 @@ if SOCKETIO_OK and sio:
         seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + seq.to_bytes(4, "big")
         frame_with_seq = raw + seq_suffix
 
-        r1 = f"adv_viewers_{did}"
-        r2 = f"view:{did}"
-        # Emit frame_bin to both rooms — single call each for minimum latency
-        sio.emit("frame_bin", frame_with_seq, room=r1)
-        sio.emit("frame_bin", frame_with_seq, room=r2)
+        # Fan out to viewers
+        # v14: Unified room "view:{did}" for all binary frames
+        # We send the versioned (suffixed) frame for best viewer experience.
+        sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
 
         # ── v13: Lightweight frame-metadata event (no binary) ─────────────────
         # Sent every 10 frames so viewer HUD can show live FPS / latency
@@ -2067,7 +2063,7 @@ if SOCKETIO_OK and sio:
             sio.emit("frame_meta", {
                 "device_id": did, "seq": seq, "ts_us": ts_us,
                 "size": n, "fps": _actual_fps,
-            }, room=r1)
+            }, room=f"view:{did}")
 
         # ── Plugin hooks (background — never blocks hot path) ─────────────────
         if _plugin_hooks.get("on_frame"):
@@ -2119,8 +2115,14 @@ if SOCKETIO_OK and sio:
                 if did in _devices:
                     _devices[did]["frame_count"]   = _devices[did].get("frame_count", 0) + 1
                     _devices[did]["last_frame_ts"] = utcnow()
-            sio.emit("frame_bin", raw, room=f"adv_viewers_{did}")
-            sio.emit("frame_bin", raw, room=f"view:{did}")
+
+            # v13: sequence suffix for fallback relay
+            seq = _frame_seq.get(did, 0) + 1
+            _frame_seq[did] = seq
+            seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + seq.to_bytes(4, "big")
+            frame_with_seq = raw + seq_suffix
+
+            sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
         except Exception as e:
             log.warning(f"frame_bin_relay error: {e}")
 

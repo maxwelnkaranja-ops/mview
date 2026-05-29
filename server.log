@@ -36675,3 +36675,808 @@ OSError: [WinError 10048] Only one usage of each socket address (protocol/networ
 2026-05-28 15:43:49  DEBUG     [Dummy-50]  Validating WebSocket request
 2026-05-28 15:43:49  INFO      [Dummy-50]  127.0.0.1 - - [2026-05-28 15:43:49] "GET /health HTTP/1.1" 200 634 0.001008
 2026-05-28 15:43:49  DEBUG     [Dummy-49]  http://127.0.0.1:10000 "GET /health HTTP/1.1" 200 324
+2026-05-29 17:01:49  CRITICAL  [MainThread]  Unhandled exception
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 324, in <module>
+    sio = SocketIO(
+        app,
+    ...<8 lines>...
+        transports=["websocket", "polling"],
+    )
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask_socketio\__init__.py", line 201, in __init__
+    self.init_app(app, **kwargs)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask_socketio\__init__.py", line 257, in init_app
+    self.server = socketio.Server(**self.server_options)
+                  ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\socketio\base_server.py", line 34, in __init__
+    self.eio = self._engineio_server_class()(**engineio_options)
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\engineio\base_server.py", line 94, in __init__
+    raise ValueError('Invalid async_mode specified')
+ValueError: Invalid async_mode specified
+2026-05-29 17:01:50  ERROR     [MainThread]  CRASH in global_exc_hook: Invalid async_mode specified
+2026-05-29 17:02:11  CRITICAL  [MainThread]  Unhandled exception
+Traceback (most recent call last):
+  File "C:\Users\maxxi\Videos\stitch_m_view_enterprise_suite\server.py", line 324, in <module>
+    sio = SocketIO(
+        app,
+    ...<8 lines>...
+        transports=["websocket", "polling"],
+    )
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask_socketio\__init__.py", line 201, in __init__
+    self.init_app(app, **kwargs)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask_socketio\__init__.py", line 257, in init_app
+    self.server = socketio.Server(**self.server_options)
+                  ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\socketio\base_server.py", line 34, in __init__
+    self.eio = self._engineio_server_class()(**engineio_options)
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\maxxi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\engineio\base_server.py", line 94, in __init__
+    raise ValueError('Invalid async_mode specified')
+ValueError: Invalid async_mode specified
+2026-05-29 17:02:11  ERROR     [MainThread]  CRASH in global_exc_hook: Invalid async_mode specified
+2026-05-29 17:09:09  INFO      [MainThread]  SocketIO: using async_mode=threading
+2026-05-29 17:09:10  INFO      [MainThread]  ========================================================================
+2026-05-29 17:09:10  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-29 17:09:10  INFO      [MainThread]  ========================================================================
+2026-05-29 17:09:10  INFO      [MainThread]    Gevent patched:        False   - MUST be True for stream stability
+2026-05-29 17:09:10  INFO      [MainThread]    Async mode:            gevent
+2026-05-29 17:09:10  INFO      [MainThread]    Port:                  10000
+2026-05-29 17:09:10  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-29 17:09:10  INFO      [MainThread]    Agent exclusive:       True
+2026-05-29 17:09:10  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-29 17:09:10  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-29 17:09:10  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-29 17:09:10  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-29 17:09:10  INFO      [MainThread]    Max frame size:        4MB
+2026-05-29 17:09:10  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-29 17:09:10  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-29 17:09:10  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-29 17:09:10  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-29 17:09:10  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-29 17:09:10  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-29 17:09:10  INFO      [MainThread]    JWT enabled:           False
+2026-05-29 17:09:10  INFO      [MainThread]    TOTP enabled:          False
+2026-05-29 17:09:10  INFO      [MainThread]    Redis scale-out:       False
+2026-05-29 17:09:10  INFO      [MainThread]    Org isolation:         False
+2026-05-29 17:09:10  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-29 17:09:10  INFO      [MainThread]    Signed webhooks:       False
+2026-05-29 17:09:10  INFO      [MainThread]    Webhook:               disabled
+2026-05-29 17:09:10  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-29 17:09:10  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-29 17:09:10  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-29 17:09:11  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-29 17:09:11  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-29 17:09:11  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-29 17:09:11  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-29 17:09:11  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-29 17:09:11  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-29 17:09:11  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-29 17:09:11  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-29 17:09:11  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-29 17:09:11  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-29 17:09:11  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-29 17:09:11  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-29 17:09:11  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-29 17:09:11  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-29 17:09:11  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-29 17:09:11  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-29 17:09:11  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-29 17:09:11  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-29 17:09:11  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-29 17:09:11  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-29 17:09:11  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-29 17:09:11  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-29 17:09:11  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-29 17:09:11  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-29 17:09:11  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-29 17:09:11  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-29 17:09:11  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-29 17:09:11  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-29 17:09:11  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:09:11  INFO      [MainThread]  ========================================================================
+2026-05-29 17:09:11  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-29 17:09:11  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-29 17:09:11  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-29 17:09:11  INFO      [MainThread]  ========================================================================
+2026-05-29 17:09:11  CRITICAL  [MainThread]  GEVENT NOT INSTALLED — server will crash under load!
+2026-05-29 17:09:11  CRITICAL  [MainThread]  Fix: pip install gevent gevent-websocket
+2026-05-29 17:09:11  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-29 17:09:11  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-29 17:09:27  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=3 mem=66MB
+2026-05-29 17:10:04  INFO      [Thread-3 (process_request_thread)]  Socket connected: muX7nzKWPr9nVYv5AAAB from 127.0.0.1
+2026-05-29 17:10:04  INFO      [Thread-8 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:04] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:10:05  INFO      [Thread-9 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=muX7nzKWPr9nVYv5AAAB
+2026-05-29 17:10:05  WARNING   [Thread-12 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:05  WARNING   [Thread-16 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:05  WARNING   [Thread-17 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:05  INFO      [Thread-10 (process_request_thread)]  Socket connected: Np-hpPWvSxhb468oAAAD from 127.0.0.1
+2026-05-29 17:10:05  INFO      [Thread-20 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:05] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:10:05  WARNING   [Thread-21 (_handle_event_internal)]  Evicting stale agent TEST-AGENT sid=muX7nzKWPr9nVYv5AAAB
+2026-05-29 17:10:05  INFO      [Thread-21 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=Np-hpPWvSxhb468oAAAD
+2026-05-29 17:10:06  WARNING   [Thread-24 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:07  INFO      [Thread-27 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:07] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:10:07  WARNING   [Thread-28 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:08  INFO      [Thread-29 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:08] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:10:08  WARNING   [Thread-30 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:26  INFO      [Thread-45 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:26] "GET /dashboard HTTP/1.1" 200 -
+2026-05-29 17:10:26  INFO      [Thread-46 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:26] "GET /config.js HTTP/1.1" 200 -
+2026-05-29 17:10:28  INFO      [Thread-49 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:28] "[33mGET /@vite/client HTTP/1.1[0m" 404 -
+2026-05-29 17:10:40  INFO      [Thread-2 (_self_ping_loop)]  Self-ping disabled: RENDER_EXTERNAL_URL not set.
+2026-05-29 17:10:47  WARNING   [Thread-64 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:47  INFO      [Thread-64 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:47] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:10:48  WARNING   [Thread-66 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:10:48  INFO      [Thread-66 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:10:48] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:14:27  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=11 mem=68MB
+2026-05-29 17:15:16  WARNING   [Thread-10 (process_request_thread)]  Agent offline: maxiiloh- (TEST-AGENT)
+2026-05-29 17:15:16  INFO      [Thread-10 (process_request_thread)]  Socket disconnected: Np-hpPWvSxhb468oAAAD
+2026-05-29 17:15:16  WARNING   [Thread-238 (_cleanup_agent_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:16  WARNING   [Thread-239 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:16  WARNING   [Thread-240 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:33  INFO      [Thread-248 (process_request_thread)]  Socket connected: A9LqT3-2EoBLpCKMAAAF from 127.0.0.1
+2026-05-29 17:15:33  INFO      [Thread-252 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:15:33] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:15:33  INFO      [Thread-253 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=A9LqT3-2EoBLpCKMAAAF
+2026-05-29 17:15:33  WARNING   [Thread-255 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:33  WARNING   [Thread-257 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:34  WARNING   [Thread-258 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:36  INFO      [Thread-260 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:15:36] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:15:36  WARNING   [Thread-261 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:15:38  INFO      [Thread-265 (process_request_thread)]  Socket connected: qLwKmXXtGB58Bl_4AAAH from 127.0.0.1
+2026-05-29 17:15:38  INFO      [Thread-269 (_handle_event_internal)]  agent_auth attempt: device=TEST-AGENT sid=qLwKmXXtGB58Bl_4AAAH
+2026-05-29 17:15:38  INFO      [Thread-269 (_handle_event_internal)]  Advanced Monitor auth OK: device=TEST-AGENT sid=qLwKmXXtGB58Bl_4AAAH
+2026-05-29 17:15:38  INFO      [Thread-273 (_handle_event_internal)]  frame_bin: initial calibration for TEST-AGENT: 0.009s
+2026-05-29 17:15:38  INFO      [Thread-273 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 0 | KBPS: 0.0 | Latency: 0.0ms
+2026-05-29 17:15:58  INFO      [Thread-587 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 14.7 | KBPS: 2708.8 | Latency: 1.9ms
+2026-05-29 17:16:15  INFO      [Thread-898 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 27.8 | KBPS: 3183.7 | Latency: 0.0ms
+2026-05-29 17:16:16  WARNING   [Thread-995 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:16:16  INFO      [Thread-995 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:16:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:16:20  INFO      [Thread-1206 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 57.0 | KBPS: 3257.1 | Latency: -0.2ms
+2026-05-29 17:16:25  INFO      [Thread-1511 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 52.2 | KBPS: 3632.2 | Latency: 12.0ms
+2026-05-29 17:16:30  INFO      [Thread-1818 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.2 | KBPS: 3634.1 | Latency: 0.0ms
+2026-05-29 17:16:35  INFO      [Thread-2120 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.4 | KBPS: 3571.6 | Latency: 0.0ms
+2026-05-29 17:16:40  INFO      [Thread-2427 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.6 | KBPS: 3692.2 | Latency: 0.0ms
+2026-05-29 17:16:46  INFO      [Thread-2731 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.7 | KBPS: 3632.1 | Latency: 14.8ms
+2026-05-29 17:16:51  INFO      [Thread-3038 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 58.1 | KBPS: 3635.6 | Latency: 71.0ms
+2026-05-29 17:16:56  INFO      [Thread-3344 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 58.7 | KBPS: 3635.2 | Latency: 0.0ms
+2026-05-29 17:17:01  INFO      [Thread-3649 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 58.7 | KBPS: 3557.4 | Latency: 0.5ms
+2026-05-29 17:17:06  INFO      [Thread-3954 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 56.9 | KBPS: 3263.5 | Latency: 0.0ms
+2026-05-29 17:17:11  INFO      [Thread-4260 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.6 | KBPS: 3597.3 | Latency: -0.4ms
+2026-05-29 17:17:17  INFO      [Thread-4566 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 40.0 | KBPS: 2522.3 | Latency: 16.7ms
+2026-05-29 17:17:22  INFO      [Thread-4872 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 60.5 | KBPS: 3622.5 | Latency: 11.0ms
+2026-05-29 17:17:29  INFO      [Thread-5178 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 53.6 | KBPS: 3692.3 | Latency: 2.0ms
+2026-05-29 17:17:34  INFO      [Thread-5483 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 44.1 | KBPS: 3374.1 | Latency: 3.1ms
+2026-05-29 17:17:40  INFO      [Thread-5790 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 60.1 | KBPS: 3685.7 | Latency: 0.6ms
+2026-05-29 17:17:45  INFO      [Thread-6095 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 60.3 | KBPS: 3675.2 | Latency: 11.9ms
+2026-05-29 17:17:50  INFO      [Thread-6401 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.1 | KBPS: 3624.2 | Latency: 2.0ms
+2026-05-29 17:17:55  INFO      [Thread-6705 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 56.4 | KBPS: 3444.0 | Latency: 10.7ms
+2026-05-29 17:18:00  INFO      [Thread-7012 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.6 | KBPS: 3636.2 | Latency: 6.1ms
+2026-05-29 17:18:05  INFO      [Thread-7316 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.1 | KBPS: 3638.7 | Latency: 1.2ms
+2026-05-29 17:18:10  INFO      [Thread-7624 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.0 | KBPS: 3562.2 | Latency: 2.1ms
+2026-05-29 17:18:15  INFO      [Thread-7927 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 60.3 | KBPS: 3681.5 | Latency: -0.4ms
+2026-05-29 17:18:20  INFO      [Thread-8233 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.9 | KBPS: 3758.0 | Latency: 14.6ms
+2026-05-29 17:18:26  INFO      [Thread-8539 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.5 | KBPS: 3701.9 | Latency: 0.0ms
+2026-05-29 17:18:31  INFO      [Thread-8845 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 57.4 | KBPS: 3389.0 | Latency: 0.0ms
+2026-05-29 17:18:36  INFO      [Thread-9150 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 54.8 | KBPS: 3391.6 | Latency: 8.4ms
+2026-05-29 17:18:41  INFO      [Thread-9456 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.4 | KBPS: 3621.7 | Latency: 4.2ms
+2026-05-29 17:18:46  INFO      [Thread-9760 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.1 | KBPS: 3574.7 | Latency: 13.9ms
+2026-05-29 17:18:52  INFO      [Thread-10066 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.2 | KBPS: 3686.0 | Latency: 0.0ms
+2026-05-29 17:18:57  INFO      [Thread-10372 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 54.2 | KBPS: 3272.1 | Latency: 9.4ms
+2026-05-29 17:19:02  INFO      [Thread-10678 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.3 | KBPS: 3569.3 | Latency: 8.7ms
+2026-05-29 17:19:08  INFO      [Thread-10984 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 56.4 | KBPS: 3688.8 | Latency: 0.0ms
+2026-05-29 17:19:13  INFO      [Thread-11288 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 41.6 | KBPS: 2351.8 | Latency: 0.0ms
+2026-05-29 17:19:19  INFO      [Thread-11597 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 59.1 | KBPS: 3556.5 | Latency: 0.0ms
+2026-05-29 17:20:43  INFO      [MainThread]  SocketIO: using async_mode=threading
+2026-05-29 17:20:43  INFO      [MainThread]  ========================================================================
+2026-05-29 17:20:43  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-29 17:20:43  INFO      [MainThread]  ========================================================================
+2026-05-29 17:20:43  INFO      [MainThread]    Gevent patched:        False   - MUST be True for stream stability
+2026-05-29 17:20:43  INFO      [MainThread]    Async mode:            gevent
+2026-05-29 17:20:43  INFO      [MainThread]    Port:                  10000
+2026-05-29 17:20:43  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-29 17:20:43  INFO      [MainThread]    Agent exclusive:       True
+2026-05-29 17:20:43  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-29 17:20:43  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-29 17:20:43  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-29 17:20:43  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-29 17:20:43  INFO      [MainThread]    Max frame size:        4MB
+2026-05-29 17:20:43  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-29 17:20:43  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-29 17:20:43  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-29 17:20:43  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-29 17:20:43  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-29 17:20:43  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-29 17:20:43  INFO      [MainThread]    JWT enabled:           False
+2026-05-29 17:20:43  INFO      [MainThread]    TOTP enabled:          False
+2026-05-29 17:20:43  INFO      [MainThread]    Redis scale-out:       False
+2026-05-29 17:20:43  INFO      [MainThread]    Org isolation:         False
+2026-05-29 17:20:43  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-29 17:20:43  INFO      [MainThread]    Signed webhooks:       False
+2026-05-29 17:20:43  INFO      [MainThread]    Webhook:               disabled
+2026-05-29 17:20:43  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-29 17:20:43  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-29 17:20:43  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-29 17:20:43  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-29 17:20:43  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-29 17:20:43  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-29 17:20:43  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-29 17:20:43  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-29 17:20:43  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-29 17:20:43  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-29 17:20:43  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-29 17:20:43  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-29 17:20:43  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-29 17:20:43  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-29 17:20:43  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-29 17:20:43  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-29 17:20:43  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-29 17:20:43  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-29 17:20:43  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-29 17:20:43  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-29 17:20:43  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-29 17:20:43  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-29 17:20:43  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-29 17:20:43  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-29 17:20:43  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-29 17:20:43  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-29 17:20:43  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-29 17:20:43  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-29 17:20:43  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-29 17:20:43  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-29 17:20:43  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-29 17:20:43  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:20:43  INFO      [MainThread]  ========================================================================
+2026-05-29 17:20:43  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-29 17:20:43  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-29 17:20:43  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-29 17:20:43  INFO      [MainThread]  ========================================================================
+2026-05-29 17:20:43  CRITICAL  [MainThread]  GEVENT NOT INSTALLED — server will crash under load!
+2026-05-29 17:20:43  CRITICAL  [MainThread]  Fix: pip install gevent gevent-websocket
+2026-05-29 17:20:43  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-29 17:20:43  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-29 17:20:49  WARNING   [Thread-3 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:20:49  INFO      [Thread-3 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:20:49] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:20:52  INFO      [Thread-4 (process_request_thread)]  Socket connected: QzAa3KhpqJHITEnVAAAB from 127.0.0.1
+2026-05-29 17:20:52  INFO      [Thread-9 (_handle_event_internal)]  agent_auth attempt: device=TEST-AGENT sid=QzAa3KhpqJHITEnVAAAB
+2026-05-29 17:20:54  INFO      [Thread-4 (process_request_thread)]  Socket disconnected: QzAa3KhpqJHITEnVAAAB
+2026-05-29 17:20:55  INFO      [Thread-10 (process_request_thread)]  Socket connected: k9gki5U3IBMEk-LzAAAD from 127.0.0.1
+2026-05-29 17:20:56  INFO      [Thread-14 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=k9gki5U3IBMEk-LzAAAD
+2026-05-29 17:20:56  WARNING   [Thread-16 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:20:56  WARNING   [Thread-18 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:20:56  WARNING   [Thread-19 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:20:56  WARNING   [Thread-20 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:20:58  INFO      [Thread-22 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:20:58] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:20:58  WARNING   [Thread-23 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:08  INFO      [Thread-27 (process_request_thread)]  Socket connected: hxkT9MpiaTWUZzqGAAAF from 127.0.0.1
+2026-05-29 17:21:08  INFO      [Thread-31 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:21:08] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:21:08  WARNING   [Thread-32 (_handle_event_internal)]  Evicting stale agent TEST-AGENT sid=k9gki5U3IBMEk-LzAAAD
+2026-05-29 17:21:08  INFO      [Thread-32 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=hxkT9MpiaTWUZzqGAAAF
+2026-05-29 17:21:08  WARNING   [Thread-35 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:08  WARNING   [Thread-37 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:08  WARNING   [Thread-38 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:10  INFO      [Thread-41 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:21:10] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:21:10  WARNING   [Thread-42 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:13  INFO      [Thread-44 (_handle_event_internal)]  frame_bin: initial calibration for TEST-AGENT: 0.019s
+2026-05-29 17:21:13  INFO      [Thread-44 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 0 | KBPS: 0.0 | Latency: 0.0ms
+2026-05-29 17:21:38  INFO      [Thread-362 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 11.1 | KBPS: 3454.3 | Latency: 0.0ms
+2026-05-29 17:21:51  WARNING   [Thread-536 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:21:51  INFO      [Thread-536 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:21:51] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:22:01  INFO      [Thread-678 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.1 | KBPS: 4241.9 | Latency: 4.9ms
+2026-05-29 17:22:13  INFO      [Thread-2 (_self_ping_loop)]  Self-ping disabled: RENDER_EXTERNAL_URL not set.
+2026-05-29 17:22:24  INFO      [Thread-992 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.2 | KBPS: 4009.9 | Latency: 0.8ms
+2026-05-29 17:22:47  INFO      [Thread-1306 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.5 | KBPS: 3917.3 | Latency: -0.4ms
+2026-05-29 17:23:12  INFO      [Thread-1623 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 11.9 | KBPS: 4060.7 | Latency: 0.2ms
+2026-05-29 17:23:37  INFO      [Thread-1937 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.1 | KBPS: 5046.6 | Latency: 0.0ms
+2026-05-29 17:24:01  INFO      [Thread-2255 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 11.6 | KBPS: 4185.8 | Latency: -0.5ms
+2026-05-29 17:24:26  INFO      [Thread-2569 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.5 | KBPS: 3454.7 | Latency: 0.0ms
+2026-05-29 17:24:28  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=11 mem=97MB
+2026-05-29 17:24:48  INFO      [Thread-2884 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.3 | KBPS: 4799.4 | Latency: 0.0ms
+2026-05-29 17:25:11  INFO      [Thread-3199 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.4 | KBPS: 4707.5 | Latency: 0.0ms
+2026-05-29 17:25:35  INFO      [Thread-3513 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.9 | KBPS: 3935.2 | Latency: 7.8ms
+2026-05-29 17:25:58  INFO      [Thread-3829 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.9 | KBPS: 4175.3 | Latency: 0.6ms
+2026-05-29 17:26:21  INFO      [Thread-4145 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.7 | KBPS: 3717.6 | Latency: 0.0ms
+2026-05-29 17:26:45  INFO      [Thread-4458 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.1 | KBPS: 3716.2 | Latency: 29.5ms
+2026-05-29 17:27:09  INFO      [Thread-4773 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.8 | KBPS: 3970.7 | Latency: 0.0ms
+2026-05-29 17:27:32  INFO      [Thread-5089 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.0 | KBPS: 4304.6 | Latency: -0.4ms
+2026-05-29 17:27:55  INFO      [Thread-5403 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.0 | KBPS: 4093.4 | Latency: 0.0ms
+2026-05-29 17:28:19  INFO      [Thread-5719 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.0 | KBPS: 3733.3 | Latency: 10.4ms
+2026-05-29 17:28:43  INFO      [Thread-6034 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.4 | KBPS: 4752.2 | Latency: 0.4ms
+2026-05-29 17:29:09  INFO      [Thread-6353 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 10.8 | KBPS: 3981.0 | Latency: 0.0ms
+2026-05-29 17:29:28  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=12 mem=217MB
+2026-05-29 17:29:33  INFO      [Thread-6671 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.4 | KBPS: 4451.5 | Latency: 0.6ms
+2026-05-29 17:29:58  INFO      [Thread-6990 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 11.8 | KBPS: 3195.5 | Latency: 0.0ms
+2026-05-29 17:30:22  INFO      [Thread-7308 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.1 | KBPS: 3922.7 | Latency: 8.3ms
+2026-05-29 17:30:46  INFO      [Thread-7624 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.8 | KBPS: 4644.1 | Latency: -1.0ms
+2026-05-29 17:30:51  WARNING   [Thread-7701 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:30:51  INFO      [Thread-7701 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:30:51] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:31:09  INFO      [Thread-7942 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.5 | KBPS: 3677.7 | Latency: 4.3ms
+2026-05-29 17:31:33  INFO      [Thread-8260 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.8 | KBPS: 4108.6 | Latency: 2.1ms
+2026-05-29 17:31:53  WARNING   [Thread-8525 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:31:53  INFO      [Thread-8525 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:31:53] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:31:57  INFO      [Thread-8578 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.5 | KBPS: 3877.4 | Latency: 0.4ms
+2026-05-29 17:32:21  INFO      [Thread-8897 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 12.4 | KBPS: 4131.2 | Latency: 26.1ms
+2026-05-29 17:32:49  INFO      [Thread-9216 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 9.4 | KBPS: 2817.1 | Latency: 38.7ms
+2026-05-29 17:33:25  INFO      [Thread-9538 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 9.9 | KBPS: 3624.5 | Latency: -0.7ms
+2026-05-29 17:33:51  INFO      [Thread-9857 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 10.4 | KBPS: 3488.5 | Latency: 0.0ms
+2026-05-29 17:34:20  INFO      [Thread-10173 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 11.6 | KBPS: 4621.3 | Latency: 2.3ms
+2026-05-29 17:34:28  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=11 mem=375MB
+2026-05-29 17:34:49  INFO      [Thread-10491 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 8.4 | KBPS: 3330.4 | Latency: 5.1ms
+2026-05-29 17:35:22  INFO      [Thread-10811 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 9.5 | KBPS: 3130.8 | Latency: 6.0ms
+2026-05-29 17:35:51  INFO      [MainThread]  SocketIO: using async_mode=threading
+2026-05-29 17:35:51  INFO      [MainThread]  ========================================================================
+2026-05-29 17:35:51  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-29 17:35:51  INFO      [MainThread]  ========================================================================
+2026-05-29 17:35:51  INFO      [MainThread]    Gevent patched:        False   - MUST be True for stream stability
+2026-05-29 17:35:51  INFO      [MainThread]    Async mode:            gevent
+2026-05-29 17:35:51  INFO      [MainThread]    Port:                  10000
+2026-05-29 17:35:51  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-29 17:35:51  INFO      [MainThread]    Agent exclusive:       True
+2026-05-29 17:35:51  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-29 17:35:51  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-29 17:35:51  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-29 17:35:51  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-29 17:35:51  INFO      [MainThread]    Max frame size:        4MB
+2026-05-29 17:35:51  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-29 17:35:51  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-29 17:35:51  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-29 17:35:51  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-29 17:35:51  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-29 17:35:51  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-29 17:35:51  INFO      [MainThread]    JWT enabled:           False
+2026-05-29 17:35:51  INFO      [MainThread]    TOTP enabled:          False
+2026-05-29 17:35:51  INFO      [MainThread]    Redis scale-out:       False
+2026-05-29 17:35:51  INFO      [MainThread]    Org isolation:         False
+2026-05-29 17:35:51  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-29 17:35:51  INFO      [MainThread]    Signed webhooks:       False
+2026-05-29 17:35:51  INFO      [MainThread]    Webhook:               disabled
+2026-05-29 17:35:51  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-29 17:35:51  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-29 17:35:51  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-29 17:35:51  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-29 17:35:51  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-29 17:35:51  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-29 17:35:51  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-29 17:35:51  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-29 17:35:51  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-29 17:35:51  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-29 17:35:51  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-29 17:35:51  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-29 17:35:51  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-29 17:35:51  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-29 17:35:51  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-29 17:35:51  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-29 17:35:51  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-29 17:35:51  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-29 17:35:51  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-29 17:35:51  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-29 17:35:51  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-29 17:35:51  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-29 17:35:51  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-29 17:35:51  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-29 17:35:51  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-29 17:35:51  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-29 17:35:51  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-29 17:35:51  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-29 17:35:51  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-29 17:35:51  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-29 17:35:51  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-29 17:35:51  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:35:51  INFO      [MainThread]  ========================================================================
+2026-05-29 17:35:51  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-29 17:35:51  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-29 17:35:51  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-29 17:35:51  INFO      [MainThread]  ========================================================================
+2026-05-29 17:35:51  CRITICAL  [MainThread]  GEVENT NOT INSTALLED — server will crash under load!
+2026-05-29 17:35:51  CRITICAL  [MainThread]  Fix: pip install gevent gevent-websocket
+2026-05-29 17:35:51  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-29 17:35:51  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-29 17:35:51  INFO      [Thread-3 (process_request_thread)]  Socket connected: dEkWYEv0idPq4svOAAAB from 127.0.0.1
+2026-05-29 17:35:51  INFO      [Thread-8 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=dEkWYEv0idPq4svOAAAB
+2026-05-29 17:35:51  WARNING   [Thread-10 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:35:51  WARNING   [Thread-12 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:35:51  WARNING   [Thread-13 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:35:51  WARNING   [Thread-14 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:35:54  INFO      [Thread-16 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:35:54] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:35:54  WARNING   [Thread-17 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:05  INFO      [Thread-22 (process_request_thread)]  Socket connected: LwZmgHFed13hnLmfAAAD from 127.0.0.1
+2026-05-29 17:36:05  INFO      [Thread-26 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:36:05] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:36:06  WARNING   [Thread-27 (_handle_event_internal)]  Evicting stale agent TEST-AGENT sid=dEkWYEv0idPq4svOAAAB
+2026-05-29 17:36:06  INFO      [Thread-27 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=LwZmgHFed13hnLmfAAAD
+2026-05-29 17:36:06  WARNING   [Thread-30 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:06  WARNING   [Thread-32 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:06  WARNING   [Thread-33 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:06  WARNING   [Thread-34 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:08  INFO      [Thread-36 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:36:08] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:36:08  WARNING   [Thread-37 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:10  INFO      [Thread-39 (_handle_event_internal)]  frame_bin: initial calibration for TEST-AGENT: 0.012s
+2026-05-29 17:36:10  INFO      [Thread-39 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 0 | KBPS: 0.0 | Latency: 0.0ms
+2026-05-29 17:36:32  INFO      [Thread-353 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 13.7 | KBPS: 4366.5 | Latency: 15.7ms
+2026-05-29 17:36:56  INFO      [MainThread]  SocketIO: using async_mode=threading
+2026-05-29 17:36:57  INFO      [MainThread]  ========================================================================
+2026-05-29 17:36:57  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-29 17:36:57  INFO      [MainThread]  ========================================================================
+2026-05-29 17:36:57  INFO      [MainThread]    Gevent patched:        False   - MUST be True for stream stability
+2026-05-29 17:36:57  INFO      [MainThread]    Async mode:            gevent
+2026-05-29 17:36:57  INFO      [MainThread]    Port:                  10000
+2026-05-29 17:36:57  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-29 17:36:57  INFO      [MainThread]    Agent exclusive:       True
+2026-05-29 17:36:57  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-29 17:36:57  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-29 17:36:57  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-29 17:36:57  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-29 17:36:57  INFO      [MainThread]    Max frame size:        4MB
+2026-05-29 17:36:57  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-29 17:36:57  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-29 17:36:57  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-29 17:36:57  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-29 17:36:57  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-29 17:36:57  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-29 17:36:57  INFO      [MainThread]    JWT enabled:           False
+2026-05-29 17:36:57  INFO      [MainThread]    TOTP enabled:          False
+2026-05-29 17:36:57  INFO      [MainThread]    Redis scale-out:       False
+2026-05-29 17:36:57  INFO      [MainThread]    Org isolation:         False
+2026-05-29 17:36:57  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-29 17:36:57  INFO      [MainThread]    Signed webhooks:       False
+2026-05-29 17:36:57  INFO      [MainThread]    Webhook:               disabled
+2026-05-29 17:36:57  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-29 17:36:57  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-29 17:36:57  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-29 17:36:57  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-29 17:36:57  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-29 17:36:57  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-29 17:36:57  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-29 17:36:57  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-29 17:36:57  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-29 17:36:57  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-29 17:36:57  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-29 17:36:57  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-29 17:36:57  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-29 17:36:57  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-29 17:36:57  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-29 17:36:57  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-29 17:36:57  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-29 17:36:57  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-29 17:36:57  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-29 17:36:57  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-29 17:36:57  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-29 17:36:57  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-29 17:36:57  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-29 17:36:57  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-29 17:36:57  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-29 17:36:57  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-29 17:36:57  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-29 17:36:57  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-29 17:36:57  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-29 17:36:57  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-29 17:36:57  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-29 17:36:57  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:36:57  INFO      [MainThread]  ========================================================================
+2026-05-29 17:36:57  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-29 17:36:57  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-29 17:36:57  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-29 17:36:57  INFO      [MainThread]  ========================================================================
+2026-05-29 17:36:57  CRITICAL  [MainThread]  GEVENT NOT INSTALLED — server will crash under load!
+2026-05-29 17:36:57  CRITICAL  [MainThread]  Fix: pip install gevent gevent-websocket
+2026-05-29 17:36:57  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-29 17:36:57  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-29 17:36:59  INFO      [Thread-3 (process_request_thread)]  Socket connected: b8upU_omU02G7W-aAAAB from 127.0.0.1
+2026-05-29 17:36:59  INFO      [Thread-8 (process_request_thread)]  Socket connected: g6jRV01-zVvGR7zEAAAD from 127.0.0.1
+2026-05-29 17:36:59  INFO      [Thread-12 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=b8upU_omU02G7W-aAAAB
+2026-05-29 17:36:59  WARNING   [Thread-14 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:59  WARNING   [Thread-16 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:59  WARNING   [Thread-17 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:36:59  WARNING   [Thread-19 (_handle_event_internal)]  Evicting stale agent TEST-AGENT sid=b8upU_omU02G7W-aAAAB
+2026-05-29 17:36:59  INFO      [Thread-19 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=g6jRV01-zVvGR7zEAAAD
+2026-05-29 17:36:59  WARNING   [Thread-22 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:37:01  INFO      [Thread-25 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:01] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:37:01  WARNING   [Thread-26 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:37:01  INFO      [Thread-27 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:01] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:37:01  WARNING   [Thread-28 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:37:08  WARNING   [Thread-32 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:37:08  INFO      [Thread-32 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:08] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:37:45  INFO      [Thread-56 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:45] "GET /dashboard HTTP/1.1" 200 -
+2026-05-29 17:37:45  INFO      [Thread-57 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:45] "[36mGET /config.js HTTP/1.1[0m" 304 -
+2026-05-29 17:37:46  INFO      [Thread-58 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:46] "[36mGET /dashboard HTTP/1.1[0m" 304 -
+2026-05-29 17:37:46  INFO      [Thread-59 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:46] "[36mGET /config.js HTTP/1.1[0m" 304 -
+2026-05-29 17:37:53  INFO      [Thread-66 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:37:53] "[33mGET /@vite/client HTTP/1.1[0m" 404 -
+2026-05-29 17:38:26  INFO      [Thread-2 (_self_ping_loop)]  Self-ping disabled: RENDER_EXTERNAL_URL not set.
+2026-05-29 17:38:29  INFO      [Thread-67 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:29] "[36mGET /dashboard HTTP/1.1[0m" 304 -
+2026-05-29 17:38:29  INFO      [Thread-90 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:29] "GET /config.js HTTP/1.1" 200 -
+2026-05-29 17:38:30  WARNING   [Thread-91 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:38:30  INFO      [Thread-91 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:30] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:38:30  INFO      [Thread-96 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:30] "[33mGET /@vite/client HTTP/1.1[0m" 404 -
+2026-05-29 17:38:30  INFO      [Thread-92 (process_request_thread)]  Socket connected: Q05Ooc5FeHxnIwWTAAAF from 127.0.0.1
+2026-05-29 17:38:30  WARNING   [Thread-99 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:38:30  INFO      [Thread-100 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:30] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:38:30  INFO      [Thread-101 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:30] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:38:40  WARNING   [Thread-103 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:38:40  INFO      [Thread-103 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:40] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:38:41  INFO      [Thread-111 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:41] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:38:50  WARNING   [Thread-112 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:38:50  INFO      [Thread-112 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:50] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:38:51  INFO      [Thread-119 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:38:51] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:00  WARNING   [Thread-120 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:00  INFO      [Thread-120 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:00] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:01  INFO      [Thread-128 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:01] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:10  WARNING   [Thread-129 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:10  INFO      [Thread-129 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:10] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:11  INFO      [Thread-139 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:11] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:21  WARNING   [Thread-141 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:21  INFO      [Thread-141 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:21] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:24  INFO      [Thread-150 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:24] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:27  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=16 mem=79MB
+2026-05-29 17:39:30  WARNING   [Thread-152 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:30  INFO      [Thread-152 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:30] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:31  INFO      [Thread-157 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:31] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:34  INFO      [Thread-158 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:34] "GET /dashboard HTTP/1.1" 200 -
+2026-05-29 17:39:34  INFO      [Thread-92 (process_request_thread)]  Socket disconnected: Q05Ooc5FeHxnIwWTAAAF
+2026-05-29 17:39:35  INFO      [Thread-161 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:35] "[36mGET /config.js HTTP/1.1[0m" 304 -
+2026-05-29 17:39:35  WARNING   [Thread-164 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:35  INFO      [Thread-164 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:35] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:35  INFO      [Thread-163 (process_request_thread)]  Socket connected: Mx-KrZ91b5geqTxnAAAH from 127.0.0.1
+2026-05-29 17:39:35  WARNING   [Thread-170 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:36  INFO      [Thread-171 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:36] "[33mGET /@vite/client HTTP/1.1[0m" 404 -
+2026-05-29 17:39:36  INFO      [Thread-172 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:36] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:36  INFO      [Thread-174 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:36] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:37  INFO      [Thread-177 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:37  INFO      [Thread-177 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:39:43  INFO      [Thread-184 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:43  INFO      [Thread-184 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:39:46  INFO      [Thread-187 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:46  INFO      [Thread-187 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:39:46  WARNING   [Thread-175 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:46  INFO      [Thread-175 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:46] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:47  INFO      [Thread-190 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:47  INFO      [Thread-190 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:39:48  INFO      [Thread-192 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:48] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:53  INFO      [Thread-198 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:53  INFO      [Thread-198 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:39:56  WARNING   [Thread-193 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:39:56  INFO      [Thread-193 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:39:57  INFO      [Thread-201 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:39:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:39:58  INFO      [Thread-204 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:39:58  INFO      [Thread-204 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:40:03  INFO      [Thread-209 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:40:03  INFO      [Thread-209 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:40:06  WARNING   [Thread-202 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:40:06  INFO      [Thread-202 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:40:07  INFO      [Thread-212 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:40:16  WARNING   [Thread-213 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:40:16  INFO      [Thread-213 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:40:17  INFO      [Thread-220 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:17] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:40:22  INFO      [Thread-229 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85
+2026-05-29 17:40:22  INFO      [Thread-229 (_handle_event_internal)]  Viewer Mx-KrZ91b5geqTxnAAAH watching TEST-AGENT  fps=60 quality=85 scale=1.0
+2026-05-29 17:40:26  WARNING   [Thread-221 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:40:26  INFO      [Thread-221 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:26] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:40:27  INFO      [Thread-232 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:27] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:40:36  WARNING   [Thread-233 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:40:36  INFO      [Thread-233 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:36] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:40:37  INFO      [Thread-239 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:37] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:40:53  WARNING   [Thread-254 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:40:53  INFO      [Thread-254 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:40:53] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:41:22  WARNING   [Thread-240 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:41:22  INFO      [Thread-240 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:41:22] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:41:23  INFO      [Thread-275 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:41:23] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:42:23  WARNING   [Thread-276 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:42:23  INFO      [Thread-276 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:42:23] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:42:24  INFO      [Thread-319 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:42:24] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:42:58  INFO      [MainThread]  SocketIO: using async_mode=threading
+2026-05-29 17:42:58  INFO      [MainThread]  ========================================================================
+2026-05-29 17:42:58  INFO      [MainThread]    Screen Connect Server  v13.0.0  - ULTRA LIVE-SYNC ENTERPRISE
+2026-05-29 17:42:58  INFO      [MainThread]  ========================================================================
+2026-05-29 17:42:58  INFO      [MainThread]    Gevent patched:        False   - MUST be True for stream stability
+2026-05-29 17:42:58  INFO      [MainThread]    Async mode:            gevent
+2026-05-29 17:42:58  INFO      [MainThread]    Port:                  10000
+2026-05-29 17:42:58  INFO      [MainThread]    Heartbeat TTL:         20s
+2026-05-29 17:42:58  INFO      [MainThread]    Agent exclusive:       True
+2026-05-29 17:42:58  INFO      [MainThread]    Max viewers/device:    unlimited
+2026-05-29 17:42:58  INFO      [MainThread]    Viewer idle kick:      disableds
+2026-05-29 17:42:58  INFO      [MainThread]    Max session dur:       unlimiteds
+2026-05-29 17:42:58  INFO      [MainThread]    Rate limit:            300 req/min per IP
+2026-05-29 17:42:58  INFO      [MainThread]    Max frame size:        4MB
+2026-05-29 17:42:58  INFO      [MainThread]    Max frame kbps:        unlimited
+2026-05-29 17:42:59  INFO      [MainThread]    Frame dedup (fast):    False
+2026-05-29 17:42:59  INFO      [MainThread]    GOP buffer size:       0 frames (0=live-only)
+2026-05-29 17:42:59  INFO      [MainThread]    Stale-frame guard:     150ms TTL
+2026-05-29 17:42:59  INFO      [MainThread]    Cursor delta suppress: 2px threshold
+2026-05-29 17:42:59  INFO      [MainThread]    Real-time FPS API:     /api/fps  /api/latency
+2026-05-29 17:42:59  INFO      [MainThread]    JWT enabled:           False
+2026-05-29 17:42:59  INFO      [MainThread]    TOTP enabled:          False
+2026-05-29 17:42:59  INFO      [MainThread]    Redis scale-out:       False
+2026-05-29 17:42:59  INFO      [MainThread]    Org isolation:         False
+2026-05-29 17:42:59  INFO      [MainThread]    Brute-force lockout:   10 fails - 300s
+2026-05-29 17:42:59  INFO      [MainThread]    Signed webhooks:       False
+2026-05-29 17:42:59  INFO      [MainThread]    Webhook:               disabled
+2026-05-29 17:42:59  INFO      [MainThread]    SSE stream:            /api/events
+2026-05-29 17:42:59  INFO      [MainThread]    Prometheus metrics:    /metrics (text/plain)
+2026-05-29 17:42:59  INFO      [MainThread]    Health checks:         /health/live  /health/ready  /health/full
+2026-05-29 17:42:59  INFO      [MainThread]    Signed invite tokens:  /api/invite/verify
+2026-05-29 17:42:59  INFO      [MainThread]    Device health scores:  /api/devices/health  /api/device/<id>/health
+2026-05-29 17:42:59  INFO      [MainThread]    Device fingerprints:   /api/device/<id>/fingerprint
+2026-05-29 17:42:59  INFO      [MainThread]    Device snapshot:       /api/devices/snapshot (batch health+stats)
+2026-05-29 17:42:59  INFO      [MainThread]    Guest tokens:          /api/guest-token (scoped time-limited access)
+2026-05-29 17:42:59  INFO      [MainThread]    Org webhooks:          /api/orgs/<id>/webhook
+2026-05-29 17:42:59  INFO      [MainThread]    Org rate limiting:     1000 req/min per org
+2026-05-29 17:42:59  INFO      [MainThread]    Reconnect storm guard: 10 max in 60s
+2026-05-29 17:42:59  INFO      [MainThread]    Geo-IP enrichment:     /api/device/<id>/geo
+2026-05-29 17:42:59  INFO      [MainThread]    Device aliases:        /api/device/<id>/alias
+2026-05-29 17:42:59  INFO      [MainThread]    Connection quality:    /api/device/<id>/quality
+2026-05-29 17:42:59  INFO      [MainThread]    Integrations (Slack):  /api/integrations/channels
+2026-05-29 17:42:59  INFO      [MainThread]    Audit log export:      /api/audit-log/export
+2026-05-29 17:42:59  INFO      [MainThread]    Audit log file:        audit.jsonl
+2026-05-29 17:42:59  INFO      [MainThread]    Per-org Prometheus:    /metrics/org/<org_id>
+2026-05-29 17:42:59  INFO      [MainThread]    Live config push:      /api/admin/config-push (SSE fanout)
+2026-05-29 17:42:59  INFO      [MainThread]    Patch manifest:        /api/patch-manifest
+2026-05-29 17:42:59  INFO      [MainThread]    Bulk tag:              /api/devices/bulk-tag
+2026-05-29 17:42:59  INFO      [MainThread]    Version requirements:  /api/orgs/<id>/version-requirement
+2026-05-29 17:42:59  INFO      [MainThread]    Bulk commands:         /api/devices/bulk-command
+2026-05-29 17:42:59  INFO      [MainThread]    Bulk invites:          /api/invites/bulk (max 1000)
+2026-05-29 17:42:59  INFO      [MainThread]    CSV export:            /api/sessions/export.csv
+2026-05-29 17:42:59  INFO      [MainThread]    Script library:        /api/scripts
+2026-05-29 17:42:59  INFO      [MainThread]    Macro library:         /api/macros
+2026-05-29 17:42:59  INFO      [MainThread]    Scheduled jobs:        /api/schedule
+2026-05-29 17:42:59  INFO      [MainThread]    Session recordings:    /api/recordings
+2026-05-29 17:42:59  INFO      [MainThread]    Orgs/Groups:           /api/orgs  /api/groups
+2026-05-29 17:42:59  INFO      [MainThread]    Plugin hooks:          on_agent_connect / on_frame / on_command
+2026-05-29 17:42:59  INFO      [MainThread]    Agent caps:            ['frame_bin', 'cursor_bin', 'webrtc', 'audio', 'file_transfer', 'shell', 'keylog', 'webcam', 'clipboard_sync', 'auto_update', 'wol', 'multi_monitor']
+2026-05-29 17:42:59  INFO      [MainThread]  ========================================================================
+2026-05-29 17:42:59  INFO      [MainThread]    RENDER start command (REQUIRED):
+2026-05-29 17:42:59  INFO      [MainThread]      gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+2026-05-29 17:42:59  INFO      [MainThread]               -w 1 --timeout 300 --keep-alive 75 --bind 0.0.0.0:$PORT server:app
+2026-05-29 17:42:59  INFO      [MainThread]  ========================================================================
+2026-05-29 17:42:59  CRITICAL  [MainThread]  GEVENT NOT INSTALLED — server will crash under load!
+2026-05-29 17:42:59  CRITICAL  [MainThread]  Fix: pip install gevent gevent-websocket
+2026-05-29 17:42:59  INFO      [MainThread]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.0.100:10000
+2026-05-29 17:42:59  INFO      [MainThread]  [33mPress CTRL+C to quit[0m
+2026-05-29 17:43:12  INFO      [Thread-351 (process_request_thread)]  Socket connected: cXZJJS4KmIK0-5t-AAAJ from 127.0.0.1
+2026-05-29 17:43:12  INFO      [Thread-355 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:12] "GET /health/live HTTP/1.1" 200 -
+2026-05-29 17:43:12  WARNING   [Thread-356 (_handle_event_internal)]  Evicting stale agent TEST-AGENT sid=g6jRV01-zVvGR7zEAAAD
+2026-05-29 17:43:13  INFO      [Thread-356 (_handle_event_internal)]  Agent ONLINE: maxiiloh- (TEST-AGENT) sid=cXZJJS4KmIK0-5t-AAAJ
+2026-05-29 17:43:13  WARNING   [Thread-359 (_agent_connect_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:13  WARNING   [Thread-361 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:13  WARNING   [Thread-362 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:13  INFO      [Thread-320 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:13] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:43:14  INFO      [Thread-364 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:14] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:43:14  INFO      [Thread-366 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:14] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:43:14  INFO      [Thread-368 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:14] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:43:15  WARNING   [Thread-371 (db_upsert)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:15  INFO      [Thread-370 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:15] "POST /agent/checkin HTTP/1.1" 200 -
+2026-05-29 17:43:17  INFO      [Thread-376 (_handle_event_internal)]  frame_bin: initial calibration for TEST-AGENT: 0.054s
+2026-05-29 17:43:17  INFO      [Thread-376 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 0 | KBPS: 0.0 | Latency: 0.0ms
+2026-05-29 17:43:34  WARNING   [Thread-369 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:34  INFO      [Thread-369 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:34] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:43:39  INFO      [Thread-539 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:39] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:43:55  WARNING   [Thread-658 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:43:55  INFO      [Thread-658 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:43:55] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:44:03  INFO      [Thread-725 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 6.4 | KBPS: 2784.5 | Latency: 16.4ms
+2026-05-29 17:44:25  WARNING   [Thread-541 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:44:25  INFO      [Thread-541 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:44:25] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:44:27  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=1 gop_bufs=0 threads=19 mem=350MB
+2026-05-29 17:44:28  INFO      [Thread-2 (_self_ping_loop)]  Self-ping disabled: RENDER_EXTERNAL_URL not set.
+2026-05-29 17:44:28  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=2 mem=77MB
+2026-05-29 17:44:30  INFO      [Thread-935 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:44:30] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:44:48  INFO      [Thread-1068 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 6.6 | KBPS: 2800.2 | Latency: 38.7ms
+2026-05-29 17:45:23  WARNING   [Thread-937 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:45:23  INFO      [Thread-937 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:45:23] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:45:26  INFO      [Thread-1352 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:45:26] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:45:36  INFO      [Thread-1414 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 6.5 | KBPS: 2855.5 | Latency: 22.6ms
+2026-05-29 17:46:10  WARNING   [Thread-1354 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:10  INFO      [Thread-1354 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:10] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:20  WARNING   [Thread-1711 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:20  INFO      [Thread-1711 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:20] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:21  INFO      [Thread-1714 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:21] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:46:24  INFO      [Thread-1716 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:24] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:46:28  WARNING   [Thread-1748 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:28  INFO      [Thread-1748 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:28] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:35  INFO      [Thread-1752 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:35] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:46:37  WARNING   [Thread-1807 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:37  INFO      [Thread-1807 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:37] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:40  INFO      [Thread-1810 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:40] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:46:41  INFO      [Thread-1831 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 2.9 | KBPS: 2320.9 | Latency: 41.4ms
+2026-05-29 17:46:46  WARNING   [Thread-1866 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:46  INFO      [Thread-1866 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:46] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:48  INFO      [Thread-1869 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:48] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:46:56  WARNING   [Thread-1937 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:46:56  INFO      [Thread-1937 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:46:57  INFO      [Thread-1939 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:46:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:06  WARNING   [Thread-2008 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:06  INFO      [Thread-2008 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:07  INFO      [Thread-2011 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:10  WARNING   [Thread-2032 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:10  INFO      [Thread-2032 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:10] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:16  WARNING   [Thread-2080 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:16  INFO      [Thread-2080 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:18  INFO      [Thread-2083 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:18] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:26  WARNING   [Thread-2142 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:26  INFO      [Thread-2142 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:26] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:27  INFO      [Thread-2144 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:27] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:36  WARNING   [Thread-2211 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:36  INFO      [Thread-2211 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:36] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:37  INFO      [Thread-2214 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:37] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:39  INFO      [Thread-2230 (_handle_event_internal)]  PERF: TEST-AGENT | FPS: 4.7 | KBPS: 2087.9 | Latency: 11.7ms
+2026-05-29 17:47:46  WARNING   [Thread-2277 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:46  INFO      [Thread-2277 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:46] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:47  INFO      [Thread-2279 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:47] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:47:56  WARNING   [Thread-2344 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:47:56  INFO      [Thread-2344 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:47:57  INFO      [Thread-2347 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:47:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:06  WARNING   [Thread-2409 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:06  INFO      [Thread-2409 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:07  INFO      [Thread-2412 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:16  WARNING   [Thread-2481 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:16  INFO      [Thread-2481 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:17  INFO      [Thread-2485 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:17] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:26  WARNING   [Thread-2560 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:26  INFO      [Thread-2560 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:26] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:27  INFO      [Thread-2566 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:27] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:36  WARNING   [Thread-2712 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:36  INFO      [Thread-2712 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:36] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:37  INFO      [Thread-2716 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:37] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:47  WARNING   [Thread-2836 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:47  INFO      [Thread-2836 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:47] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:48  INFO      [Thread-2839 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:48] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:48:56  WARNING   [Thread-2976 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:48:56  INFO      [Thread-2976 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:48:57  INFO      [Thread-2981 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:48:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:06  WARNING   [Thread-3106 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:06  INFO      [Thread-3106 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:07  INFO      [Thread-3111 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:16  WARNING   [Thread-3238 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:16  INFO      [Thread-3238 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:17  INFO      [Thread-3243 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:17] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:26  WARNING   [Thread-3396 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:26  INFO      [Thread-3396 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:26] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:27  INFO      [Thread-3401 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:27] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:28  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=1 gop_bufs=0 threads=19 mem=144MB
+2026-05-29 17:49:29  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=0 viewers=0 gop_bufs=0 threads=2 mem=77MB
+2026-05-29 17:49:36  WARNING   [Thread-3560 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:36  INFO      [Thread-3560 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:36] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:37  INFO      [Thread-3566 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:37] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:46  WARNING   [Thread-3746 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:46  INFO      [Thread-3746 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:46] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:47  INFO      [Thread-3752 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:47] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:49:56  WARNING   [Thread-3918 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:49:56  INFO      [Thread-3918 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:49:57  INFO      [Thread-3923 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:49:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:06  WARNING   [Thread-4091 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:06  INFO      [Thread-4091 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:07  INFO      [Thread-4095 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:16  WARNING   [Thread-4248 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:16  INFO      [Thread-4248 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:17  INFO      [Thread-4252 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:17] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:26  WARNING   [Thread-4418 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:26  INFO      [Thread-4418 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:26] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:27  INFO      [Thread-4424 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:27] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:36  WARNING   [Thread-4592 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:36  INFO      [Thread-4592 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:36] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:37  INFO      [Thread-4596 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:37] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:46  WARNING   [Thread-4775 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:46  INFO      [Thread-4775 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:46] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:47  INFO      [Thread-4780 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:47] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:56  WARNING   [Thread-4946 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:56  INFO      [Thread-4946 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:56] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:50:57  INFO      [Thread-4950 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:57] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:50:57  WARNING   [Thread-4963 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:50:57  INFO      [Thread-4963 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:50:57] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:51:06  WARNING   [Thread-5109 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:51:06  INFO      [Thread-5109 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:06] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:51:07  INFO      [Thread-5113 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:07] "GET /api/devices HTTP/1.1" 200 -
+2026-05-29 17:51:16  WARNING   [Thread-5243 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 17:51:16  INFO      [Thread-5243 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:16] "GET /status HTTP/1.1" 200 -
+2026-05-29 17:51:17  INFO      [Thread-5246 (process_request_thread)]  127.0.0.1 - - [29/May/2026 17:51:17] "GET /api/devices HTTP/1.1" 200 -
