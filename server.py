@@ -964,7 +964,9 @@ def _cleanup_agent(agent_sid: str):
     if sio:
         payload = {"device_id": did, "label": label, "ts": utcnow()}
         sio.emit("agent_offline",  payload)
+        sio.emit("agent_offline",  payload, room="adv_dashboards")
         sio.emit("device_offline", payload)
+        sio.emit("device_offline", payload, room="adv_dashboards")
     # Supabase + webhook in background — never blocks the event loop
     _bg(_cleanup_agent_bg, did, label)
 
@@ -998,6 +1000,7 @@ def broadcast_device_update():
                     "frame_count": live[did].get("frame_count", 0),
                 })
         sio.emit("device_update", {"rows": rows, "ts": utcnow()})
+        sio.emit("device_update", {"rows": rows, "ts": utcnow()}, room="adv_dashboards")
         _broadcast_device_list()
     except Exception as e:
         log.error(f"broadcast_device_update error: {e}")
@@ -1474,6 +1477,7 @@ if SOCKETIO_OK and sio:
         sid = request.sid
         ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
         join_room("dashboards")
+        join_room("adv_dashboards")   # join both rooms so all device events are received
         log.info(f"Socket connected: {sid} from {ip}")
 
     @sio.on("disconnect")
@@ -1502,6 +1506,11 @@ if SOCKETIO_OK and sio:
         sid = request.sid
         join_room("adv_dashboards")
         _send_device_list_to(sid)
+        # Also push current live device states so dashboard shows online agents instantly
+        with _dev_lock:
+            online_devs = [_safe_dev(d) for d in _devices.values()]
+        if online_devs:
+            sio.emit("device_update", {"rows": online_devs, "ts": utcnow()}, room=sid)
 
     def _build_device_list_result() -> list:
         with _dev_lock:
@@ -1767,11 +1776,14 @@ if SOCKETIO_OK and sio:
         _audit("agent_online", device_id=did, label=label, ip=data.get("local_ip"))
         _push_timeline(did, "agent_online", {"label": label, "ip": data.get("local_ip")})
 
-        # Emit online events
+        # Emit online events to all dashboard rooms
         fp = dict(data)
-        sio.emit("agent_online",  {"device_id": did, "name": label, "label": label,
-                                   "ip": data.get("local_ip"), "fingerprint": fp, "ts": utcnow()})
+        online_payload = {"device_id": did, "name": label, "label": label,
+                          "ip": data.get("local_ip"), "fingerprint": fp, "ts": utcnow()}
+        sio.emit("agent_online",  online_payload)
+        sio.emit("agent_online",  online_payload, room="adv_dashboards")
         sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow()})
+        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow()}, room="adv_dashboards")
 
         # v12: Send capability flags to agent
         sio.emit("caps", {"caps": AGENT_CAPS, "server_version": VERSION}, room=request.sid)
@@ -2336,6 +2348,14 @@ if SOCKETIO_OK and sio:
         ("clipboard_set_result",   "clipboard_set_result",  False),
         ("action_result",          "action_result",         True),
         ("stream_stats",           "stream_stats",          False),
+        ("shell_stream_data",      "shell_stream_data",     False),
+        ("shell_stream_done",      "shell_stream_done",     False),
+        ("transfer_progress",      "transfer_progress",     False),
+        ("transfer_done",          "transfer_done",         False),
+        ("recording_error",        "recording_error",       True),
+        ("tunnel_data",            "tunnel_data",           False),
+        ("tunnel_close",           "tunnel_close",          False),
+        ("connection_quality",     "connection_quality",    False),
     ]:
         _relay(_ev_in, _ev_out, also_dashboards=_also_dash)
 
@@ -2344,6 +2364,7 @@ if SOCKETIO_OK and sio:
         did = data.get("device_id", "")
         sio.emit("agent_alert", data, room=f"view:{did}")
         sio.emit("agent_alert", data, room="dashboards")
+        sio.emit("agent_alert", data, room="adv_dashboards")
         _audit("agent_alert", device_id=did, type=data.get("type"), value=data.get("value"))
         _fire_webhook("agent_alert", data)
 
@@ -2462,6 +2483,8 @@ if SOCKETIO_OK and sio:
         ("uninstall_agent",   "uninstall"),
         ("webcam_capture",    "webcam"),
         ("webcam_list",       "webcam_list"),
+        ("tunnel_open",       "tunnel_open"),
+        ("tunnel_send",       "tunnel_send"),
     ]:
         _fwd(_ename, tab=_tab)
 
@@ -2878,7 +2901,10 @@ if SOCKETIO_OK and sio:
             return
         _sleep(90)
         render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
-        ping_url   = f"{render_url}/health" if render_url else f"http://127.0.0.1:{PORT}/health"
+        if not render_url:
+            log.info("Self-ping disabled: RENDER_EXTERNAL_URL not set.")
+            return
+        ping_url = f"{render_url}/health"
         log.info(f"Self-ping: {ping_url} every {SELF_PING_INTERVAL}s")
         while True:
             try:

@@ -7662,25 +7662,14 @@
         SB_KEY:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054",
         SERVER_URL: (() => {
-          // 0. Use same host and port as current page
-          const protocol = location.protocol;
-          const host = location.host; // includes port
-          return `${protocol}//${host}`;
-          // 1. config.js already seeded window.SC.SERVER_URL — use it (no trailing slash)
-          // 1. config.js already seeded window.SC.SERVER_URL — use it (no trailing slash)
+          // Priority 1: config.js injected window.SC.SERVER_URL (from Render server)
           if (window.SC && window.SC.SERVER_URL && window.SC.SERVER_URL.length > 4)
             return window.SC.SERVER_URL.replace(/\/+$/, "");
-          // 2. config.js set window.SCREEN_CONNECT_SERVER_URL
+          // Priority 2: config.js set window.SCREEN_CONNECT_SERVER_URL
           if (window.SCREEN_CONNECT_SERVER_URL)
             return window.SCREEN_CONNECT_SERVER_URL.replace(/\/+$/, "");
-          // 3. Same-origin fallback (only valid when served from the relay server itself)
-          let url = `${location.protocol}//${location.host}`;
-          if (location.protocol === "https:") {
-            url = url
-              .replace(/^http:\/\//i, "https://")
-              .replace(/^ws:\/\//i, "wss://");
-          }
-          return url;
+          // Priority 3: Same-origin — dashboard is served by the relay server itself
+          return `${location.protocol}//${location.host}`;
         })(),
         socket: null,
         srvOnline: false,
@@ -7884,8 +7873,9 @@
           showToast("Server connected", "success");
           addLog("WebSocket connected", "Server", "System", "ok");
           addNotif("Server connected", "ok");
-          // Join dashboards room for broadcasts
+          // Join dashboards room for broadcasts, and request device list
           SC.socket.emit("join_dashboard", {});
+          SC.socket.emit("viewer_hello", {});
           refresh();
         });
 
@@ -7912,10 +7902,44 @@
           hideBanner();
           showToast("Reconnected", "success");
           SC.socket.emit("join_dashboard", {});
+          SC.socket.emit("viewer_hello", {});
           refresh();
         });
 
         /* ── Agent events ── */
+        SC.socket.on("device_list", (deviceList) => {
+          // Server sends fresh device list after viewer_hello — render immediately
+          if (!Array.isArray(deviceList)) return;
+          const liveDevices = {};
+          deviceList.forEach(d => {
+            const did = d.device_id || d.id || d.token;
+            if (did) liveDevices[did] = d;
+          });
+          // Merge live data into screens and re-render
+          screens = screens.map(s => {
+            const ld = liveDevices[s.token];
+            if (ld) {
+              return { ...s, status: ld.online ? "online" : s.status,
+                cpu: ld.cpu ?? s.cpu, ram: ld.ram ?? s.ram,
+                ip: ld.ip || s.ip, os: ld.os || s.os };
+            }
+            return s;
+          });
+          // Add any brand-new online devices not in screens yet
+          deviceList.filter(d => d.online).forEach(ld => {
+            const did = ld.device_id || ld.id || ld.token;
+            if (!screens.find(s => s.token === did)) {
+              screens.push({
+                id: screens.length, token: did,
+                name: ld.name || ld.label || ld.hostname || did,
+                status: "online", ip: ld.ip || "—", location: "—",
+                type: ld.os || "—", lastActive: "now",
+                cpu: ld.cpu, ram: ld.ram, os: ld.os || "—",
+              });
+            }
+          });
+          renderAll(screens);
+        });
         SC.socket.on("agent_online", (d) => {
           showToast(`Online: ${d.label || d.device_id}`, "success");
           addLog(
@@ -8161,6 +8185,100 @@
             const fl = $("rv-fps-label");
             if (fl) fl.textContent = `${d.actual_fps} fps`;
           }
+        });
+
+        /* ── Shell streaming ── */
+        SC.socket.on("shell_stream_data", (d) => {
+          const out = $("shell-out");
+          if (out && d.line !== undefined) {
+            out.innerHTML += `\n${esc(d.line)}`;
+            out.scrollTop = out.scrollHeight;
+          }
+        });
+        SC.socket.on("shell_stream_done", (d) => {
+          const out = $("shell-out");
+          if (out) {
+            out.innerHTML += `\n<span style="color:var(--c-brand)">[stream done, exit ${d.exit_code ?? 0}]</span>`;
+            out.scrollTop = out.scrollHeight;
+          }
+          const pill = $("shell-status-pill"), lbl = $("shell-status-lbl");
+          if (pill) pill.className = "pill online";
+          if (lbl)  lbl.textContent = `Done (${d.exit_code ?? 0})`;
+          setTimeout(() => { if (pill) pill.className = "pill pending"; if (lbl) lbl.textContent = "Idle"; }, 4000);
+        });
+
+        /* ── File transfer progress ── */
+        SC.socket.on("transfer_progress", (d) => {
+          const pct = d.pct ?? 0;
+          addLog(`Transfer ${d.transfer_id?.slice(0,8) ?? ""}: ${pct}%`, d.device_id ?? "Device", "File", "ok");
+          const bar = $("transfer-progress-bar");
+          if (bar) { bar.style.width = pct + "%"; bar.title = `${pct}%`; }
+        });
+        SC.socket.on("transfer_done", (d) => {
+          addLog(`Transfer complete: ${d.path ?? ""}`, d.device_id ?? "Device", "File", "ok");
+          showToast(`Transfer done: ${d.path ?? "file"}`, "success");
+        });
+
+        /* ── Recording ── */
+        SC.socket.on("recording_chunk", (d) => {
+          addLog(`Recording chunk ${d.chunk ?? ""} received`, d.device_id ?? "Device", "Record", "ok");
+        });
+        SC.socket.on("recording_done", (d) => {
+          addLog(`Recording done (${d.chunks ?? 0} chunks)`, d.device_id ?? "Device", "Record", "ok");
+          showToast("Recording complete", "success");
+        });
+        SC.socket.on("recording_error", (d) => {
+          addLog(`Recording error: ${d.error ?? "unknown"}`, d.device_id ?? "Device", "Record", "warn");
+          showToast("Recording error: " + (d.error ?? ""), "error");
+        });
+
+        /* ── Agent alerts ── */
+        SC.socket.on("agent_alert", (d) => {
+          const msg = d.message ?? `Alert: ${d.type} = ${d.value}`;
+          addLog(msg, d.device_id ?? "Device", "Alert", "warn");
+          addNotif(msg, "warn");
+          showToast(msg, "error");
+        });
+
+        /* ── Security events ── */
+        SC.socket.on("security_alert", (d) => {
+          const msg = `Security: ${d.type} on ${d.device_id ?? "device"}`;
+          addLog(msg, d.device_id ?? "Security", "Security", "warn");
+          addNotif(msg, "warn");
+          showToast(msg, "error");
+        });
+
+        /* ── Server lifecycle ── */
+        SC.socket.on("kicked", (d) => {
+          showBanner(`Session ended: ${d.reason ?? "kicked by server"}`, false);
+          addNotif(`Kicked: ${d.reason ?? ""}`, "warn");
+        });
+        SC.socket.on("server_shutdown", (d) => {
+          showBanner("Server is shutting down…", false);
+          addNotif("Server shutdown", "warn");
+        });
+
+        /* ── Connection quality ── */
+        SC.socket.on("connection_quality", (d) => {
+          if (d.device_id !== RV?.deviceId) return;
+          const fps   = $("lv-fps-val");
+          const rtt   = $("lv-rtt-val");
+          const kbps  = $("lv-kbps-val");
+          if (fps  && d.fps  != null)       fps.textContent  = d.fps + " fps";
+          if (rtt  && d.rtt_ms != null)     rtt.textContent  = Math.round(d.rtt_ms) + " ms";
+          if (kbps && d.encode_ms != null)  kbps.textContent = Math.round(d.encode_ms) + " ms enc";
+        });
+
+        /* ── Tunnel relay ── */
+        SC.socket.on("tunnel_data", (d) => {
+          // Relay data to any open TunnelProxy listeners registered by advanced features
+          if (typeof SC._tunnelHandlers === "object" && SC._tunnelHandlers[d.tunnel_id]) {
+            SC._tunnelHandlers[d.tunnel_id](d.data);
+          }
+        });
+        SC.socket.on("tunnel_close", (d) => {
+          addLog(`Tunnel ${d.tunnel_id?.slice(0,8) ?? ""} closed`, d.device_id ?? "Device", "Tunnel", "ok");
+          if (typeof SC._tunnelHandlers === "object") delete SC._tunnelHandlers[d.tunnel_id];
         });
 
         SC.socket.on("pong_agent", (d) => {
