@@ -257,3 +257,143 @@
 2026-05-29 21:54:46  INFO      [Thread-10716 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.3 | KBPS: 4745.3 | Latency: 0.0ms
 2026-05-29 21:55:22  INFO      [Thread-11588 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 6.4 | KBPS: 1348.8 | Latency: 664.3ms
 2026-05-29 21:56:03  INFO      [Thread-12467 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.9 | KBPS: 3564.5 | Latency: 12.1ms
+2026-05-29 21:56:40  INFO      [Thread-13214 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.0 | KBPS: 4161.9 | Latency: 0.0ms
+2026-05-29 21:56:48  WARNING   [Thread-13330 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 21:56:48  INFO      [Thread-13330 (process_request_thread)]  127.0.0.1 - - [29/May/2026 21:56:48] "GET /status HTTP/1.1" 200 -
+2026-05-29 21:57:12  INFO      [Thread-13693 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.7 | KBPS: 3283.4 | Latency: 0.0ms
+2026-05-29 21:57:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=8 mem=124MB
+2026-05-29 21:57:42  INFO      [Thread-14003 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.0 | KBPS: 4013.0 | Latency: 2.6ms
+2026-05-29 21:58:17  INFO      [Thread-14715 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.6 | KBPS: 3869.1 | Latency: 0.0ms
+2026-05-29 21:58:53  INFO      [Thread-15464 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.6 | KBPS: 3573.3 | Latency: 2.5ms
+2026-05-29 21:59:28  INFO      [Thread-16069 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.1 | KBPS: 3038.2 | Latency: 3.3ms
+2026-05-29 21:59:59  INFO      [Thread-16674 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.6 | KBPS: 1688.9 | Latency: 1.8ms
+2026-05-29 22:00:32  INFO      [Thread-17232 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.1 | KBPS: 3655.3 | Latency: 0.0ms
+2026-05-29 22:01:06  INFO      [Thread-18038 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.0 | KBPS: 3683.5 | Latency: -0.0ms
+2026-05-29 22:01:33  INFO      [Thread-18441 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.1 | KBPS: 4389.3 | Latency: 6.9ms
+2026-05-29 22:02:03  INFO      [Thread-19003 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:02:03] "[36mGET /dashboard HTTP/1.1[0m" 304 -
+2026-05-29 22:02:03  INFO      [Thread-19004 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.3 | KBPS: 5577.8 | Latency: 0.8ms
+2026-05-29 22:02:03  INFO      [Thread-19005 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:02:03] "GET /config.js HTTP/1.1" 200 -
+2026-05-29 22:02:06  INFO      [Thread-19008 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:02:06] "[33mGET /@vite/client HTTP/1.1[0m" 404 -
+2026-05-29 22:02:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=8 mem=156MB
+2026-05-29 22:02:51  INFO      [Thread-19742 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.9 | KBPS: 2572.9 | Latency: 0.0ms
+2026-05-29 22:03:17  INFO      [Thread-20060 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.3 | KBPS: 2572.8 | Latency: 0.0ms
+2026-05-29 22:03:44  INFO      [Thread-20377 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.3 | KBPS: 2358.4 | Latency: 0.4ms
+2026-05-29 22:04:10  INFO      [Thread-20696 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.5 | KBPS: 2572.5 | Latency: 0.0ms
+2026-05-29 22:04:36  INFO      [Thread-21039 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.2 | KBPS: 2435.5 | Latency: 0.0ms
+2026-05-29 22:05:03  INFO      [Thread-21449 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.3 | KBPS: 2507.4 | Latency: 0.0ms
+2026-05-29 22:05:30  INFO      [Thread-21899 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.1 | KBPS: 2507.5 | Latency: 0.0ms
+2026-05-29 22:05:57  INFO      [Thread-22348 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.2 | KBPS: 2770.1 | Latency: 0.0ms
+2026-05-29 22:06:24  INFO      [Thread-22785 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.1 | KBPS: 2752.5 | Latency: 0.0ms
+2026-05-29 22:06:51  INFO      [Thread-23266 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.1 | KBPS: 2728.7 | Latency: -0.3ms
+2026-05-29 22:06:51  WARNING   [Thread-23268 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 22:06:51  INFO      [Thread-23268 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:06:51] "GET /status HTTP/1.1" 200 -
+2026-05-29 22:07:18  INFO      [Thread-23703 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.1 | KBPS: 2488.7 | Latency: 0.0ms
+2026-05-29 22:07:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=7 mem=163MB
+2026-05-29 22:07:44  INFO      [Thread-24080 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.7 | KBPS: 2716.9 | Latency: 0.0ms
+2026-05-29 22:08:16  INFO      [Thread-24717 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.1 | KBPS: 1638.2 | Latency: 109.9ms
+2026-05-29 22:08:51  INFO      [Thread-25299 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.1 | KBPS: 2078.9 | Latency: 0.0ms
+2026-05-29 22:09:36  INFO      [Thread-26007 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.4 | KBPS: 1493.1 | Latency: 2.0ms
+2026-05-29 22:10:12  INFO      [Thread-26590 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.4 | KBPS: 1825.7 | Latency: 2.2ms
+2026-05-29 22:10:45  INFO      [Thread-27028 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.0 | KBPS: 3039.8 | Latency: 0.0ms
+2026-05-29 22:11:16  INFO      [Thread-27347 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.6 | KBPS: 3039.7 | Latency: 47.2ms
+2026-05-29 22:11:47  INFO      [Thread-27665 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.8 | KBPS: 3039.7 | Latency: 0.0ms
+2026-05-29 22:11:55  INFO      [Thread-27969 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 55.3 | KBPS: 3792.9 | Latency: 0.0ms
+2026-05-29 22:12:01  INFO      [Thread-28273 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 54.9 | KBPS: 3797.3 | Latency: 5.5ms
+2026-05-29 22:12:07  INFO      [Thread-28576 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 56.9 | KBPS: 3941.7 | Latency: 0.0ms
+2026-05-29 22:12:12  INFO      [Thread-28880 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 57.8 | KBPS: 3903.5 | Latency: 3.7ms
+2026-05-29 22:12:19  INFO      [Thread-29182 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 43.5 | KBPS: 2463.8 | Latency: 9.9ms
+2026-05-29 22:12:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=7 mem=180MB
+2026-05-29 22:12:47  INFO      [Thread-29659 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.7 | KBPS: 3347.4 | Latency: 2.8ms
+2026-05-29 22:13:16  INFO      [Thread-30079 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.9 | KBPS: 3153.3 | Latency: 23.6ms
+2026-05-29 22:13:43  INFO      [Thread-30496 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.3 | KBPS: 3440.0 | Latency: 2.4ms
+2026-05-29 22:14:09  INFO      [Thread-30813 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.2 | KBPS: 3439.8 | Latency: 8.5ms
+2026-05-29 22:14:26  INFO      [Thread-31126 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 55.5 | KBPS: 4933.1 | Latency: 0.0ms
+2026-05-29 22:14:31  INFO      [Thread-31431 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4063.8 | Latency: 0.0ms
+2026-05-29 22:14:36  INFO      [Thread-31736 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 3999.8 | Latency: -0.3ms
+2026-05-29 22:14:41  INFO      [Thread-32039 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 3998.4 | Latency: 0.0ms
+2026-05-29 22:14:46  INFO      [Thread-32343 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 3997.6 | Latency: 0.0ms
+2026-05-29 22:14:51  INFO      [Thread-32646 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4071.3 | Latency: 0.5ms
+2026-05-29 22:14:56  INFO      [Thread-32950 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.9 | KBPS: 3999.6 | Latency: 0.0ms
+2026-05-29 22:15:01  INFO      [Thread-33255 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4010.7 | Latency: 0.2ms
+2026-05-29 22:15:06  INFO      [Thread-33557 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4080.5 | Latency: 0.0ms
+2026-05-29 22:15:11  INFO      [Thread-33861 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4049.1 | Latency: -0.6ms
+2026-05-29 22:15:16  INFO      [Thread-34165 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.5 | KBPS: 4053.8 | Latency: -0.9ms
+2026-05-29 22:15:21  INFO      [Thread-34469 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4008.0 | Latency: 0.6ms
+2026-05-29 22:15:26  INFO      [Thread-34773 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4009.2 | Latency: -0.9ms
+2026-05-29 22:15:31  INFO      [Thread-35077 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4070.2 | Latency: 0.3ms
+2026-05-29 22:15:36  INFO      [Thread-35380 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4073.5 | Latency: -0.7ms
+2026-05-29 22:15:41  INFO      [Thread-35684 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4064.9 | Latency: 0.0ms
+2026-05-29 22:15:46  INFO      [Thread-35987 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4067.6 | Latency: -0.4ms
+2026-05-29 22:15:51  INFO      [Thread-36292 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4076.5 | Latency: 0.0ms
+2026-05-29 22:15:56  INFO      [Thread-36595 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 57.8 | KBPS: 3751.2 | Latency: 0.0ms
+2026-05-29 22:16:01  INFO      [Thread-36900 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4075.7 | Latency: -1.0ms
+2026-05-29 22:16:06  INFO      [Thread-37203 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4016.7 | Latency: -0.7ms
+2026-05-29 22:16:11  INFO      [Thread-37506 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4054.9 | Latency: 0.0ms
+2026-05-29 22:16:16  INFO      [Thread-37810 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4057.0 | Latency: 0.1ms
+2026-05-29 22:16:21  INFO      [Thread-38114 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4078.8 | Latency: 0.0ms
+2026-05-29 22:16:26  INFO      [Thread-38417 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4017.9 | Latency: -0.3ms
+2026-05-29 22:16:37  INFO      [Thread-38780 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 14.7 | KBPS: 3440.1 | Latency: 12.2ms
+2026-05-29 22:16:53  WARNING   [Thread-38977 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 22:16:53  INFO      [Thread-38977 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:16:53] "GET /status HTTP/1.1" 200 -
+2026-05-29 22:17:03  INFO      [Thread-39100 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.3 | KBPS: 3440.1 | Latency: 0.0ms
+2026-05-29 22:17:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=7 mem=263MB
+2026-05-29 22:17:29  INFO      [Thread-39416 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 11.4 | KBPS: 3440.1 | Latency: 8.8ms
+2026-05-29 22:17:38  INFO      [Thread-39724 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4058.0 | Latency: 1.0ms
+2026-05-29 22:17:43  INFO      [Thread-40028 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4059.0 | Latency: -0.3ms
+2026-05-29 22:17:48  INFO      [Thread-40331 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4058.5 | Latency: -0.4ms
+2026-05-29 22:17:53  INFO      [Thread-40636 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 3999.1 | Latency: 0.0ms
+2026-05-29 22:17:58  INFO      [Thread-40940 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 58.8 | KBPS: 3935.1 | Latency: -0.8ms
+2026-05-29 22:18:03  INFO      [Thread-41244 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4019.9 | Latency: 0.0ms
+2026-05-29 22:18:08  INFO      [Thread-41546 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 56.2 | KBPS: 4014.5 | Latency: 19.8ms
+2026-05-29 22:18:13  INFO      [Thread-41850 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 3992.6 | Latency: 0.0ms
+2026-05-29 22:18:18  INFO      [Thread-42153 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.5 | KBPS: 3927.5 | Latency: -0.9ms
+2026-05-29 22:18:23  INFO      [Thread-42458 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4013.8 | Latency: 0.0ms
+2026-05-29 22:18:28  INFO      [Thread-42761 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.5 | KBPS: 4017.0 | Latency: 0.0ms
+2026-05-29 22:18:33  INFO      [Thread-43066 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4008.3 | Latency: 0.0ms
+2026-05-29 22:18:38  INFO      [Thread-43369 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4011.7 | Latency: 0.0ms
+2026-05-29 22:18:43  INFO      [Thread-43673 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4075.4 | Latency: 0.0ms
+2026-05-29 22:18:48  INFO      [Thread-43977 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4007.5 | Latency: 0.0ms
+2026-05-29 22:18:53  INFO      [Thread-44281 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4078.8 | Latency: 0.0ms
+2026-05-29 22:18:58  INFO      [Thread-44584 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4015.3 | Latency: -0.6ms
+2026-05-29 22:19:03  INFO      [Thread-44888 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4076.0 | Latency: 0.0ms
+2026-05-29 22:19:08  INFO      [Thread-45191 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.9 | KBPS: 4009.9 | Latency: -0.4ms
+2026-05-29 22:19:14  INFO      [Thread-45495 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.9 | KBPS: 3991.6 | Latency: 1.4ms
+2026-05-29 22:19:19  INFO      [Thread-45799 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4059.1 | Latency: 1.4ms
+2026-05-29 22:19:24  INFO      [Thread-46103 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 58.7 | KBPS: 4014.3 | Latency: 0.0ms
+2026-05-29 22:19:29  INFO      [Thread-46406 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4017.1 | Latency: 0.0ms
+2026-05-29 22:19:34  INFO      [Thread-46710 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4004.0 | Latency: -0.8ms
+2026-05-29 22:19:39  INFO      [Thread-47014 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4078.6 | Latency: -0.1ms
+2026-05-29 22:19:44  INFO      [Thread-47318 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4074.7 | Latency: 0.0ms
+2026-05-29 22:19:49  INFO      [Thread-47621 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4010.6 | Latency: 0.0ms
+2026-05-29 22:19:54  INFO      [Thread-47925 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4076.9 | Latency: 0.0ms
+2026-05-29 22:19:59  INFO      [Thread-48228 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4016.4 | Latency: 0.0ms
+2026-05-29 22:20:04  INFO      [Thread-48533 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4090.0 | Latency: 0.0ms
+2026-05-29 22:20:09  INFO      [Thread-48837 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4024.0 | Latency: 0.0ms
+2026-05-29 22:20:14  INFO      [Thread-49141 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 57.5 | KBPS: 4065.7 | Latency: -0.9ms
+2026-05-29 22:20:19  INFO      [Thread-49444 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.9 | KBPS: 4007.4 | Latency: 0.0ms
+2026-05-29 22:20:24  INFO      [Thread-49747 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.9 | KBPS: 4028.3 | Latency: 0.0ms
+2026-05-29 22:20:29  INFO      [Thread-50051 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4026.5 | Latency: 0.0ms
+2026-05-29 22:20:34  INFO      [Thread-50355 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 59.5 | KBPS: 3953.4 | Latency: 0.0ms
+2026-05-29 22:20:39  INFO      [Thread-50658 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4091.4 | Latency: 1.4ms
+2026-05-29 22:20:44  INFO      [Thread-50962 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4080.2 | Latency: 0.3ms
+2026-05-29 22:20:49  INFO      [Thread-51265 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.1 | KBPS: 4090.8 | Latency: -0.8ms
+2026-05-29 22:20:54  INFO      [Thread-51571 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 60.0 | KBPS: 4021.5 | Latency: -0.5ms
+2026-05-29 22:21:12  INFO      [Thread-52064 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.2 | KBPS: 2318.2 | Latency: 29.7ms
+2026-05-29 22:21:43  INFO      [Thread-52558 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.0 | KBPS: 1821.5 | Latency: 8.1ms
+2026-05-29 22:22:14  INFO      [Thread-53029 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 10.2 | KBPS: 1943.3 | Latency: -0.5ms
+2026-05-29 22:22:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=7 mem=207MB
+2026-05-29 22:22:45  INFO      [Thread-53346 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 9.8 | KBPS: 1961.2 | Latency: 0.0ms
+2026-05-29 22:23:22  INFO      [Thread-53666 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.0 | KBPS: 1789.3 | Latency: 0.0ms
+2026-05-29 22:24:01  INFO      [Thread-53986 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.5 | KBPS: 1790.6 | Latency: 0.0ms
+2026-05-29 22:24:55  INFO      [Thread-54434 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 4.8 | KBPS: 1395.7 | Latency: 11.1ms
+2026-05-29 22:25:44  INFO      [Thread-55197 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 5.8 | KBPS: 2699.6 | Latency: 53.5ms
+2026-05-29 22:26:23  INFO      [Thread-55517 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.8 | KBPS: 2699.6 | Latency: 20.1ms
+2026-05-29 22:26:55  WARNING   [Thread-55791 (process_request_thread)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 22:26:55  INFO      [Thread-55791 (process_request_thread)]  127.0.0.1 - - [29/May/2026 22:26:55] "GET /status HTTP/1.1" 200 -
+2026-05-29 22:27:00  INFO      [Thread-55835 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 8.0 | KBPS: 2699.6 | Latency: 28.8ms
+2026-05-29 22:27:22  INFO      [Thread-1 (_watchdog_loop)]  Watchdog health | devices=1 viewers=0 gop_bufs=0 threads=7 mem=249MB
+2026-05-29 22:27:40  INFO      [Thread-56227 (_handle_event_internal)]  PERF: uqt5uq7 | FPS: 7.2 | KBPS: 1820.0 | Latency: 41.3ms
+2026-05-29 22:28:06  WARNING   [Thread-2521 (process_request_thread)]  Agent offline: maxiiloh- (uqt5uq7)
+2026-05-29 22:28:06  INFO      [Thread-2521 (process_request_thread)]  Socket disconnected: RljmWaxbxBqFqghIAAAF
+2026-05-29 22:28:06  WARNING   [Thread-56604 (_cleanup_agent_bg)]  Supabase unavailable: No module named 'supabase'
+2026-05-29 22:28:06  WARNING   [Thread-56605 (_refresh_dev_list_cache)]  Supabase unavailable: No module named 'supabase'

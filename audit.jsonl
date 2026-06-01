@@ -62,3 +62,9 @@
 {"ts": "2026-05-29T18:46:07.567917", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 100.0}
 {"ts": "2026-05-29T18:51:29.737342", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 92.7}
 {"ts": "2026-05-29T18:56:49.955463", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 96.0}
+{"ts": "2026-05-29T19:02:13.353245", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T19:08:34.262964", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 99.4}
+{"ts": "2026-05-29T19:14:26.303622", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 94.0}
+{"ts": "2026-05-29T19:21:54.360571", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 99.6}
+{"ts": "2026-05-29T19:27:14.775090", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 100.0}
+{"ts": "2026-05-29T19:28:06.915971", "event": "agent_offline", "device_id": "uqt5uq7", "label": "maxiiloh-"}

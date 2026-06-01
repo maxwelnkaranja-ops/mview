@@ -86,6 +86,7 @@ import winreg
 import ctypes
 import uuid
 import asyncio
+from asyncio import QueueEmpty as _AsyncQueueEmpty
 import struct
 from concurrent.futures import ThreadPoolExecutor
 import random
@@ -291,7 +292,7 @@ CONFIG = {
     # For Render live: Use https://your-app.onrender.com
     "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
     "DEVICE_TOKEN":         "TEST-AGENT",
-    "UNIFIED_CONNECTION":   True,       # v14: use single socket for everything (more stable)
+    "UNIFIED_CONNECTION":   False,       # v14: separate socket for streaming is often more stable for high-load relay
 
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "10.0.0",  # ULTRA LIVE-SYNC ENTERPRISE build
@@ -300,11 +301,12 @@ CONFIG = {
     "RECONNECT_MAX":        15,  # v10: max 15s backoff (was 60s)
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           60,         # target FPS — range 30-60 (ENTERPRISE LIVE-SYNC)
-    "STREAM_MIN_FPS":       60,         # v14: lock at 60fps, no sparing the gpu
-    "STREAM_QUALITY":       95,         # quality 95 — ultra-high grade
+    "STREAM_FPS":           30,         # v14: default to 30fps for better stability over internet
+    "STREAM_MIN_FPS":       10,         # v14: allow drop to 10fps if needed
+    "STREAM_QUALITY":       70,         # v14: quality 70 is sweet spot for JPEG bandwidth
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
+    "STREAM_SCALE":         0.7,        # v14: default 0.7x scale (approx 720p) for much faster streaming
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
@@ -985,7 +987,6 @@ def _producer_thread(
     cfg_sig = None
     n = 0
     grab_fails = 0
-    enc_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="adv-enc-prod")
 
     def _reset_pipeline():
         nonlocal capture, w, h, encoder, enc_flag, differ, fps_ctl, cfg_sig, n, grab_fails
@@ -1062,10 +1063,10 @@ def _producer_thread(
 
         force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
 
-        # Encode in thread pool so CPU-heavy JPEG doesn't block ticker
+        # v14: Encode directly in producer thread. Redundant thread pool with 0.5s 
+        # timeout was causing 1fps/stalls when encoding took >500ms.
         try:
-            future  = enc_pool.submit(encoder.encode_frame, small, force_key)
-            payload, is_key = future.result(timeout=0.5)
+            payload, is_key = encoder.encode_frame(small, force_key)
         except Exception as e:
             log.debug(f"Encode error: {e}")
             continue
@@ -1078,21 +1079,22 @@ def _producer_thread(
         header = FRAME_HDR.pack(fw, fh, ts_us, flags, len(payload))
         pkt    = header + payload
 
-        # Drop-oldest when queue is full — keep only the newest frame.
-        # v12.2: drain ALL stale frames, not just one, so the consumer
-        # always picks up the absolute latest capture.
-        while frame_q.full():
-            try: frame_q.get_nowait()
-            except _queue.Empty: break
+        # v14: Use loop.call_soon_threadsafe to put frames into asyncio.Queue.
+        # This is significantly more efficient than blocking on a thread-safe queue.
+        def _put_frame(p):
+            while frame_q.full():
+                try: frame_q.get_nowait()
+                except: break
+            try:
+                frame_q.put_nowait(p)
+            except asyncio.QueueFull:
+                pass
 
-        try:
-            frame_q.put_nowait(pkt)
-        except _queue.Full:
-            pass  # race — still safe
+        if _adv_loop:
+            _adv_loop.call_soon_threadsafe(_put_frame, pkt)
 
         n += 1
 
-    enc_pool.shutdown(wait=False)
     try: capture.close()
     except Exception: pass
     log.info("Producer thread exited.")
@@ -1153,7 +1155,9 @@ async def _adv_task_stream_frames(unified_sio=None):
     if unified_sio:
         _adv_sio_async = unified_sio
 
-    frame_q  = _queue.Queue(maxsize=2)   # tight buffer: always newest frame, zero stale backlog
+    # v14: Use asyncio.Queue for zero-overhead consumer waiting.
+    # Producer will use call_soon_threadsafe to populate this.
+    frame_q  = asyncio.Queue(maxsize=2)
     stop_evt = _threading_mod.Event()
     tick_evt = _threading_mod.Event()
 
@@ -1177,19 +1181,20 @@ async def _adv_task_stream_frames(unified_sio=None):
                 log.info("Stream consumer: auth cleared — shutting down producer")
                 break
 
-            # Drain the queue — always consume the NEWEST frame only.
-            # If multiple frames queued (encode burst), skip to the last one
-            # so the viewer always sees the most current screen state (live-sync).
-            pkt = None
+            # v14: Proper async wait for the next frame. No more busy-waiting!
             try:
-                while True:
-                    pkt = frame_q.get_nowait()
-            except _queue.Empty:
-                pass
-
-            if pkt is None:
-                await asyncio.sleep(0.0005)   # 0.5ms yield — minimal latency
+                pkt = await asyncio.wait_for(frame_q.get(), timeout=1.0)
+            except asyncio.TimeoutError:
                 continue
+
+            # Drain any backlog — keep only the absolute newest
+            while not frame_q.empty():
+                try: pkt = frame_q.get_nowait()
+                except _AsyncQueueEmpty: break
+            
+            # v14: Keep a local count for dropping logs
+            if not hasattr(_adv_task_stream_frames, "_n"): _adv_task_stream_frames._n = 0
+            _adv_task_stream_frames._n += 1
 
             # Stale-frame guard: if the frame is >500ms old, discard it.
             # 500ms TTL ensures frames are dropped only if they are significantly late,
@@ -1200,7 +1205,7 @@ async def _adv_task_stream_frames(unified_sio=None):
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
                     if age_ms > 500:
-                        if n % 60 == 0:
+                        if _adv_task_stream_frames._n % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
                 except Exception:
@@ -1211,21 +1216,21 @@ async def _adv_task_stream_frames(unified_sio=None):
 
             # Emit over Socket.IO (non-blocking fan-out)
             if _adv_sio_async and _adv_sio_async.connected:
-                # v10: drop-if-busy emit — ensures the loop never blocks on network IO
-                # maintaining perfect mirror sync even on jittery connections.
-                if not hasattr(_adv_sio_async, "_emitting"): _adv_sio_async._emitting = False
-                if not _adv_sio_async._emitting:
-                    _adv_sio_async._emitting = True
-                    # v10: Debug print for frame emission
-                    if random.random() < 0.01:
-                        log.info(f"Emitting frame_bin: {len(pkt)} bytes")
+                # v14: allow up to 2 frames in flight to prevent "stuck at 1fps" on jittery networks
+                # while still protecting against massive backlog/OOM.
+                if not hasattr(_adv_sio_async, "_in_flight"): _adv_sio_async._in_flight = 0
+                if _adv_sio_async._in_flight < 2:
+                    _adv_sio_async._in_flight += 1
                     
                     async def _do_emit(p):
                         try:
                             await _safe_emit("frame_bin", p)
                         finally:
-                            _adv_sio_async._emitting = False
+                            _adv_sio_async._in_flight = max(0, _adv_sio_async._in_flight - 1)
+                    
                     asyncio.create_task(_do_emit(pkt))
+                elif _adv_task_stream_frames._n % 30 == 0:
+                    log.debug(f"Stream consumer: dropping frame due to backpressure (in_flight={_adv_sio_async._in_flight})")
 
             # Also push over any open WebRTC DataChannels
             for vsid, dc in list(_adv_webrtc_channels.items()):
@@ -1246,11 +1251,14 @@ async def _adv_task_stream_cursor():
     interval = 1.0 / 60
     lx = ly = -1
     skip = 0  # skip counter for unchanged positions
+    log.info("Cursor stream task started")
     while True:
         if _adv_authed:
             try:
                 pos = _cursor_relative_to_monitor()
                 if pos is None:
+                    if lx != -1: # just left the monitor
+                        log.debug("Cursor left monitor")
                     lx = ly = -1
                     await asyncio.sleep(interval)
                     continue
@@ -1260,13 +1268,23 @@ async def _adv_task_stream_cursor():
                 if dx > 1 or dy > 1 or skip >= 120:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
-                    await _safe_emit("cursor_bin", pkt)
+                    
+                    # v14: Don't await cursor emission in the 60Hz loop. 
+                    # If network is slow, it will back up and cause 1fps.
+                    asyncio.create_task(_safe_emit("cursor_bin", pkt))
+                    
+                    if skip >= 120 and dx <= 1 and dy <= 1:
+                        log.debug(f"Cursor keepalive: {x},{y}")
+                    
                     lx, ly = x, y
                     skip = 0
                 else:
                     skip += 1
-            except Exception:
-                pass
+            except Exception as e:
+                log.debug(f"Cursor task error: {e}")
+        else:
+            await asyncio.sleep(0.5)
+            continue
         await asyncio.sleep(interval)
 
 
