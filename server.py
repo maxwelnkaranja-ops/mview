@@ -2091,6 +2091,8 @@ if SOCKETIO_OK and sio:
         # Fan out to viewers
         # v14: Unified room "view:{did}" for all binary frames
         # We send the versioned (suffixed) frame for best viewer experience.
+        if seq % 60 == 0:
+            log.info(f"Server: relaying frame_bin for {did} (seq={seq})")
         sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
         # v15.7: Secondary relay for enterprise sync
         sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")

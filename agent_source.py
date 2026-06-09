@@ -985,6 +985,10 @@ import queue as _queue
 import threading as _threading_mod
 
 
+# v15.7: Global diagnostic counters
+_producer_frame_count = 0
+_consumer_frame_count = 0
+
 def _producer_thread(
     frame_q: _queue.Queue,
     stop_evt: _threading_mod.Event,
@@ -999,6 +1003,7 @@ def _producer_thread(
     Queue:  bounded maxsize=2. When full, oldest item is dropped (drop-oldest
             policy) so the consumer always gets the freshest frame.
     """
+    global _producer_frame_count
     capture = w = h = encoder = enc_flag = differ = fps_ctl = None
     cfg_sig = None
     n = 0
@@ -1068,14 +1073,13 @@ def _producer_thread(
 
         # v15: Diagnostic FPS logging
         if not hasattr(_producer_thread, "_last_fps_log"): _producer_thread._last_fps_log = time.time()
-        if not hasattr(_producer_thread, "_frame_count"):  _producer_thread._frame_count = 0
-        _producer_thread._frame_count += 1
+        _producer_frame_count += 1
         now = time.time()
         if now - _producer_thread._last_fps_log >= 5.0:
-            actual_fps = _producer_thread._frame_count / (now - _producer_thread._last_fps_log)
+            actual_fps = _producer_frame_count / (now - _producer_thread._last_fps_log)
             log.info(f"Advanced Monitor: Actual Producer FPS: {actual_fps:.1f} (Target: {CONFIG['STREAM_FPS']})")
             _producer_thread._last_fps_log = now
-            _producer_thread._frame_count = 0
+            _producer_frame_count = 0
 
         force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
 
@@ -1089,14 +1093,11 @@ def _producer_thread(
         t3 = time.perf_counter()
 
         # v15: Diagnostic Timing
-        if not hasattr(_producer_thread, "_frame_count"): _producer_thread._frame_count = 0
-        _producer_thread._frame_count += 1
-        
-        # v15: Fixed 89984ms lag issue. Use standard unix timestamp in microseconds.
+        # Fixed 89984ms lag issue. Use standard unix timestamp in microseconds.
         # time.time() is the most reliable for cross-platform internet relays.
         ts_us  = int(time.time() * 1_000_000)
 
-        if _producer_thread._frame_count % 30 == 0:
+        if _producer_frame_count % 30 == 0:
             log.info(f"Perf: Grab={(t1-t0)*1000:.1f}ms, Scale={(t2-t1)*1000:.1f}ms, Encode={(t3-t2)*1000:.1f}ms | Total={(time.perf_counter()-t0)*1000:.1f}ms")
 
         if not payload:
@@ -1164,13 +1165,19 @@ def _ticker_thread(stop_evt: _threading_mod.Event, tick_evt: _threading_mod.Even
             next_tick = time.monotonic()
 
 
+import inspect
+
 async def _safe_emit(event, data):
     """v14: Emit event over either sync or async Socket.IO client safely."""
-    global _adv_sio_async
+    global _adv_sio_async, _consumer_frame_count
     if not _adv_sio_async or not _adv_sio_async.connected:
         return
     try:
-        if asyncio.iscoroutinefunction(_adv_sio_async.emit):
+        # v15.7: Log binary frame relay to verify flow
+        if event == "frame_bin" and _consumer_frame_count % 60 == 0:
+            log.info(f"Relay: emitting frame_bin to server ({len(data)} bytes)")
+
+        if inspect.iscoroutinefunction(_adv_sio_async.emit):
             await _adv_sio_async.emit(event, data)
         else:
             # Sync client: run in executor to avoid blocking event loop
@@ -1181,13 +1188,16 @@ async def _safe_emit(event, data):
 
 _adv_task_running = False
 
+# v15.7: Stream control events
+_adv_stream_ctrl = {"stop": None, "tick": None}
+
 async def _adv_task_stream_frames(unified_sio=None):
     """
     Consumer task (async).
     Waits for auth_ok via asyncio.Event — NO polling loop over _adv_authed flag.
     Spawns producer + ticker threads, then drains the queue and emits frames.
     """
-    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async, _adv_task_running
+    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async, _adv_task_running, _adv_stream_ctrl
     if _adv_task_running:
         log.info("Stream consumer already running — skipping")
         return
@@ -1209,6 +1219,9 @@ async def _adv_task_stream_frames(unified_sio=None):
         frame_q  = asyncio.Queue(maxsize=2)
         stop_evt = _threading_mod.Event()
         tick_evt = _threading_mod.Event()
+        
+        _adv_stream_ctrl["stop"] = stop_evt
+        _adv_stream_ctrl["tick"] = tick_evt
 
         prod_t = _threading_mod.Thread(
             target=_producer_thread,
@@ -1254,12 +1267,10 @@ async def _adv_task_stream_frames(unified_sio=None):
                 except _AsyncQueueEmpty: break
             
             # v15: Diagnostic Timing
-            if not hasattr(_adv_task_stream_frames, "_frame_count"): 
-                _adv_task_stream_frames.__dict__["_frame_count"] = 0
-            _adv_task_stream_frames.__dict__["_frame_count"] += 1
+            global _consumer_frame_count
+            _consumer_frame_count += 1
             
-            _fc = _adv_task_stream_frames.__dict__["_frame_count"]
-            if _fc % 30 == 0:
+            if _consumer_frame_count % 30 == 0:
                 log.info(f"Stream Stats: in_flight={_adv_sio_async._in_flight if _adv_sio_async else '?'}")
 
             # Stale-frame guard: if the frame is >150ms old, discard it.
@@ -1269,7 +1280,7 @@ async def _adv_task_stream_frames(unified_sio=None):
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
                     if age_ms > 150:
-                        if _fc % 60 == 0:
+                        if _consumer_frame_count % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
                 except Exception:
@@ -1298,12 +1309,12 @@ async def _adv_task_stream_frames(unified_sio=None):
                     asyncio.create_task(_do_emit(pkt))
                 else:
                     # Backpressure hit — drop frame
-                    if _fc % 60 == 0:
+                    if _consumer_frame_count % 60 == 0:
                         log.debug(f"Stream backpressure: dropping frame (in_flight={_adv_sio_async._in_flight})")
                         if CONFIG["STREAM_QUALITY"] > 30:
                             CONFIG["STREAM_QUALITY"] -= 5
                             log.info(f"Adaptive Quality: reduced to {CONFIG['STREAM_QUALITY']} (congestion)")
-                        if CONFIG["STREAM_SCALE"] > 0.4 and _adv_task_stream_frames._frame_count % 300 == 0:
+                        if CONFIG["STREAM_SCALE"] > 0.4 and _consumer_frame_count % 300 == 0:
                             CONFIG["STREAM_SCALE"] = round(CONFIG["STREAM_SCALE"] - 0.1, 1)
                             log.info(f"Adaptive Scale: reduced to {CONFIG['STREAM_SCALE']} (persistent congestion)")
 
@@ -4267,8 +4278,8 @@ class ScreenConnectAgent:
                 elif tab == "refresh_stream":
                     log.info("Dashboard requested stream refresh — restarting pipeline")
                     _adv_viewers = max(_adv_viewers, 1) # v15.6: Ensure viewers > 0
-                    stop_evt.set()
-                    tick_evt.set()
+                    if _adv_stream_ctrl["stop"]: _adv_stream_ctrl["stop"].set()
+                    if _adv_stream_ctrl["tick"]: _adv_stream_ctrl["tick"].set()
                     # Trigger immediate re-emission if needed
                     _adv_last_frame_ts = 0 
                     if not _adv_task_running:
