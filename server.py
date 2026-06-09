@@ -1895,6 +1895,35 @@ if SOCKETIO_OK and sio:
         if vcount > 0:
             sio.emit("viewer_count", {"count": vcount}, room=sid)
 
+    # ── Agent → Dashboard result relays ───────────────────────────────────────
+    def _relay_to_viewers(event_name):
+        @sio.on(event_name)
+        def _handler(data):
+            did = data.get("device_id")
+            if did:
+                sio.emit(event_name, data, room=f"view:{did}")
+                sio.emit(event_name, data, room="dashboards")
+                sio.emit(event_name, data, room="adv_dashboards")
+
+    # Register all result relays
+    _result_events = [
+        "system_stats_report", "network_report", "disks_report",
+        "processes_report", "action_result", "shell_result",
+        "file_list_result", "file_read_result", "webcam_result",
+        "webcam_list_result", "audio_result", "installed_apps_result",
+        "event_log_result", "network_scan_result", "action_error",
+        "drives_report", "windows_list", "registry_list"
+    ]
+    for ev in _result_events:
+        _relay_to_viewers(ev)
+
+    @sio.on("request_snapshot")
+    def on_request_snapshot(data):
+        """Dashboard requested a full system snapshot."""
+        did = data.get("device_id")
+        if did:
+            sio.emit("request_action", {"tab": "system_snapshot", "device_id": did}, room=did)
+
     # ── Binary frame relay ────────────────────────────────────────────────────
     @sio.on("frame_bin")
     def on_frame_bin(data):
@@ -1955,8 +1984,9 @@ if SOCKETIO_OK and sio:
                 if raw_lat < _device_clock_offset[did]:
                     _device_clock_offset[did] = raw_lat # Instant lock to lowest
                 else:
-                    # Slowly drift up to account for server/agent clock drift (1ms per frame)
-                    _device_clock_offset[did] += 1000 
+                    # v15: Reduced drift to 10 microseconds per frame (0.6ms/sec at 60fps)
+                    # to account for server/agent clock skew without causing 5s lag.
+                    _device_clock_offset[did] += 10 
             
             adj_lat_us = raw_lat - _device_clock_offset[did]
             

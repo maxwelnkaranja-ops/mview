@@ -300,9 +300,9 @@ CONFIG = {
     "RECONNECT_MAX":        15,  # v10: max 15s backoff (was 60s)
 
     # ── Streaming (Advanced Monitor — second-site engine) ───────────────────
-    "STREAM_FPS":           30,         # v15: 30fps for internet relay
+    "STREAM_FPS":           60,         # v15: 60fps for enterprise sync
     "STREAM_MIN_FPS":       30,
-    "STREAM_QUALITY":       60,
+    "STREAM_QUALITY":       65,
     "STREAM_MONITOR":       1,
     "STREAM_MODE":          "screenshot",
     "STREAM_SCALE":         0.7,
@@ -770,7 +770,7 @@ class DXGICapture:
 class MSSCapture:
     def __init__(self):
         import mss as _mss
-        self._mss = _mss.mss()
+        self._mss = _mss.MSS()
         mon_idx = int(CONFIG.get("STREAM_MONITOR", 1))
         # Ensure index is within bounds
         idx = max(1, min(mon_idx, len(self._mss.monitors) - 1))
@@ -781,10 +781,9 @@ class MSSCapture:
         try:
             raw = self._mss.grab(self._mon)
             if CV2_OK:
-                # v10 fast path: zero-copy BGRA → BGR via numpy view
-                # np.frombuffer avoids a data copy; COLOR_BGRA2BGR is in-place on contiguous array
+                # v15 optimization: bgra view + slicing is faster than cv2.cvtColor
                 bgra = np.frombuffer(raw.bgra, dtype=np.uint8).reshape(raw.height, raw.width, 4)
-                return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
+                return bgra[:, :, :3]
             else:
                 # PIL fallback (no cv2) — frombytes is faster than fromarray
                 from PIL import Image as _PILImage
@@ -1093,16 +1092,17 @@ def _producer_thread(
         if not hasattr(_producer_thread, "_frame_count"): _producer_thread._frame_count = 0
         _producer_thread._frame_count += 1
         
+        # v15: Fixed 89984ms lag issue. Use standard unix timestamp in microseconds.
+        # time.time() is the most reliable for cross-platform internet relays.
+        ts_us  = int(time.time() * 1_000_000)
+
         if _producer_thread._frame_count % 30 == 0:
-            log.info(f"Perf: Grab={(t1-t0)*1000:.1f}ms, Scale={(t2-t1)*1000:.1f}ms, Encode={(t3-t2)*1000:.1f}ms | Age={(time.time()*1000000 - ts_us)/1000:.1f}ms")
+            log.info(f"Perf: Grab={(t1-t0)*1000:.1f}ms, Scale={(t2-t1)*1000:.1f}ms, Encode={(t3-t2)*1000:.1f}ms | Total={(time.perf_counter()-t0)*1000:.1f}ms")
 
         if not payload:
             continue
 
         flags  = enc_flag | (FLAG_KEYFRAME if is_key else 0)
-        # v15: Fixed 89984ms lag issue. Use standard unix timestamp in microseconds.
-        # time.time() is the most reliable for cross-platform internet relays.
-        ts_us  = int(time.time() * 1_000_000)
         header = FRAME_HDR.pack(fw, fh, ts_us, flags, len(payload))
         pkt    = header + payload
 
@@ -1179,44 +1179,50 @@ async def _safe_emit(event, data):
     except Exception as e:
         log.debug(f"Socket safe_emit error ({event}): {e}")
 
+_adv_task_running = False
+
 async def _adv_task_stream_frames(unified_sio=None):
     """
     Consumer task (async).
     Waits for auth_ok via asyncio.Event — NO polling loop over _adv_authed flag.
     Spawns producer + ticker threads, then drains the queue and emits frames.
     """
-    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async
-
-    # Wait for auth before doing anything — replaces `if not _adv_authed: sleep(0.1); continue`
-    log.info("Stream consumer: waiting for auth_ok…")
-    if _adv_auth_event is not None:
-        await _adv_auth_event.wait()
-    log.info("Stream consumer: auth confirmed — starting producer + ticker")
-
-    # v14: If unified_sio is provided, we use it for emission
-    if unified_sio:
-        _adv_sio_async = unified_sio
-
-    # v14: Use asyncio.Queue for zero-overhead consumer waiting.
-    # Producer will use call_soon_threadsafe to populate this.
-    frame_q  = asyncio.Queue(maxsize=2)
-    stop_evt = _threading_mod.Event()
-    tick_evt = _threading_mod.Event()
-
-    prod_t = _threading_mod.Thread(
-        target=_producer_thread,
-        args=(frame_q, stop_evt, tick_evt),
-        daemon=True, name="adv-producer",
-    )
-    tick_t = _threading_mod.Thread(
-        target=_ticker_thread,
-        args=(stop_evt, tick_evt),
-        daemon=True, name="adv-ticker",
-    )
-    prod_t.start()
-    tick_t.start()
+    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async, _adv_task_running
+    if _adv_task_running:
+        log.info("Stream consumer already running — skipping")
+        return
+    _adv_task_running = True
 
     try:
+        # Wait for auth before doing anything — replaces `if not _adv_authed: sleep(0.1); continue`
+        log.info("Stream consumer: waiting for auth_ok…")
+        if _adv_auth_event is not None:
+            await _adv_auth_event.wait()
+        log.info("Stream consumer: auth confirmed — starting producer + ticker")
+
+        # v14: If unified_sio is provided, we use it for emission
+        if unified_sio:
+            _adv_sio_async = unified_sio
+
+        # v14: Use asyncio.Queue for zero-overhead consumer waiting.
+        # Producer will use call_soon_threadsafe to populate this.
+        frame_q  = asyncio.Queue(maxsize=2)
+        stop_evt = _threading_mod.Event()
+        tick_evt = _threading_mod.Event()
+
+        prod_t = _threading_mod.Thread(
+            target=_producer_thread,
+            args=(frame_q, stop_evt, tick_evt),
+            daemon=True, name="adv-producer",
+        )
+        tick_t = _threading_mod.Thread(
+            target=_ticker_thread,
+            args=(stop_evt, tick_evt),
+            daemon=True, name="adv-ticker",
+        )
+        prod_t.start()
+        tick_t.start()
+
         while True:
             # v15: If auth dropped, WAIT for it to come back instead of exiting.
             if _adv_auth_event is not None and not _adv_auth_event.is_set():
@@ -1253,13 +1259,13 @@ async def _adv_task_stream_frames(unified_sio=None):
             if _adv_task_stream_frames._frame_count % 30 == 0:
                 log.info(f"Stream Stats: in_flight={_adv_sio_async._in_flight if _adv_sio_async else '?'}")
 
-            # Stale-frame guard: if the frame is >500ms old, discard it.
+            # Stale-frame guard: if the frame is >150ms old, discard it.
             if len(pkt) >= 16:
                 try:
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
-                    if age_ms > 500:
+                    if age_ms > 150:
                         if _adv_task_stream_frames._frame_count % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
@@ -1274,8 +1280,8 @@ async def _adv_task_stream_frames(unified_sio=None):
                 # v14: Enterprise Adaptive Backpressure
                 if not hasattr(_adv_sio_async, "_in_flight"): _adv_sio_async._in_flight = 0
                 
-                # v15: Increased max_in_flight to 15 to handle high-latency/jittery Render connections.
-                max_in_flight = 15 
+                # v15: Reduced max_in_flight to 2 to minimize buffer bloat/latency.
+                max_in_flight = 2 
                 if _adv_sio_async._in_flight < max_in_flight:
                     _adv_sio_async._in_flight += 1
                     
@@ -1309,6 +1315,7 @@ async def _adv_task_stream_frames(unified_sio=None):
     finally:
         # v15: KILL THREADS ON EXIT
         log.info("Stream consumer task exiting — killing producer/ticker threads")
+        _adv_task_running = False
         stop_evt.set()
         tick_evt.set() # wake up ticker if sleeping
         time.sleep(0.2)
@@ -1940,9 +1947,15 @@ class SystemMonitor:
             "net_packets_sent": net.packets_sent,
             "net_packets_recv": net.packets_recv,
             "net_mbps_up":      round(_net_monitor.get_mbps(), 2),
+            "disks":            self.get_disk_list(),
+            "interfaces":       self.get_network_interfaces(),
+            "boot_time":        datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+            "uptime_s":         int(time.time() - psutil.boot_time()),
+            "os":               f"{platform.system()} {platform.release()}",
+            "hostname":         platform.node(),
+            "user":             os.getlogin() if hasattr(os, "getlogin") else "N/A",
             "battery_pct":      bat.percent       if bat else None,
             "battery_plug":     bat.power_plugged  if bat else None,
-            "boot_time":        datetime.fromtimestamp(psutil.boot_time()).isoformat(),
             "uptime_hrs":       round((time.time() - psutil.boot_time()) / 3600, 2),
         }
 
@@ -2052,13 +2065,19 @@ class ProcessManager:
             return {"success": False, "message": str(e)}
 
     @staticmethod
-    def start_process(command: str) -> dict:
+    def start_process(command: str, detached: bool = True) -> dict:
         try:
+            # v15: For enterprise, support both detached (hidden) and interactive launches.
+            # If detached is True, we use CREATE_NO_WINDOW.
+            flags = 0
+            if detached and sys.platform == "win32":
+                flags = subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
+            
             proc = subprocess.Popen(command, shell=True,
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL,
-                                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
-            return {"success": True, "pid": proc.pid, "message": f"Started: {command}"}
+                                    creationflags=flags)
+            return {"success": True, "pid": proc.pid, "message": f"Started ({'detached' if detached else 'interactive'}): {command}"}
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -2263,9 +2282,19 @@ class FileBrowser:
 # ════════════════════════════════════════════════════════════════════════════
 class RemoteShell:
     TIMEOUT = 60
+    _executor = ThreadPoolExecutor(max_workers=4)
+
+    @classmethod
+    def execute(cls, command: str, shell_type: str = "cmd") -> dict:
+        # v15: Run in executor to avoid blocking the agent thread
+        future = cls._executor.submit(cls._do_execute, command, shell_type)
+        try:
+            return future.result(timeout=cls.TIMEOUT + 5)
+        except Exception as e:
+            return {"success": False, "command": command, "error": str(e)}
 
     @staticmethod
-    def execute(command: str, shell_type: str = "cmd") -> dict:
+    def _do_execute(command: str, shell_type: str = "cmd") -> dict:
         t0 = time.time()
         try:
             env = os.environ.copy()
@@ -2279,6 +2308,7 @@ class RemoteShell:
             else:
                 cmd = command
                 shell_flag = True
+            
             result = subprocess.run(
                 cmd, shell=shell_flag,
                 capture_output=True, text=True,
@@ -2289,8 +2319,8 @@ class RemoteShell:
                 "success":    True,
                 "command":    command,
                 "shell_type": shell_type,
-                "stdout":     result.stdout[-16384:],
-                "stderr":     result.stderr[-4096:],
+                "stdout":     result.stdout[-32768:], # v15: increased buffer
+                "stderr":     result.stderr[-8192:],
                 "returncode": result.returncode,
                 "elapsed_s":  round(time.time() - t0, 3),
                 "ts":         datetime.utcnow().isoformat(),
@@ -4141,16 +4171,15 @@ class ScreenConnectAgent:
                 if not _adv_monitor_started:
                     start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"], unified_sio=sio)
                 
-                # v15.5: Proactive Frame Trigger
+                # v15.6: FORCE REFRESH SIGNAL
                 # When a viewer connects, we MUST force a keyframe and wake the ticker.
-                # This fixes the "retrying stream" black screen after refresh.
+                # Also reset n to force a keyframe immediately.
                 global n
                 n = 0
                 if _adv_loop:
-                    # Signal the ticker thread indirectly by setting n=0 and waking the loop
                     _adv_loop.call_soon_threadsafe(lambda: None) 
                 
-                # Also send a small heartbeat to the dashboard to confirm agent is ready
+                # Proactive push to clear "retrying" state
                 sio.emit("agent_auth_ready", {
                     "token":     CONFIG["DEVICE_TOKEN"],
                     "device_id": CONFIG["DEVICE_TOKEN"],
@@ -4193,26 +4222,30 @@ class ScreenConnectAgent:
                 
                 # ── Power Management ──────────────────────────────────────────
                 elif tab in ("shutdown", "restart", "sleep", "lock_screen", "logoff", "abort_shutdown", "hibernate"):
-                    log.info(f"Power command: {tab}")
-                    if tab == "lock_screen":
-                        ctypes.windll.user32.LockWorkStation()
-                    elif tab == "sleep":
-                        os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
-                    elif tab == "hibernate":
-                        os.system("rundll32.exe powrprof.dll,SetSuspendState 1,1,0")
-                    elif tab == "shutdown":
-                        os.system("shutdown /s /t 5 /f")
-                    elif tab == "restart":
-                        os.system("shutdown /r /t 5 /f")
-                    elif tab == "logoff":
-                        os.system("shutdown /l")
-                    elif tab == "abort_shutdown":
-                        os.system("shutdown /a")
-                    
-                    sio.emit("action_result", {
-                        "device_id": CONFIG["DEVICE_TOKEN"],
-                        "action": tab, "success": True, "ts": datetime.utcnow().isoformat()
-                    })
+                    log.warning(f"Power command received: {tab}")
+                    try:
+                        if tab == "shutdown":
+                            subprocess.Popen("shutdown /s /t 10 /f /c \"Remote shutdown via Enterprise Suite\"", shell=True)
+                        elif tab == "restart":
+                            subprocess.Popen("shutdown /r /t 10 /f /c \"Remote restart via Enterprise Suite\"", shell=True)
+                        elif tab == "abort_shutdown":
+                            subprocess.Popen("shutdown /a", shell=True)
+                        elif tab == "sleep":
+                            if sys.platform == "win32":
+                                subprocess.Popen("rundll32.exe powrprof.dll,SetSuspendState 0,1,0", shell=True)
+                        elif tab == "hibernate":
+                            if sys.platform == "win32":
+                                subprocess.Popen("rundll32.exe powrprof.dll,SetSuspendState 1,1,0", shell=True)
+                        elif tab == "lock_screen":
+                            if sys.platform == "win32":
+                                subprocess.Popen("rundll32.exe user32.dll,LockWorkStation", shell=True)
+                        elif tab == "logoff":
+                            if sys.platform == "win32":
+                                subprocess.Popen("shutdown /l", shell=True)
+                        
+                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": True, "message": f"Power command {tab} executed.", "ts": datetime.utcnow().isoformat() })
+                    except Exception as e:
+                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": False, "message": str(e), "ts": datetime.utcnow().isoformat() })
 
                 # ── Process Manager ───────────────────────────────────────────
                 elif tab == "processes":
@@ -4228,8 +4261,17 @@ class ScreenConnectAgent:
                     elif tab == "suspend_process": res = proc_mgr.suspend_process(pid)
                     else: res = proc_mgr.resume_process(pid)
                     sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "pid": pid, **res })
+                elif tab == "refresh_stream":
+                    log.info("Dashboard requested stream refresh — restarting pipeline")
+                    stop_evt.set()
+                    tick_evt.set()
+                    # The consumer task will exit and restart via its finally block + loop logic
+                    # if it's managed by a supervisor. If not, we trigger it.
+                    if not _adv_task_running:
+                        asyncio.create_task(_adv_task_stream_frames())
+                
                 elif tab == "start_process":
-                    res = proc_mgr.start_process(data.get("command", ""))
+                    res = proc_mgr.start_process(data.get("command", ""), detached=data.get("detached", True))
                     sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": "start_process", **res })
 
                 # ── Remote Shell ──────────────────────────────────────────────

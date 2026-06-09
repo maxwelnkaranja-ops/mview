@@ -5992,6 +5992,9 @@
               <button class="lv-btn primary" onclick="connectScreenById($('rv-device-sel').value)">
                 <span class="lv-btn-ico">cast</span>Connect
               </button>
+              <button class="lv-btn" onclick="lvRefreshStream()" title="Refresh stream logic and sync">
+                <span class="lv-btn-ico">sync</span>Refresh Stream
+              </button>
               <div class="lv-select-bar-right">
                 <span class="lv-select-label">Monitor</span>
                 <select id="rv-monitor-sel" style="width:110px;">
@@ -6296,6 +6299,17 @@
                 <button class="btn btn-p ripple-btn" onclick="launchProcess()">
                   <span class="mi">play_arrow</span>Launch
                 </button>
+              </div>
+              <div style="padding: 0 14px 14px 14px; display: flex; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size:11px; color:var(--text-3); align-self:center; margin-right:4px;">Quick:</span>
+                <button class="tbtn" onclick="quickLaunch('notepad.exe')">Notepad</button>
+                <button class="tbtn" onclick="quickLaunch('calc.exe')">Calc</button>
+                <button class="tbtn" onclick="quickLaunch('cmd.exe')">CMD</button>
+                <button class="tbtn" onclick="quickLaunch('powershell.exe')">PowerShell</button>
+                <button class="tbtn" onclick="quickLaunch('taskmgr.exe')">TaskMgr</button>
+                <button class="tbtn" onclick="quickLaunch('explorer.exe')">Explorer</button>
+                <button class="tbtn" onclick="quickLaunch('control.exe')">Control</button>
+                <button class="tbtn" onclick="quickLaunch('ms-settings:')">Settings</button>
               </div>
             </div>
 
@@ -10411,8 +10425,15 @@
           pid,
         });
       }
-      function launchProcess() {
-        const cmd = $("launch-cmd")?.value?.trim();
+      function quickLaunch(cmd) {
+        const inp = $("launch-cmd");
+        if (inp) inp.value = cmd;
+        launchProcess(false); // launch as interactive (not detached)
+      }
+
+      function launchProcess(detached = true) {
+        const inp = $("launch-cmd");
+        const cmd = inp?.value?.trim();
         if (!cmd) return;
         if (!_procDeviceId) {
           showToast("Select a device first", "error");
@@ -10422,9 +10443,11 @@
           tab: "start_process",
           device_id: _procDeviceId,
           command: cmd,
+          detached: detached,
         });
-        $("launch-cmd").value = "";
+        inp.value = "";
         addLog(`Launch: ${cmd}`, _procDeviceId, "Admin", "info");
+        showToast("Launch command sent", "info");
       }
 
       /* ══ Shell ═══════════════════════════════════════════════════════ */
@@ -12331,6 +12354,30 @@ if(typeof _origShowSection === 'function'){
         SC.socket.emit("dashboard_command", { tab: "screenshot", device_id: RV.deviceId, quality: 85, scale: 1 });
         showToast("Screenshot requested", "info");
       }
+      function lvRefreshStream() {
+        if (!RV.deviceId || !SC.socket) return;
+        showToast("Refreshing stream logic...", "info");
+        // Reset local stream state
+        frameQueue = [];
+        isRendering = false;
+        _healAttempts = 0;
+        const canvas = $("rv-canvas");
+        if (canvas) canvas.style.display = "none";
+        const rc = $("rv-connecting");
+        if (rc) {
+          rc.style.display = "flex";
+          const rcm = $("rv-conn-msg");
+          if (rcm) rcm.textContent = "Re-syncing stream...";
+        }
+        // Force agent to restart stream pipeline
+        SC.socket.emit("dashboard_command", {
+          tab: "refresh_stream",
+          device_id: RV.deviceId
+        });
+      }
+
+
+
       function lvFullscreen() {
         const vp = $("lv-viewport");
         if (vp?.requestFullscreen) vp.requestFullscreen();
