@@ -8103,6 +8103,21 @@
         SC.socket.on("frame_bin", async (raw) => {
           try {
             if (!RV.active) return;
+            // v15.6: HEAL THE STREAM
+            // If we are getting binary frames but UI is stuck at "retrying", heal it.
+            if ($("rv-connecting")?.style.display !== "none") {
+              $("rv-connecting").style.display = "none";
+              $("lv-connecting")?.classList.remove("visible");
+              const canvas = $("rv-canvas");
+              if (canvas) canvas.style.display = "block";
+              // Update LV UI steps
+              const s1 = $("lvs-relay"), s2 = $("lvs-agent"), s3 = $("lvs-stream");
+              if (s1) s1.className = "lv-conn-step done";
+              if (s2) s2.className = "lv-conn-step done";
+              if (s3) s3.className = "lv-conn-step done";
+              showToast("Stream signal restored", "success");
+            }
+
             // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
             let buf;
             try {

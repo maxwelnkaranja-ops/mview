@@ -1776,11 +1776,13 @@ if SOCKETIO_OK and sio:
         # Emit online events to all dashboard rooms
         fp = dict(data)
         online_payload = {"device_id": did, "name": label, "label": label,
-                          "ip": data.get("local_ip"), "fingerprint": fp, "ts": utcnow()}
+                          "ip": data.get("local_ip"), "fingerprint": fp, "ts": utcnow(), "status": "online"}
         sio.emit("agent_online",  online_payload)
         sio.emit("agent_online",  online_payload, room="adv_dashboards")
-        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow()})
-        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow()}, room="adv_dashboards")
+        sio.emit("agent_online",  online_payload, room="dashboards")
+        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow(), "status": "online"})
+        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow(), "status": "online"}, room="adv_dashboards")
+        sio.emit("device_online", {"device_id": did, "label": label, "fingerprint": fp, "ts": utcnow(), "status": "online"}, room="dashboards")
 
         # v12: Send capability flags to agent
         sio.emit("caps", {"caps": AGENT_CAPS, "server_version": VERSION}, room=request.sid)
@@ -1923,6 +1925,17 @@ if SOCKETIO_OK and sio:
         did = data.get("device_id")
         if did:
             sio.emit("request_action", {"tab": "system_snapshot", "device_id": did}, room=did)
+
+    @sio.on("on_agent_online")
+    def on_agent_online_relay(data):
+        """Relay agent_online from one room to others."""
+        sio.emit("agent_online", data, room="adv_dashboards")
+        sio.emit("agent_online", data, room="dashboards")
+
+    @sio.on("on_agent_offline")
+    def on_agent_offline_relay(data):
+        sio.emit("agent_offline", data, room="adv_dashboards")
+        sio.emit("agent_offline", data, room="dashboards")
 
     # ── Binary frame relay ────────────────────────────────────────────────────
     @sio.on("frame_bin")
@@ -2079,6 +2092,8 @@ if SOCKETIO_OK and sio:
         # v14: Unified room "view:{did}" for all binary frames
         # We send the versioned (suffixed) frame for best viewer experience.
         sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
+        # v15.7: Secondary relay for enterprise sync
+        sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
 
         # ── v13: Lightweight frame-metadata event (no binary) ─────────────────
         # Sent every 10 frames so viewer HUD can show live FPS / latency
@@ -2094,6 +2109,10 @@ if SOCKETIO_OK and sio:
                 "device_id": did, "seq": seq, "ts_us": ts_us,
                 "size": n, "fps": _actual_fps,
             }, room=f"view:{did}")
+            sio.emit("frame_meta", {
+                "device_id": did, "seq": seq, "ts_us": ts_us,
+                "size": n, "fps": _actual_fps,
+            }, room=f"adv_viewers_{did}")
 
         # ── Plugin hooks (background — never blocks hot path) ─────────────────
         if _plugin_hooks.get("on_frame"):
@@ -2153,6 +2172,7 @@ if SOCKETIO_OK and sio:
             frame_with_seq = raw + seq_suffix
 
             sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
+            sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
         except Exception as e:
             log.warning(f"frame_bin_relay error: {e}")
 

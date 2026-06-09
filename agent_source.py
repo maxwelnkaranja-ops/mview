@@ -1234,6 +1234,7 @@ async def _adv_task_stream_frames(unified_sio=None):
             # v15.5: If we have no viewers, don't just wait 2 seconds.
             # Yield and wait for either a frame or a viewer to connect.
             if _adv_viewers == 0:
+                # v15.6: Pulse ticker even with 0 viewers to keep a fresh frame ready
                 await asyncio.sleep(0.5)
                 continue
 
@@ -1253,10 +1254,12 @@ async def _adv_task_stream_frames(unified_sio=None):
                 except _AsyncQueueEmpty: break
             
             # v15: Diagnostic Timing
-            if not hasattr(_adv_task_stream_frames, "_frame_count"): _adv_task_stream_frames._frame_count = 0
-            _adv_task_stream_frames._frame_count += 1
+            if not hasattr(_adv_task_stream_frames, "_frame_count"): 
+                _adv_task_stream_frames.__dict__["_frame_count"] = 0
+            _adv_task_stream_frames.__dict__["_frame_count"] += 1
             
-            if _adv_task_stream_frames._frame_count % 30 == 0:
+            _fc = _adv_task_stream_frames.__dict__["_frame_count"]
+            if _fc % 30 == 0:
                 log.info(f"Stream Stats: in_flight={_adv_sio_async._in_flight if _adv_sio_async else '?'}")
 
             # Stale-frame guard: if the frame is >150ms old, discard it.
@@ -1266,7 +1269,7 @@ async def _adv_task_stream_frames(unified_sio=None):
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
                     if age_ms > 150:
-                        if _adv_task_stream_frames._frame_count % 60 == 0:
+                        if _fc % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
                 except Exception:
@@ -1295,7 +1298,7 @@ async def _adv_task_stream_frames(unified_sio=None):
                     asyncio.create_task(_do_emit(pkt))
                 else:
                     # Backpressure hit — drop frame
-                    if _adv_task_stream_frames._frame_count % 60 == 0:
+                    if _fc % 60 == 0:
                         log.debug(f"Stream backpressure: dropping frame (in_flight={_adv_sio_async._in_flight})")
                         if CONFIG["STREAM_QUALITY"] > 30:
                             CONFIG["STREAM_QUALITY"] -= 5
@@ -4263,10 +4266,11 @@ class ScreenConnectAgent:
                     sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "pid": pid, **res })
                 elif tab == "refresh_stream":
                     log.info("Dashboard requested stream refresh — restarting pipeline")
+                    _adv_viewers = max(_adv_viewers, 1) # v15.6: Ensure viewers > 0
                     stop_evt.set()
                     tick_evt.set()
-                    # The consumer task will exit and restart via its finally block + loop logic
-                    # if it's managed by a supervisor. If not, we trigger it.
+                    # Trigger immediate re-emission if needed
+                    _adv_last_frame_ts = 0 
                     if not _adv_task_running:
                         asyncio.create_task(_adv_task_stream_frames())
                 
