@@ -1358,8 +1358,10 @@ async def _adv_task_stream_frames(unified_sio=None):
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
-                    # v16: Aggressive stale-frame guard for low-lag performance
-                    if age_ms > 150:
+                    # v17: Relaxed stale-frame guard for internet/Render deployment.
+                    # 150ms was too aggressive — network + encode latency alone can
+                    # exceed that, causing every frame to be silently dropped.
+                    if age_ms > 2500:
                         if _consumer_frame_count % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
@@ -4285,8 +4287,12 @@ class ScreenConnectAgent:
                 # Also reset n to force a keyframe immediately.
                 global n
                 n = 0
-                if _adv_loop:
-                    _adv_loop.call_soon_threadsafe(lambda: None) 
+                # v17: Actually wake the consumer loop — the old no-op lambda did nothing.
+                # Poke the tick_evt so the producer/consumer unblocks from its 0.5s sleep
+                # immediately rather than waiting for the next cycle.
+                tick = _adv_stream_ctrl.get("tick")
+                if tick:
+                    tick.set()
                 
                 # Proactive push to clear "retrying" state
                 sio.emit("agent_auth_ready", {

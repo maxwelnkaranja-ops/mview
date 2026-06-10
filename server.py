@@ -1728,6 +1728,9 @@ if SOCKETIO_OK and sio:
             if agent_adv_sid:
                 sio.emit("viewer_count", {"count": vcount}, room=agent_adv_sid)
             sio.emit("viewer_count", {"count": vcount}, room=did)
+            # v17: Also wake agent via the adv_viewers room in case adv socket
+            # joined that room but not the device-id room (unified-socket agents).
+            sio.emit("viewer_count", {"count": vcount}, room=f"adv_viewers_{did}")
 
             sio.emit("watch_ok", {
                 "online": True, "device_id": did,

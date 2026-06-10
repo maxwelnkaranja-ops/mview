@@ -8192,6 +8192,11 @@
             const diagLat = $("diag-lat");
             if (diagLat) diagLat.textContent = RV.latency;
 
+            // v17: HEAL FIRST, guard second.
+            // Frames arriving while watch_ok was missed (race) auto-activate RV
+            // so the heal block below can clear the 'retrying' overlay.
+            if (!RV.active && RV.deviceId) { RV.active = true; }
+
             if (!RV.active) return;
             // v15.6: HEAL THE STREAM
             // If we are getting binary frames but UI is stuck at "retrying", heal it.
@@ -9891,7 +9896,7 @@
           if (!RV.active || $("rv-canvas").style.display !== "none") {
             clearInterval(_healTimer); return;
           }
-          if (++_healAttempts > 6) { clearInterval(_healTimer); return; } // give up after 30s
+          if (++_healAttempts > 12) { clearInterval(_healTimer); return; } // v17: give up after 60s
           const rcm = $("rv-conn-msg");
           if (rcm) rcm.textContent = `Retrying stream (attempt ${_healAttempts})…`;
           if (SC.socket?.connected) {
