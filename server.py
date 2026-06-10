@@ -1184,15 +1184,12 @@ def health():
         mem = psutil.Process().memory_info().rss // (1024 * 1024)
     except Exception:
         mem = None
-    # Use cached Supabase state — never block on a live DB call in health check
-    with _sb_lock:
-        db_ok = _sb is not None
     return jsonify({
         "status":         "ok",
         "version":        VERSION,
         "server_time":    utcnow(),
         "uptime_seconds": int(time.time() - _SERVER_START),
-        "database":       db_ok,
+        "database":       get_sb() is not None,
         "socketio":       SOCKETIO_OK,
         "async_mode":     "gevent",
         "devices_online": online,
@@ -1318,30 +1315,21 @@ def api_devices():
     return jsonify({"devices": [_safe_dev(d) for d in devs], "count": len(devs), "ts": utcnow()})
 
 def _safe_dev(d):
-    did = d.get("device_id")
     return {
-        "device_id":     did,
-        "id":            did,
-        "token":         did,
+        "device_id":     d.get("device_id"),
         "label":         d.get("label"),
-        "name":          d.get("label") or d.get("hostname") or did,
         "hostname":      d.get("hostname"),
         "os":            d.get("os"),
         "local_ip":      d.get("local_ip"),
-        "ip":            d.get("local_ip"),
         "username":      d.get("username"),
         "cpu":           d.get("cpu"),
         "ram":           d.get("ram"),
         "agent_version": d.get("agent_version"),
         "stream_mode":   d.get("stream_mode"),
         "status":        "online",
-        "online":        True,
         "connected_at":  d.get("connected_at"),
         "last_beat":     d.get("last_beat"),
         "frame_count":   d.get("frame_count", 0),
-        "screen_w":      d.get("screen_w", 0),
-        "screen_h":      d.get("screen_h", 0),
-        "fingerprint":   d.get("fingerprint", {}),
     }
 
 @app.route("/api/device/<device_id>/command", methods=["POST"])
@@ -1549,6 +1537,12 @@ def agent_checkin():
 # ══════════════════════════════════════════════════════════════════════════════
 if SOCKETIO_OK and sio:
 
+    @sio.on("*")
+    def catch_all(event, data):
+        """v16: Log all incoming events for debugging external agent."""
+        if event not in ["frame_bin", "cursor_bin", "cursor_bin_norm", "system_stats_report"]:
+            log.info(f"DEBUG_EVENT: sid={request.sid} event={event} data={data}")
+
     @sio.on("connect")
     def on_connect():
         sid = request.sid
@@ -1585,7 +1579,6 @@ if SOCKETIO_OK and sio:
     def on_viewer_hello(data):
         sid = request.sid
         join_room("adv_dashboards")
-        join_room("dashboards")
         _send_device_list_to(sid)
         # Also push current live device states so dashboard shows online agents instantly
         with _dev_lock:
@@ -1605,14 +1598,11 @@ if SOCKETIO_OK and sio:
                 "id": did,
                 "device_id": did,
                 "token": did,
-                "label": dev.get("label") or dev.get("hostname") or did,
                 "name": dev.get("label") or dev.get("hostname") or did,
-                "status": "online",
                 "online": True, "screen_w": dev.get("screen_w", 0), "screen_h": dev.get("screen_h", 0),
                 "rtt_ms": dev.get("rtt_ms", 0), "cpu": dev.get("cpu"), "ram": dev.get("ram"),
                 "ip": dev.get("local_ip") or db_row.get("ip_address", ""),
                 "os": dev.get("os") or db_row.get("os_info", ""),
-                "fingerprint": dev.get("fingerprint", {}),
             })
         for did, row in db_map.items():
             if did not in live:
@@ -1620,9 +1610,7 @@ if SOCKETIO_OK and sio:
                     "id": did,
                     "device_id": did,
                     "token": did,
-                    "label": row.get("label") or row.get("hostname") or did,
                     "name": row.get("label") or row.get("hostname") or did,
-                    "status": "offline",
                     "online": False, "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
                     "cpu": None, "ram": None,
                     "ip": row.get("ip_address", ""), "os": row.get("os_info", ""),
@@ -2034,7 +2022,6 @@ if SOCKETIO_OK and sio:
                 with _sid_lock:
                     did = _sid_to_device.get(sid)
             
-            log.debug(f"frame_bin: sid={sid}, did={did}, data_len={len(data)}")
             if not did: return
 
             n = len(data)
