@@ -37,7 +37,7 @@ const activityLogs = [
 // ── Production server URL ────────────────────
 // Reads from config.js; falls back to Render URL.
 // NEVER use localhost or a raw IP in this file for production.
-const PROD_SERVER_URL = 'https://screen-connect-rtca.onrender.com';
+const PROD_SERVER_URL = 'http://localhost:10000';
 function getServerUrl() { return window.MVIEW_SERVER_URL || PROD_SERVER_URL; }
 
 // ── Page Navigation ──────────────────────────

@@ -68,3 +68,144 @@
 {"ts": "2026-05-29T19:21:54.360571", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 99.6}
 {"ts": "2026-05-29T19:27:14.775090", "event": "agent_alert", "device_id": "uqt5uq7", "type": "cpu", "value": 100.0}
 {"ts": "2026-05-29T19:28:06.915971", "event": "agent_offline", "device_id": "uqt5uq7", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:30:15.673836", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:30:15.848006", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:31:24.177692", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:32:42.619758", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:33:18.010900", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:33:18.081138", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:33:23.074111", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:34:34.046357", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:35:11.258435", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:35:11.260253", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:35:17.356166", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:37:31.743031", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:37:31.834858", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:37:36.762911", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:38:24.055111", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:38:24.055731", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:39:00.142551", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 92.9}
+{"ts": "2026-06-09T16:39:53.608561", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:40:54.306209", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:40:54.311499", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:40:59.081630", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:42:08.958152", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:42:20.194008", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:42:20.203465", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:42:55.110941", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T16:43:09.293746", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:43:09.295265", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:43:14.393623", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:48:36.353337", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:53:56.492892", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 97.7}
+{"ts": "2026-06-09T16:56:32.807683", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "67Od95ZBIKU8MyT1AAAH"}
+{"ts": "2026-06-09T16:56:32.813378", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:56:33.013223", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:56:37.021853", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.6}
+{"ts": "2026-06-09T16:58:33.542113", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:58:42.950360", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:58:44.997072", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 92.5}
+{"ts": "2026-06-09T16:58:59.759650", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "T5wv_Lf8c4-5mnUCAAAB"}
+{"ts": "2026-06-09T16:58:59.760131", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:58:59.773685", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:59:20.820798", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "1lH_UXTNKCeNcuULAAAE"}
+{"ts": "2026-06-09T16:59:20.821181", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T16:59:20.822558", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T16:59:25.857045", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T16:59:35.821647", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 93.1}
+{"ts": "2026-06-09T17:04:47.693080", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:04:57.604123", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:10:09.780625", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:10:20.800746", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:15:33.933187", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:15:42.926134", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:20:15.073606", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:20:15.075016", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:21:55.127693", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 93.6}
+{"ts": "2026-06-09T17:24:10.830807", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:24:10.840716", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:24:15.272380", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:25:03.093442", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T17:26:25.359489", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:26:25.361470", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:26:29.492038", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:31:49.762719", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.2}
+{"ts": "2026-06-09T17:36:41.746596", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "XrHtS1rqdckocWRtAAAD"}
+{"ts": "2026-06-09T17:36:41.746949", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:36:41.904343", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:36:46.678442", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.7}
+{"ts": "2026-06-09T17:37:09.869571", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:41:55.569709", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "maxiiloh-"}
+{"ts": "2026-06-09T17:42:28.526284", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:42:32.314779", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:47:48.552388", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:47:52.245584", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:49:21.067591", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:49:21.075392", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:49:29.693400", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T17:52:58.858895", "event": "agent_online", "device_id": "TEST-AGENT", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-09T17:52:58.866399", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T17:53:03.242238", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T18:12:15.504789", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-09T18:12:15.508263", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-09T18:12:28.797597", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-09T18:21:36.371666", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-09T18:25:29.190516", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-09T18:25:29.191975", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T07:36:14.813110", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T07:36:24.126943", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T07:36:24.128323", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T07:36:28.175389", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 96.9}
+{"ts": "2026-06-10T07:47:08.348132", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 93.0}
+{"ts": "2026-06-10T07:47:45.069859", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T07:49:41.784999", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T07:49:48.332428", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T07:54:30.902063", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T07:54:30.903550", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T07:54:35.788029", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 94.4}
+{"ts": "2026-06-10T08:02:09.721382", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T08:02:16.359478", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:02:16.360951", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:02:20.412328", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 97.9}
+{"ts": "2026-06-10T08:08:44.470395", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 92.5}
+{"ts": "2026-06-10T08:14:36.477094", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T08:15:08.454703", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:15:10.731663", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:19:38.562801", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:19:38.564405", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:20:28.366688", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:20:29.930810", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:27:52.552204", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T08:27:57.228679", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:27:57.230562", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:30:09.296217", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.4}
+{"ts": "2026-06-10T08:46:41.380035", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 96.6}
+{"ts": "2026-06-10T08:52:01.430016", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T08:55:49.895809", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "CK_YrEwqQRG3ppiPAAAF"}
+{"ts": "2026-06-10T08:55:49.896175", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T08:55:49.939484", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T08:56:28.249749", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T08:57:23.415961", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T08:59:09.939396", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T09:02:41.486097", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:07:43.565544", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:18:02.315231", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T09:18:02.316821", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T09:18:08.201390", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:18:08.239622", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "DD9oOTTNzV-v-oXIAAAB"}
+{"ts": "2026-06-10T09:18:08.240073", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T09:18:08.665814", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T09:18:12.259708", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "CATLsGrY28Sz93hSAAAD"}
+{"ts": "2026-06-10T09:18:12.260605", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T09:18:12.263018", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T09:18:22.991240", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "-VZlq_jLZ7oITWNJAAAF"}
+{"ts": "2026-06-10T09:18:22.991681", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T09:18:23.012618", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T09:18:23.022458", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:18:29.124792", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:19:03.060516", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:19:03.172717", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}
+{"ts": "2026-06-10T09:19:13.838568", "event": "agent_online", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG", "ip": "127.0.0.1"}
+{"ts": "2026-06-10T09:19:13.852349", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-10T09:19:30.098717", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-10T09:20:33.335821", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "LOCAL-DEBUG"}

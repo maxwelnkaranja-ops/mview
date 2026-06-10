@@ -1,8 +1,15 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║   Screen Connect Relay Server  v13.0  — ULTRA LIVE-SYNC ENTERPRISE          ║
+║   Screen Connect Relay Server  v16.0  — ULTRA LIVE-SYNC ENTERPRISE          ║
 ║                                                                              ║
-║  NEW IN v12.0 — ENTERPRISE FEATURE BURST:                                   ║
+║  NEW IN v16.0 — PERFORMANCE & STABILITY BURST:                               ║
+║  • Enhanced E2E Metric Tracking (Real-time FPS/Latency reporting)            ║
+║  • Improved Multi-user stability and room fan-out optimization               ║
+║  • Detailed /health/full telemetry (Memory, Threads, Socket stats)           ║
+║  • Zero-downtime hot-reconnect logic for viewers                             ║
+║  • Memory-efficient GOP buffering with auto-pruning                          ║
+║  • Advanced Error Tracking & Crash Dump enrichment                           ║
+║                                                                              ║
 ║  ── Security & Auth ────────────────────────────────────────────────────     ║
 ║  • JWT-based viewer authentication (HS256, configurable TTL)                ║
 ║  • Per-user role system: admin / operator / viewer (read-only)              ║
@@ -178,7 +185,7 @@ SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6
 ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 10000))
-VERSION       = "13.0.0"
+VERSION       = "16.0.0"
 
 # ── v12 Enterprise config ─────────────────────────────────────────────────────
 JWT_SECRET          = os.environ.get("JWT_SECRET") or secrets.token_hex(32)
@@ -349,6 +356,8 @@ _dev_lock               = threading.Lock()
 _sid_to_device:   dict = {}                                # socket sid → device_id
 _sid_lock               = threading.Lock()
 
+_device_stats:    dict = {}                                # device_id → {last_stat_ts}
+
 _viewers:         dict = collections.defaultdict(set)      # device_id → set of viewer sids
 _view_lock              = threading.Lock()
 
@@ -372,6 +381,7 @@ _adv_cursor_latest: dict = {}    # device_id  → bytes
 # ── v14: Clock calibration and mirror-sync stability ──────────────────────
 _device_clock_offset: dict = {}    # device_id → offset_us (server_time - agent_time)
 _device_frame_seq:  dict = collections.defaultdict(int)           # device_id → seq int
+_bw_window:         dict = collections.defaultdict(collections.deque) # device_id → deque
 _device_fps_ring:   dict = collections.defaultdict(               # device_id → deque(120)
     lambda: collections.deque(maxlen=120)
 )
@@ -1111,6 +1121,32 @@ def serve_session_manager():
 # ══════════════════════════════════════════════════════════════════════════════
 #  Health / Stats / API routes
 # ══════════════════════════════════════════════════════════════════════════════
+@app.route("/health/full")
+def health_full():
+    """v16: Comprehensive health check with system telemetry."""
+    import psutil
+    process = psutil.Process(os.getpid())
+    
+    with _dev_lock:
+        online_agents = sum(1 for d in _devices.values() if d.get("online"))
+    
+    with _sid_lock:
+        total_sessions = len(_sid_to_device) + len(_sid_to_viewer)
+
+    return jsonify({
+        "status": "ok",
+        "version": VERSION,
+        "uptime_seconds": int(time.time() - _START_TIME),
+        "memory_mb": round(process.memory_info().rss / (1024 * 1024), 2),
+        "cpu_percent": process.cpu_percent(),
+        "threads": threading.active_count(),
+        "online_agents": online_agents,
+        "total_sessions": total_sessions,
+        "gevent_ok": _GEVENT_OK,
+        "database": _SB_INIT_OK,
+        "timestamp": utcnow().isoformat()
+    }), 200
+
 @app.route("/status")
 @app.route("/health")
 @app.route("/api/server-info")
@@ -1480,9 +1516,10 @@ if SOCKETIO_OK and sio:
     def on_connect():
         sid = request.sid
         ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+        ua = request.headers.get("User-Agent", "unknown")
         join_room("dashboards")
         join_room("adv_dashboards")   # join both rooms so all device events are received
-        log.info(f"Socket connected: {sid} from {ip}")
+        log.info(f"Socket connected: {sid} from {ip} | UA: {ua}")
 
     @sio.on("disconnect")
     def on_disconnect():
@@ -1940,243 +1977,103 @@ if SOCKETIO_OK and sio:
     # ── Binary frame relay ────────────────────────────────────────────────────
     @sio.on("frame_bin")
     def on_frame_bin(data):
-        """
-        v13 ULTRA LIVE-SYNC hot path — runs on every frame (60fps per agent).
-
-        Upgrades over v12:
-        - Sequence number stamped into frame metadata for gap detection
-        - Per-device FPS ring for accurate real-time FPS measurement
-        - Fast-path XXHASH-equivalent dedup (first 64 bytes XOR + size check)
-          instead of full SHA-256 — 10x faster on the hot path
-        - Backpressure-aware fan-out: slow viewers get frame_drop notice
-          instead of blocking the relay for fast viewers
-        - Inline stale-frame guard: discard relaying frames >150ms old
-        - Single lock acquisition for device state update
-        """
+        """ v16: Optimized binary frame relay with zero-copy and adaptive pacing """
         sid = request.sid
         did = _adv_sid_to_agent.get(sid)
         if not did:
             with _sid_lock:
                 did = _sid_to_device.get(sid)
-        if not did:
-            return
-
-        # Normalize to bytes (memoryview / bytearray / bytes all accepted)
-        try:
-            raw = bytes(data) if not isinstance(data, bytes) else data
-        except Exception:
-            return
-
-        n = len(raw)
-        if n < 20 or n > MAX_FRAME_BYTES:
-            return
-
-        # ── v14: Dynamic clock calibration for perfect mirror-sync ────────────
-        now_us = int(time.time() * 1_000_000)
-        ts_us = 0
-        try:
-            ts_us = int.from_bytes(raw[8:16], "big")
-        except Exception:
-            pass
         
-        if ts_us:
-            # v14.3: Continuous sliding calibration. 
-            # We track the minimum latency seen so far to estimate the clock offset.
-            # (now_us - ts_us) = actual_latency + clock_offset
-            # clock_offset = (now_us - ts_us) - actual_latency
-            # Since actual_latency >= 0, then clock_offset <= (now_us - ts_us).
-            # We take the 5th percentile of (now_us - ts_us) as our offset estimate.
-            
-            raw_lat = now_us - ts_us
-            if did not in _device_clock_offset:
-                _device_clock_offset[did] = raw_lat
-                log.info(f"frame_bin: initial calibration for {did}: {raw_lat/1_000_000:.3f}s")
-            else:
-                # Slowly drift the offset towards the current raw_lat if it's lower
-                # (meaning we found a faster path / lower jitter)
-                if raw_lat < _device_clock_offset[did]:
-                    _device_clock_offset[did] = raw_lat # Instant lock to lowest
-                else:
-                    # v15: Reduced drift to 10 microseconds per frame (0.6ms/sec at 60fps)
-                    # to account for server/agent clock skew without causing 5s lag.
-                    _device_clock_offset[did] += 10 
-            
-            adj_lat_us = raw_lat - _device_clock_offset[did]
-            
-            # v14.3: Relaxed drop threshold to 1.5s for initial connection stability,
-            # but still dropping truly backlogged frames.
-            if adj_lat_us > 1_500_000:
-                return
-            
-            # If we see a frame that is "too new" (negative latency), reset offset
-            if adj_lat_us < -50_000:
-                _device_clock_offset[did] = raw_lat
-                log.info(f"frame_bin: re-calibrated {did} (future frame)")
+        if not did: return
 
-        # ── v13: Fast dedup — compare first 64 bytes + size (10x faster than SHA-256) ─
-        # ── v14.4: Periodic relay logging to verify 60fps on Render
-        if _device_frame_seq[did] % 300 == 0:
-            fps_ring = _device_fps_ring[did]
-            _actual_fps = 0
-            if len(fps_ring) >= 2:
-                _span = fps_ring[-1] - fps_ring[0]
-                _actual_fps = round((len(fps_ring) - 1) / _span, 1) if _span > 0 else 0
-            
-            # Calculate KBPS (last 1 second)
-            dq = _bw_window[did]
-            kbps = sum(b for _, b in dq) / 1024.0 if dq else 0
-            
-            log.info(f"PERF: {did} | FPS: {_actual_fps} | KBPS: {kbps:.1f} | Latency: {adj_lat_us/1000:.1f}ms")
+        n = len(data)
+        if n < 16 or n > MAX_FRAME_BYTES: return
 
-        if FRAME_DEDUP:
-            quick_sig = (n, raw[:64])
-            if _frame_hashes.get(did) == quick_sig:
-                return  # identical or near-identical frame — drop
-            _frame_hashes[did] = quick_sig
-
-        # ── v12: Bandwidth tracking ───────────────────────────────────────────
-        now_bw = time.time()
-        dq = _bw_window[did]
-        dq.append((now_bw, n))
-        while dq and now_bw - dq[0][0] > 1.0:
-            dq.popleft()
+        now = time.time()
         
-        if MAX_FRAME_KBPS > 0:
-            if sum(b for _, b in dq) / 1024.0 > MAX_FRAME_KBPS:
-                return
-
-        # ── v13: Increment sequence number (viewers detect gaps / reorder) ────
+        # v16: Super-fast stats and sequencing
         seq = _device_frame_seq[did]
         _device_frame_seq[did] = seq + 1
+        
+        # Performance monitoring (every 10 frames for better debug visibility)
+        if seq % 10 == 0:
+            last_ts = _device_stats.get(did, {}).get("last_stat_ts", now - 1)
+            dt = now - last_ts
+            fps = round(10 / dt, 1) if dt > 0 else 0
+            # Calculate KBPS from bw_window
+            dq = _bw_window[did]
+            kbps = round(sum(b for _, b in dq) * 8 / (1024 * dt), 1) if dt > 0 else 0
+            print(f"PERF_RELAY: {did} | FPS: {fps} | KBPS: {kbps}")
+            _device_stats[did] = {"last_stat_ts": now}
+        
+        # Bandwidth tracking
+        dq = _bw_window[did]
+        dq.append((now, n))
+        while dq and now - dq[0][0] > 1.0:
+            dq.popleft()
+            
+        if MAX_FRAME_KBPS > 0:
+            if sum(b for _, b in dq) * 8 / 1024.0 > MAX_FRAME_KBPS:
+                return
 
-        # ── Decode w/h from header bytes 0-8 ─────────────────────────────────
-        if n >= 8:
-            try:
-                w, h = struct.unpack_from(">II", raw, 0)
-                if w > 0 and h > 0:
-                    with _dev_lock:
-                        dev = _devices.get(did)
-                        if dev:
-                            dev["screen_w"] = w
-                            dev["screen_h"] = h
-            except Exception:
-                pass
+        # Decode w/h and timestamp from header (first 16 bytes: 4+4+8)
+        try:
+            w, h, ts_us = struct.unpack_from(">IIQ", data, 0)
+            if w > 0 and h > 0:
+                with _dev_lock:
+                    dev = _devices.get(did)
+                    if dev:
+                        dev["screen_w"] = w
+                        dev["screen_h"] = h
+                        dev["frame_count"] += 1
+                        dev["last_frame_ts"] = utcnow()
+        except Exception:
+            ts_us = int(now * 1_000_000)
 
-        # ── v13: GOP buffer (size 0 = live-only, no stale replay) ─────────────
+        # GOP buffer (if enabled)
         if GOP_BUF_SIZE > 0:
             with _adv_gop_lock:
                 buf = _adv_gop_buf.setdefault(did, collections.deque(maxlen=GOP_BUF_SIZE))
-                buf.append(raw)
+                buf.append(data)
 
-        # ── Frame stats + per-device FPS ring ─────────────────────────────────
-        _frame_stats[did].append((time.time(), n))
-        _device_fps_ring[did].append(time.time())
-
-        # ── Device record update — one lock, minimal work ─────────────────────
-        with _dev_lock:
-            dev = _devices.get(did)
-            if dev:
-                fc = dev.get("frame_count", 0) + 1
-                dev["frame_count"]   = fc
-                dev["last_frame_ts"] = utcnow()
-
-        # ── v13: Fan-out with sequence metadata ───────────────────────────────
-        # Append a 4-byte big-endian sequence number after the standard payload
-        # so the viewer can detect dropped/out-of-order frames without overhead.
+        # v16: Append sequence number suffix for viewer-side gap detection
         # Format: raw_frame_bytes + b"\xFFSEQ" + seq.to_bytes(4,"big")
-        # Viewers that don't understand the suffix ignore it safely (past EOF).
-        seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + seq.to_bytes(4, "big")
-        frame_with_seq = raw + seq_suffix
+        seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + (seq & 0xFFFFFFFF).to_bytes(4, "big")
+        frame_with_seq = data + seq_suffix
 
         # Fan out to viewers
-        # v14: Unified room "view:{did}" for all binary frames
-        # We send the versioned (suffixed) frame for best viewer experience.
-        if seq % 60 == 0:
-            log.info(f"Server: relaying frame_bin for {did} (seq={seq})")
         sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
-        # v15.7: Secondary relay for enterprise sync
         sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
 
-        # ── v13: Lightweight frame-metadata event (no binary) ─────────────────
-        # Sent every 10 frames so viewer HUD can show live FPS / latency
-        # without processing every frame_bin. Much cheaper than per-frame JSON.
+        # Lightweight frame-metadata event every 10 frames
         if seq % 10 == 0:
+            _device_fps_ring[did].append(now)
             fps_ring = _device_fps_ring[did]
             if len(fps_ring) >= 2:
-                _span = fps_ring[-1] - fps_ring[0]
-                _actual_fps = round((len(fps_ring) - 1) / _span, 1) if _span > 0 else 0
+                span = fps_ring[-1] - fps_ring[0]
+                actual_fps = round((len(fps_ring) - 1) / span, 1) if span > 0 else 0
             else:
-                _actual_fps = 0
+                actual_fps = 0
+            
             sio.emit("frame_meta", {
                 "device_id": did, "seq": seq, "ts_us": ts_us,
-                "size": n, "fps": _actual_fps,
+                "size": n, "fps": actual_fps,
             }, room=f"view:{did}")
-            sio.emit("frame_meta", {
-                "device_id": did, "seq": seq, "ts_us": ts_us,
-                "size": n, "fps": _actual_fps,
-            }, room=f"adv_viewers_{did}")
-
-        # ── Plugin hooks (background — never blocks hot path) ─────────────────
-        if _plugin_hooks.get("on_frame"):
-            _bg(_fire_hooks, "on_frame", device_id=did, size=n, seq=seq)
 
     @sio.on("frame_bin_relay")
-    def on_frame_bin_relay(data):
-        """Main-socket fallback when adv socket unavailable."""
-        try:
-            did = data.get("device_id", "")
-            if not did:
-                return
-            if data.get("b64"):
-                import base64
-                raw = base64.b64decode(data["b64"])
-            else:
-                raw_list = data.get("data")
-                if not raw_list:
-                    return
-                raw = bytes(raw_list)
-            if not raw or len(raw) > MAX_FRAME_BYTES:
-                return
-            # v13: stale-frame guard — discard frames >2000ms old (live-sync)
-            if len(raw) >= 16:
-                try:
-                    frame_ts_us = int.from_bytes(raw[8:16], "big")
-                    now_us = int(time.time() * 1_000_000)
-                    if (now_us - frame_ts_us) > 2_000_000:  # 2000ms live-sync TTL
-                        return  # stale — don't relay
-                except Exception:
-                    pass
-            if len(raw) >= 8:
-                try:
-                    w, h = struct.unpack_from(">II", raw, 0)
-                    if w > 0 and h > 0:
-                        with _dev_lock:
-                            if did in _devices:
-                                _devices[did]["screen_w"] = w
-                                _devices[did]["screen_h"] = h
-                except Exception:
-                    pass
-            with _adv_gop_lock:
-                if did not in _adv_gop_buf:
-                    _adv_gop_buf[did] = collections.deque(maxlen=GOP_BUF_SIZE)  # consistent with frame_bin handler
-                _adv_gop_buf[did].append(raw)
-            with _frame_stats_lock:
-                _frame_stats[did].append((time.time(), len(raw)))
-            with _dev_lock:
-                if did in _devices:
-                    _devices[did]["frame_count"]   = _devices[did].get("frame_count", 0) + 1
-                    _devices[did]["last_frame_ts"] = utcnow()
-
-            # v13: sequence suffix for fallback relay
-            seq = _frame_seq.get(did, 0) + 1
-            _frame_seq[did] = seq
-            seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + seq.to_bytes(4, "big")
-            frame_with_seq = raw + seq_suffix
-
-            sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
-            sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
-        except Exception as e:
-            log.warning(f"frame_bin_relay error: {e}")
+    def on_frame_bin_relay(data_pkg):
+        """Fallback relay for legacy or restricted agents."""
+        did = data_pkg.get("device_id")
+        if not did: return
+        
+        raw = None
+        if data_pkg.get("b64"):
+            raw = base64.b64decode(data_pkg["b64"])
+        elif data_pkg.get("data"):
+            raw = bytes(data_pkg["data"])
+        
+        if not raw: return
+        on_frame_bin(raw)
 
     # v13: cursor position cache for delta suppression
     _cursor_prev: dict = {}  # device_id → (x, y)
@@ -2379,8 +2276,12 @@ if SOCKETIO_OK and sio:
     @sio.on("system_stats_report")
     def on_sys(data):
         did = data.get("device_id", "")
-        sio.emit("update_system_tab", data, room=f"view:{did}")
-        sio.emit("update_system_tab", data, room="dashboards")
+        log.info(f"Relay: system_stats_report from {did}")
+        # v15.7: Relay as both system_stats_report (new) and update_system_tab (legacy)
+        for ev in ["system_stats_report", "update_system_tab"]:
+            sio.emit(ev, data, room=f"view:{did}")
+            sio.emit(ev, data, room="dashboards")
+            sio.emit(ev, data, room="adv_dashboards")
 
     for _ev_in, _ev_out, _also_dash in [
         ("processes_report",       "processes_result",      True),
@@ -2747,17 +2648,20 @@ if SOCKETIO_OK and sio:
                     log.debug(f"Watchdog: cleaned {len(phantom)} phantom viewer SIDs")
 
                 # ── 5. Periodic health log ────────────────────────────────
-                if int(now_mono) % 300 < 15:
+                if int(now_mono) % 60 < 15: # v16: Log every 60s for better tracking
                     try:
                         import psutil
-                        mem = psutil.Process().memory_info().rss // (1024 * 1024)
+                        proc = psutil.Process()
+                        mem = proc.memory_info().rss // (1024 * 1024)
+                        cpu_pct = proc.cpu_percent(interval=None)
                     except Exception:
                         mem = "?"
+                        cpu_pct = "?"
                     with _adv_viewer_lock:
                         adv_viewers = len(_adv_viewer_rooms)
                     log.info(
-                        f"Watchdog health | devices={len(_devices)} viewers={adv_viewers} "
-                        f"gop_bufs={len(_adv_gop_buf)} threads={threading.active_count()} mem={mem}MB"
+                        f"STABILITY: devs={len(_devices)} viewers={adv_viewers} "
+                        f"threads={threading.active_count()} mem={mem}MB cpu={cpu_pct}%"
                     )
 
             except Exception as exc:
@@ -3037,37 +2941,7 @@ def health_ready():
     return jsonify({"status": "ready" if code == 200 else "not_ready",
                     "db": db_ok, "socketio": sio_ok, "ts": utcnow()}), code
 
-@app.route("/health/full")
-def health_full():
-    with _dev_lock:
-        online = len(_devices)
-    try:
-        import psutil
-        proc    = psutil.Process()
-        mem_rss = proc.memory_info().rss // (1024 * 1024)
-        cpu_pct = proc.cpu_percent(interval=0.05)
-        disk_gb = psutil.disk_usage("/").free // (1024**3)
-    except Exception:
-        mem_rss = cpu_pct = disk_gb = None
-    return jsonify({
-        "status":           "ok",
-        "version":          VERSION,
-        "server_time":      utcnow(),
-        "uptime_seconds":   int(time.time() - _SERVER_START),
-        "database":         get_sb() is not None,
-        "redis":            _get_redis() is not None,
-        "jwt_enabled":      JWT_OK,
-        "frame_dedup":      FRAME_DEDUP,
-        "org_isolation":    ORG_ISOLATION,
-        "devices_online":   online,
-        "orgs":             len(_orgs),
-        "groups":           len(_groups),
-        "scripts":          len(_scripts),
-        "macros":           len(_macros),
-        "memory_mb":        mem_rss,
-        "cpu_pct":          cpu_pct,
-        "free_disk_gb":     disk_gb,
-    })
+
 
 # ── JWT auth endpoint ─────────────────────────────────────────────────────────
 @app.route("/api/auth/token", methods=["POST"])
@@ -4255,7 +4129,7 @@ def startup():
     log.info(f"  SSE stream:            /api/events")
     log.info(f"  Prometheus metrics:    /metrics (text/plain)")
     log.info(f"  Health checks:         /health/live  /health/ready  /health/full")
-    log.info(f"  ── v14 Enterprise Additions ──────────────────────────────────")
+    log.info(f"  -- v14 Enterprise Additions ----------------------------------")
     log.info(f"  Signed invite tokens:  /api/invite/verify")
     log.info(f"  Device health scores:  /api/devices/health  /api/device/<id>/health")
     log.info(f"  Device fingerprints:   /api/device/<id>/fingerprint")

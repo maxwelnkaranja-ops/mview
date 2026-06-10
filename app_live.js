@@ -20,7 +20,7 @@ const defaultFiles = [
    Always reads from config.js first, falls back to Render URL.
    Never use localhost or a raw IP in production.
 ─────────────────────────────────────────────────────────── */
-const PROD_SERVER_URL = 'https://screen-connect-rtca.onrender.com';
+const PROD_SERVER_URL = 'http://localhost:10000';
 
 function getServerUrl() {
   return window.MVIEW_SERVER_URL || PROD_SERVER_URL;

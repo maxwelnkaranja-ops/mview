@@ -5531,7 +5531,7 @@
             >
             <span>ScreenConnect</span>
             <span style="font-weight: 300; color: var(--text-3)"
-              >Enterprise</span
+              >v16 Enterprise</span
             >
           </div>
           <div class="topbar-sep"></div>
@@ -6310,6 +6310,14 @@
                 <button class="tbtn" onclick="quickLaunch('explorer.exe')">Explorer</button>
                 <button class="tbtn" onclick="quickLaunch('control.exe')">Control</button>
                 <button class="tbtn" onclick="quickLaunch('ms-settings:')">Settings</button>
+                <button class="tbtn" onclick="quickLaunch('regedit.exe')">Regedit</button>
+                <button class="tbtn" onclick="quickLaunch('eventvwr.msc')">EventViewer</button>
+                <button class="tbtn" onclick="quickLaunch('diskmgmt.msc')">DiskMgmt</button>
+                <button class="tbtn" onclick="quickLaunch('devmgmt.msc')">DevMgmt</button>
+                <button class="tbtn" onclick="quickLaunch('resmon.exe')">ResMon</button>
+                <button class="tbtn" onclick="quickLaunch('perfmon.msc')">PerfMon</button>
+                <button class="tbtn" onclick="quickLaunch('ncpa.cpl')">NetConfig</button>
+                <button class="tbtn" onclick="quickLaunch('sysdm.cpl')">SysProp</button>
               </div>
             </div>
 
@@ -7887,9 +7895,28 @@
           showToast("Server connected", "success");
           addLog("WebSocket connected", "Server", "System", "ok");
           addNotif("Server connected", "ok");
+
+          // v16: If we reconnected while a stream was active, clear the "retrying" UI
+          if (RV.active) {
+            const rc = $("rv-connecting");
+            if (rc) rc.style.display = "none";
+            const lvConn = $("lv-connecting");
+            if (lvConn) lvConn.classList.remove("visible");
+          }
+
           // Join dashboards room for broadcasts, and request device list
           SC.socket.emit("join_dashboard", {});
           SC.socket.emit("viewer_hello", {});
+          
+          // v16: Auto-resume stream if we were previously watching one
+          if (RV.active && RV.deviceId) {
+            console.log("v16: Re-subscribing to", RV.deviceId);
+            SC.socket.emit("watch_device", { 
+              device_id: RV.deviceId,
+              fps: 60,
+              quality: 95
+            });
+          }
           refresh();
         });
 
@@ -7908,6 +7935,12 @@
           updateBadges();
           showBanner("Server disconnected — reconnecting…", false);
           addNotif("Server disconnected", "warn");
+          
+          // v16: If disconnected, clear UI connecting state to prevent "stuck at retrying" visual
+          const rc = $("rv-connecting");
+          if (rc) rc.style.display = "flex";
+          const rcm = $("rv-conn-msg");
+          if (rcm) rcm.textContent = "Server connection lost, retrying...";
         });
 
         SC.socket.on("reconnect", () => {
@@ -8053,51 +8086,70 @@
         /* Frame rendering queue for smooth 60fps */
         const frameQueue = [];
         let isRendering = false;
+        let lastRenderTime = 0;
 
         function startRenderingLoop() {
           if (isRendering) return;
           isRendering = true;
-          const canvas = $("rv-canvas"), ctx = canvas?.getContext("2d", { alpha: false });
+          const canvas = $("rv-canvas"), ctx = canvas?.getContext("2d", { 
+            alpha: false,
+            desynchronized: true // v16: Reduce latency by bypassing compositor if possible
+          });
           
-          function render() {
+          function render(now) {
             if (!RV.active) { isRendering = false; return; }
             
-            // v14 ULTRA SYNC: High-frequency render loop
-            // If we have frames, draw the newest one to ensure perfect sync with real-time
+            // v16 ULTRA BOOST: Adaptive rendering
             if (frameQueue.length > 0) {
-              const { bmp, w, h } = frameQueue.pop(); // Take the most recent frame
+              // Always take the NEWEST frame to minimize latency (drop-oldest)
+              const newest = frameQueue.pop();
               
-              // Clear the rest of the queue to avoid latency buildup
+              // Clean up the rest of the queue immediately
               while (frameQueue.length > 0) {
                 const f = frameQueue.shift();
                 if (f.bmp) f.bmp.close();
               }
 
-              if (canvas && ctx) {
+              if (canvas && ctx && newest.bmp) {
+                const { bmp, w, h } = newest;
                 if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
                   canvas.width = w;
                   canvas.height = h;
                 }
-                ctx.imageSmoothingEnabled = false; // Pixel-perfect crispness
+                ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
                 bmp.close();
 
-                $("rv-empty").style.display = "none";
-                canvas.style.display = "block";
-                const sf3d = $("stream-frame-3d");
-                if (sf3d) sf3d.classList.add("streaming");
-                const rc2 = $("rv-connecting");
-                if (rc2) rc2.style.display = "none";
-                const rio = $("rv-info-overlay");
-                if (rio) rio.style.display = "flex";
-                const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
-                if (rvPill) { rvPill.className = "pill online live"; }
-                if (rvLbl) { rvLbl.textContent = "Live Ultra-Sync"; }
+                // UI updates only when first frame arrives
+                if ($("rv-empty").style.display !== "none") {
+                    $("rv-empty").style.display = "none";
+                    canvas.style.display = "block";
+                    const sf3d = $("stream-frame-3d");
+                    if (sf3d) sf3d.classList.add("streaming");
+                    const rc2 = $("rv-connecting");
+                    if (rc2) rc2.style.display = "none";
+                    const rio = $("rv-info-overlay");
+                    if (rio) rio.style.display = "flex";
+                    const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+                    if (rvPill) { rvPill.className = "pill online live"; }
+                    if (rvLbl) { rvLbl.textContent = "Live Ultra-Sync (Boosted)"; }
+                }
               }
             }
             requestAnimationFrame(render);
           }
           requestAnimationFrame(render);
+        }
+
+        function createBwLabel() {
+            const container = $("rv-info-overlay");
+            if (!container) return null;
+            let bl = document.createElement("div");
+            bl.id = "rv-bw-label";
+            bl.className = "rv-info-pill";
+            bl.style.cssText = "margin-left:8px; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:4px; font-size:12px; color:#aaa";
+            container.appendChild(bl);
+            return bl;
         }
 
         SC.socket.on("frame_bin", async (raw) => {
@@ -8176,8 +8228,20 @@
               RV.fps = RV.frameCount;
               RV.frameCount = 0;
               RV.lastFpsTime = now;
+              
+              // v16: Show E2E FPS (frames actually reached the dashboard)
               const fl = $("rv-fps-label");
-              if (fl) fl.textContent = `${RV.fps} fps`;
+              if (fl) {
+                fl.textContent = `${RV.fps} fps (UI)`;
+                fl.style.color = RV.fps >= 50 ? "#4ade80" : RV.fps >= 25 ? "#fb923c" : "#f87171";
+              }
+              
+              // v16: Show actual bandwidth reaching the dashboard
+              const bl = $("rv-bw-label") || createBwLabel();
+              if (bl) {
+                const mbps = (RV.bytesPerSec * 8) / (1024 * 1024);
+                bl.textContent = mbps.toFixed(1) + " Mbps";
+              }
             }
 
             if (isH264) return;
@@ -8305,12 +8369,17 @@
         /* ── Connection quality ── */
         SC.socket.on("connection_quality", (d) => {
           if (d.device_id !== RV?.deviceId) return;
-          const fps   = $("lv-fps-val");
-          const rtt   = $("lv-rtt-val");
-          const kbps  = $("lv-kbps-val");
-          if (fps  && d.fps  != null)       fps.textContent  = d.fps + " fps";
-          if (rtt  && d.rtt_ms != null)     rtt.textContent  = Math.round(d.rtt_ms) + " ms";
-          if (kbps && d.encode_ms != null)  kbps.textContent = Math.round(d.encode_ms) + " ms enc";
+          // v16: We prioritize E2E metrics (calculated in frame_bin) over agent-reported ones.
+          // We only update the agent-side stats here.
+          const agentFps = $("lv-agent-fps"); // New element if we want to show it
+          const rtt      = $("lv-rtt-val");
+          const kbps     = $("lv-kbps-val");
+          
+          if (agentFps && d.fps != null)    agentFps.textContent = d.fps + " fps (Agent)";
+          if (rtt && d.rtt_ms != null)      rtt.textContent      = Math.round(d.rtt_ms) + " ms";
+          if (kbps && d.encode_ms != null)  kbps.textContent     = Math.round(d.encode_ms) + " ms enc";
+          
+          // We DON'T update lv-fps-val here anymore to avoid fighting with E2E counter
         });
 
         /* ── Tunnel relay ── */
@@ -12169,17 +12238,26 @@ if(typeof _origShowSection === 'function'){
         const lat = RV.latency || 0;
         const kbps = Math.round((RV.bytesPerSec || 0) / 1024);
 
-        // FPS chip
+        // FPS chip — Now showing E2E (dashboard-received) FPS
         const fpsEl = $("lv-fps-val");
         if (fpsEl) fpsEl.textContent = fps;
         const fpsChip = $("lv-fps-chip");
-        if (fpsChip) fpsChip.className = "lv-metric " + (fps >= 24 ? "ok" : fps > 0 ? "warn" : "");
+        if (fpsChip) {
+          fpsChip.className = "lv-metric " + (fps >= 24 ? "ok" : fps > 0 ? "warn" : "");
+          // Update the label to be clear it's E2E
+          const fpsLbl = fpsChip.querySelector(".lv-metric-lbl");
+          if (fpsLbl) fpsLbl.textContent = "fps (e2e)";
+        }
 
-        // Latency chip
+        // Latency chip — Now showing E2E Latency
         const latEl = $("lv-lat-val");
         if (latEl) latEl.textContent = lat > 0 ? lat : "—";
         const latChip = $("lv-lat-chip");
-        if (latChip) latChip.className = "lv-metric " + (lat === 0 ? "" : lat < 150 ? "ok" : lat < 400 ? "warn" : "bad");
+        if (latChip) {
+          latChip.className = "lv-metric " + (lat === 0 ? "" : lat < 150 ? "ok" : lat < 400 ? "warn" : "bad");
+          const latLbl = latChip.querySelector(".lv-metric-lbl");
+          if (latLbl) latLbl.textContent = "ms (e2e)";
+        }
 
         // Bandwidth chip
         const bwEl = $("lv-bw-val");
