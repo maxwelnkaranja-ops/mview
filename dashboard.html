@@ -7824,32 +7824,37 @@
         const inp = $("settings-server-url");
         if (inp?.value?.trim() && inp.value.trim() !== SC.SERVER_URL) {
           let v = inp.value.trim().replace(/\/+$/, "");
-          // Block mixed-content: never set http:// URL when page is https://
           if (location.protocol === "https:")
             v = v.replace(/^http:\/\//i, "https://");
           if (!(v.startsWith("http://") && location.protocol === "https:"))
             SC.SERVER_URL = v;
         }
-        // Ensure SERVER_URL is always secure when on HTTPS
-        if (location.protocol === "https:" && SC.SERVER_URL.startsWith("http:")) {
-           // Allow local testing without SSL forcing
-           // SC.SERVER_URL = SC.SERVER_URL.replace(/^http:\/\//i, "https://");
-        }
-        // Force server status check to use the correct origin
         const checkUrl = SC.SERVER_URL + "/status";
         try {
           const r = await fetch(checkUrl, {
-            signal: AbortSignal.timeout(5000),
+            signal: AbortSignal.timeout(8000),
             headers: { Accept: "application/json" },
           });
           if (r.ok) {
             const j = await r.json().catch(() => ({}));
-            SC.srvOnline = !!(j.status === "ok" || j.version);
+            const httpOk = !!(j.status === "ok" || j.version);
+            // Only update srvOnline from HTTP if socket isn't already confirming connection
+            if (!SC.socket?.connected) {
+              SC.srvOnline = httpOk;
+            } else {
+              SC.srvOnline = true; // socket is connected = server is online
+            }
+            // Update Supabase badge from server response
+            if (j.database !== undefined) {
+              SC.sbOnline = !!j.database;
+            }
           } else {
-            SC.srvOnline = false;
+            // HTTP error — only mark offline if socket also isn't connected
+            if (!SC.socket?.connected) SC.srvOnline = false;
           }
         } catch {
-          SC.srvOnline = false;
+          // Timeout/network error — only mark offline if socket isn't connected
+          if (!SC.socket?.connected) SC.srvOnline = false;
         }
         updateBadges();
       }
@@ -7901,14 +7906,13 @@
           const diagSocket = $("diag-socket");
           if (diagSocket) diagSocket.textContent = "Connected";
           SC._reconnTries = 0;
-          _forceBinaryAB(); // belt-and-suspenders: set arraybuffer on every connect/reconnect
+          _forceBinaryAB();
           updateBadges();
           hideBanner();
           showToast("Server connected", "success");
           addLog("WebSocket connected", "Server", "System", "ok");
           addNotif("Server connected", "ok");
 
-          // v16: If we reconnected while a stream was active, clear the "retrying" UI
           if (RV.active) {
             const rc = $("rv-connecting");
             if (rc) rc.style.display = "none";
@@ -7916,11 +7920,9 @@
             if (lvConn) lvConn.classList.remove("visible");
           }
 
-          // Join dashboards room for broadcasts, and request device list
           SC.socket.emit("join_dashboard", {});
           SC.socket.emit("viewer_hello", {});
           
-          // v16: Auto-resume stream if we were previously watching one
           if (RV.active && RV.deviceId) {
             SC.socket.emit("watch_device", { 
               device_id: RV.deviceId,
@@ -7928,6 +7930,8 @@
               quality: 95
             });
           }
+          // Refresh server info (non-blocking — updates Supabase badge)
+          checkServer().catch(() => {});
           refresh();
         });
 

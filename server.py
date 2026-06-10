@@ -1184,12 +1184,15 @@ def health():
         mem = psutil.Process().memory_info().rss // (1024 * 1024)
     except Exception:
         mem = None
+    # Use cached Supabase state — never block on a live DB call in health check
+    with _sb_lock:
+        db_ok = _sb is not None
     return jsonify({
         "status":         "ok",
         "version":        VERSION,
         "server_time":    utcnow(),
         "uptime_seconds": int(time.time() - _SERVER_START),
-        "database":       get_sb() is not None,
+        "database":       db_ok,
         "socketio":       SOCKETIO_OK,
         "async_mode":     "gevent",
         "devices_online": online,
