@@ -7922,7 +7922,6 @@
           
           // v16: Auto-resume stream if we were previously watching one
           if (RV.active && RV.deviceId) {
-            console.log("v16: Re-subscribing to", RV.deviceId);
             SC.socket.emit("watch_device", { 
               device_id: RV.deviceId,
               fps: 60,
@@ -7999,18 +7998,6 @@
           });
           renderAll(screens);
         });
-        /* ── v14 ULTRA SYNC AUTO-CONNECT ── */
-        SC.socket.on("device_list", (list) => {
-          const target = list.find(d => (d.device_id || d.id) === "TEST-AGENT" && d.online);
-          if (target && !RV.active) {
-            console.log("ULTRA SYNC: Auto-connecting to TEST-AGENT...");
-            setTimeout(() => {
-              const idx = screens.findIndex(s => s.token === "TEST-AGENT");
-              if (idx !== -1) connectScreen(idx);
-            }, 1000);
-          }
-        });
-
         SC.socket.on("agent_online", (d) => {
           showToast(`Online: ${d.label || d.device_id}`, "success");
           addLog(
@@ -8150,7 +8137,17 @@
                 const rc2 = $("rv-connecting");
                 if (rc2 && rc2.style.display !== "none") rc2.style.display = "none";
                 const rvEmpty = $("rv-empty");
-                if (rvEmpty && rvEmpty.style.display !== "none") rvEmpty.style.display = "none";
+                if (rvEmpty && rvEmpty.style.display !== "none") {
+                    rvEmpty.style.display = "none";
+                    if (canvas) canvas.style.display = "block";
+                    const sf3d = $("stream-frame-3d");
+                    if (sf3d) sf3d.classList.add("streaming");
+                    const rio = $("rv-info-overlay");
+                    if (rio) rio.style.display = "flex";
+                    const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+                    if (rvPill) { rvPill.className = "pill online live"; }
+                    if (rvLbl) { rvLbl.textContent = "Live"; }
+                }
                 if (canvas.style.display !== "block") canvas.style.display = "block";
 
                 if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
@@ -8160,22 +8157,6 @@
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
                 bmp.close();
-
-                // UI updates only when first frame arrives
-                const rvEmpty = $("rv-empty");
-                if (rvEmpty && rvEmpty.style.display !== "none") {
-                    rvEmpty.style.display = "none";
-                    if (canvas) canvas.style.display = "block";
-                    const sf3d = $("stream-frame-3d");
-                    if (sf3d) sf3d.classList.add("streaming");
-                    const rc2 = $("rv-connecting");
-                    if (rc2) rc2.style.display = "none";
-                    const rio = $("rv-info-overlay");
-                    if (rio) rio.style.display = "flex";
-                    const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
-                    if (rvPill) { rvPill.className = "pill online live"; }
-                    if (rvLbl) { rvLbl.textContent = "Live Ultra-Sync (Boosted)"; }
-                }
               }
             }
             requestAnimationFrame(render);
@@ -8207,9 +8188,6 @@
             const diagLat = $("diag-lat");
             if (diagLat) diagLat.textContent = RV.latency;
 
-            if (RV.frameCount % 60 === 0) {
-              console.log("v16: Frame received, size:", sz);
-            }
             if (!RV.active) return;
             // v15.6: HEAL THE STREAM
             // If we are getting binary frames but UI is stuck at "retrying", heal it.

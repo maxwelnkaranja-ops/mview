@@ -296,11 +296,9 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
-    # For Local LAN testing: Use http://YOUR_PC_IP:10000 (e.g., http://192.168.100.25:10000)
-    # For Render live: Use https://your-app.onrender.com
-    # OR: Create an agent_config.txt file next to the EXE with SERVER_URL=http://your.server:port
-    "SERVER_URL":           "http://192.168.100.25:10000",
-    "DEVICE_TOKEN":         "TEST-AGENT",
+    # Set SERVER_URL to your Render URL. Override via agent_config.txt next to the EXE.
+    "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
+    "DEVICE_TOKEN":         "",  # Loaded from embedded trailer token at runtime
 
     # ── Identity ────────────────────────────────────────────────────────────
     "AGENT_VERSION":        "16.0.0",  # ULTRA LIVE-SYNC ENTERPRISE build
@@ -5032,8 +5030,6 @@ class ScreenConnectAgent:
                 
                 # FIX: Force http if connecting to a local IP to avoid common SSL/TLS errors in local dev
                 url = CONFIG["SERVER_URL"]
-                if "192.168." in url or "10.0." in url or "localhost" in url:
-                    url = url.replace("https://", "http://")
                 
                 log.info(f"Connecting to {url}...")
                 sio.connect(
