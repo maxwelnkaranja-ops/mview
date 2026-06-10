@@ -1121,6 +1121,31 @@ def serve_session_manager():
 # ══════════════════════════════════════════════════════════════════════════════
 #  Health / Stats / API routes
 # ══════════════════════════════════════════════════════════════════════════════
+@app.route("/debug/connections")
+def debug_connections():
+    """v16: Detailed connection debugging for external testing."""
+    with _sid_lock:
+        devices = {sid: did for sid, did in _sid_to_device.items()}
+    
+    with _view_lock:
+        viewers = {did: list(sids) for did, sids in _viewers.items()}
+    
+    with _adv_viewer_lock:
+        adv_viewers = {sid: did for sid, did in _adv_viewer_rooms.items()}
+    
+    with _dev_lock:
+        online_agents = {did: {"label": d.get("label"), "online": d.get("online")} for did, d in _devices.items()}
+
+    return jsonify({
+        "total_active_device_sids": len(devices),
+        "total_adv_viewer_sids": len(adv_viewers),
+        "devices_by_sid": devices,
+        "viewers_by_device": viewers,
+        "adv_viewers_by_sid": adv_viewers,
+        "known_devices": online_agents,
+        "timestamp": utcnow().isoformat()
+    }), 200
+
 @app.route("/health/full")
 def health_full():
     """v16: Comprehensive health check with system telemetry."""
@@ -1131,12 +1156,12 @@ def health_full():
         online_agents = sum(1 for d in _devices.values() if d.get("online"))
     
     with _sid_lock:
-        total_sessions = len(_sid_to_device) + len(_sid_to_viewer)
+        total_sessions = len(_sid_to_device) + len(_adv_viewer_rooms)
 
     return jsonify({
         "status": "ok",
         "version": VERSION,
-        "uptime_seconds": int(time.time() - _START_TIME),
+        "uptime_seconds": int(time.time() - _SERVER_START),
         "memory_mb": round(process.memory_info().rss / (1024 * 1024), 2),
         "cpu_percent": process.cpu_percent(),
         "threads": threading.active_count(),
@@ -1512,14 +1537,22 @@ def agent_checkin():
 # ══════════════════════════════════════════════════════════════════════════════
 if SOCKETIO_OK and sio:
 
+    @sio.on("*")
+    def catch_all(event, data):
+        """v16: Log all incoming events for debugging external agent."""
+        if event not in ["frame_bin", "cursor_bin", "cursor_bin_norm", "system_stats_report"]:
+            log.info(f"DEBUG_EVENT: sid={request.sid} event={event} data={data}")
+
     @sio.on("connect")
     def on_connect():
         sid = request.sid
         ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
         ua = request.headers.get("User-Agent", "unknown")
+        query = request.args.to_dict()
+        log.info(f"SOCKET CONNECTED: sid={sid} ip={ip} ua={ua} query={query}")
         join_room("dashboards")
         join_room("adv_dashboards")   # join both rooms so all device events are received
-        log.info(f"Socket connected: {sid} from {ip} | UA: {ua}")
+        _audit("socket_connect", sid=sid, ip=ip, query=query)
 
     @sio.on("disconnect")
     def on_disconnect():
@@ -1664,6 +1697,8 @@ if SOCKETIO_OK and sio:
 
             # Join viewer rooms
             join_room(f"view:{did}")
+            join_room(f"adv_viewers_{did}") # v16: Ensure viewer joins the advanced room
+            log.info(f"Viewer {sid} joined rooms for {did}")
             with _view_lock:
                 _viewers[did].add(sid)
             with _adv_viewer_lock:
@@ -1736,6 +1771,7 @@ if SOCKETIO_OK and sio:
     def _handle_agent_connect(data):
         did   = data.get("device_id") or data.get("token", "")
         label = data.get("label") or data.get("hostname") or did
+        log.info(f"Agent handshake attempt: sid={request.sid} did={did} label={label} data={data}")
         if not did:
             log.warning(f"agent_connect: no device_id from {request.sid}")
             return
@@ -1784,6 +1820,7 @@ if SOCKETIO_OK and sio:
                 "label":         label,
                 "name":          label,
                 "status":        "online",
+                "online":        True,
                 "hostname":      data.get("hostname"),
                 "username":      data.get("username"),
                 "os":            data.get("os"),
@@ -1975,90 +2012,100 @@ if SOCKETIO_OK and sio:
         sio.emit("agent_offline", data, room="dashboards")
 
     # ── Binary frame relay ────────────────────────────────────────────────────
+    @sio.on("*")
+    def catch_all(event, sid, data):
+        if event not in ["heartbeat", "frame_bin", "cursor_bin"]:
+            log.info(f"EVENT: {event} from {sid} | data: {str(data)[:200]}")
+
     @sio.on("frame_bin")
     def on_frame_bin(data):
-        """ v16: Optimized binary frame relay with zero-copy and adaptive pacing """
-        sid = request.sid
-        did = _adv_sid_to_agent.get(sid)
-        if not did:
-            with _sid_lock:
-                did = _sid_to_device.get(sid)
-        
-        if not did: return
-
-        n = len(data)
-        if n < 16 or n > MAX_FRAME_BYTES: return
-
-        now = time.time()
-        
-        # v16: Super-fast stats and sequencing
-        seq = _device_frame_seq[did]
-        _device_frame_seq[did] = seq + 1
-        
-        # Performance monitoring (every 10 frames for better debug visibility)
-        if seq % 10 == 0:
-            last_ts = _device_stats.get(did, {}).get("last_stat_ts", now - 1)
-            dt = now - last_ts
-            fps = round(10 / dt, 1) if dt > 0 else 0
-            # Calculate KBPS from bw_window
-            dq = _bw_window[did]
-            kbps = round(sum(b for _, b in dq) * 8 / (1024 * dt), 1) if dt > 0 else 0
-            print(f"PERF_RELAY: {did} | FPS: {fps} | KBPS: {kbps}")
-            _device_stats[did] = {"last_stat_ts": now}
-        
-        # Bandwidth tracking
-        dq = _bw_window[did]
-        dq.append((now, n))
-        while dq and now - dq[0][0] > 1.0:
-            dq.popleft()
-            
-        if MAX_FRAME_KBPS > 0:
-            if sum(b for _, b in dq) * 8 / 1024.0 > MAX_FRAME_KBPS:
-                return
-
-        # Decode w/h and timestamp from header (first 16 bytes: 4+4+8)
+        """ v16: Optimized binary frame relay with zero-copy and error resilience """
         try:
-            w, h, ts_us = struct.unpack_from(">IIQ", data, 0)
-            if w > 0 and h > 0:
-                with _dev_lock:
-                    dev = _devices.get(did)
-                    if dev:
-                        dev["screen_w"] = w
-                        dev["screen_h"] = h
-                        dev["frame_count"] += 1
-                        dev["last_frame_ts"] = utcnow()
-        except Exception:
-            ts_us = int(now * 1_000_000)
-
-        # GOP buffer (if enabled)
-        if GOP_BUF_SIZE > 0:
-            with _adv_gop_lock:
-                buf = _adv_gop_buf.setdefault(did, collections.deque(maxlen=GOP_BUF_SIZE))
-                buf.append(data)
-
-        # v16: Append sequence number suffix for viewer-side gap detection
-        # Format: raw_frame_bytes + b"\xFFSEQ" + seq.to_bytes(4,"big")
-        seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + (seq & 0xFFFFFFFF).to_bytes(4, "big")
-        frame_with_seq = data + seq_suffix
-
-        # Fan out to viewers
-        sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
-        sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
-
-        # Lightweight frame-metadata event every 10 frames
-        if seq % 10 == 0:
-            _device_fps_ring[did].append(now)
-            fps_ring = _device_fps_ring[did]
-            if len(fps_ring) >= 2:
-                span = fps_ring[-1] - fps_ring[0]
-                actual_fps = round((len(fps_ring) - 1) / span, 1) if span > 0 else 0
-            else:
-                actual_fps = 0
+            sid = request.sid
+            did = _adv_sid_to_agent.get(sid)
+            if not did:
+                with _sid_lock:
+                    did = _sid_to_device.get(sid)
             
-            sio.emit("frame_meta", {
-                "device_id": did, "seq": seq, "ts_us": ts_us,
-                "size": n, "fps": actual_fps,
-            }, room=f"view:{did}")
+            log.info(f"frame_bin: sid={sid}, did={did}, data_len={len(data)}")
+            if not did: return
+
+            n = len(data)
+            if n < 16 or n > MAX_FRAME_BYTES: return
+
+            now = time.time()
+            
+            # v16: Super-fast stats and sequencing
+            seq = _device_frame_seq[did]
+            _device_frame_seq[did] = seq + 1
+            
+            # Performance monitoring (every 10 frames for better debug visibility)
+            if seq % 10 == 0:
+                last_ts = _device_stats.get(did, {}).get("last_stat_ts", now - 1)
+                dt = now - last_ts
+                fps = round(10 / dt, 1) if dt > 0 else 0
+                # Calculate KBPS from bw_window
+                dq = _bw_window[did]
+                kbps = round(sum(b for _, b in dq) * 8 / (1024 * dt), 1) if dt > 0 else 0
+                log.info(f"PERF_RELAY: {did} | FPS: {fps} | KBPS: {kbps} | SIZE: {n} bytes")
+                _device_stats[did] = {"last_stat_ts": now}
+            
+            # Bandwidth tracking
+            dq = _bw_window[did]
+            dq.append((now, n))
+            while dq and now - dq[0][0] > 1.0:
+                dq.popleft()
+                
+            if MAX_FRAME_KBPS > 0:
+                if sum(b for _, b in dq) * 8 / 1024.0 > MAX_FRAME_KBPS:
+                    return
+
+            # Decode w/h and timestamp from header (first 16 bytes: 4+4+8)
+            try:
+                w, h, ts_us = struct.unpack_from(">IIQ", data, 0)
+                if w > 0 and h > 0:
+                    with _dev_lock:
+                        dev = _devices.get(did)
+                        if dev:
+                            dev["screen_w"] = w
+                            dev["screen_h"] = h
+                            dev["frame_count"] += 1
+                            dev["last_frame_ts"] = utcnow()
+            except Exception:
+                ts_us = int(now * 1_000_000)
+
+            # GOP buffer (if enabled)
+            if GOP_BUF_SIZE > 0:
+                with _adv_gop_lock:
+                    buf = _adv_gop_buf.setdefault(did, collections.deque(maxlen=GOP_BUF_SIZE))
+                    buf.append(data)
+
+            # v16: Append sequence number suffix for viewer-side gap detection
+            # Format: raw_frame_bytes + b"\xFFSEQ" + seq.to_bytes(4,"big")
+            seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + (seq & 0xFFFFFFFF).to_bytes(4, "big")
+            frame_with_seq = data + seq_suffix
+
+            # Fan out to viewers
+            sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
+            sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
+
+            # Lightweight frame-metadata event every 10 frames
+            if seq % 10 == 0:
+                _device_fps_ring[did].append(now)
+                fps_ring = _device_fps_ring[did]
+                if len(fps_ring) >= 2:
+                    span = fps_ring[-1] - fps_ring[0]
+                    actual_fps = round((len(fps_ring) - 1) / span, 1) if span > 0 else 0
+                else:
+                    actual_fps = 0
+                
+                sio.emit("frame_meta", {
+                    "device_id": did, "seq": seq, "ts_us": ts_us,
+                    "size": n, "fps": actual_fps,
+                }, room=f"view:{did}")
+
+        except Exception as exc:
+            _report_crash("on_frame_bin", exc)
 
     @sio.on("frame_bin_relay")
     def on_frame_bin_relay(data_pkg):
@@ -2077,6 +2124,15 @@ if SOCKETIO_OK and sio:
 
     # v13: cursor position cache for delta suppression
     _cursor_prev: dict = {}  # device_id → (x, y)
+
+    @sio.on("cursor_bin_norm")
+    def on_cursor_bin_norm(data):
+        """v16: Relay normalized cursor binary packets."""
+        sid = request.sid
+        did = _sid_to_device.get(sid) or _adv_sid_to_agent.get(sid)
+        if did:
+            sio.emit("cursor_bin_norm", data, room=f"view:{did}")
+            sio.emit("cursor_bin_norm", data, room=f"adv_viewers_{did}")
 
     @sio.on("cursor_bin")
     def on_cursor_bin(data):
@@ -2648,7 +2704,8 @@ if SOCKETIO_OK and sio:
                     log.debug(f"Watchdog: cleaned {len(phantom)} phantom viewer SIDs")
 
                 # ── 5. Periodic health log ────────────────────────────────
-                if int(now_mono) % 60 < 15: # v16: Log every 60s for better tracking
+                if now_mono - getattr(_watchdog_loop, "last_log", 0) >= 60:
+                    _watchdog_loop.last_log = now_mono
                     try:
                         import psutil
                         proc = psutil.Process()
@@ -2657,12 +2714,26 @@ if SOCKETIO_OK and sio:
                     except Exception:
                         mem = "?"
                         cpu_pct = "?"
+                    
+                    with _dev_lock:
+                        online_count = sum(1 for d in _devices.values() if d.get("online"))
                     with _adv_viewer_lock:
                         adv_viewers = len(_adv_viewer_rooms)
+                    
                     log.info(
-                        f"STABILITY: devs={len(_devices)} viewers={adv_viewers} "
+                        f"STABILITY: devs={online_count} viewers={adv_viewers} "
                         f"threads={threading.active_count()} mem={mem}MB cpu={cpu_pct}%"
                     )
+
+                    # v16: Broadcast server-side health to all dashboards
+                    sio.emit("server_health", {
+                        "online_agents": online_count,
+                        "total_viewers": adv_viewers,
+                        "mem_mb": mem,
+                        "cpu_pct": cpu_pct,
+                        "uptime": int(now_mono - _SERVER_START),
+                        "version": VERSION
+                    }, room="dashboards")
 
             except Exception as exc:
                 _report_crash("_watchdog_loop", exc)

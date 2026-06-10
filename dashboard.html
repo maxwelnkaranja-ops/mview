@@ -5244,6 +5244,16 @@
         <div class="loader-status" id="loader-status-txt">
           Initializing systems…
         </div>
+        <div id="diag-overlay" style="position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; font-family:monospace; font-size:12px; z-index:9999; border:1px solid #0f0; display:none; pointer-events:none;">
+          <div>E2E DIAGNOSTICS (v16)</div>
+          <hr style="border:0; border-top:1px solid #0f0;">
+          <div>Frames Received: <span id="diag-frames">0</span></div>
+          <div>Last Frame Size: <span id="diag-size">0</span></div>
+          <div>Actual FPS: <span id="diag-fps">0</span></div>
+          <div>Latency: <span id="diag-lat">0</span> ms</div>
+          <div>Cursor: <span id="diag-cur">0,0</span></div>
+          <div>Socket Status: <span id="diag-socket">Disconnected</span></div>
+        </div>
       </div>
     </div>
 
@@ -7888,6 +7898,8 @@
 
         SC.socket.on("connect", () => {
           SC.srvOnline = true;
+          const diagSocket = $("diag-socket");
+          if (diagSocket) diagSocket.textContent = "Connected";
           SC._reconnTries = 0;
           _forceBinaryAB(); // belt-and-suspenders: set arraybuffer on every connect/reconnect
           updateBadges();
@@ -8035,6 +8047,26 @@
           } else refresh();
         });
 
+        SC.socket.on("server_health", (d) => {
+          // v16: Update dashboard health indicators
+          const memEl = $("diag-mem-val");
+          const cpuEl = $("diag-cpu-val");
+          const agentsEl = $("diag-agents-val");
+          if (memEl) memEl.textContent = d.mem_mb + " MB";
+          if (cpuEl) cpuEl.textContent = d.cpu_pct + "%";
+          if (agentsEl) agentsEl.textContent = d.online_agents;
+          
+          // Update global stability score if we have active stream
+          if (RV.active) {
+            const score = Math.max(0, 100 - (RV.droppedFrames || 0) * 5);
+            const scoreEl = $("rv-stability-score");
+            if (scoreEl) {
+              scoreEl.textContent = score + "%";
+              scoreEl.style.color = score > 90 ? "var(--ok)" : score > 70 ? "var(--warn)" : "var(--bad)";
+            }
+          }
+        });
+
         SC.socket.on("server_log", (data) => {
           const logBox = document.getElementById("diag-log");
           if (!logBox) return;
@@ -8087,6 +8119,7 @@
         const frameQueue = [];
         let isRendering = false;
         let lastRenderTime = 0;
+        let pendCur = { x: 0, y: 0 }; // Declare pendCur to fix ReferenceError
 
         function startRenderingLoop() {
           if (isRendering) return;
@@ -8112,6 +8145,14 @@
 
               if (canvas && ctx && newest.bmp) {
                 const { bmp, w, h } = newest;
+                
+                // v16: Ensure "retrying" UI is hidden whenever we have a valid frame
+                const rc2 = $("rv-connecting");
+                if (rc2 && rc2.style.display !== "none") rc2.style.display = "none";
+                const rvEmpty = $("rv-empty");
+                if (rvEmpty && rvEmpty.style.display !== "none") rvEmpty.style.display = "none";
+                if (canvas.style.display !== "block") canvas.style.display = "block";
+
                 if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
                   canvas.width = w;
                   canvas.height = h;
@@ -8121,9 +8162,10 @@
                 bmp.close();
 
                 // UI updates only when first frame arrives
-                if ($("rv-empty").style.display !== "none") {
-                    $("rv-empty").style.display = "none";
-                    canvas.style.display = "block";
+                const rvEmpty = $("rv-empty");
+                if (rvEmpty && rvEmpty.style.display !== "none") {
+                    rvEmpty.style.display = "none";
+                    if (canvas) canvas.style.display = "block";
                     const sf3d = $("stream-frame-3d");
                     if (sf3d) sf3d.classList.add("streaming");
                     const rc2 = $("rv-connecting");
@@ -8154,6 +8196,20 @@
 
         SC.socket.on("frame_bin", async (raw) => {
           try {
+            // v16: Update diagnostics
+            const sz = raw.byteLength || raw.size || 0;
+            const diagFrames = $("diag-frames");
+            if (diagFrames) diagFrames.textContent = RV.frameCount;
+            const diagSize = $("diag-size");
+            if (diagSize) diagSize.textContent = (sz / 1024).toFixed(1) + " KB";
+            const diagFps = $("diag-fps");
+            if (diagFps) diagFps.textContent = RV.fps;
+            const diagLat = $("diag-lat");
+            if (diagLat) diagLat.textContent = RV.latency;
+
+            if (RV.frameCount % 60 === 0) {
+              console.log("v16: Frame received, size:", sz);
+            }
             if (!RV.active) return;
             // v15.6: HEAL THE STREAM
             // If we are getting binary frames but UI is stuck at "retrying", heal it.
@@ -8246,15 +8302,40 @@
 
             if (isH264) return;
 
-            const blob = new Blob([cleanBuf.slice(24)], { type: "image/jpeg" });
-            const bmp = await createImageBitmap(blob);
-            
-            frameQueue.push({ bmp, w, h });
-            if (!isRendering) startRenderingLoop();
+            // v16 ULTRA BOOST: Don't await decode in the socket handler to prevent blocking the stream
+            const frameData = { w, h, tsHi, tsLo, flags };
+            (async () => {
+              try {
+                const blob = new Blob([cleanBuf.slice(24)], { type: "image/jpeg" });
+                const bmp = await createImageBitmap(blob);
+                
+                frameQueue.push({ bmp, ...frameData });
+                if (!isRendering) startRenderingLoop();
+              } catch (e) {
+                console.error("Decode error", e);
+              }
+            })();
           } catch (err) {
             console.error("Critical frame_bin error", err);
           }
         });
+        SC.socket.on("cursor_bin_norm", (buf) => {
+          // v16: Handle high-precision normalized cursor
+          const dv = new DataView(buf);
+          const nx = dv.getUint16(0, false),
+            ny = dv.getUint16(2, false);
+          
+          const canvas = $("rv-canvas");
+          if (!canvas) return;
+          
+          const cx = (nx / 65535) * (canvas.width || 1);
+          const cy = (ny / 65535) * (canvas.height || 1);
+          
+          pendCur = { x: cx, y: cy };
+          updateSharedCursor(cx, cy, false);
+          drawCursorOverlay(cx, cy, false);
+        });
+
         SC.socket.on("cursor_bin", async (raw) => {
           // FIX: Don't guard on RV.active — cursor must work in Advanced Monitor mode too
           if (!RV.deviceId) return;
@@ -8630,6 +8711,17 @@
       }
 
       /* ══ Refresh ════════════════════════════════════════════════════ */
+      // v16: Global diagnostics toggle (Shift+D)
+      window.addEventListener("keydown", (e) => {
+        if (e.shiftKey && e.key === "D") {
+          const diag = $("diag-overlay");
+          if (diag) {
+            diag.style.display = diag.style.display === "none" ? "block" : "none";
+            console.log("v16: Diagnostics overlay toggled:", diag.style.display);
+          }
+        }
+      });
+
       async function refresh() {
         const rows = await loadSB();
         let liveDevices = {};
