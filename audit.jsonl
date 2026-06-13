@@ -1,1 +1,669 @@
 {"ts": "2026-06-10T18:16:00.324579", "event": "power_command", "device_id": "TEST-AGENT", "command": "lock_screen"}
+{"ts": "2026-06-11T07:45:22.718151", "event": "socket_connect", "sid": "HEXb3RWB27aF3MdKAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781163925.983908"}}
+{"ts": "2026-06-11T07:45:22.865516", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T07:45:30.255781", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T07:45:32.381224", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 93.6}
+{"ts": "2026-06-11T07:45:44.198525", "event": "socket_connect", "sid": "y4TJql17Cu1PVJJwAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781163947.460316"}}
+{"ts": "2026-06-11T07:45:44.456149", "event": "agent_evicted", "device_id": "TEST-AGENT", "old_sid": "HEXb3RWB27aF3MdKAAAB"}
+{"ts": "2026-06-11T07:45:44.457123", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T07:45:44.546730", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T07:45:46.687107", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 94.9}
+{"ts": "2026-06-11T07:47:39.527432", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T07:47:40.432685", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 96.9}
+{"ts": "2026-06-11T07:47:42.518108", "event": "socket_connect", "sid": "YnatOtbkTTstoMy_AAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781164065.7320685"}}
+{"ts": "2026-06-11T07:47:42.629578", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T07:47:42.725145", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T07:47:44.999508", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 91.4}
+{"ts": "2026-06-11T07:49:38.493002", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T07:49:41.763748", "event": "socket_connect", "sid": "RoD0L0VEbAa0QlWKAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781164184.753488"}}
+{"ts": "2026-06-11T07:49:41.970471", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T07:49:42.013541", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T07:49:44.432323", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.4}
+{"ts": "2026-06-11T07:49:44.433027", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 92.4}
+{"ts": "2026-06-11T07:50:52.538164", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 94.2}
+{"ts": "2026-06-11T07:51:37.740433", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T07:51:41.495279", "event": "socket_connect", "sid": "LBA3b0zHsVE5i3U9AAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781164304.5354283"}}
+{"ts": "2026-06-11T07:51:41.663575", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T07:51:41.779027", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T07:51:44.124245", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T07:51:44.126879", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 90.2}
+{"ts": "2026-06-11T07:53:00.560345", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T07:56:12.757424", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 95.1}
+{"ts": "2026-06-11T07:57:04.261019", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 98.6}
+{"ts": "2026-06-11T07:57:36.272944", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 90.6}
+{"ts": "2026-06-11T08:03:28.381968", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 90.9}
+{"ts": "2026-06-11T08:11:28.618852", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.6}
+{"ts": "2026-06-11T08:11:28.619650", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 91.2}
+{"ts": "2026-06-11T08:13:49.273651", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 93.1}
+{"ts": "2026-06-11T08:17:24.412381", "event": "socket_connect", "sid": "g6dyuPoTgKf9LoSeAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781165847.5584507"}}
+{"ts": "2026-06-11T08:17:24.602131", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:17:24.706852", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:17:26.893790", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 93.1}
+{"ts": "2026-06-11T08:17:49.718184", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:21:24.526841", "event": "socket_connect", "sid": "1-vghQTeyzZViU-MAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166087.8406453"}}
+{"ts": "2026-06-11T08:21:24.622606", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:21:24.683924", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:21:49.809246", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:23:26.794473", "event": "socket_connect", "sid": "Bf7-3q3xoZlrNRBYAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166210.1409388"}}
+{"ts": "2026-06-11T08:23:26.851420", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:23:26.903455", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:23:49.834850", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:25:30.740761", "event": "socket_connect", "sid": "qT7wQGRQ4HxUxagQAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166334.0581386"}}
+{"ts": "2026-06-11T08:25:30.813136", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:25:30.901584", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:26:04.888507", "event": "watchdog_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:27:00.751486", "event": "socket_connect", "sid": "EMft5VVRDinTP6SGAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166424.0897338"}}
+{"ts": "2026-06-11T08:27:00.819967", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:27:00.879544", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:29:04.692010", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:29:07.479576", "event": "socket_connect", "sid": "BqwmNjQ8OzHK037yAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166550.8183863"}}
+{"ts": "2026-06-11T08:29:07.529634", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:29:07.583258", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:31:11.222093", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:31:19.381653", "event": "socket_connect", "sid": "nPcJcBkeanBA9u1rAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166679.7638466"}}
+{"ts": "2026-06-11T08:31:19.908767", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:31:19.939408", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:33:23.145635", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:33:25.877818", "event": "socket_connect", "sid": "btk8l1gV0uasZHGaAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166809.1905448"}}
+{"ts": "2026-06-11T08:33:25.931132", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:33:25.968566", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:35:22.282510", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:35:25.150989", "event": "socket_connect", "sid": "-8XbuZc6l9gsAQ0kAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781166928.5004404"}}
+{"ts": "2026-06-11T08:35:25.229431", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:35:25.302784", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:39:11.498564", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:39:14.176782", "event": "socket_connect", "sid": "qOC9Ka647mZUuS0NAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167157.5193582"}}
+{"ts": "2026-06-11T08:39:14.229535", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:39:14.290901", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:41:11.599326", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:41:17.565953", "event": "socket_connect", "sid": "cw6jt2AJFh2rAHFKAAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167280.5984626"}}
+{"ts": "2026-06-11T08:41:17.702706", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:41:17.736514", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:43:24.605145", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:43:27.392242", "event": "socket_connect", "sid": "mnwS8nZqSWmm6basAAAP", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167410.7534833"}}
+{"ts": "2026-06-11T08:43:27.449403", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:43:27.541056", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:45:27.533263", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:45:30.288144", "event": "socket_connect", "sid": "DdKaHEDj3SCmdwAlAAAR", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167533.6537833"}}
+{"ts": "2026-06-11T08:45:30.387482", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:45:30.434672", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:47:26.113676", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:47:29.242735", "event": "socket_connect", "sid": "FrDxzqm2ZjI_3ZnlAAAT", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167652.552699"}}
+{"ts": "2026-06-11T08:47:29.305703", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:47:29.355225", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:49:31.375046", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:49:33.980785", "event": "socket_connect", "sid": "LV4Fx52Wmai_P93sAAAV", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781167777.3419187"}}
+{"ts": "2026-06-11T08:49:34.081445", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:49:34.238370", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:53:33.936362", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:53:37.021115", "event": "socket_connect", "sid": "HykYy2mboeWvmH3PAAAX", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168020.3777845"}}
+{"ts": "2026-06-11T08:53:37.187666", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:53:37.292776", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:55:36.756067", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:55:39.303754", "event": "socket_connect", "sid": "cU5h9CEcElOij9j6AAAZ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168142.7019591"}}
+{"ts": "2026-06-11T08:55:39.365456", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:55:39.417626", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T08:57:41.497721", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T08:57:44.423849", "event": "socket_connect", "sid": "SFGKx3DWvKxqWr_uAAAb", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168267.7656338"}}
+{"ts": "2026-06-11T08:57:44.541366", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T08:57:44.599416", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:01:29.661966", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:01:32.634897", "event": "socket_connect", "sid": "0uoHhmySgF-NPLb9AAAd", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168496.029346"}}
+{"ts": "2026-06-11T09:01:32.949738", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:01:33.018384", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:04:48.749482", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:04:51.848670", "event": "socket_connect", "sid": "6XDAHWZxBxfp9MtqAAAf", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168695.2673955"}}
+{"ts": "2026-06-11T09:04:51.934005", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:04:52.073404", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:05:56.996368", "event": "socket_connect", "sid": "qOjIjThbzNsEpRJfAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168759.3930662"}}
+{"ts": "2026-06-11T09:05:57.047432", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:05:57.101626", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:09:23.517076", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:09:27.008942", "event": "socket_connect", "sid": "vK-mcFGdW-goweKHAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781168970.401648"}}
+{"ts": "2026-06-11T09:09:27.085067", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:09:27.183014", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:11:24.924517", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:11:27.607694", "event": "socket_connect", "sid": "PWsiwc_29B46LiUVAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781169091.013916"}}
+{"ts": "2026-06-11T09:11:27.719254", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:11:27.861562", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:20:13.425522", "event": "socket_connect", "sid": "ppPRP1g698oiDP-OAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781169616.8389456"}}
+{"ts": "2026-06-11T09:20:13.497945", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:20:13.554724", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:20:15.696284", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "cpu", "value": 99.4}
+{"ts": "2026-06-11T09:20:15.696683", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 94.3}
+{"ts": "2026-06-11T09:22:10.689870", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:22:13.726625", "event": "socket_connect", "sid": "7BqliOOHPEGuPH9uAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781169737.1604402"}}
+{"ts": "2026-06-11T09:22:13.801698", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:22:13.860067", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 0}
+{"ts": "2026-06-11T09:23:45.733946", "event": "socket_connect", "sid": "g2l7ExtnggWvJgDnAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T09:24:02.999027", "event": "socket_connect", "sid": "qsseZL1yLevwv9uEAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T09:25:43.425911", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:36:12.731257", "event": "socket_connect", "sid": "96R1myn4uEkPiHHhAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781170576.4344032"}}
+{"ts": "2026-06-11T09:36:12.811729", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:36:12.850981", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T09:38:08.197860", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T09:38:10.613046", "event": "socket_connect", "sid": "PloswUE3R-19SqO4AAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781170694.3488915"}}
+{"ts": "2026-06-11T09:38:10.646454", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:38:10.682903", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T09:58:13.828316+00:00", "event": "socket_connect", "sid": "WrRwfHg9L3bANtgxAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T09:58:17.254227+00:00", "event": "socket_connect", "sid": "T1B5qxxQ6LPlYvHGAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T09:58:20.998264+00:00", "event": "socket_connect", "sid": "l2PLDVZ5Tb1Md_5jAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781171904.713671"}}
+{"ts": "2026-06-11T09:58:21.072451+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T09:58:21.105089+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T09:58:23.238559+00:00", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 92.1}
+{"ts": "2026-06-11T10:00:16.202327+00:00", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T10:00:18.869701+00:00", "event": "socket_connect", "sid": "PQ4yFkBzySrJYPF9AAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781172022.6219497"}}
+{"ts": "2026-06-11T10:00:18.936473+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T10:00:19.011364+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T10:02:13.848553+00:00", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T10:02:16.617409+00:00", "event": "socket_connect", "sid": "_htRfiNImI8OKqcyAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781172140.3605247"}}
+{"ts": "2026-06-11T10:02:16.642503+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T10:02:16.710899+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T10:04:12.219363+00:00", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T10:04:15.245953+00:00", "event": "socket_connect", "sid": "OKXgkDtLDz7OYTvgAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781172258.9504144"}}
+{"ts": "2026-06-11T10:04:15.297897+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T10:04:15.339583+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T10:06:10.225308+00:00", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T10:06:13.843870+00:00", "event": "socket_connect", "sid": "TmUnZVeje-fToaetAAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781172377.56697"}}
+{"ts": "2026-06-11T10:06:13.893396+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T10:06:13.944460+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T10:07:48.117975+00:00", "event": "socket_connect", "sid": "z97BL8ek8A1jFYJCAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T10:07:48.522009+00:00", "event": "socket_connect", "sid": "kJKD1KpOlT3rJAdZAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781172472.269877"}}
+{"ts": "2026-06-11T10:07:48.566575+00:00", "event": "agent_online", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T10:07:48.664487+00:00", "event": "agent_auth_ok", "device_id": "TEST-AGENT", "viewers": 1}
+{"ts": "2026-06-11T10:07:50.792949+00:00", "event": "agent_alert", "device_id": "TEST-AGENT", "type": "ram", "value": 90.4}
+{"ts": "2026-06-11T10:07:54.868861+00:00", "event": "socket_connect", "sid": "GZ1xdFXMgwip81VNAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T10:08:28.607889+00:00", "event": "agent_offline", "device_id": "TEST-AGENT", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T11:11:08.942012+00:00", "event": "socket_connect", "sid": "x04yfJRu9eXaRuj2AAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T11:11:17.806171+00:00", "event": "socket_connect", "sid": "yw-CjJEr1jbIonz7AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T11:12:18.476265+00:00", "event": "socket_connect", "sid": "j2WjcRkM78aI0iZfAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T16:10:30.194803+00:00", "event": "socket_connect", "sid": "Q7DWddYB9yLIxaAtAAAB", "ip": "127.0.0.1", "query": {"transport": "websocket", "EIO": "4", "t": "1781194230.1686664"}}
+{"ts": "2026-06-11T16:10:30.337345+00:00", "event": "agent_online", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-11T16:10:30.350573+00:00", "event": "agent_auth_ok", "device_id": "MV-1986392E2951A9C7D035", "viewers": 0}
+{"ts": "2026-06-11T16:10:36.996212+00:00", "event": "agent_offline", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-"}
+{"ts": "2026-06-11T16:10:39.573810+00:00", "event": "socket_connect", "sid": "1y8O2BDjTUPLCJ1iAAAD", "ip": "127.0.0.1", "query": {"transport": "websocket", "EIO": "4", "t": "1781194239.5674818"}}
+{"ts": "2026-06-11T16:10:39.596344+00:00", "event": "agent_online", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-11T16:10:39.600403+00:00", "event": "agent_auth_ok", "device_id": "MV-1986392E2951A9C7D035", "viewers": 0}
+{"ts": "2026-06-11T16:12:08.752777+00:00", "event": "socket_connect", "sid": "VCSowElGueSLb9e9AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T16:12:17.613716+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:17:19.444287+00:00", "event": "agent_offline", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-"}
+{"ts": "2026-06-11T16:22:49.745564+00:00", "event": "socket_connect", "sid": "SEuEM6mcw0kvAb5QAAAH", "ip": "127.0.0.1", "query": {"transport": "websocket", "EIO": "4", "t": "1781194969.6079495"}}
+{"ts": "2026-06-11T16:22:50.099706+00:00", "event": "agent_online", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-11T16:22:50.208956+00:00", "event": "agent_auth_ok", "device_id": "MV-1986392E2951A9C7D035", "viewers": 1}
+{"ts": "2026-06-11T16:22:52.892953+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:23:24.194166+00:00", "event": "socket_connect", "sid": "G-uUyPYGw9_IxYXzAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T16:28:13.110459+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:33:33.139943+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:36:57.731818+00:00", "event": "socket_connect", "sid": "CpQc-z9DqoNEPK2qAAAL", "ip": "127.0.0.1", "query": {"transport": "websocket", "EIO": "4", "t": "1781195816.5091553"}}
+{"ts": "2026-06-11T16:36:58.776300+00:00", "event": "agent_evicted", "device_id": "MV-1986392E2951A9C7D035", "old_sid": "SEuEM6mcw0kvAb5QAAAH"}
+{"ts": "2026-06-11T16:36:58.778678+00:00", "event": "agent_online", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-11T16:36:58.789397+00:00", "event": "agent_auth_ok", "device_id": "MV-1986392E2951A9C7D035", "viewers": 1}
+{"ts": "2026-06-11T16:37:09.957447+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:38:56.383953+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:42:31.141339+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:44:13.800582+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:47:41.694944+00:00", "event": "socket_connect", "sid": "V3sPOx-RNn7vmbMHAAAP", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T16:47:51.090865+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:48:34.830209+00:00", "event": "agent_offline", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-"}
+{"ts": "2026-06-11T16:49:34.047815+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:54:54.061734+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T16:59:00.961290+00:00", "event": "socket_connect", "sid": "8NfcFaVw0REd-thzAAAR", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T16:59:17.858929+00:00", "event": "socket_connect", "sid": "asAHTdPcXDOA6rm0AAAT", "ip": "127.0.0.1", "query": {"transport": "websocket", "EIO": "4", "t": "1781197157.3948684"}}
+{"ts": "2026-06-11T16:59:19.649020+00:00", "event": "agent_online", "device_id": "MV-1986392E2951A9C7D035", "label": "maxiiloh-", "ip": "192.168.100.25"}
+{"ts": "2026-06-11T16:59:19.698021+00:00", "event": "agent_auth_ok", "device_id": "MV-1986392E2951A9C7D035", "viewers": 1}
+{"ts": "2026-06-11T16:59:26.710295+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T17:00:14.581841+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T17:04:46.713802+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T17:05:34.568798+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T17:10:08.617945+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T17:10:54.918828+00:00", "event": "agent_alert", "device_id": "MV-1986392E2951A9C7D035", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-11T18:04:20.089770+00:00", "event": "socket_connect", "sid": "O_9YNM6bmbvsqRUIAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781201063.5066724"}}
+{"ts": "2026-06-11T18:04:20.218613+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T18:04:20.352409+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-11T18:10:52.031486+00:00", "event": "socket_connect", "sid": "zdCjOz7gsxVQ5tDnAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T18:14:10.927079+00:00", "event": "socket_connect", "sid": "jOEowCBuElRndrEdAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781201654.3397026"}}
+{"ts": "2026-06-11T18:14:11.082677+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T18:14:11.293326+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-11T18:14:42.495550+00:00", "event": "socket_connect", "sid": "P_jbeAqx2Cn5n3GQAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T18:24:07.291476+00:00", "event": "socket_connect", "sid": "kdAKDC7NqHxOk2DWAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T18:24:48.397523+00:00", "event": "socket_connect", "sid": "Kyo6qWmnM3G8kpZIAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T18:42:21.912393+00:00", "event": "socket_connect", "sid": "Tqib0ymItsGyYu-9AAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T18:51:17.898457+00:00", "event": "socket_connect", "sid": "akKExlcVDVS5pJApAAAL", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T19:19:31.659083+00:00", "event": "socket_connect", "sid": "fTy3GC2wwtpL3lfEAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781205572.157314"}}
+{"ts": "2026-06-11T19:19:31.711631+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T19:19:31.723030+00:00", "event": "socket_connect", "sid": "gcDJpEB3MyyYbXuRAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T19:19:31.828998+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-11T19:19:57.821567+00:00", "event": "socket_connect", "sid": "RB7HdlGK1DrgjdYbAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T19:23:50.071756+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.9}
+{"ts": "2026-06-11T19:25:26.330661+00:00", "event": "socket_connect", "sid": "pBkcRSxrYscDWP3RAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-11T19:29:10.111884+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.4}
+{"ts": "2026-06-11T19:31:29.981328+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-11T19:37:54.710432+00:00", "event": "socket_connect", "sid": "dq2YIq2t2fNprr8ZAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781206677.7829523"}}
+{"ts": "2026-06-11T19:37:54.765678+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T19:37:54.793522+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-11T19:37:56.882210+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 95.1}
+{"ts": "2026-06-11T19:37:56.882631+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.7}
+{"ts": "2026-06-11T19:39:54.316217+00:00", "event": "socket_connect", "sid": "-3JMqi3tAYBdIfn8AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781206794.4089646"}}
+{"ts": "2026-06-11T19:39:54.338913+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-11T19:39:54.361343+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-11T19:40:08.377119+00:00", "event": "socket_connect", "sid": "IOtxoiMCQbTpqmTTAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T08:55:40.786193+00:00", "event": "socket_connect", "sid": "oLjgCyKqZzxdC63FAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781254543.7870543"}}
+{"ts": "2026-06-12T08:55:40.933475+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T08:55:40.956499+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T08:55:43.050351+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.7}
+{"ts": "2026-06-12T08:56:07.219020+00:00", "event": "socket_connect", "sid": "Nr5pv6EhTFiAVim8AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T08:56:47.069443+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 96.7}
+{"ts": "2026-06-12T09:04:55.394096+00:00", "event": "socket_connect", "sid": "E3JluuAx6aghlsoWAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781255098.415765"}}
+{"ts": "2026-06-12T09:04:55.448023+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T09:04:55.458049+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T09:04:55.532035+00:00", "event": "socket_connect", "sid": "J4rCSLUqLfz1BubhAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:04:57.564438+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.1}
+{"ts": "2026-06-12T09:05:06.485547+00:00", "event": "socket_connect", "sid": "foK2DEgp6QdDph05AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:06:01.593174+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 91.7}
+{"ts": "2026-06-12T09:10:17.686594+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.5}
+{"ts": "2026-06-12T09:12:58.089541+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 90.4}
+{"ts": "2026-06-12T09:18:49.910553+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 93.9}
+{"ts": "2026-06-12T09:26:33.325735+00:00", "event": "socket_connect", "sid": "bQxGXM02UL7PExL2AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781256396.3785686"}}
+{"ts": "2026-06-12T09:26:33.374718+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T09:26:33.382394+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T09:26:45.919336+00:00", "event": "socket_connect", "sid": "0RV0xrbCXO9H4imaAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:26:48.540040+00:00", "event": "socket_connect", "sid": "CvCfNBKyQwPOqnaqAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:27:13.488187+00:00", "event": "socket_connect", "sid": "OSMaa4rt1cHwly5vAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:28:11.508809+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 94.0}
+{"ts": "2026-06-12T09:28:43.511551+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.0}
+{"ts": "2026-06-12T09:45:43.019930+00:00", "event": "socket_connect", "sid": "VKWjn_HzGAy43Cf7AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781257543.102692"}}
+{"ts": "2026-06-12T09:45:43.066939+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T09:45:43.071094+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T09:46:25.551634+00:00", "event": "socket_connect", "sid": "8AsIA8LhmeSRbNzZAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:46:29.190220+00:00", "event": "socket_connect", "sid": "dl-sdANWT79glGsHAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:47:21.259819+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.3}
+{"ts": "2026-06-12T09:48:04.437896+00:00", "event": "power_command", "device_id": "MV-A5ABD3848FA805741C1B", "command": "lock_screen"}
+{"ts": "2026-06-12T09:53:20.573558+00:00", "event": "socket_connect", "sid": "6yDfpfpcsMtuiOqnAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781258003.666556"}}
+{"ts": "2026-06-12T09:53:20.607826+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T09:53:20.622899+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T09:53:22.376049+00:00", "event": "socket_connect", "sid": "xG-4b991HRWHtuW_AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T09:53:30.505904+00:00", "event": "socket_connect", "sid": "e8Poe3WYrXTYVH-UAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:01:34.369742+00:00", "event": "socket_connect", "sid": "JSgx-62aSSogIDtqAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:01:34.821969+00:00", "event": "socket_connect", "sid": "2iTafeGUANrNf_a0AAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781258497.0866113"}}
+{"ts": "2026-06-12T10:01:34.913905+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:01:34.918548+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T10:02:15.126726+00:00", "event": "socket_connect", "sid": "gj2jm4NKZfD2eC4PAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:06:57.364866+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 90.1}
+{"ts": "2026-06-12T10:20:44.130138+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T10:21:00.291720+00:00", "event": "socket_connect", "sid": "ieEeIjHaqUaFcR9PAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781259663.386683"}}
+{"ts": "2026-06-12T10:21:00.343184+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:21:00.346249+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T10:24:14.942929+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T10:28:57.775268+00:00", "event": "socket_connect", "sid": "U_GGThj6HAJjrDM5AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781260137.8775218"}}
+{"ts": "2026-06-12T10:28:57.823195+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:28:57.830637+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T10:29:12.891778+00:00", "event": "socket_connect", "sid": "NCdut7jeRd07SErLAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:29:17.180155+00:00", "event": "socket_connect", "sid": "AS0MKUWKBxydts2kAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:32:04.179746+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T10:32:07.036616+00:00", "event": "socket_connect", "sid": "Pd7nNyOubhKbo3LVAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781260330.1666489"}}
+{"ts": "2026-06-12T10:32:07.075592+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:32:07.084329+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T10:41:35.117613+00:00", "event": "socket_connect", "sid": "tA-U4_wkyN-OlqwjAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:41:38.010731+00:00", "event": "socket_connect", "sid": "pCsTUJQKMb5DppNXAAAL", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:42:36.273516+00:00", "event": "socket_connect", "sid": "Hqn7Ux4AQqlILi_gAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:42:36.416535+00:00", "event": "socket_connect", "sid": "KJ-OHA4h0N6MVSG3AAAE", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781260957.934059"}}
+{"ts": "2026-06-12T10:42:36.437881+00:00", "event": "socket_connect", "sid": "R4mREoh7alDJsZ0_AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:42:36.596108+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:42:36.689087+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T10:47:55.545901+00:00", "event": "socket_connect", "sid": "7S7-WU7_NsASQ6JZAAAP", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:51:10.324458+00:00", "event": "socket_connect", "sid": "t_q_1vcnF9EMrFRNAAAU", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:51:58.021216+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T10:52:26.457587+00:00", "event": "socket_connect", "sid": "8BDdJ-51xgxpdxMnAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781261549.630735"}}
+{"ts": "2026-06-12T10:52:26.508230+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:52:26.510640+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T10:52:27.972988+00:00", "event": "socket_connect", "sid": "ZquJckdls-Vmppe7AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:52:28.435144+00:00", "event": "socket_connect", "sid": "lvsDOQgFBPCGTEEbAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:52:42.641582+00:00", "event": "socket_connect", "sid": "8Xj5CeDMWdO81BCgAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T10:56:00.360664+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T10:56:03.118870+00:00", "event": "socket_connect", "sid": "PiVVxOoHk8eSvVYQAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781261766.2475944"}}
+{"ts": "2026-06-12T10:56:03.182867+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T10:56:03.193623+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 2}
+{"ts": "2026-06-12T11:00:52.365222+00:00", "event": "socket_connect", "sid": "OM3GW3yvpA-hH-COAAAC", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:00:52.387293+00:00", "event": "socket_connect", "sid": "PmrS3lT_S8fUcSSEAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781262052.547329"}}
+{"ts": "2026-06-12T11:00:52.497689+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T11:00:52.636589+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T11:00:58.553072+00:00", "event": "socket_connect", "sid": "UuYZkR7Tz3rwoX74AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:01:01.597833+00:00", "event": "socket_connect", "sid": "liUCVMpKwSI95IY2AAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:01:46.691426+00:00", "event": "socket_connect", "sid": "Sb6oM8fYrPMCJC4JAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:01:56.239033+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T11:02:07.361818+00:00", "event": "socket_connect", "sid": "MrBshuBBlvM6NXnsAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781262130.5452778"}}
+{"ts": "2026-06-12T11:02:07.396705+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T11:02:07.448386+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T11:05:35.045515+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T11:05:37.705921+00:00", "event": "socket_connect", "sid": "54qe4p0TtGwsywzaAAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781262340.8892236"}}
+{"ts": "2026-06-12T11:05:37.745643+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T11:05:37.756955+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 2}
+{"ts": "2026-06-12T11:06:11.878071+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 91.6}
+{"ts": "2026-06-12T11:10:29.981992+00:00", "event": "socket_connect", "sid": "ouY7qI93-MIFkaR4AAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:10:33.397873+00:00", "event": "socket_connect", "sid": "U09_YWTaKVkiu4-6AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:10:35.546101+00:00", "event": "socket_connect", "sid": "TPGQyfONbEuoIBGHAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781262638.7235198"}}
+{"ts": "2026-06-12T11:10:35.592344+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T11:10:35.600162+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 2}
+{"ts": "2026-06-12T11:10:45.261648+00:00", "event": "socket_connect", "sid": "P3paaTViAv3wucUlAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:13:17.841402+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.8}
+{"ts": "2026-06-12T11:18:37.985647+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 90.8}
+{"ts": "2026-06-12T11:23:58.111931+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 90.6}
+{"ts": "2026-06-12T11:27:27.945884+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T11:28:13.365240+00:00", "event": "socket_connect", "sid": "z7lzc1NndCPROAchAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:28:27.175242+00:00", "event": "socket_connect", "sid": "Nu6xbEvIXHuLABPOAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T11:28:45.386196+00:00", "event": "socket_connect", "sid": "MUdC8__T7GzIlARSAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781263728.6191623"}}
+{"ts": "2026-06-12T11:28:45.418372+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T11:28:45.443491+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T11:29:29.546809+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T13:05:53.020365+00:00", "event": "socket_connect", "sid": "qTII2nEktYYKkLTOAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781269555.5164518"}}
+{"ts": "2026-06-12T13:05:53.057075+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:05:53.066967+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T13:05:55.246890+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.0}
+{"ts": "2026-06-12T13:06:26.880073+00:00", "event": "socket_connect", "sid": "9vceWAOn0SDEOK17AAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T13:06:27.320085+00:00", "event": "socket_connect", "sid": "kWjqa6GfvmEDsB1NAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781269588.668086"}}
+{"ts": "2026-06-12T13:06:27.361265+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:06:27.364105+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T13:06:39.158899+00:00", "event": "socket_connect", "sid": "Q8tSpp5Q02c-3aTkAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T13:07:24.411511+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T13:07:24.767473+00:00", "event": "socket_connect", "sid": "7CyEpyRoeafzUirzAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T13:08:04.155337+00:00", "event": "socket_connect", "sid": "6kRMPHvBEDGFk7DbAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781269686.721964"}}
+{"ts": "2026-06-12T13:08:04.203911+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:08:04.214125+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T13:11:48.053488+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T13:11:50.814332+00:00", "event": "socket_connect", "sid": "DjVgSSUwt7VMhiusAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781269913.3827887"}}
+{"ts": "2026-06-12T13:11:50.854613+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:11:50.862027+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T13:13:28.975673+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 97.1}
+{"ts": "2026-06-12T13:18:46.523201+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 93.2}
+{"ts": "2026-06-12T13:32:38.800254+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 91.4}
+{"ts": "2026-06-12T13:35:07.080590+00:00", "event": "socket_connect", "sid": "udu3PxAkzUKbOvq-AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781271309.2474442"}}
+{"ts": "2026-06-12T13:35:07.107336+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:35:07.127597+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T13:35:08.642595+00:00", "event": "socket_connect", "sid": "c6Tg-TaX26awRSyhAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T13:35:37.495193+00:00", "event": "socket_connect", "sid": "gXiHH9I-92ysS5dLAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T13:36:45.240261+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 90.8}
+{"ts": "2026-06-12T13:41:33.382804+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.6}
+{"ts": "2026-06-12T13:42:37.385811+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.9}
+{"ts": "2026-06-12T13:47:25.530363+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.3}
+{"ts": "2026-06-12T13:48:29.519472+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.9}
+{"ts": "2026-06-12T13:53:21.643700+00:00", "event": "watchdog_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T13:54:49.315070+00:00", "event": "socket_connect", "sid": "H43iq0OdT5gqPyvxAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781272493.424949"}}
+{"ts": "2026-06-12T13:54:49.475687+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T13:54:49.491446+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T13:54:51.926004+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 97.4}
+{"ts": "2026-06-12T13:57:32.011620+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.5}
+{"ts": "2026-06-12T14:00:12.124654+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:02:52.257927+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 95.0}
+{"ts": "2026-06-12T14:05:32.330907+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:08:12.409812+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.8}
+{"ts": "2026-06-12T14:10:52.485217+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 95.5}
+{"ts": "2026-06-12T14:13:32.553968+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.2}
+{"ts": "2026-06-12T14:14:54.315264+00:00", "event": "socket_connect", "sid": "3aZQ-zF95Tl7Gkv-AAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:16:12.644294+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:17:29.362301+00:00", "event": "socket_connect", "sid": "6KoD3ckWiduVsCYIAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:17:50.635392+00:00", "event": "socket_connect", "sid": "iNHC2uDVP4DrubMDAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781273875.8078249"}}
+{"ts": "2026-06-12T14:17:50.700168+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:17:50.729991+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:17:52.897175+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 95.2}
+{"ts": "2026-06-12T14:18:07.091011+00:00", "event": "socket_connect", "sid": "A8FOZxoMLoVGoQa_AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:19:46.490364+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:19:49.810140+00:00", "event": "socket_connect", "sid": "lkAPhwEzySWAkd53AAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781273994.7305498"}}
+{"ts": "2026-06-12T14:19:50.343087+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:19:50.696825+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:19:53.020530+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:19:53.021004+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.4}
+{"ts": "2026-06-12T14:25:13.242337+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.9}
+{"ts": "2026-06-12T14:28:25.421477+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.2}
+{"ts": "2026-06-12T14:30:33.565531+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:31:26.650771+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:32:11.524706+00:00", "event": "socket_connect", "sid": "lMk_O7bDiwQ5rfxZAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781274736.7620547"}}
+{"ts": "2026-06-12T14:32:11.661816+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:32:11.766737+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:32:13.869330+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.3}
+{"ts": "2026-06-12T14:34:06.564052+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:34:10.604027+00:00", "event": "socket_connect", "sid": "NwfnCcBu_mtYwHb8AAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781274855.7845933"}}
+{"ts": "2026-06-12T14:34:10.739100+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:34:10.823513+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:34:13.208755+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.7}
+{"ts": "2026-06-12T14:34:45.221679+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.8}
+{"ts": "2026-06-12T14:34:54.094041+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:35:25.805752+00:00", "event": "socket_connect", "sid": "doQqPn7NCLztwkL4AAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781274930.9021294"}}
+{"ts": "2026-06-12T14:35:25.946191+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:35:25.948975+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:37:22.494052+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:37:25.474010+00:00", "event": "socket_connect", "sid": "8P2v-LNr9vxVfRy4AAAP", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275050.657786"}}
+{"ts": "2026-06-12T14:37:25.547358+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:37:25.568791+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:39:23.083222+00:00", "event": "socket_connect", "sid": "0SSGPaNnimnvfl1MAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275168.293545"}}
+{"ts": "2026-06-12T14:39:23.145280+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:39:23.175993+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T14:39:23.812406+00:00", "event": "socket_connect", "sid": "VlXQuVEdIGOr_vLdAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:39:28.175310+00:00", "event": "socket_connect", "sid": "sklIKXZ5V9U4ChkPAAAF", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275173.4088802"}}
+{"ts": "2026-06-12T14:39:28.244150+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "0SSGPaNnimnvfl1MAAAB"}
+{"ts": "2026-06-12T14:39:28.244864+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:39:28.252256+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:39:30.350148+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 91.5}
+{"ts": "2026-06-12T14:39:57.393000+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T14:40:00.381847+00:00", "event": "socket_connect", "sid": "Lyh226LPwuSrj0peAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:40:00.883035+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:46:28.670600+00:00", "event": "socket_connect", "sid": "CKI5pvg6on2-jwlmAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275593.88166"}}
+{"ts": "2026-06-12T14:46:28.770778+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:46:28.822103+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T14:46:30.982082+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.0}
+{"ts": "2026-06-12T14:48:34.247879+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:48:37.054479+00:00", "event": "socket_connect", "sid": "-MtYzS2KDVoCT-YSAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275722.1849139"}}
+{"ts": "2026-06-12T14:48:37.105450+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:48:37.126465+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T14:49:43.344848+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.5}
+{"ts": "2026-06-12T14:51:51.402430+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.4}
+{"ts": "2026-06-12T14:52:34.460404+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:53:13.940652+00:00", "event": "socket_connect", "sid": "n5twFrGvaV7BeyGIAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781275999.1600988"}}
+{"ts": "2026-06-12T14:53:14.011360+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:53:14.016880+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T14:54:03.011408+00:00", "event": "socket_connect", "sid": "gHj769aCIpu8J_TbAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:54:06.051652+00:00", "event": "socket_connect", "sid": "--1Ywr2Zusd4h3ZdAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T14:55:09.607809+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T14:55:12.401746+00:00", "event": "socket_connect", "sid": "bKZWU-xMM3DWSEf7AAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781276117.6376746"}}
+{"ts": "2026-06-12T14:55:12.509143+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T14:55:12.514700+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T14:55:14.726836+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.0}
+{"ts": "2026-06-12T14:56:18.238625+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:06:35.312554+00:00", "event": "socket_connect", "sid": "50MgJoT-xxwSVqiQAAAJ", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781276799.8308017"}}
+{"ts": "2026-06-12T15:06:35.576870+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:06:35.584552+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:07:01.953010+00:00", "event": "socket_connect", "sid": "N5b9aHofN3W80bI2AAAL", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T15:08:31.517447+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:08:34.238040+00:00", "event": "socket_connect", "sid": "5sfu76Pre_VLjswyAAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781276919.500392"}}
+{"ts": "2026-06-12T15:08:34.298024+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:08:34.306670+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:10:31.897726+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:13:25.419551+00:00", "event": "socket_connect", "sid": "nkMoTlahtaAMc3k9AAAP", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277210.1488447"}}
+{"ts": "2026-06-12T15:13:25.613069+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:13:25.857732+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:13:42.020622+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.8}
+{"ts": "2026-06-12T15:15:20.781620+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:15:24.682631+00:00", "event": "socket_connect", "sid": "FcoLCO_fF06CrjZ5AAAR", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277329.32968"}}
+{"ts": "2026-06-12T15:15:24.860533+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:15:24.969752+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:16:21.465947+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:21:08.446243+00:00", "event": "socket_connect", "sid": "9s5scalzK1g0pROOAAAT", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277672.9215949"}}
+{"ts": "2026-06-12T15:21:08.586861+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:21:08.760015+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:21:21.896159+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.0}
+{"ts": "2026-06-12T15:22:40.959706+00:00", "event": "socket_connect", "sid": "VjAzpdgqKchN1uxtAAAV", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277766.190736"}}
+{"ts": "2026-06-12T15:22:41.085668+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "9s5scalzK1g0pROOAAAT"}
+{"ts": "2026-06-12T15:22:41.086461+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:22:41.089017+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:22:43.196246+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 96.6}
+{"ts": "2026-06-12T15:23:06.600417+00:00", "event": "socket_connect", "sid": "UjxCrULdWSYmBQmoAAAX", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277791.79505"}}
+{"ts": "2026-06-12T15:23:06.791015+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "VjAzpdgqKchN1uxtAAAV"}
+{"ts": "2026-06-12T15:23:06.791506+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:23:06.897628+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:23:09.136121+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.9}
+{"ts": "2026-06-12T15:23:22.323067+00:00", "event": "socket_connect", "sid": "GL96umPZNgVhSm-uAAAZ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T15:23:41.153569+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.3}
+{"ts": "2026-06-12T15:24:39.356065+00:00", "event": "socket_connect", "sid": "kk6exeXFBJxIgRQOAAAb", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781277884.33384"}}
+{"ts": "2026-06-12T15:24:39.563874+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "UjxCrULdWSYmBQmoAAAX"}
+{"ts": "2026-06-12T15:24:39.567705+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:24:39.613166+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:24:41.948051+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.2}
+{"ts": "2026-06-12T15:28:29.335877+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T15:30:34.120453+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 92.5}
+{"ts": "2026-06-12T15:32:25.774811+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:44:41.538128+00:00", "event": "socket_connect", "sid": "JWKzP3kW1x-SogcjAAAd", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279087.0142162"}}
+{"ts": "2026-06-12T15:44:41.581316+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:44:41.592015+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:44:42.041159+00:00", "event": "socket_connect", "sid": "IU4bJat8c_OQw6L3AAAf", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279087.453495"}}
+{"ts": "2026-06-12T15:44:42.094557+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "JWKzP3kW1x-SogcjAAAd"}
+{"ts": "2026-06-12T15:44:42.095477+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:44:42.143694+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:44:43.746506+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T15:44:43.747201+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.3}
+{"ts": "2026-06-12T15:44:44.375858+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T15:44:44.376559+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.6}
+{"ts": "2026-06-12T15:51:10.876129+00:00", "event": "socket_connect", "sid": "BqC4DLBDdQEmbIhNAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279475.4036026"}}
+{"ts": "2026-06-12T15:51:10.911496+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:51:10.934886+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T15:51:11.803495+00:00", "event": "socket_connect", "sid": "MYzgC7Sq0unU8qT-AAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T15:51:13.021690+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.7}
+{"ts": "2026-06-12T15:51:13.310396+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:51:21.793924+00:00", "event": "socket_connect", "sid": "vuKXf_az9cp2z2bOAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T15:55:13.663137+00:00", "event": "socket_connect", "sid": "OXVEFLVPPt8BCekdAAAH", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279719.1708715"}}
+{"ts": "2026-06-12T15:55:13.709149+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:55:13.710921+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:56:28.921677+00:00", "event": "socket_connect", "sid": "XLSAiXLcFrIpt8NpAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T15:57:09.230646+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:57:12.043571+00:00", "event": "socket_connect", "sid": "piDvs7d4SO4kLVeMAAAL", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279837.5559766"}}
+{"ts": "2026-06-12T15:57:12.093946+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:57:12.104160+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T15:58:03.418058+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T15:58:18.806320+00:00", "event": "socket_connect", "sid": "i3rZqctKSpryHS07AAAN", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781279904.3300078"}}
+{"ts": "2026-06-12T15:58:18.864784+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T15:58:18.869904+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T16:00:15.139390+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T16:00:17.735346+00:00", "event": "socket_connect", "sid": "R5dUx_h0I208uyKNAAAP", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781280023.245893"}}
+{"ts": "2026-06-12T16:00:17.788575+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T16:00:17.792969+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T16:01:23.986123+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.7}
+{"ts": "2026-06-12T16:02:27.978993+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 95.5}
+{"ts": "2026-06-12T16:06:21.812489+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T16:08:38.089581+00:00", "event": "socket_connect", "sid": "IudNTIrrzUqSnVoXAAAR", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781280523.630323"}}
+{"ts": "2026-06-12T16:08:38.130965+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T16:08:38.133068+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T16:08:40.293785+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.4}
+{"ts": "2026-06-12T16:09:07.492742+00:00", "event": "socket_connect", "sid": "5ICuLR6GeFlVx7AOAAAT", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T16:14:00.357355+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.7}
+{"ts": "2026-06-12T16:19:52.499349+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.4}
+{"ts": "2026-06-12T16:25:44.653884+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.8}
+{"ts": "2026-06-12T16:25:44.654585+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.0}
+{"ts": "2026-06-12T16:31:04.733622+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.1}
+{"ts": "2026-06-12T16:45:29.001989+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 96.0}
+{"ts": "2026-06-12T16:55:37.175941+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 95.8}
+{"ts": "2026-06-12T16:56:02.040542+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T17:24:41.625533+00:00", "event": "socket_connect", "sid": "LUQ_7nyId_5CmH_nAAAV", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781285087.0204036"}}
+{"ts": "2026-06-12T17:24:41.671100+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T17:24:41.676832+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T17:24:43.824629+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T17:24:43.825110+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.7}
+{"ts": "2026-06-12T17:25:23.903404+00:00", "event": "socket_connect", "sid": "LoVtotBU9MxyQtWAAAAY", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:25:27.496265+00:00", "event": "socket_connect", "sid": "5cugx9kHai_3SjiQAAAZ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:25:30.344031+00:00", "event": "socket_connect", "sid": "5nTWhMm3Twb59j3dAAAb", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781285135.2647367"}}
+{"ts": "2026-06-12T17:25:30.717477+00:00", "event": "agent_evicted", "device_id": "MV-A5ABD3848FA805741C1B", "old_sid": "LUQ_7nyId_5CmH_nAAAV"}
+{"ts": "2026-06-12T17:25:30.717951+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T17:25:30.795707+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T17:25:33.006277+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-12T17:25:33.006689+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.6}
+{"ts": "2026-06-12T17:30:53.124732+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.0}
+{"ts": "2026-06-12T17:38:04.730349+00:00", "event": "socket_connect", "sid": "nAQUODg73W2Nd21WAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:38:15.593014+00:00", "event": "socket_connect", "sid": "8t1KNgdPJSIe0BWzAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781285900.7600858"}}
+{"ts": "2026-06-12T17:38:15.638538+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T17:38:15.645434+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T17:38:49.753245+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.4}
+{"ts": "2026-06-12T17:39:04.631464+00:00", "event": "socket_connect", "sid": "JljUEYpU_MXsnic8AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:39:08.884243+00:00", "event": "socket_connect", "sid": "kkw8DZ3oS9HiJxTVAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:40:28.705891+00:00", "event": "socket_connect", "sid": "RE6gMVJ1SPCpx6ybAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T17:44:09.882923+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.2}
+{"ts": "2026-06-12T18:45:02.698561+00:00", "event": "socket_connect", "sid": "fz7a-u9EA5JR8yfgAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T18:45:15.186827+00:00", "event": "socket_connect", "sid": "PYbTYcd67oL9eUOlAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781289920.404793"}}
+{"ts": "2026-06-12T18:45:15.251467+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T18:45:15.253490+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T18:45:17.364403+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 95.0}
+{"ts": "2026-06-12T18:45:51.508232+00:00", "event": "socket_connect", "sid": "ii4joN7obUMgtFD2AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T18:48:29.469155+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.5}
+{"ts": "2026-06-12T18:50:37.520350+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.7}
+{"ts": "2026-06-12T18:55:25.691464+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 98.1}
+{"ts": "2026-06-12T18:55:57.705679+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.3}
+{"ts": "2026-06-12T18:58:13.704102+00:00", "event": "socket_connect", "sid": "K29EQDaQl2dS3H4JAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T18:58:18.059058+00:00", "event": "socket_connect", "sid": "a5pnpsz6xEHoHb7UAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781290703.2882197"}}
+{"ts": "2026-06-12T18:58:18.130201+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T18:58:18.133468+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T18:58:20.309027+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.0}
+{"ts": "2026-06-12T18:59:00.739727+00:00", "event": "socket_connect", "sid": "_NS6z9xigeHGrDymAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T18:59:48.278345+00:00", "event": "socket_connect", "sid": "2-zmOnI9afREA2QXAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:00:11.631352+00:00", "event": "socket_connect", "sid": "I7-04JPq1EczkLtAAAAJ", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:03:40.475108+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.5}
+{"ts": "2026-06-12T19:07:30.291228+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T19:07:55.711277+00:00", "event": "socket_connect", "sid": "29nBC0Mv_uZfXlP6AAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:08:11.671761+00:00", "event": "socket_connect", "sid": "PXUxUW8AXjUBB2lbAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781291296.955167"}}
+{"ts": "2026-06-12T19:08:11.724030+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T19:08:11.730889+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T19:08:46.039156+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.7}
+{"ts": "2026-06-12T19:08:48.175941+00:00", "event": "socket_connect", "sid": "hLH93N6LAWddm8JmAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:15:09.984401+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.6}
+{"ts": "2026-06-12T19:16:29.754889+00:00", "event": "socket_connect", "sid": "BgEnkFlEekcXrRQcAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781291795.04579"}}
+{"ts": "2026-06-12T19:16:29.795649+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T19:16:29.805046+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-12T19:16:33.693733+00:00", "event": "socket_connect", "sid": "5venuNQmDpjqQunZAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:17:10.765762+00:00", "event": "socket_connect", "sid": "K9TdvAkCpFeA_XbPAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:18:07.970002+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.8}
+{"ts": "2026-06-12T19:18:39.994806+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 96.9}
+{"ts": "2026-06-12T19:19:20.088132+00:00", "event": "socket_connect", "sid": "cyNX4RUXGsbZeCIAAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:23:28.107093+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.4}
+{"ts": "2026-06-12T19:24:00.124286+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 99.9}
+{"ts": "2026-06-12T19:29:52.345343+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 96.6}
+{"ts": "2026-06-12T19:30:38.269344+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-12T19:33:14.704153+00:00", "event": "socket_connect", "sid": "jOa7ucb75dx4Zcw7AAAC", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:33:14.797582+00:00", "event": "socket_connect", "sid": "ecdNEjq4mH4Hvl3aAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781292800.0594242"}}
+{"ts": "2026-06-12T19:33:14.886625+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-12T19:33:14.892635+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-12T19:33:17.027080+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.6}
+{"ts": "2026-06-12T19:34:24.899868+00:00", "event": "socket_connect", "sid": "7psEnjf_N8txt7VjAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:35:10.500824+00:00", "event": "socket_connect", "sid": "jwhMjlEZ0GgANj2HAAAH", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-12T19:35:57.129836+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 91.5}
+{"ts": "2026-06-12T19:38:37.166806+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 92.2}
+{"ts": "2026-06-12T19:42:03.915349+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-13T09:09:14.896512+00:00", "event": "socket_connect", "sid": "56lxXKaluL4_RDJTAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781341754.4025948"}}
+{"ts": "2026-06-13T09:09:14.969526+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T09:09:14.972476+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T09:09:17.124714+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 95.3}
+{"ts": "2026-06-13T09:10:14.598740+00:00", "event": "socket_connect", "sid": "Z1Fj5Eu0WY5OL2ZYAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T09:14:37.264079+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.2}
+{"ts": "2026-06-13T09:16:30.481929+00:00", "event": "socket_connect", "sid": "l0g7GhmSknYO5kX9AAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T09:19:57.441189+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 94.8}
+{"ts": "2026-06-13T09:21:33.059325+00:00", "event": "socket_connect", "sid": "h47NmFUbkeENViU-AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781342492.5986862"}}
+{"ts": "2026-06-13T09:21:33.127353+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T09:21:33.136284+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T09:23:11.333564+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.3}
+{"ts": "2026-06-13T09:23:11.988345+00:00", "event": "socket_connect", "sid": "lyWRFIFyNzHh_3HzAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T09:24:33.562378+00:00", "event": "socket_connect", "sid": "oNxicg80M7h3xViKAAAF", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T09:35:27.365207+00:00", "event": "socket_connect", "sid": "VSFAmXjSHdVTcqdWAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781343326.9386857"}}
+{"ts": "2026-06-13T09:35:27.408603+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T09:35:27.415349+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T09:35:31.512010+00:00", "event": "socket_connect", "sid": "JMQP5vyg4jlO0a5nAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T11:28:36.511981+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.4}
+{"ts": "2026-06-13T11:30:19.939815+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-13T11:46:45.213806+00:00", "event": "socket_connect", "sid": "L-WtFpdXuC6Jc36TAAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781351204.9277065"}}
+{"ts": "2026-06-13T11:46:45.344486+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T11:46:45.349302+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T11:47:19.505633+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 91.6}
+{"ts": "2026-06-13T11:52:39.634095+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 90.2}
+{"ts": "2026-06-13T12:00:25.427542+00:00", "event": "socket_connect", "sid": "Z_2vvs7YyZHLbelRAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T12:00:32.005999+00:00", "event": "socket_connect", "sid": "bEGZgnrZSYibyVwXAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781352031.7284353"}}
+{"ts": "2026-06-13T12:00:32.073288+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T12:00:32.093222+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T12:10:17.531792+00:00", "event": "socket_connect", "sid": "REB06sJPgNgKTB00AAAB", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781352616.2434514"}}
+{"ts": "2026-06-13T12:10:17.630512+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T12:10:17.639646+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 0}
+{"ts": "2026-06-13T12:10:25.560941+00:00", "event": "socket_connect", "sid": "7n2nai1LYmd2VKdnAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T12:27:30.741277+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
+{"ts": "2026-06-13T12:28:15.077818+00:00", "event": "socket_connect", "sid": "3XaECp3kZ1_voVCYAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}

@@ -2571,18 +2571,6 @@
         100% { top: 100%; opacity: 0; }
       }
 
-      /* Canvas */
-      #rv-canvas {
-        display: none;
-        cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300d4aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E") 12 12, crosshair;
-        image-rendering: auto;
-        border-radius: 14px;
-        max-width: 100%;
-        max-height: 100%;
-        width: 100%;
-        height: auto;
-        object-fit: contain;
-      }
       #rv-cursor-overlay {
         position: absolute;
         top: 0; left: 0;
@@ -5799,6 +5787,7 @@
                       <th>IP Address</th>
                       <th>Last Active</th>
                       <th>Type</th>
+                      <th style="text-align: center">FPS</th>
                       <th style="text-align: right">Actions</th>
                     </tr>
                   </thead>
@@ -6035,7 +6024,7 @@
               <!-- Connecting state -->
               <div class="lv-connecting" id="lv-connecting">
                 <div class="lv-spinner"></div>
-                <div class="lv-conn-msg" id="rv-conn-msg">Connecting to agent…</div>
+                <div class="lv-conn-msg" id="rv-conn-msg">Receiving stream from server…</div>
                 <div class="lv-conn-steps">
                   <div class="lv-conn-step active" id="lvs-relay"><span class="mi" style="font-size:11px">wifi</span>Relay</div>
                   <span style="color:var(--text-4);font-size:10px">→</span>
@@ -6060,9 +6049,10 @@
                 </div>
                 <!-- Scanline -->
                 <div class="lv-scanline"></div>
-                <!-- Canvas -->
-                <canvas id="rv-canvas"></canvas>
-                <canvas id="rv-cursor-overlay"></canvas>
+                <!-- WebRTC live video — only display element -->
+                <video id="rv-video" autoplay playsinline muted
+                       style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:1;background:#000"></video>
+                <canvas id="rv-cursor-overlay" style="position:absolute;top:0;left:0;z-index:3;pointer-events:none"></canvas>
                 <!-- Info overlay -->
                 <div class="lv-info-overlay" id="rv-info-overlay">
                   <span class="mi" style="font-size:11px">info</span>
@@ -6096,7 +6086,7 @@
                 </div>
                 <div class="lv-statusbar-item">
                   <span class="mi" style="color:var(--c-brand)">memory</span>
-                  <span id="lv-sb-codec">JPEG</span>
+                  <span id="lv-sb-codec">H.264</span>
                 </div>
               </div>
             </div>
@@ -7927,7 +7917,8 @@
             SC.socket.emit("watch_device", { 
               device_id: RV.deviceId,
               fps: 60,
-              quality: 95
+              quality: 92,
+              mode: "video",
             });
           }
           // Refresh server info (non-blocking — updates Supabase badge)
@@ -7955,7 +7946,7 @@
           const rc = $("rv-connecting");
           if (rc) rc.style.display = "flex";
           const rcm = $("rv-conn-msg");
-          if (rcm) rcm.textContent = "Server connection lost, retrying...";
+          if (rcm) rcm.textContent = "Server connection lost, reconnecting…";
         });
 
         SC.socket.on("reconnect", () => {
@@ -8083,7 +8074,8 @@
 
         /* ── Streaming ── */
         SC.socket.on("watch_ok", (d) => {
-          RV.active = true; // FIX: must set BEFORE the guard — was always returning early
+          RV.active = true;
+          RV.streamMode = d.stream_mode || "webrtc";
           const rvPill = $("rv-status-pill"),
             rvLbl = $("rv-status-lbl");
           if (rvPill) rvPill.className = "pill online";
@@ -8091,11 +8083,24 @@
           const rc = $("rv-connecting");
           if (rc) rc.style.display = "none";
           addLog(
-            `Watching: ${d.name || RV.deviceName}`,
+            `Watching: ${d.name || RV.deviceName} [${RV.streamMode}]`,
             RV.deviceName || "Device",
             "System",
             "ok",
           );
+          if (RV.streamMode === "webrtc") {
+            // Don't re-initiate if peer is already live
+            const alreadyUp = _rtcPeer && (_rtcPeer.connectionState === "connected" || _rtcPeer.connectionState === "connecting");
+            if (!alreadyUp && RV.deviceId && typeof window.startWebRTC === "function") {
+              window.startWebRTC(RV.deviceId).catch(e => {
+                console.warn("[WebRTC] startWebRTC (watch_ok) failed:", e);
+              });
+            }
+          } else {
+            // JPEG canvas fallback — aiortc unavailable (Python 3.14 / missing wheels)
+            console.info("[Stream] Server in JPEG relay mode — using canvas renderer");
+            _startJpegCanvas();
+          }
         });
         SC.socket.on("watch_error", (d) => {
           const rcm = $("rv-conn-msg");
@@ -8106,255 +8111,387 @@
           if (rvLbl) rvLbl.textContent = "Error";
           showToast("Watch error: " + (d.msg || ""), "error");
         });
-        /* Frame rendering queue for smooth 60fps */
-        const frameQueue = [];
-        let isRendering = false;
-        let lastRenderTime = 0;
-        let pendCur = { x: 0, y: 0 }; // Declare pendCur to fix ReferenceError
 
-        function startRenderingLoop() {
-          if (isRendering) return;
-          isRendering = true;
-          const canvas = $("rv-canvas"), ctx = canvas?.getContext("2d", { 
-            alpha: false,
-            desynchronized: true // v16: Reduce latency by bypassing compositor if possible
-          });
-          
-          function render(now) {
-            if (!RV.active) { isRendering = false; return; }
-            
-            // v16 ULTRA BOOST: Adaptive rendering
-            if (frameQueue.length > 0) {
-              // Always take the NEWEST frame to minimize latency (drop-oldest)
-              const newest = frameQueue.pop();
-              
-              // Clean up the rest of the queue immediately
-              while (frameQueue.length > 0) {
-                const f = frameQueue.shift();
-                if (f.bmp) f.bmp.close();
-              }
+        // ── WebRTC Peer Connection — server-side aiortc bridge ────────────────
+        // Stored on RV so connectScreen heal timer and other outer scopes can reach it.
+        if (!("_rtcPeer" in RV)) RV._rtcPeer = null;
+        Object.defineProperty(window, "_rtcPeer", {
+          get() { return RV._rtcPeer; },
+          set(v) { RV._rtcPeer = v; },
+          configurable: true,
+        });
 
-              if (canvas && ctx && newest.bmp) {
-                const { bmp, w, h } = newest;
-                
-                // v16: Ensure "retrying" UI is hidden whenever we have a valid frame
-                const rc2 = $("rv-connecting");
-                if (rc2 && rc2.style.display !== "none") rc2.style.display = "none";
-                const rvEmpty = $("rv-empty");
-                if (rvEmpty && rvEmpty.style.display !== "none") {
-                    rvEmpty.style.display = "none";
-                    if (canvas) canvas.style.display = "block";
-                    const sf3d = $("stream-frame-3d");
-                    if (sf3d) sf3d.classList.add("streaming");
-                    const rio = $("rv-info-overlay");
-                    if (rio) rio.style.display = "flex";
-                    const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
-                    if (rvPill) { rvPill.className = "pill online live"; }
-                    if (rvLbl) { rvLbl.textContent = "Live"; }
-                }
-                if (canvas.style.display !== "block") canvas.style.display = "block";
-
-                if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
-                  canvas.width = w;
-                  canvas.height = h;
-                }
-                ctx.imageSmoothingEnabled = false;
-                ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-                bmp.close();
-              }
+        function _rtcCleanup() {
+          try { 
+            if (RV._rtcPeer && RV._rtcPeer._statsInterval) {
+              clearInterval(RV._rtcPeer._statsInterval);
             }
-            requestAnimationFrame(render);
+            if (RV._rtcPeer) RV._rtcPeer.close(); 
+          } catch(_) {}
+          RV._rtcPeer = null;
+        }
+
+        async function startWebRTC(deviceId) {
+          if (!deviceId) {
+            console.warn("[WebRTC] startWebRTC called with null deviceId — skipping");
+            return;
           }
-          requestAnimationFrame(render);
-        }
+          // Don't restart if we already have a live or connecting peer
+          if (RV._rtcPeer && (RV._rtcPeer.connectionState === "connected" || RV._rtcPeer.connectionState === "connecting")) {
+            console.info("[WebRTC] Peer already", RV._rtcPeer.connectionState, "— skipping duplicate startWebRTC");
+            return;
+          }
+          _rtcCleanup();
+          RV._rtcPeer = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" },
+                         { urls: "stun:stun1.l.google.com:19302" }]
+          });
 
-        function createBwLabel() {
-            const container = $("rv-info-overlay");
-            if (!container) return null;
-            let bl = document.createElement("div");
-            bl.id = "rv-bw-label";
-            bl.className = "rv-info-pill";
-            bl.style.cssText = "margin-left:8px; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:4px; font-size:12px; color:#aaa";
-            container.appendChild(bl);
-            return bl;
-        }
-
-        SC.socket.on("frame_bin", async (raw) => {
-          try {
-            // v16: Update diagnostics
-            const sz = raw.byteLength || raw.size || 0;
-            const diagFrames = $("diag-frames");
-            if (diagFrames) diagFrames.textContent = RV.frameCount;
-            const diagSize = $("diag-size");
-            if (diagSize) diagSize.textContent = (sz / 1024).toFixed(1) + " KB";
-            const diagFps = $("diag-fps");
-            if (diagFps) diagFps.textContent = RV.fps;
-            const diagLat = $("diag-lat");
-            if (diagLat) diagLat.textContent = RV.latency;
-
-            // v17: HEAL FIRST, guard second.
-            // Frames arriving while watch_ok was missed (race) auto-activate RV
-            // so the heal block below can clear the 'retrying' overlay.
-            if (!RV.active && RV.deviceId) { RV.active = true; }
-
-            if (!RV.active) return;
-            // v15.6: HEAL THE STREAM
-            // If we are getting binary frames but UI is stuck at "retrying", heal it.
-            if ($("rv-connecting")?.style.display !== "none") {
-              $("rv-connecting").style.display = "none";
+          // ── Video track from server aiortc bridge (MediaStreamTrack) ──
+          RV._rtcPeer.ontrack = (event) => {
+            console.log("[WebRTC] ontrack fired — streams:", event.streams?.length, "track kind:", event.track?.kind, "track:", event.track);
+            const vid = $("rv-video");
+            if (vid && event.streams && event.streams[0]) {
+              // Only reassign srcObject if the stream is actually new — reassigning
+              // the same stream aborts any in-flight autoplay and causes AbortError.
+              if (vid.srcObject !== event.streams[0]) {
+                vid.srcObject = event.streams[0];
+              }
+              vid.style.display = "block";
+              
+              // Add loadedmetadata and canplay listeners to debug
+              vid.addEventListener("loadedmetadata", () => {
+                console.log("[WebRTC] video loadedmetadata:", vid.videoWidth, "x", vid.videoHeight);
+              });
+              vid.addEventListener("canplay", () => {
+                console.log("[WebRTC] video canplay");
+              });
+              
+              // Explicitly call play() and swallow AbortError (browser autoplay race)
+              vid.play().catch(err => {
+                if (err.name === "AbortError") {
+                  setTimeout(() => vid.play().catch(() => {}), 120);
+                }
+              });
+              // Update UI to live state
+              const rc = $("rv-connecting");
+              if (rc) rc.style.display = "none";
               $("lv-connecting")?.classList.remove("visible");
-              const canvas = $("rv-canvas");
-              if (canvas) canvas.style.display = "block";
-              // Update LV UI steps
-              const s1 = $("lvs-relay"), s2 = $("lvs-agent"), s3 = $("lvs-stream");
-              if (s1) s1.className = "lv-conn-step done";
-              if (s2) s2.className = "lv-conn-step done";
+              const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+              if (rvPill) { rvPill.className = "pill online live"; }
+              if (rvLbl) rvLbl.textContent = "Live";
+              const rio = $("rv-info-overlay");
+              if (rio) rio.style.display = "flex";
+              const rvEmpty = $("rv-empty");
+              if (rvEmpty) rvEmpty.style.display = "none";
+              // Place video inside LV frame
+              const lvframe = $("lv-screen-frame");
+              if (lvframe && vid.parentElement !== lvframe) {
+                lvframe.insertBefore(vid, lvframe.querySelector(".lv-scanline"));
+              }
+              $("lv-screen-frame")?.classList.add("streaming");
+              $("lv-wave")?.classList.add("active");
+              $("lv-live-badge")?.classList.add("visible");
+              const s3 = $("lvs-stream");
               if (s3) s3.className = "lv-conn-step done";
-              showToast("Stream signal restored", "success");
+              // FPS tracking
+              if (vid.requestVideoFrameCallback) {
+                let _lastVfc = performance.now(), _vfcCount = 0;
+                function _vfc(now) {
+                  _vfcCount++;
+                  if (now - _lastVfc >= 1000) {
+                    RV.fps = _vfcCount; _vfcCount = 0; _lastVfc = now;
+                    const fl = $("rv-fps-label");
+                    if (fl) {
+                      fl.textContent = `${RV.fps} fps`;
+                      fl.style.color = RV.fps >= 50 ? "#4ade80" : RV.fps >= 25 ? "#fb923c" : "#f87171";
+                    }
+                    if (vid.videoWidth && vid.videoHeight) {
+                      const ri = $("rv-info-text");
+                      if (ri) ri.textContent = `${vid.videoWidth}×${vid.videoHeight} · ${RV.fps}fps · WebRTC`;
+                    }
+                  }
+                  vid.requestVideoFrameCallback(_vfc);
+                }
+                vid.requestVideoFrameCallback(_vfc);
+              }
+            }
+          };
+
+          RV._rtcPeer.onicecandidate = (ev) => {
+            if (ev.candidate) {
+              SC.socket.emit("webrtc_ice_viewer", { candidate: ev.candidate });
+            }
+          };
+
+          RV._rtcPeer.onconnectionstatechange = () => {
+            const state = RV._rtcPeer?.connectionState;
+            console.log("[WebRTC] connection state:", state);
+            if (state === "connected") {
+              const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+              if (rvPill) rvPill.className = "pill online live";
+              if (rvLbl) rvLbl.textContent = "Live (WebRTC)";
+              // Stop heal timer — we're connected, no need to retry
+              if (RV._healTimer) { clearInterval(RV._healTimer); RV._healTimer = null; }
+              
+              // Start WebRTC stats polling for bitrate
+              let _lastStatsTime = Date.now();
+              let _lastBytesReceived = 0;
+              const _statsInterval = setInterval(async () => {
+                if (!RV._rtcPeer || RV._rtcPeer.connectionState !== "connected") {
+                  clearInterval(_statsInterval);
+                  return;
+                }
+                try {
+                  const stats = await RV._rtcPeer.getStats();
+                  let bytesReceived = 0;
+                  stats.forEach(report => {
+                    if (report.type === "inbound-rtp" && report.kind === "video" && report.bytesReceived) {
+                      bytesReceived += report.bytesReceived;
+                    }
+                  });
+                  const now = Date.now();
+                  const deltaMs = now - _lastStatsTime;
+                  if (deltaMs > 0 && bytesReceived > 0) {
+                    const deltaBytes = bytesReceived - _lastBytesReceived;
+                    if (deltaBytes > 0) {
+                      RV.bytesPerSec = Math.round((deltaBytes / deltaMs) * 1000);
+                      updateViewerBandwidth(deltaBytes);
+                    }
+                  }
+                  _lastStatsTime = now;
+                  _lastBytesReceived = bytesReceived;
+                } catch (err) {
+                  console.warn("[WebRTC] getStats error:", err);
+                }
+              }, 1000);
+              // Store interval ID to clear on cleanup
+              RV._rtcPeer._statsInterval = _statsInterval;
+            } else if (state === "failed" || state === "disconnected") {
+              showToast("WebRTC stream disconnected", "error");
+              if (RV._rtcPeer._statsInterval) {
+                clearInterval(RV._rtcPeer._statsInterval);
+              }
+            }
+          };
+
+          // Create offer requesting video + audio (agent may only send video)
+          const offer = await RV._rtcPeer.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
+          await RV._rtcPeer.setLocalDescription(offer);
+          SC.socket.emit("webrtc_offer", { device_id: deviceId, sdp: { sdp: offer.sdp, type: offer.type } });
+          console.log("[WebRTC] Offer sent for device:", deviceId);
+
+          // If server bridge doesn't deliver a track within 10s, clean up and let heal timer retry
+          setTimeout(() => {
+            const vid = $("rv-video");
+            const hasRTC = (vid && vid.srcObject && vid.style.display !== "none") ||
+                           (_jpegCanvas && _jpegCanvas.style.display !== "none") ||
+                           (RV._rtcPeer && RV._rtcPeer.connectionState === "connected");
+            if (!hasRTC && RV._rtcPeer && RV._rtcPeer.connectionState !== "connected") {
+              console.warn("[WebRTC] No track received from server bridge — cleaning up, heal timer will retry");
+              _rtcCleanup();
+            }
+          }, 10000);
+        }
+        window.startWebRTC = startWebRTC; // Expose to global scope
+
+        // ── JPEG canvas fallback (used when server aiortc bridge is unavailable) ──
+
+        function _startJpegCanvas() {
+          const vid = $("rv-video");
+          if (vid) { vid.style.display = "none"; vid.srcObject = null; }
+
+          if (!_jpegCanvas) {
+            _jpegCanvas = document.createElement("canvas");
+            _jpegCanvas.id = "rv-jpeg-canvas";
+            _jpegCanvas.style.cssText = "display:none;border-radius:14px;max-width:100%;max-height:100%;width:100%;height:auto;object-fit:contain;cursor:crosshair;";
+          }
+          // Insert into LV frame
+          const lvframe = $("lv-screen-frame");
+          if (lvframe && _jpegCanvas.parentElement !== lvframe) {
+            lvframe.insertBefore(_jpegCanvas, lvframe.querySelector(".lv-scanline"));
+          }
+          _jpegCtx = _jpegCanvas.getContext("2d");
+          console.info("[JPEG] Canvas renderer ready");
+        }
+
+        SC.socket.on("frame_jpeg", (d) => {
+          if (!RV.active || !d || !d.d) return;
+          if (!_jpegCanvas) _startJpegCanvas();
+          // Calculate bytes first (outside onload for immediate update)
+          const byteData = Uint8Array.from(atob(d.d), c => c.charCodeAt(0));
+          updateViewerBandwidth(byteData.length);
+          
+          const img = new Image();
+          img.onload = () => {
+            if (_jpegCanvas.width !== img.naturalWidth || _jpegCanvas.height !== img.naturalHeight) {
+              _jpegCanvas.width  = img.naturalWidth;
+              _jpegCanvas.height = img.naturalHeight;
+            }
+            _jpegCtx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(img.src);
+
+            // Show canvas, hide empty/connecting states
+            if (_jpegCanvas.style.display !== "block") {
+              _jpegCanvas.style.display = "block";
+              $("rv-empty")?.style?.setProperty("display", "none");
+              $("rv-connecting")?.style?.setProperty("display", "none");
+              const rvPill = $("rv-status-pill"), rvLbl = $("rv-status-lbl");
+              if (rvPill) rvPill.className = "pill online live";
+              if (rvLbl) rvLbl.textContent = "Live (JPEG)";
+              $("rv-info-overlay")?.style?.setProperty("display", "flex");
+              $("lv-screen-frame")?.classList.add("streaming");
+              $("lv-wave")?.classList.add("active");
+              $("lv-live-badge")?.classList.add("visible");
+              // Bind input events to canvas
+              if (!_jpegCanvas._evtBound) {
+                _jpegCanvas._evtBound = true;
+                _jpegCanvas.addEventListener("mousedown", (e) => rvMouse(e, "down"));
+                _jpegCanvas.addEventListener("mouseup",   (e) => rvMouse(e, "up"));
+                _jpegCanvas.addEventListener("click",     (e) => rvMouse(e, "click"));
+                _jpegCanvas.addEventListener("dblclick",  (e) => rvMouse(e, "dblclick"));
+                _jpegCanvas.addEventListener("mousemove", (e) => rvMouse(e, "move"));
+                _jpegCanvas.addEventListener("contextmenu", (e) => { e.preventDefault(); rvMouse(e, "rclick"); });
+                _jpegCanvas.addEventListener("wheel", (e) => { e.preventDefault(); rvScroll(e); }, { passive: false });
+              }
             }
 
-            // FIXED: socket.io may deliver binary as ArrayBuffer, Uint8Array, Buffer, or Blob
-            let buf;
-            try {
-              if (raw instanceof ArrayBuffer) {
-                buf = raw;
-              } else if (raw && raw.buffer instanceof ArrayBuffer) {
-                buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
-              } else if (Array.isArray(raw)) {
-                buf = new Uint8Array(raw).buffer;
-              } else if (raw instanceof Blob) {
-                buf = await raw.arrayBuffer();
-              } else {
-                return;
-              }
-            } catch (e) {
+            // FPS counter
+            _jpegFrameCount++;
+            const now = performance.now();
+            if (now - _jpegLastFps >= 1000) {
+              RV.fps = _jpegFrameCount; _jpegFrameCount = 0; _jpegLastFps = now;
+              const fl = $("rv-fps-label");
+              if (fl) { fl.textContent = `${RV.fps} fps`; fl.style.color = RV.fps >= 50 ? "#4ade80" : RV.fps >= 25 ? "#fb923c" : "#f87171"; }
+              const ri = $("rv-info-text");
+              if (ri) ri.textContent = `${img.naturalWidth}×${img.naturalHeight} · ${RV.fps}fps · JPEG`;
+            }
+          };
+          // Use blob URL for efficient decoding
+          img.src = URL.createObjectURL(new Blob([byteData], { type: "image/jpeg" }));
+        });
+        SC.socket.on("webrtc_answer", async (data) => {
+          if (_rtcPeer && data.sdp) {
+            // Guard: only set remote description if we are waiting for an answer.
+            // If signalingState is already "stable" the connection is established
+            // and a duplicate answer (from heal timer re-offer) must be ignored.
+            if (_rtcPeer.signalingState !== "have-local-offer") {
+              console.warn("[WebRTC] Ignoring answer in state:", _rtcPeer.signalingState);
               return;
             }
-
-            if (buf.byteLength < 24) return;
-
-            // Strip v13 sequence suffix if present (\xFFSEQ + 4 bytes = 8 bytes total)
-            let cleanBuf = buf;
-            if (buf.byteLength > 32) {
-              const dvEnd = new DataView(buf, buf.byteLength - 8);
-              if (dvEnd.getUint32(0, false) === 0xFF534551) {
-                cleanBuf = buf.slice(0, buf.byteLength - 8);
-              }
-            }
-
-            // Track bandwidth
-            RV._bytesWindow = RV._bytesWindow || [];
-            RV._bytesWindow.push([Date.now(), buf.byteLength]);
-            const _bwCutoff = Date.now() - 3000;
-            RV._bytesWindow = RV._bytesWindow.filter(([t]) => t > _bwCutoff);
-            RV.bytesPerSec = RV._bytesWindow.reduce((s, [,b]) => s + b, 0) / 3;
-
-            const dv = new DataView(buf);
-            const w = dv.getUint32(0, false), h = dv.getUint32(4, false);
-            const tsHi = dv.getUint32(8, false), tsLo = dv.getUint32(12, false);
-            const frameTs = Number((BigInt(tsHi) * 4294967296n + BigInt(tsLo)) / 1000n);
-            const frameLat = Math.max(0, Math.min(9999, Math.round(Date.now() - frameTs)));
-            
-            if (!isNaN(frameLat) && frameLat < 9000) {
-              RV.latency = frameLat;
-              const ll = $("rv-lat-lbl");
-              if (ll) ll.textContent = RV.latency + "ms";
-            }
-
-            const flags = dv.getUint32(16, false);
-            const isH264 = flags & 0x04;
-            RV.codec = isH264 ? "H.264" : "JPEG";
-            
-            RV.frameCount++;
-            const now = Date.now();
-            if (now - RV.lastFpsTime >= 1000) {
-              RV.fps = RV.frameCount;
-              RV.frameCount = 0;
-              RV.lastFpsTime = now;
-              
-              // v16: Show E2E FPS (frames actually reached the dashboard)
-              const fl = $("rv-fps-label");
-              if (fl) {
-                fl.textContent = `${RV.fps} fps (UI)`;
-                fl.style.color = RV.fps >= 50 ? "#4ade80" : RV.fps >= 25 ? "#fb923c" : "#f87171";
-              }
-              
-              // v16: Show actual bandwidth reaching the dashboard
-              const bl = $("rv-bw-label") || createBwLabel();
-              if (bl) {
-                const mbps = (RV.bytesPerSec * 8) / (1024 * 1024);
-                bl.textContent = mbps.toFixed(1) + " Mbps";
-              }
-            }
-
-            if (isH264) return;
-
-            // v16 ULTRA BOOST: Don't await decode in the socket handler to prevent blocking the stream
-            const frameData = { w, h, tsHi, tsLo, flags };
-            (async () => {
-              try {
-                const blob = new Blob([cleanBuf.slice(24)], { type: "image/jpeg" });
-                const bmp = await createImageBitmap(blob);
-                
-                frameQueue.push({ bmp, ...frameData });
-                if (!isRendering) startRenderingLoop();
-              } catch (e) {
-                console.error("Decode error", e);
-              }
-            })();
-          } catch (err) {
-            console.error("Critical frame_bin error", err);
+            try {
+              await _rtcPeer.setRemoteDescription({ type: data.sdp.type || "answer", sdp: data.sdp.sdp || data.sdp });
+              console.log("[WebRTC] Remote description set");
+            } catch(e) { console.error("[WebRTC] setRemoteDescription failed:", e); }
           }
         });
+
+        // ICE candidates from agent relayed by server
+        SC.socket.on("webrtc_ice", async (data) => {
+          if (_rtcPeer && data.candidate) {
+            try { await _rtcPeer.addIceCandidate(data.candidate); }
+            catch(e) { console.debug("[WebRTC] ICE candidate error:", e); }
+          }
+        });
+        
+        // Track latency from agent_pong
+        SC.socket.on("agent_pong", (data) => {
+          if (RV.pingSent && data && data.ts) {
+            const now = Date.now();
+            RV.latency = Math.round(now - data.ts);
+            // Update UI if needed
+            console.log("[Latency] Agent pong:", RV.latency, "ms");
+          }
+        });
+
+        // Handle incoming binary data from agent DataChannel
+        // 0xCC prefix = cursor packet, anything else = future control messages
+        function _handleAgentData(buf) {
+          if (!buf || buf.byteLength < 1) return;
+          const firstByte = new Uint8Array(buf)[0];
+
+          if (firstByte === 0xCC && buf.byteLength >= 9) {
+            // Cursor packet: 0xCC + ">HHI" (2B nx, 2B ny, 4B ts) = 9 bytes
+            const dv = new DataView(buf, 1);
+            const nx = dv.getUint16(0, false);
+            const ny = dv.getUint16(2, false);
+            // Map normalized 0..65535 to video element display dimensions
+            const vid = $("rv-video");
+            if (!vid || vid.style.display === "none") return;
+            const rect = vid.getBoundingClientRect();
+            const cx = (nx / 65535) * rect.width;
+            const cy = (ny / 65535) * rect.height;
+            pendCur = { x: cx, y: cy };
+            updateSharedCursor(cx, cy, false);
+            drawCursorOverlayOnVideo(cx, cy, false);
+          }
+        }
+
+        // Accept legacy SocketIO cursor events (kept for compat with non-WebRTC cursor path)
         SC.socket.on("cursor_bin_norm", (buf) => {
-          // v16: Handle high-precision normalized cursor
-          const dv = new DataView(buf);
-          const nx = dv.getUint16(0, false),
-            ny = dv.getUint16(2, false);
-          
-          const canvas = $("rv-canvas");
-          if (!canvas) return;
-          
-          const cx = (nx / 65535) * (canvas.width || 1);
-          const cy = (ny / 65535) * (canvas.height || 1);
-          
+          const dv = new DataView(buf instanceof ArrayBuffer ? buf : buf.buffer);
+          const nx = dv.getUint16(0, false), ny = dv.getUint16(2, false);
+          const vid = $("rv-video");
+          if (!vid || vid.style.display === "none") return;
+          const rect = vid.getBoundingClientRect();
+          const cx = (nx / 65535) * rect.width;
+          const cy = (ny / 65535) * rect.height;
           pendCur = { x: cx, y: cy };
           updateSharedCursor(cx, cy, false);
-          drawCursorOverlay(cx, cy, false);
+          drawCursorOverlayOnVideo(cx, cy, false);
         });
 
         SC.socket.on("cursor_bin", async (raw) => {
-          // FIX: Don't guard on RV.active — cursor must work in Advanced Monitor mode too
           if (!RV.deviceId) return;
-          // FIXED: handle ArrayBuffer, Uint8Array, Array, or Blob
           let buf;
-          if (raw instanceof ArrayBuffer) {
-            buf = raw;
-          } else if (raw && raw.buffer instanceof ArrayBuffer) {
-            buf = raw.buffer.slice(
-              raw.byteOffset,
-              raw.byteOffset + raw.byteLength,
-            );
-          } else if (Array.isArray(raw)) {
-            buf = new Uint8Array(raw).buffer;
-          } else if (raw instanceof Blob) {
-            buf = await raw.arrayBuffer();
-          } else return;
+          if (raw instanceof ArrayBuffer) buf = raw;
+          else if (raw && raw.buffer instanceof ArrayBuffer) buf = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+          else if (Array.isArray(raw)) buf = new Uint8Array(raw).buffer;
+          else if (raw instanceof Blob) buf = await raw.arrayBuffer();
+          else return;
           if (!buf || buf.byteLength < 8) return;
           const dv = new DataView(buf);
-          const cx = dv.getInt32(0, false),
-            cy = dv.getInt32(4, false);
-          // FIX: update pendCur so the main monitor canvas RAF loop also tracks the cursor
+          const cx = dv.getInt32(0, false), cy = dv.getInt32(4, false);
           pendCur = { x: cx, y: cy };
           updateSharedCursor(cx, cy, false);
-          drawCursorOverlay(cx, cy, false);
+          drawCursorOverlayOnVideo(cx, cy, false);
         });
-        SC.socket.on("screen_data", (d) => displayRemoteFrame(d));
-        SC.socket.on("screenshot", (d) => displayRemoteFrame(d));
-        SC.socket.on("screen_frame", (d) => displayRemoteFrame(d));
-        SC.socket.on("frame", (d) => displayRemoteFrame(d));
-        SC.socket.on("stream_to_dash", (d) => displayRemoteFrame(d));
-        SC.socket.on("screenshot_result", (d) => displayRemoteFrame(d));
+
+        // Draw cursor on top of the rv-video element
+        function drawCursorOverlayOnVideo(cx, cy, clicking) {
+          const vid = $("rv-video");
+          const overlay = $("rv-cursor-overlay");
+          if (!vid || vid.style.display === "none" || !overlay) return;
+          overlay.style.display = "block";
+          const dw = vid.clientWidth  || vid.offsetWidth  || 1;
+          const dh = vid.clientHeight || vid.offsetHeight || 1;
+          overlay.width  = dw;
+          overlay.height = dh;
+          overlay.style.width  = dw + "px";
+          overlay.style.height = dh + "px";
+          // Position overlay over the video element
+          const dr = vid.getBoundingClientRect();
+          const or = overlay.parentElement?.getBoundingClientRect?.() || dr;
+          overlay.style.left = (dr.left - or.left) + "px";
+          overlay.style.top  = (dr.top  - or.top)  + "px";
+          const ctx = overlay.getContext("2d");
+          ctx.clearRect(0, 0, dw, dh);
+          // Larger, more visible cursor — 14px outer ring, 5px dot
+          ctx.beginPath();
+          ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(255,255,255,0.9)";
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+          ctx.fillStyle = clicking ? "rgba(255,60,60,0.9)" : "rgba(0,0,0,0.85)";
+          ctx.fill();
+        }
+
+        // Pure WebRTC — no SocketIO frame relay, no canvas, no JPEG
+        for (const _ev of ["frame_bin","screen_data","screenshot","screen_frame","frame","stream_to_dash","screenshot_result"]) {
+          SC.socket.on(_ev, () => { /* server-bridge WebRTC only — no-op */ });
+        }
 
         SC.socket.on("stream_stats", (d) => {
           if (d.device_id === RV.deviceId) {
@@ -8437,17 +8574,14 @@
         /* ── Connection quality ── */
         SC.socket.on("connection_quality", (d) => {
           if (d.device_id !== RV?.deviceId) return;
-          // v16: We prioritize E2E metrics (calculated in frame_bin) over agent-reported ones.
-          // We only update the agent-side stats here.
-          const agentFps = $("lv-agent-fps"); // New element if we want to show it
+          // Agent-reported stats — display alongside E2E WebRTC metrics
+          const agentFps = $("lv-agent-fps");
           const rtt      = $("lv-rtt-val");
           const kbps     = $("lv-kbps-val");
           
           if (agentFps && d.fps != null)    agentFps.textContent = d.fps + " fps (Agent)";
           if (rtt && d.rtt_ms != null)      rtt.textContent      = Math.round(d.rtt_ms) + " ms";
           if (kbps && d.encode_ms != null)  kbps.textContent     = Math.round(d.encode_ms) + " ms enc";
-          
-          // We DON'T update lv-fps-val here anymore to avoid fighting with E2E counter
         });
 
         /* ── Tunnel relay ── */
@@ -8468,23 +8602,6 @@
             const ll = $("rv-lat-lbl");
             if (ll) ll.textContent = RV.latency + "ms";
           }
-        });
-
-        SC.socket.on("cursor_event", (d) => {
-          if (d.device_id !== RV.deviceId) return;
-          const canvas = $("rv-canvas");
-          if (!canvas || canvas.style.display === "none") return;
-          // Agent may send normalized (0..1) or absolute pixel coords.
-          // Detect: if both x and y are <= 1.0 treat as normalized, else treat as pixels.
-          let cx = d.x,
-            cy = d.y;
-          if (cx <= 1.0 && cy <= 1.0) {
-            // normalized → convert to canvas pixel space
-            cx = cx * (canvas.width || 1920);
-            cy = cy * (canvas.height || 1080);
-          }
-          updateSharedCursor(cx, cy, d.type === "click" || d.type === "down");
-          drawCursorOverlay(cx, cy, d.type === "click" || d.type === "down");
         });
 
         /* ── System ── */
@@ -8840,7 +8957,7 @@
         const tbody = $("mtbody");
         if (!tbody) return;
         if (!data.length) {
-          tbody.innerHTML = `<tr><td colspan="7"><div class="empty-st"><span class="mi empty-ico">computer</span><div class="empty-title">${_filter ? cap(_filter) + " machines" : "Machines"} empty</div><div class="empty-sub">Connect an agent to populate this list.</div><button class="btn btn-p" onclick="openModal()"><span class="mi">add_link</span>Connect Agent</button></div></td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8"><div class="empty-st"><span class="mi empty-ico">computer</span><div class="empty-title">${_filter ? cap(_filter) + " machines" : "Machines"} empty</div><div class="empty-sub">Connect an agent to populate this list.</div><button class="btn btn-p" onclick="openModal()"><span class="mi">add_link</span>Connect Agent</button></div></td></tr>`;
           return;
         }
         tbody.innerHTML = data
@@ -8853,6 +8970,7 @@
       <td style="font-family:var(--mono);font-size:10px;color:var(--text-3)">${esc(s.ip)}</td>
       <td style="font-size:11px;color:var(--text-3)">${esc(s.lastActive)}</td>
       <td style="font-size:11px;color:var(--text-3)">${esc(s.type)}</td>
+      <td style="font-size:11px;color:var(--text-3);text-align:center">${s.fps ? s.fps.toFixed(1) + " fps" : "—"}</td>
       <td><div class="abtns">
         ${s.status === "online" ? `<button class="tbtn p" onclick="event.stopPropagation();connectScreen(${s.id})"><span class="mi">cast</span>Connect</button>` : `<button class="tbtn" style="opacity:.4" disabled><span class="mi">hourglass_empty</span>${cap(s.status)}</button>`}
         <button class="tbtn" onclick="event.stopPropagation();showDeviceInfo(${s.id})"><span class="mi">info</span></button>
@@ -9274,21 +9392,25 @@
         if (id === "remote-view") setupCanvasEvents();
       }
 
-      /* ══ Canvas events (RV) ══════════════════════════════════════════ */
+      /* ── JPEG canvas fallback state (outer scope — accessible by rvMouse/rvScroll) ── */
+      let _jpegCanvas = null, _jpegCtx = null;
+      let _jpegFrameCount = 0, _jpegLastFps = performance.now();
+
+      /* ══ Video element input events (RV) ════════════════════════════ */
       function setupCanvasEvents() {
-        const canvas = $("rv-canvas");
-        if (!canvas || canvas._evtBound) return;
-        canvas._evtBound = true;
-        canvas.addEventListener("mousedown", (e) => rvMouse(e, "down"));
-        canvas.addEventListener("mouseup", (e) => rvMouse(e, "up"));
-        canvas.addEventListener("click", (e) => rvMouse(e, "click"));
-        canvas.addEventListener("dblclick", (e) => rvMouse(e, "dblclick"));
-        canvas.addEventListener("contextmenu", (e) => {
+        const vid = $("rv-video");
+        if (!vid || vid._evtBound) return;
+        vid._evtBound = true;
+        vid.addEventListener("mousedown", (e) => rvMouse(e, "down"));
+        vid.addEventListener("mouseup", (e) => rvMouse(e, "up"));
+        vid.addEventListener("click", (e) => rvMouse(e, "click"));
+        vid.addEventListener("dblclick", (e) => rvMouse(e, "dblclick"));
+        vid.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           rvMouse(e, "rclick");
         });
-        canvas.addEventListener("mousemove", (e) => rvMouse(e, "move"));
-        canvas.addEventListener(
+        vid.addEventListener("mousemove", (e) => rvMouse(e, "move"));
+        vid.addEventListener(
           "wheel",
           (e) => {
             e.preventDefault();
@@ -9781,9 +9903,9 @@
         _cursorClickTimer: null,
       };
       const QUALITY_MAP = {
-        high: { jpg: 85, scale: 1 },
-        medium: { jpg: 65, scale: 0.85 },
-        low: { jpg: 45, scale: 0.6 },
+        high:   { jpg: 92, q: 92, scale: 1.0  },   // H.264 CRF ~24
+        medium: { jpg: 75, q: 75, scale: 0.9  },   // H.264 CRF ~29
+        low:    { jpg: 55, q: 55, scale: 0.75 },   // H.264 CRF ~34
       };
       const ADV_MONITOR_CURSOR = { x: 0, y: 0, clicking: false, ts: 0 };
 
@@ -9829,8 +9951,6 @@
         if (opts.showSection !== false) {
           showSection(opts.section || "remote-view");
         }
-        // FIX: Always mark active so frame_bin handler processes frames
-        // even when viewing from Advanced Monitor tab (bridge mode)
         const t = $("rv-title");
         if (t) t.textContent = `${s.name} · ${s.ip || s.location}`;
         const rvPill = $("rv-status-pill"),
@@ -9838,7 +9958,6 @@
         if (rvPill) rvPill.className = "pill pending";
         if (rvLbl) rvLbl.textContent = "Connecting…";
         $("rv-empty").style.display = "none";
-        $("rv-canvas").style.display = "none";
         const rc = $("rv-connecting");
         if (rc) rc.style.display = "flex";
         const rio = $("rv-info-overlay");
@@ -9869,6 +9988,7 @@
           scale: qmap.scale,
           monitor: parseInt($("rv-monitor-sel")?.value || "1"),
         });
+        // WebRTC offer is sent from the watch_ok handler once server confirms registration
         if (RV.pingTimer) clearInterval(RV.pingTimer);
         RV.pingTimer = setInterval(() => {
           if (!RV.active || !SC.socket) return;
@@ -9882,24 +10002,34 @@
         // FIXED: Increased watchdog from 6s→15s; also retry watch_device at 8s in case
         // the advanced monitor auth race caused the agent to miss the first viewer_count.
         RV._watchdog = setTimeout(() => {
-          if (RV.active && $("rv-canvas").style.display === "none") {
+          const vid = $("rv-video");
+          const hasStream = (vid && vid.srcObject && vid.style.display !== "none") ||
+                           (_jpegCanvas && _jpegCanvas.style.display !== "none");
+          if (RV.active && !hasStream) {
             const rcm = $("rv-conn-msg");
-            if (rcm) rcm.textContent = "Agent connected but no frames received";
-            if (rvPill) rvPill.className = "pill offline";
-            if (rvLbl) rvLbl.textContent = "No frames";
+            if (rcm) rcm.textContent = "Receiving stream from server…";
+            if (rvPill) rvPill.className = "pill pending";
+            if (rvLbl) rvLbl.textContent = "WebRTC handshake…";
           }
         }, 15000);
         // Self-healing: re-emit watch_device every 5s until first frame arrives
         // Handles race where viewer_count never reached the agent (adv socket auth delay)
         let _healAttempts = 0;
         const _healTimer = setInterval(() => {
-          if (!RV.active || $("rv-canvas").style.display !== "none") {
+          const _vid = $("rv-video");
+          // Stop healing as soon as WebRTC is connected OR video/canvas is live.
+          // Do NOT require vid.style.display — video may be hidden until first frame paints.
+          const _hasStream = (_rtcPeer && (_rtcPeer.connectionState === "connected" || _rtcPeer.connectionState === "connecting")) ||
+                             (_vid && _vid.srcObject) ||
+                             (_jpegCanvas && _jpegCanvas.style.display !== "none");
+          if (!RV.active || _hasStream || !RV.deviceId) {
             clearInterval(_healTimer); return;
           }
           if (++_healAttempts > 12) { clearInterval(_healTimer); return; } // v17: give up after 60s
           const rcm = $("rv-conn-msg");
-          if (rcm) rcm.textContent = `Retrying stream (attempt ${_healAttempts})…`;
+          if (rcm) rcm.textContent = "Receiving stream from server…";
           if (SC.socket?.connected) {
+            // Re-emit watch_device; the watch_ok response will re-trigger startWebRTC
             SC.socket.emit("watch_device", {
               device_id: RV.deviceId,
               fps: targetFps,
@@ -9911,15 +10041,14 @@
         }, 5000);
         RV._healTimer = _healTimer;
 
-        // Retry watch_device at 8s if still no frames (agent auth race recovery)
+        // Retry watch_device at 8s if still no WebRTC track (agent auth race recovery)
         setTimeout(() => {
-          if (
-            RV.active &&
-            $("rv-canvas").style.display === "none" &&
-            SC.socket
-          ) {
+          const vid = $("rv-video");
+          const hasStream = (vid && vid.srcObject && vid.style.display !== "none") ||
+                           (_jpegCanvas && _jpegCanvas.style.display !== "none");
+          if (RV.active && !hasStream && SC.socket) {
             const rcm = $("rv-conn-msg");
-            if (rcm) rcm.textContent = "Retrying stream…";
+            if (rcm) rcm.textContent = "Receiving stream from server…";
             SC.socket.emit("watch_device", {
               device_id: RV.deviceId,
               fps: targetFps,
@@ -9939,66 +10068,33 @@
         else showToast("Device not found or offline", "error");
       }
 
-      function displayRemoteFrame(data) {
-        if (!RV.active) return;
-        const canvas = $("rv-canvas"),
-          ctx = canvas?.getContext("2d");
-        if (!canvas || !ctx) return;
-        const rc = $("rv-connecting");
-        if (rc) rc.style.display = "none";
-        $("rv-empty").style.display = "none";
-        canvas.style.display = "block";
-        const rvPill = $("rv-status-pill"),
-          rvLbl = $("rv-status-lbl");
-        if (rvPill) rvPill.className = "pill online";
-        if (rvLbl) rvLbl.textContent = "Live";
-        const rio = $("rv-info-overlay");
-        if (rio) rio.style.display = "flex";
-        const src = data.frame || data.screenshot || data.image || data.data;
-        if (!src) return;
-        RV.codec = "JPEG";
-        updateViewerBandwidth(Math.round(String(src).length * 0.75));
-        const img = new Image();
-        img.onload = () => {
-          if (data.w && data.h) {
-            canvas.width = data.w;
-            canvas.height = data.h;
-          } else if (img.naturalWidth) {
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-          }
-          ctx.drawImage(img, 0, 0);
-          RV.frameCount++;
-          const now = Date.now();
-          if (now - RV.lastFpsTime >= 1000) {
-            RV.fps = RV.frameCount;
-            RV.frameCount = 0;
-            RV.lastFpsTime = now;
-            const fl = $("rv-fps-label");
-            if (fl) fl.textContent = `${RV.fps} fps`;
-          }
-          const ri = $("rv-info-text");
-          if (ri)
-            ri.textContent = `${canvas.width}×${canvas.height} · ${RV.fps}fps · ${RV.latency}ms · ${RV.quality}`;
-        };
-        img.src = src.startsWith("data:")
-          ? src
-          : `data:image/jpeg;base64,${src}`;
-      }
-
       let mouseState = { x: 0, y: 0, w: 0, h: 0, pending: false };
       function rvMouse(e, type) {
         if (!RV.active || !RV.inputEnabled || !SC.socket) return;
-        const canvas = $("rv-canvas");
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
+        const vid = $("rv-video");
+        const activeEl = (vid && vid.style.display !== "none") ? vid
+                       : (_jpegCanvas && _jpegCanvas.style.display !== "none") ? _jpegCanvas
+                       : null;
+        if (!activeEl) return;
+        const rect = activeEl.getBoundingClientRect();
+
+        // Get actual content dimensions instead of just display rect
+        let contentW = activeEl.videoWidth || activeEl.width || rect.width;
+        let contentH = activeEl.videoHeight || activeEl.height || rect.height;
+        // Calculate scale factor from content to display size
+        let scaleX = contentW / rect.width;
+        let scaleY = contentH / rect.height;
 
         if (type === "move") {
           // v14 ULTRA SYNC: Use requestAnimationFrame for smooth, high-speed cursor sync
-          mouseState.x = e.clientX - rect.left;
-          mouseState.y = e.clientY - rect.top;
-          mouseState.w = rect.width;
-          mouseState.h = rect.height;
+          let rawX = e.clientX - rect.left;
+          let rawY = e.clientY - rect.top;
+          // Scale to actual content dimensions
+          mouseState.x = rawX * scaleX;
+          mouseState.y = rawY * scaleY;
+          // Send actual content dimensions to agent
+          mouseState.w = contentW;
+          mouseState.h = contentH;
           
           if (!mouseState.pending) {
             mouseState.pending = true;
@@ -10017,35 +10113,41 @@
             });
           }
         } else if (type === "down" || type === "up") {
+          let rawX = e.clientX - rect.left;
+          let rawY = e.clientY - rect.top;
           SC.socket.emit("input_event", {
           device_id: RV.deviceId,
           type: "mouse_click",
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-          w: rect.width,
-          h: rect.height,
+          x: rawX * scaleX,
+          y: rawY * scaleY,
+          w: contentW,
+          h: contentH,
           button: e.button === 2 ? "right" : "left",
           down: type === "down",
         });
           if (type === "down") $("rv-kb")?.focus();
         } else if (type === "dblclick") {
+          let rawX = e.clientX - rect.left;
+          let rawY = e.clientY - rect.top;
           SC.socket.emit("input_event", {
           device_id: RV.deviceId,
           type: "mouse_dblclick",
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-          w: rect.width,
-          h: rect.height,
+          x: rawX * scaleX,
+          y: rawY * scaleY,
+          w: contentW,
+          h: contentH,
           button: "left",
         });
         } else if (type === "rclick") {
+          let rawX = e.clientX - rect.left;
+          let rawY = e.clientY - rect.top;
           SC.socket.emit("input_event", {
               device_id: RV.deviceId,
               type: "mouse_click",
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-              w: rect.width,
-              h: rect.height,
+              x: rawX * scaleX,
+              y: rawY * scaleY,
+              w: contentW,
+              h: contentH,
               button: "right",
               down: true,
             });
@@ -10054,10 +10156,10 @@
                 SC.socket.emit("input_event", {
                   device_id: RV.deviceId,
                   type: "mouse_click",
-                  x: e.clientX - rect.left,
-                  y: e.clientY - rect.top,
-                  w: rect.width,
-                  h: rect.height,
+                  x: rawX * scaleX,
+                  y: rawY * scaleY,
+                  w: contentW,
+                  h: contentH,
                   button: "right",
                   down: false,
                 }),
@@ -10068,14 +10170,17 @@
       function rvScroll(e) {
         if (!RV.active || !RV.inputEnabled || !SC.socket) return;
         e.preventDefault();
-        const canvas = $("rv-canvas");
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
+        const vid = $("rv-video");
+        const activeEl = (vid && vid.style.display !== "none") ? vid
+                       : (_jpegCanvas && _jpegCanvas.style.display !== "none") ? _jpegCanvas
+                       : null;
+        if (!activeEl) return;
+        const rect = activeEl.getBoundingClientRect();
         const x = Math.round(
-          (e.clientX - rect.left) * (canvas.width / rect.width),
+          (e.clientX - rect.left) * ((activeEl.videoWidth || activeEl.width) / rect.width),
         );
         const y = Math.round(
-          (e.clientY - rect.top) * (canvas.height / rect.height),
+          (e.clientY - rect.top) * ((activeEl.videoHeight || activeEl.height) / rect.height),
         );
         SC.socket.emit("input_event", {
           device_id: RV.deviceId,
@@ -10112,7 +10217,9 @@
         showToast("Sent Ctrl+Alt+Del", "info");
       }
       function disconnectRemote() {
+        const _disconnectingDeviceId = RV.deviceId;
         RV.active = false;
+        RV.deviceId = null;
         if (RV.pingTimer) {
           clearInterval(RV.pingTimer);
           RV.pingTimer = null;
@@ -10121,19 +10228,26 @@
           clearTimeout(RV._watchdog);
           RV._watchdog = null;
         }
+        // Close WebRTC peer cleanly
+        if (typeof _rtcCleanup === "function") _rtcCleanup();
+        const rvVid = $("rv-video");
+        if (rvVid) { rvVid.srcObject = null; rvVid.style.display = "none"; }
+        // Hide JPEG canvas if active
+        if (_jpegCanvas) {
+          _jpegCanvas.style.display = "none";
+        }
         if (SC.socket) {
-          SC.socket.emit("unsubscribe_stream", { device_id: RV.deviceId });
+          SC.socket.emit("unsubscribe_stream", { device_id: _disconnectingDeviceId });
           SC.socket.emit("dashboard_command", {
             tab: "monitor",
             action: "stop",
-            device_id: RV.deviceId,
+            device_id: _disconnectingDeviceId,
           });
         }
         ADV_MONITOR_CURSOR.clicking = false;
         const sf3d = $("stream-frame-3d");
         if (sf3d) sf3d.classList.remove("streaming");
         if (RV._healTimer) { clearInterval(RV._healTimer); RV._healTimer = null; }
-        $("rv-canvas").style.display = "none";
         const rc = $("rv-connecting");
         if (rc) rc.style.display = "none";
         const rio = $("rv-info-overlay");
@@ -10173,16 +10287,22 @@
         showToast(`Quality: ${RV.quality}`, "info");
       }
       function toggleStreamMode() {
+        // Stream mode is always "video" (H.264). Toggle is repurposed as a quality cycle.
         if (!RV.active || !SC.socket) return;
-        RV._streamMode = RV._streamMode === "video" ? "screenshot" : "video";
+        const tiers = ["high", "medium", "low"];
+        const idx = tiers.indexOf(RV.quality || "high");
+        RV.quality = tiers[(idx + 1) % tiers.length];
         const lbl = $("rv-mode-lbl");
-        if (lbl)
-          lbl.textContent = RV._streamMode === "video" ? "Video" : "Screen";
-        SC.socket.emit("set_stream_mode", {
+        if (lbl) lbl.textContent = "H.264 / " + RV.quality;
+        const qmap = QUALITY_MAP[RV.quality];
+        SC.socket.emit("watch_device", {
           device_id: RV.deviceId,
-          mode: RV._streamMode,
+          fps: RV.quality === "high" ? 60 : RV.quality === "medium" ? 30 : 25,
+          quality: qmap.q,
+          scale: qmap.scale,
+          mode: "video",
         });
-        showToast("Mode: " + RV._streamMode, "info");
+        showToast("Quality: " + RV.quality, "info");
       }
       function requestFullscreen() {
         const wrap = $("rv-wrap");
@@ -10200,28 +10320,8 @@
         showToast("Screenshot requested", "info");
       }
       function drawCursorOverlay(cx, cy, clicking) {
-        const canvas = $("rv-canvas"),
-          overlay = $("rv-cursor-overlay");
-        // FIX: Also ensure overlay is visible
-        if (!canvas || !overlay) return;
-        overlay.style.display = "block";
-        overlay.width = canvas.clientWidth;
-        overlay.height = canvas.clientHeight;
-        overlay.style.width = canvas.clientWidth + "px";
-        overlay.style.height = canvas.clientHeight + "px";
-        const ctx = overlay.getContext("2d");
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-        const sx = cx * (canvas.clientWidth / (canvas.width || 1)),
-          sy = cy * (canvas.clientHeight / (canvas.height || 1));
-        ctx.beginPath();
-        ctx.arc(sx, sy, 9, 0, Math.PI * 2);
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-        ctx.fillStyle = clicking ? "rgba(255,50,50,.8)" : "#000";
-        ctx.fill();
+        // Route to the new unified overlay renderer
+        drawCursorOverlayOnVideo(cx, cy, clicking);
       }
 
       window.__ADV_MONITOR_BRIDGE__ = {
@@ -10247,25 +10347,26 @@
               screen_w:
                 s.fingerprint?.screen_w ||
                 s.fingerprint?.width ||
-                (RV.deviceId === s.token ? $("rv-canvas")?.width || 0 : 0),
+                (RV.deviceId === s.token ? ($("rv-video")?.videoWidth || 0) : 0),
               screen_h:
                 s.fingerprint?.screen_h ||
                 s.fingerprint?.height ||
-                (RV.deviceId === s.token ? $("rv-canvas")?.height || 0 : 0),
+                (RV.deviceId === s.token ? ($("rv-video")?.videoHeight || 0) : 0),
               viewers: s.fingerprint?.viewers || 0,
             })),
           };
         },
         getFrameCanvas() {
-          return $("rv-canvas");
+          // Return video element if WebRTC track is active
+          const vid = $("rv-video");
+          return (vid && vid.style.display !== "none") ? vid : null;
         },
         getCursor() {
-          // FIX: include screen dimensions so iframe can compute correct scale
-          const canvas = $("rv-canvas");
+          const vid = $("rv-video");
           return {
             ...ADV_MONITOR_CURSOR,
-            screenW: canvas?.width  || RV.screenW || 0,
-            screenH: canvas?.height || RV.screenH || 0,
+            screenW: vid?.videoWidth  || RV.screenW || 0,
+            screenH: vid?.videoHeight || RV.screenH || 0,
           };
         },
         watchDevice(deviceId) {
@@ -10514,6 +10615,17 @@
         if (d.ram != null) {
           const e = $("sys-ram");
           if (e) e.textContent = d.ram.toFixed(1) + "%";
+        }
+        // v16: Display FPS and latency metrics from heartbeat
+        if (d.fps != null) {
+          const fpsVal = $("lv-fps-val");
+          if (fpsVal) fpsVal.textContent = d.fps.toFixed(1);
+          const hudFps = $("lv-hud-fps");
+          if (hudFps) hudFps.textContent = d.fps.toFixed(1) + " fps";
+        }
+        if (d.kbps != null) {
+          const bwLabel = $("lv-bw-label");
+          if (bwLabel) bwLabel.textContent = d.kbps.toFixed(1) + " kbps";
         }
       }
 
@@ -12350,10 +12462,10 @@ if(typeof _origShowSection === 'function'){
         const hudLat = $("lv-hud-lat");
         if (hudLat) { hudLat.textContent = lat > 0 ? lat + " ms" : "— ms"; hudLat.className = "lv-hud-chip " + (lat === 0 ? "" : lat < 150 ? "good" : lat < 400 ? "warn" : "bad"); }
 
-        // Canvas resolution
-        const canvas = $("rv-canvas");
-        if (canvas && canvas.width > 0) {
-          const res = canvas.width + "×" + canvas.height;
+        // Video resolution from WebRTC track
+        const vid2 = $("rv-video");
+        if (vid2 && vid2.videoWidth > 0) {
+          const res = vid2.videoWidth + "×" + vid2.videoHeight;
           const hudRes = $("lv-hud-res");
           if (hudRes) hudRes.textContent = res;
           const sbRes = $("lv-sb-res");
@@ -12368,7 +12480,7 @@ if(typeof _origShowSection === 'function'){
 
         // Codec
         const sbCodec = $("lv-sb-codec");
-        if (sbCodec) sbCodec.textContent = RV.codec || "JPEG";
+        if (sbCodec) sbCodec.textContent = RV.codec || "H.264";
 
         // Clock
         const sbTime = $("lv-sb-time");
@@ -12428,7 +12540,7 @@ if(typeof _origShowSection === 'function'){
         if(s1)s1.className="lv-conn-step active";
         if(s2)s2.className="lv-conn-step";
         if(s3)s3.className="lv-conn-step";
-        // Show rv-canvas area in lv-screen-frame when frames arrive (handled by frame_bin)
+        // Show screen frame when WebRTC track arrives (handled by ontrack)
         lvSyncUI();
       };
 
@@ -12450,29 +12562,29 @@ if(typeof _origShowSection === 'function'){
       // Hook into frame arrival to show canvas inside lv-screen-frame
       const _origFrameBin = SC.socket ? null : null; // patched below
       function _lvPatchFrameArrival() {
-        // After frames arrive, show canvas correctly inside lv-screen-frame
-        const canvas = $("rv-canvas");
-        if (!canvas) return;
-        const observer = new MutationObserver(() => {
-          if (canvas.style.display !== "none") {
-            // Move canvas into lv-screen-frame if not already there
-            const frame = $("lv-screen-frame");
-            if (frame && canvas.parentElement !== frame) {
-              frame.insertBefore(canvas, frame.querySelector(".lv-scanline"));
-            }
-            $("lv-idle")?.classList.add("hidden");
-            $("lv-connecting")?.classList.remove("visible");
-            $("lv-screen-frame")?.classList.add("streaming");
-            $("lv-wave")?.classList.add("active");
-            $("lv-live-badge")?.classList.add("visible");
-            // Also move cursor overlay
-            const co = $("rv-cursor-overlay");
-            if (co && frame && co.parentElement !== frame) {
-              frame.appendChild(co);
-            }
+        // Watch both video and canvas for visibility changes
+        function _onMediaVisible(el) {
+          const frame = $("lv-screen-frame");
+          if (frame && el.parentElement !== frame) {
+            frame.insertBefore(el, frame.querySelector(".lv-scanline"));
           }
-        });
-        observer.observe(canvas, { attributes: true, attributeFilter: ["style"] });
+          $("lv-idle")?.classList.add("hidden");
+          $("lv-connecting")?.classList.remove("visible");
+          $("lv-screen-frame")?.classList.add("streaming");
+          $("lv-wave")?.classList.add("active");
+          $("lv-live-badge")?.classList.add("visible");
+          const co = $("rv-cursor-overlay");
+          if (co && frame && co.parentElement !== frame) {
+            frame.appendChild(co);
+          }
+        }
+        const vid = $("rv-video");
+        if (vid) {
+          const vobs = new MutationObserver(() => {
+            if (vid.style.display !== "none") _onMediaVisible(vid);
+          });
+          vobs.observe(vid, { attributes: true, attributeFilter: ["style"] });
+        }
       }
 
       // LV action functions
@@ -12528,24 +12640,19 @@ if(typeof _origShowSection === 'function'){
       }
       function lvRefreshStream() {
         if (!RV.deviceId || !SC.socket) return;
-        showToast("Refreshing stream logic...", "info");
-        // Reset local stream state
-        frameQueue = [];
-        isRendering = false;
-        _healAttempts = 0;
-        const canvas = $("rv-canvas");
-        if (canvas) canvas.style.display = "none";
+        showToast("Refreshing stream…", "info");
+        const vid = $("rv-video");
+        if (vid) { vid.srcObject = null; vid.style.display = "none"; }
         const rc = $("rv-connecting");
         if (rc) {
           rc.style.display = "flex";
           const rcm = $("rv-conn-msg");
-          if (rcm) rcm.textContent = "Re-syncing stream...";
+          if (rcm) rcm.textContent = "Receiving stream from server…";
         }
-        // Force agent to restart stream pipeline
-        SC.socket.emit("dashboard_command", {
-          tab: "refresh_stream",
-          device_id: RV.deviceId
-        });
+        // Close old peer and re-offer
+        if (typeof _rtcCleanup === "function") _rtcCleanup();
+        SC.socket.emit("dashboard_command", { tab: "refresh_stream", device_id: RV.deviceId });
+        setTimeout(() => window.startWebRTC && window.startWebRTC(RV.deviceId).catch(console.error), 500);
       }
 
 
@@ -12581,12 +12688,12 @@ if(typeof _origShowSection === 'function'){
       window.showSection = function(id) {
         if (typeof _origShowSectionLV === "function") _origShowSectionLV(id);
         if (id === "remote-view") {
-          // Make sure canvas is inside the frame
           setTimeout(() => {
-            const canvas = $("rv-canvas");
+            // Ensure video and cursor overlay are inside the screen frame
+            const vid = $("rv-video");
             const frame = $("lv-screen-frame");
-            if (canvas && frame && canvas.parentElement !== frame) {
-              frame.insertBefore(canvas, frame.querySelector(".lv-scanline"));
+            if (vid && frame && vid.parentElement !== frame) {
+              frame.insertBefore(vid, frame.querySelector(".lv-scanline"));
             }
             const co = $("rv-cursor-overlay");
             if (co && frame && co.parentElement !== frame) {

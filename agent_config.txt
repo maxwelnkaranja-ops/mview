@@ -1,0 +1,18 @@
+# Agent Configuration File
+# Place this file in the same directory as agent_source.py or the compiled exe
+
+# Server URL — the HTTP endpoint where the agent connects
+# For Render live deployment: https://screen-connect-rtca.onrender.com
+SERVER_URL=https://screen-connect-rtca.onrender.com
+
+# Optional: Device label (defaults to hostname)
+# DEVICE_LABEL=My Desktop
+
+# Optional: Stream monitor (1=primary, 2=secondary, etc)
+# STREAM_MONITOR=1
+
+# Optional: Stream FPS (default 60)
+# STREAM_FPS=60
+
+# Optional: Stream quality 0-100 (default 92)
+# STREAM_QUALITY=92

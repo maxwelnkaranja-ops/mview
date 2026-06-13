@@ -162,6 +162,17 @@ try:
 except ImportError:
     pass
 
+# ── aiortc WebRTC media bridge ────────────────────────────────────────────────
+try:
+    import asyncio
+    import fractions
+    import av as _av
+    from aiortc import RTCPeerConnection, RTCSessionDescription, MediaStreamTrack
+    from aiortc.contrib.media import MediaBlackhole
+    AIORTC_OK = True
+except ImportError:
+    AIORTC_OK = False
+
 from flask import Flask, request, jsonify, send_from_directory, make_response, redirect
 
 try:
@@ -182,7 +193,7 @@ except ImportError:
 # ══════════════════════════════════════════════════════════════════════════════
 SUPABASE_URL  = os.environ.get("SUPABASE_URL")  or "https://iacdzpcoftxxcoigopun.supabase.co"
 SUPABASE_KEY  = os.environ.get("SUPABASE_KEY")  or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhY2R6cGNvZnR4eGNvaWdvcHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjA1NTUsImV4cCI6MjA5MTk5NjU1NX0.5Eo21XrLTWL3RyKmuvJPdaS-NssraDMyAxVMFy-F054"
-ADMIN_KEY     = os.environ.get("ADMIN_KEY",    "mview-admin-secret")
+ADMIN_KEY     = os.environ.get("ADMIN_KEY") or secrets.token_hex(32)
 TABLE         = os.environ.get("SB_TABLE",     "devices")
 PORT          = int(os.environ.get("PORT", 10000))
 VERSION       = "16.0.0"
@@ -213,7 +224,7 @@ AGENT_STORAGE_URL = os.environ.get(
 AGENT_DIR  = os.environ.get("AGENT_DIR",  "bin")
 AGENT_FILE = os.environ.get("AGENT_FILE", "master_agent.exe")
 
-HEARTBEAT_TIMEOUT      = int(os.environ.get("HEARTBEAT_TIMEOUT",      "20"))  # v13: faster dead-agent detection
+HEARTBEAT_TIMEOUT      = int(os.environ.get("HEARTBEAT_TIMEOUT",      "60"))  # raised: 20s was too tight; agent sends every 5s but gevent scheduling jitter can gap
 MAX_VIEWERS_PER_DEVICE = int(os.environ.get("MAX_VIEWERS_PER_DEVICE", "0"))
 VIEWER_IDLE_TIMEOUT    = int(os.environ.get("VIEWER_IDLE_TIMEOUT",    "0"))
 MAX_SESSION_DURATION   = int(os.environ.get("MAX_SESSION_DURATION",   "0"))
@@ -246,7 +257,10 @@ _ch = logging.StreamHandler(sys.stdout)
 _ch.setFormatter(_log_fmt)
 _handlers.append(_ch)
 
-logging.basicConfig(level=logging.DEBUG, handlers=_handlers)
+logging.basicConfig(level=logging.INFO, handlers=_handlers)
+# Suppress HTTP/2 frame-level debug noise from httpx / hpack / h2 libraries
+for _noisy_lib in ("httpx", "httpcore", "hpack", "h2", "urllib3", "httpcore.http2"):
+    logging.getLogger(_noisy_lib).setLevel(logging.WARNING)
 log = logging.getLogger("screenconnect")
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -261,7 +275,7 @@ def _req_id() -> str:
     return getattr(_req_local, "id", "-")
 
 def _report_crash(context: str, exc: Exception):
-    ts   = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    ts   = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     txt  = f"=== SERVER CRASH ===\nContext: {context}\nTime: {ts}\n\n{traceback.format_exc()}"
     path = os.path.join(_CRASH_DIR, f"crash_{ts}.txt")
     try:
@@ -290,7 +304,7 @@ sys.excepthook = _global_exc_hook
 #  Webhook  (fire-and-forget greenlet)
 # ══════════════════════════════════════════════════════════════════════════════
 def utcnow() -> str:
-    return datetime.datetime.utcnow().isoformat()
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 def _fire_webhook(event: str, payload: dict):
     if not WEBHOOK_URL or not REQUESTS_OK:
@@ -300,7 +314,7 @@ def _fire_webhook(event: str, payload: dict):
             body = json.dumps({"event": event, "ts": utcnow(), **payload})
             headers = {"User-Agent": "MViewServer/12.0", "Content-Type": "application/json"}
             if WEBHOOK_SECRET:
-                sig = hmac.new(WEBHOOK_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+                sig = hmac.new(WEBHOOK_SECRET.encode(), body.encode(), "sha256").hexdigest()
                 headers["X-MView-Signature"] = f"sha256={sig}"
             _requests.post(WEBHOOK_URL, data=body, timeout=8, headers=headers)
         except Exception:
@@ -310,6 +324,292 @@ def _fire_webhook(event: str, payload: dict):
         gevent.spawn(_do)
     else:
         threading.Thread(target=_do, daemon=True).start()
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  aiortc WebRTC Bridge — server-side media relay
+#  Architecture: agent sends JPEG frames via SocketIO frame_bin →
+#  server feeds them into a VideoStreamTrack → aiortc answers browser's
+#  WebRTC offer → browser gets a real H.264/VP8 video track in <video>.
+#  Runs in a dedicated asyncio event loop thread separate from gevent.
+# ══════════════════════════════════════════════════════════════════════════════
+if AIORTC_OK:
+    # ── aiortc asyncio bridge thread ──────────────────────────────────────────
+    # gevent.monkey.patch_all() replaces threading.Thread with greenlets and
+    # patches select/socket.  An asyncio SelectorEventLoop running inside a
+    # gevent greenlet never fires its I/O callbacks because gevent intercepts
+    # the underlying select() call.
+    #
+    # Fix: run the asyncio loop in a *real* OS thread by using the original
+    # (unpatched) threading.start_new_thread, which gevent does not replace.
+    # We keep a threading.Event (created before patch_all would touch it) for
+    # signalling readiness, and expose _rtc_loop once the thread is alive.
+    import _thread as _raw_thread   # built-in, never monkey-patched
+    import ctypes as _ctypes
+
+    _rtc_loop: asyncio.AbstractEventLoop = None        # set inside OS thread
+    _rtc_loop_ready = threading.Event()
+
+    def _rtc_loop_runner():
+        global _rtc_loop
+        # SelectorEventLoop is safe to use from a real OS thread even when
+        # gevent has patched the main thread's selectors.
+        loop = asyncio.SelectorEventLoop()
+        asyncio.set_event_loop(loop)
+        _rtc_loop = loop
+        _rtc_loop_ready.set()
+        loop.run_forever()
+
+    # Start via raw OS thread — bypasses gevent's patched threading.Thread
+    _raw_thread.start_new_thread(_rtc_loop_runner, ())
+    _rtc_loop_ready.wait(timeout=5)
+    if _rtc_loop is None:
+        log.error("[RTC] asyncio bridge loop failed to start — WebRTC bridge disabled!")
+        AIORTC_OK = False
+        import builtins; builtins._AIORTC_BRIDGE_OK = False
+    else:
+        log.info(f"[RTC] asyncio bridge loop started in OS thread {_rtc_loop} — gevent-safe")
+        import builtins; builtins._AIORTC_BRIDGE_OK = True
+
+    def _rtc_run(coro):
+        """Schedule a coroutine on the aiortc loop from any thread, logging exceptions."""
+        async def _guarded():
+            try:
+                await coro
+            except Exception as e:
+                log.error(f"[RTC] bridge coroutine exception: {e}", exc_info=True)
+        if _rtc_loop and _rtc_loop.is_running():
+            return asyncio.run_coroutine_threadsafe(_guarded(), _rtc_loop)
+        log.error("[RTC] _rtc_run called but loop is not running!")
+        return None
+
+    # Per-device JPEG frame queues: device_id → list[asyncio.Queue]  (fan-out to all viewers)
+    _rtc_frame_queues: dict = {}  # device_id → list of asyncio.Queue
+    _rtc_frame_queues_lock = threading.Lock()
+
+    # Active RTCPeerConnections: (device_id, viewer_sid) → RTCPeerConnection
+    _rtc_peers: dict = {}
+    _rtc_peers_lock = threading.Lock()
+
+    class JpegVideoTrack(MediaStreamTrack):
+        """
+        VideoStreamTrack that pulls JPEG frames from a per-device asyncio queue,
+        decodes them with PyAV, and presents them as video/H264 frames.
+        """
+        kind = "video"
+
+        # NAL start codes used by H.264 annex-B bitstreams
+        _H264_START = (b"\x00\x00\x00\x01", b"\x00\x00\x01")
+
+        @staticmethod
+        def _detect_codec(data: bytes) -> str:
+            """Return 'h264' or 'mjpeg' based on the first bytes of the payload."""
+            if data[:4] == b"\x00\x00\x00\x01" or data[:3] == b"\x00\x00\x01":
+                return "h264"
+            return "mjpeg"
+
+        def __init__(self, device_id: str, queue=None):
+            super().__init__()
+            self._did = device_id
+            self._pts = 0
+            self._time_base = fractions.Fraction(1, 90000)
+            self._last_pts_time = None
+            self._q = queue
+            # Codec auto-detected from first frame — starts as None
+            self._codec = None
+            self._codec_name = None
+
+        def _get_codec(self, data: bytes):
+            """Return a codec context matching the incoming data format.
+            Created once and reused — never reset after creation because the
+            H.264 decoder must retain SPS/PPS state across frames.
+            """
+            name = self._detect_codec(data)
+            if self._codec is None:
+                try:
+                    self._codec = _av.CodecContext.create(name, "r")
+                    self._codec_name = name
+                    log.info(f"[RTC] {self._did}: codec -> {name}")
+                except Exception as e:
+                    log.warning(f"[RTC] {self._did}: codec create failed: {e}")
+            return self._codec
+
+        async def recv(self):
+            # Wait indefinitely for the next real frame from the agent.
+            if self._q is None:
+                self._q = asyncio.Queue(maxsize=16)
+                with _rtc_frame_queues_lock:
+                    _rtc_frame_queues[self._did] = [self._q]
+
+            while True:
+                frame_bytes = await self._q.get()
+                log.info(f"[RTC] {self._did}: received frame bytes ({len(frame_bytes)} bytes)")
+                codec = self._get_codec(frame_bytes)
+                if codec is None:
+                    continue
+                try:
+                    # parse() buffers NAL units; flush with b"" releases immediately.
+                    packets = codec.parse(frame_bytes) + codec.parse(b"")
+                    if packets:
+                        log.info(f"[RTC] {self._did}: parsed {len(packets)} packets")
+                        frames = codec.decode(packets[0])
+                        if frames:
+                            log.info(f"[RTC] {self._did}: decoded {len(frames)} frames")
+                            frame = frames[0]
+                            frame = frame.reformat(format="yuv420p")
+                            now_t = asyncio.get_event_loop().time()
+                            if self._last_pts_time is None:
+                                self._last_pts_time = now_t
+                                elapsed_ticks = 3000
+                            else:
+                                elapsed_s = now_t - self._last_pts_time
+                                elapsed_ticks = max(1, int(elapsed_s * 90000))
+                                self._last_pts_time = now_t
+                            self._pts += elapsed_ticks
+                            frame.pts = self._pts
+                            frame.time_base = self._time_base
+                            log.info(f"[RTC] {self._did}: returning frame {self._pts}")
+                            return frame
+                except Exception as e:
+                    log.warning(f"[RTC] {self._did}: decode failed: {e}", exc_info=True)
+                    # Do NOT reset codec — destroying it loses SPS/PPS state and
+                    # every subsequent frame fails. Just skip this frame.
+                    pass
+                # Decode failed — discard and wait for the next frame
+
+    async def _handle_webrtc_offer(device_id: str, viewer_sid: str, sdp_offer: dict, emit_fn):
+        """
+        Create an RTCPeerConnection for this viewer, add the device's video track,
+        answer the SDP offer, and wire up ICE callbacks.
+        """
+        key = (device_id, viewer_sid)
+
+        # Close any existing peer for this viewer
+        with _rtc_peers_lock:
+            old = _rtc_peers.pop(key, None)
+        if old:
+            try:
+                await old.close()
+            except Exception:
+                pass
+
+        # Create the frame queue NOW, on the aiortc loop, before any frame_bin
+        # events can arrive from the agent.  If we wait until recv() is first
+        # called, frames sent during SDP negotiation are silently dropped.
+        # B1 fix: append to per-device queue LIST so multiple viewers get the same frames (fan-out).
+        eager_q = asyncio.Queue(maxsize=16)
+        with _rtc_frame_queues_lock:
+            if device_id not in _rtc_frame_queues:
+                _rtc_frame_queues[device_id] = []
+            _rtc_frame_queues[device_id].append(eager_q)
+
+        # B3 fix: Pass ICE servers so NAT traversal works on Render/Railway
+        from aiortc import RTCConfiguration, RTCIceServer
+        _ice_servers = [RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+                        RTCIceServer(urls=["stun:stun1.l.google.com:19302"])]
+        _turn_url = os.environ.get("TURN_URL", "").strip()
+        if _turn_url:
+            _turn_user = os.environ.get("TURN_USERNAME", "")
+            _turn_cred = os.environ.get("TURN_CREDENTIAL", "")
+            _ice_servers.append(RTCIceServer(urls=[_turn_url], username=_turn_user, credential=_turn_cred))
+        pc = RTCPeerConnection(RTCConfiguration(iceServers=_ice_servers))
+        with _rtc_peers_lock:
+            _rtc_peers[key] = pc
+
+        # Add the video track sourced from agent frames
+        video_track = JpegVideoTrack(device_id, queue=eager_q)
+        pc.addTrack(video_track)
+
+        @pc.on("icecandidate")
+        def on_ice(candidate):
+            if candidate:
+                emit_fn("webrtc_ice", {
+                    "viewer_sid": viewer_sid,
+                    "candidate": {
+                        "candidate": candidate.to_sdp(),
+                        "sdpMid": candidate.sdpMid,
+                        "sdpMLineIndex": candidate.sdpMLineIndex,
+                    }
+                }, to=viewer_sid)
+
+        @pc.on("connectionstatechange")
+        async def on_state():
+            if pc.connectionState in ("failed", "closed", "disconnected"):
+                with _rtc_peers_lock:
+                    _rtc_peers.pop(key, None)
+                try:
+                    await pc.close()
+                except Exception:
+                    pass
+
+        # Set remote description (the browser's offer)
+        await pc.setRemoteDescription(RTCSessionDescription(
+            sdp=sdp_offer.get("sdp", ""),
+            type=sdp_offer.get("type", "offer"),
+        ))
+
+        # Create answer
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
+
+        # Send answer back to browser via SocketIO
+        emit_fn("webrtc_answer", {
+            "sdp": {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
+        }, to=viewer_sid)
+
+    async def _close_viewer_peer(device_id: str, viewer_sid: str):
+        key = (device_id, viewer_sid)
+        with _rtc_peers_lock:
+            pc = _rtc_peers.pop(key, None)
+        if pc:
+            # B1 fix: remove this viewer's queue from the device fan-out list
+            try:
+                track = next((t for t in pc.getTransceivers() if t.receiver and t.receiver.track), None)
+                if track and hasattr(track, '_q') and track._q is not None:
+                    with _rtc_frame_queues_lock:
+                        qs = _rtc_frame_queues.get(device_id, [])
+                        try:
+                            qs.remove(track._q)
+                        except ValueError:
+                            pass
+            except Exception:
+                pass
+            try:
+                await pc.close()
+            except Exception:
+                pass
+
+    def rtc_push_frame(device_id: str, jpeg_bytes: bytes):
+        """Called from gevent thread — push a JPEG frame into ALL viewer queues for the device (fan-out)."""
+        if not AIORTC_OK:
+            return
+        with _rtc_frame_queues_lock:
+            qs = list(_rtc_frame_queues.get(device_id, []))
+        if not qs:
+            return
+        log.info(f"[RTC] {device_id}: pushing frame to {len(qs)} viewers ({len(jpeg_bytes)} bytes)")
+        # Non-blocking put — drop frame if any individual viewer queue is full (live-only)
+        def _push():
+            for q in qs:
+                try:
+                    if not q.full():
+                        q.put_nowait(jpeg_bytes)
+                except Exception:
+                    pass
+        try:
+            _rtc_loop.call_soon_threadsafe(_push)
+        except Exception:
+            pass
+
+else:
+    _rtc_loop = None
+    _rtc_peers = {}
+    _rtc_frame_queues = {}
+
+    def _rtc_run(coro):
+        return None
+
+    def rtc_push_frame(device_id: str, jpeg_bytes: bytes):
+        pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Flask + CORS + SocketIO
@@ -483,8 +783,8 @@ def _is_locked_out(ip: str) -> bool:
 def _jwt_encode(payload: dict, ttl: int = None) -> str:
     if not JWT_OK:
         return secrets.token_hex(32)
-    exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl or JWT_TTL_SECONDS)
-    return _pyjwt.encode({**payload, "exp": exp, "iat": datetime.datetime.utcnow()},
+    exp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=ttl or JWT_TTL_SECONDS)
+    return _pyjwt.encode({**payload, "exp": exp, "iat": datetime.datetime.now(datetime.timezone.utc)},
                          JWT_SECRET, algorithm="HS256")
 
 def _jwt_decode(token: str) -> dict:
@@ -568,8 +868,8 @@ _macros: dict = {}   # macro_id → {name, keys: [], org_id, created_at}
 
 # ── Agent capability flags ────────────────────────────────────────────────────
 AGENT_CAPS = {
-    "frame_bin":       True,
-    "cursor_bin":      True,
+    "frame_bin":       True,    # Always enabled — feeds aiortc bridge or JPEG relay fallback
+    "cursor_bin":      False,   # WebRTC-only — cursor via WebRTC DataChannel
     "webrtc":          True,
     "audio":           True,
     "file_transfer":   True,
@@ -662,36 +962,34 @@ _shutdown_lock = threading.Lock()
 #  Supabase helpers  — all heavy calls run in gevent greenlets so they
 #  never block the Socket.IO dispatch loop
 # ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+#  Supabase helpers — DISABLED: all device state is in-memory only.
+#  The Supabase client SDK spawns background threads/greenlets that conflict
+#  with gevent's cooperative scheduler and cause heartbeat timeouts.
+# ══════════════════════════════════════════════════════════════════════════════
 def get_sb():
-    global _sb
-    with _sb_lock:
-        if _sb:
-            return _sb
-        try:
-            from supabase import create_client
-            _sb = create_client(SUPABASE_URL, SUPABASE_KEY)
-            log.info("Supabase connected.")
-            return _sb
-        except Exception as e:
-            log.warning(f"Supabase unavailable: {e}")
-            return None
+    return None  # Supabase disabled — direct agent→server→dashboard only
 
 def _sb_reset():
-    global _sb
-    with _sb_lock:
-        _sb = None
+    pass
 
 def _sb_retry(fn, attempts=3, delay=1.0):
-    for i in range(attempts):
-        try:
-            return fn(), True
-        except Exception as e:
-            if i == attempts - 1:
-                log.error(f"Supabase op failed after {attempts} attempts: {e}")
-                _sb_reset()
-                return None, False
-            _sleep(delay * (2 ** i))
     return None, False
+
+def db_get(token, bypass_cache=False):
+    return {"device_id": token, "status": "pending", "expires_at": None}
+
+def db_update(token, upd: dict):
+    return False
+
+def db_upsert(token, upd: dict):
+    return False
+
+def db_insert(payload: dict):
+    return payload
+
+def db_list_all() -> list:
+    return []
 
 def _sleep(secs):
     """Gevent-aware sleep."""
@@ -708,67 +1006,6 @@ def _bg(fn, *args, **kwargs):
         gevent.spawn(fn, *args, **kwargs)
     else:
         threading.Thread(target=fn, args=args, kwargs=kwargs, daemon=True).start()
-
-def db_get(token, bypass_cache=False):
-    if not bypass_cache:
-        cached = _db_get_cache.get(token)
-        if cached is not None:
-            return cached
-    sb = get_sb()
-    if not sb:
-        return {"device_id": token, "status": "pending", "expires_at": None}
-    result, ok = _sb_retry(lambda: sb.table(TABLE).select("*").eq("device_id", token).execute())
-    if ok and result:
-        rows = result.data or []
-        val = rows[0] if rows else None
-        if val:
-            _db_get_cache.set(token, val)
-        return val
-    return {"device_id": token, "status": "pending", "expires_at": None}
-
-def db_update(token, upd: dict):
-    sb = get_sb()
-    if not sb:
-        return False
-    result, ok = _sb_retry(lambda: sb.table(TABLE).update(upd).eq("device_id", token).execute())
-    return ok
-
-def db_upsert(token, upd: dict):
-    sb = get_sb()
-    if not sb:
-        return False
-    payload = {"device_id": token, **upd}
-    result, ok = _sb_retry(lambda: sb.table(TABLE).upsert(payload, on_conflict="device_id").execute())
-    if not ok:
-        updated, ok2 = _sb_retry(lambda: sb.table(TABLE).update(upd).eq("device_id", token).execute())
-        if ok2 and updated and updated.data:
-            return True
-        _, ok3 = _sb_retry(lambda: sb.table(TABLE).insert(payload).execute())
-        return ok3
-    return ok
-
-def db_insert(payload: dict):
-    sb = get_sb()
-    if not sb:
-        return payload
-    result, ok = _sb_retry(lambda: sb.table(TABLE).insert(payload).execute())
-    if ok and result:
-        return (result.data or [payload])[0]
-    # Retry without optional columns
-    safe = {k: v for k, v in payload.items() if k not in ("link_mode", "redirect_url")}
-    result2, ok2 = _sb_retry(lambda: sb.table(TABLE).insert(safe).execute())
-    if ok2 and result2:
-        return (result2.data or [safe])[0]
-    return payload
-
-def db_list_all() -> list:
-    sb = get_sb()
-    if not sb:
-        return []
-    result, ok = _sb_retry(lambda: sb.table(TABLE).select("*").order("created_at", desc=True).execute())
-    if ok and result:
-        return result.data or []
-    return []
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Agent binary helpers
@@ -939,6 +1176,9 @@ def _cleanup_viewer(viewer_sid: str):
         agent_sid  = _adv_agent_sids.get(adv_did)
         if agent_sid and sio:
             sio.emit("viewer_count", {"count": vcount}, room=agent_sid)
+        # Close the aiortc peer for this viewer
+        if AIORTC_OK:
+            _rtc_run(_close_viewer_peer(adv_did, viewer_sid))
     with _viewer_activity_lock:
         _viewer_last_activity.pop(viewer_sid, None)
         _viewer_session_start.pop(viewer_sid, None)
@@ -985,10 +1225,7 @@ def _cleanup_agent(agent_sid: str):
     _bg(_cleanup_agent_bg, did, label)
 
 def _cleanup_agent_bg(did, label):
-    try:
-        db_update(did, {"status": "offline", "disconnected_at": utcnow()})
-    except Exception:
-        pass
+    # Supabase sync removed — offline state already reflected in _devices removal.
     _fire_webhook("agent_offline", {"device_id": did, "label": label})
     try:
         if sio:
@@ -1000,19 +1237,9 @@ def broadcast_device_update():
     if not sio:
         return
     try:
-        rows = _get_cached_db_rows()   # non-blocking cache; never blocks event loop
+        # Pure in-memory — no DB/Supabase call, never blocks the event loop
         with _dev_lock:
-            live = {d["device_id"]: d for d in _devices.values()}
-        for row in rows:
-            did = row.get("device_id", "")
-            if did in live:
-                row.update({
-                    "_live":       True,
-                    "cpu":         live[did].get("cpu"),
-                    "ram":         live[did].get("ram"),
-                    "last_beat":   live[did].get("last_beat"),
-                    "frame_count": live[did].get("frame_count", 0),
-                })
+            rows = [_safe_dev(d) for d in _devices.values()]
         sio.emit("device_update", {"rows": rows, "ts": utcnow()})
         sio.emit("device_update", {"rows": rows, "ts": utcnow()}, room="adv_dashboards")
         _broadcast_device_list()
@@ -1143,7 +1370,7 @@ def debug_connections():
         "viewers_by_device": viewers,
         "adv_viewers_by_sid": adv_viewers,
         "known_devices": online_agents,
-        "timestamp": utcnow().isoformat()
+        "timestamp": utcnow()
     }), 200
 
 @app.route("/health/full")
@@ -1168,8 +1395,8 @@ def health_full():
         "online_agents": online_agents,
         "total_sessions": total_sessions,
         "gevent_ok": _GEVENT_OK,
-        "database": _SB_INIT_OK,
-        "timestamp": utcnow().isoformat()
+        "database": False,  # Supabase disabled
+        "timestamp": utcnow()
     }), 200
 
 @app.route("/status")
@@ -1203,7 +1430,7 @@ def health():
 @app.route("/api/crash", methods=["POST"])
 def api_crash_report():
     data = request.get_json(silent=True) or {}
-    ts   = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    ts   = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     did  = data.get("device_id", "unknown")[:64]
     path = os.path.join(_CRASH_DIR, f"agent_{did}_{ts}.txt")
     try:
@@ -1587,34 +1814,26 @@ if SOCKETIO_OK and sio:
             sio.emit("device_update", {"rows": online_devs, "ts": utcnow()}, room=sid)
 
     def _build_device_list_result() -> list:
+        # Pure in-memory — no Supabase call, no cache miss latency
         with _dev_lock:
             live = dict(_devices)
-        rows   = _get_cached_db_rows()   # non-blocking: uses cache, refreshes in bg
-        db_map = {r.get("device_id", ""): r for r in rows}
         result = []
         for did, dev in live.items():
-            db_row = db_map.get(did, {})
             result.append({
                 "id": did,
                 "device_id": did,
                 "token": did,
                 "name": dev.get("label") or dev.get("hostname") or did,
-                "online": True, "screen_w": dev.get("screen_w", 0), "screen_h": dev.get("screen_h", 0),
-                "rtt_ms": dev.get("rtt_ms", 0), "cpu": dev.get("cpu"), "ram": dev.get("ram"),
-                "ip": dev.get("local_ip") or db_row.get("ip_address", ""),
-                "os": dev.get("os") or db_row.get("os_info", ""),
+                "online": True,
+                "screen_w": dev.get("screen_w", 0),
+                "screen_h": dev.get("screen_h", 0),
+                "rtt_ms": dev.get("rtt_ms", 0),
+                "fps": dev.get("fps", 0),
+                "cpu": dev.get("cpu"),
+                "ram": dev.get("ram"),
+                "ip": dev.get("local_ip", ""),
+                "os": dev.get("os", ""),
             })
-        for did, row in db_map.items():
-            if did not in live:
-                result.append({
-                    "id": did,
-                    "device_id": did,
-                    "token": did,
-                    "name": row.get("label") or row.get("hostname") or did,
-                    "online": False, "screen_w": 0, "screen_h": 0, "rtt_ms": 0,
-                    "cpu": None, "ram": None,
-                    "ip": row.get("ip_address", ""), "os": row.get("os_info", ""),
-                })
         return result
 
     def _send_device_list_to(sid):
@@ -1713,11 +1932,7 @@ if SOCKETIO_OK and sio:
             # GOP catch-up DISABLED for live-only mode (GOP_BUF_SIZE=0).
             # Sending stale frames on connect is the primary cause of "showing past things".
             # New viewers see only frames arriving AFTER they subscribe.
-            cursor_pkt = _adv_cursor_latest.get(did)
-            if cursor_pkt:
-                def _send_cursor(_sid=sid, _cursor=cursor_pkt):
-                    sio.emit("cursor_bin", _cursor, room=_sid)
-                _bg(_send_cursor)
+            # cursor catch-up removed — cursor is delivered exclusively via WebRTC DataChannel
 
             # Notify agent of viewer count
             agent_adv_sid = _adv_agent_sids.get(did)
@@ -1737,6 +1952,7 @@ if SOCKETIO_OK and sio:
                 "name":   dev.get("hostname", did),
                 "screen_w": dev.get("screen_w", 0),
                 "screen_h": dev.get("screen_h", 0),
+                "stream_mode": "webrtc" if AIORTC_OK else "jpeg",
             }, room=sid)
             emit("subscribed", {"device_id": did, "viewers": vcount})
 
@@ -1746,7 +1962,8 @@ if SOCKETIO_OK and sio:
             scale   = float(data.get("scale", 1.0))               # default full res
             monitor = data.get("monitor", 1)
             spay = {"tab": "monitor", "action": "start", "device_id": did,
-                    "fps": fps, "quality": quality, "scale": scale, "monitor": monitor}
+                    "fps": fps, "quality": quality, "scale": scale, "monitor": monitor,
+                    "stream_mode": "jpeg"}  # always request JPEG frames — server bridges to WebRTC
             sio.emit("request_action", spay, room=did)
             if agent_adv_sid:
                 sio.emit("request_action", spay, room=agent_adv_sid)
@@ -1869,7 +2086,7 @@ if SOCKETIO_OK and sio:
             active_viewers = list(_viewers.get(did, set()))
         if active_viewers:
             spay = {"tab": "monitor", "action": "start", "device_id": did,
-                    "fps": 60, "quality": 90, "scale": 1.0, "monitor": 1}  # v12.2 LIVE-SYNC
+                    "fps": 60, "quality": 92, "scale": 1.0, "monitor": 1, "mode": "video"}
             sio.emit("request_action", spay, room=request.sid)
             for vsid in active_viewers:
                 sio.emit("agent_replaced", {"device_id": did, "label": label, "ts": utcnow()}, room=vsid)
@@ -1884,15 +2101,12 @@ if SOCKETIO_OK and sio:
         _bg(_fire_hooks, "on_agent_connect", device_id=did, label=label, data=data)
 
     def _agent_connect_bg(did, label, data):
-        try:
-            db_upsert(did, {
-                "status": "online", "label": label,
-                "ip_address": data.get("local_ip"), "hostname": data.get("hostname"),
-                "os_info": data.get("os"), "agent_version": data.get("agent_version"),
-                "connected_at": utcnow(),
-            })
-        except Exception:
-            pass
+        # Storm guard + fingerprint registration
+        _register_fingerprint(did, data)
+        if _is_reconnect_storm(did):
+            log.warning(f"Reconnect storm detected for {did} — skipping broadcast")
+            return
+        # Supabase sync removed — device state lives in _devices in-memory dict.
         try:
             broadcast_device_update()
             _broadcast_device_list()
@@ -1909,19 +2123,41 @@ if SOCKETIO_OK and sio:
         did = data.get("device_id")
         if not did:
             return
+        
+        # Calculate FPS and latency metrics from frame stats
+        fps = 0.0
+        kbps = 0.0
+        with _frame_stats_lock:
+            dq = _frame_stats.get(did)
+            if dq:
+                now = time.time()
+                recent = [(t, b) for t, b in dq if now - t < 5.0]
+                fps = len(recent) / 5.0 if recent else 0
+                bps = sum(b for _, b in recent) / 5.0 if recent else 0
+                kbps = bps / 1024
+        
+        # Build response with metrics
+        hb_with_metrics = dict(data)
+        hb_with_metrics.update({
+            "fps": round(fps, 1),
+            "kbps": round(kbps, 1),
+            "ts": utcnow(),
+        })
+        
         with _dev_lock:
             if did in _devices:
                 _devices[did].update({
                     "cpu":       data.get("cpu"),
                     "ram":       data.get("ram"),
+                    "fps":       round(fps, 1),
                     "last_beat": utcnow(),
                 })
-        sio.emit("heartbeat_update", data, room=f"view:{did}")
-        sio.emit("heartbeat_update", data, room=f"adv_viewers_{did}")
+        sio.emit("heartbeat_update", hb_with_metrics, room=f"view:{did}")
+        sio.emit("heartbeat_update", hb_with_metrics, room=f"adv_viewers_{did}")
         _hb_count[did] += 1
         if _hb_count[did] % _HB_BROADCAST_EVERY == 0:
-            sio.emit("heartbeat_update", data, room="dashboards")
-            sio.emit("heartbeat_update", data, room="adv_dashboards")
+            sio.emit("heartbeat_update", hb_with_metrics, room="dashboards")
+            sio.emit("heartbeat_update", hb_with_metrics, room="adv_dashboards")
 
     # ── Agent auth (Advanced Monitor second socket) ───────────────────────────
     @sio.on("agent_auth")
@@ -1961,7 +2197,8 @@ if SOCKETIO_OK and sio:
         sio.emit("viewer_count", {"count": vcount}, room=sid)
         if vcount > 0:
             sio.emit("request_action", {"tab": "monitor", "action": "start", "device_id": did,
-                                        "fps": 60, "quality": 90, "scale": 1.0, "monitor": 1}, room=sid)  # v12.2 LIVE-SYNC
+                                        "fps": 60, "quality": 92, "scale": 1.0, "monitor": 1,
+                                        "mode": "video"}, room=sid)
         _audit("agent_auth_ok", device_id=did, viewers=vcount)
 
     @sio.on("agent_auth_ready")
@@ -2014,151 +2251,78 @@ if SOCKETIO_OK and sio:
         sio.emit("agent_offline", data, room="adv_dashboards")
         sio.emit("agent_offline", data, room="dashboards")
 
-    # ── Binary frame relay ────────────────────────────────────────────────────
+    # ── Frame relay — feeds agent JPEG frames into aiortc WebRTC bridge ──────
     @sio.on("frame_bin")
     def on_frame_bin(data):
-        """ v16: Optimized binary frame relay with zero-copy and error resilience """
-        try:
-            sid = request.sid
-            did = _adv_sid_to_agent.get(sid)
-            if not did:
-                with _sid_lock:
-                    did = _sid_to_device.get(sid)
-            
-            if not did: return
-
-            n = len(data)
-            if n < 16 or n > MAX_FRAME_BYTES: return
-
-            now = time.time()
-            
-            # v16: Super-fast stats and sequencing
-            seq = _device_frame_seq[did]
-            _device_frame_seq[did] = seq + 1
-            
-            # Performance monitoring (every 10 frames for better debug visibility)
-            if seq % 10 == 0:
-                last_ts = _device_stats.get(did, {}).get("last_stat_ts", now - 1)
-                dt = now - last_ts
-                fps = round(10 / dt, 1) if dt > 0 else 0
-                # Calculate KBPS from bw_window
-                dq = _bw_window[did]
-                kbps = round(sum(b for _, b in dq) * 8 / (1024 * dt), 1) if dt > 0 else 0
-                log.info(f"PERF_RELAY: {did} | FPS: {fps} | KBPS: {kbps} | SIZE: {n} bytes")
-                _device_stats[did] = {"last_stat_ts": now}
-            
-            # Bandwidth tracking
-            dq = _bw_window[did]
-            dq.append((now, n))
-            while dq and now - dq[0][0] > 1.0:
-                dq.popleft()
-                
-            if MAX_FRAME_KBPS > 0:
-                if sum(b for _, b in dq) * 8 / 1024.0 > MAX_FRAME_KBPS:
-                    return
-
-            # Decode w/h and timestamp from header (first 16 bytes: 4+4+8)
-            try:
-                w, h, ts_us = struct.unpack_from(">IIQ", data, 0)
-                if w > 0 and h > 0:
-                    with _dev_lock:
-                        dev = _devices.get(did)
-                        if dev:
-                            dev["screen_w"] = w
-                            dev["screen_h"] = h
-                            dev["frame_count"] += 1
-                            dev["last_frame_ts"] = utcnow()
-            except Exception:
-                ts_us = int(now * 1_000_000)
-
-            # GOP buffer (if enabled)
-            if GOP_BUF_SIZE > 0:
-                with _adv_gop_lock:
-                    buf = _adv_gop_buf.setdefault(did, collections.deque(maxlen=GOP_BUF_SIZE))
-                    buf.append(data)
-
-            # v16: Append sequence number suffix for viewer-side gap detection
-            # Format: raw_frame_bytes + b"\xFFSEQ" + seq.to_bytes(4,"big")
-            seq_suffix = bytes([0xFF,0x53,0x45,0x51]) + (seq & 0xFFFFFFFF).to_bytes(4, "big")
-            frame_with_seq = data + seq_suffix
-
-            # Fan out to viewers
-            sio.emit("frame_bin", frame_with_seq, room=f"view:{did}")
-            sio.emit("frame_bin", frame_with_seq, room=f"adv_viewers_{did}")
-
-            # Lightweight frame-metadata event every 10 frames
-            if seq % 10 == 0:
-                _device_fps_ring[did].append(now)
-                fps_ring = _device_fps_ring[did]
-                if len(fps_ring) >= 2:
-                    span = fps_ring[-1] - fps_ring[0]
-                    actual_fps = round((len(fps_ring) - 1) / span, 1) if span > 0 else 0
-                else:
-                    actual_fps = 0
-                
-                sio.emit("frame_meta", {
-                    "device_id": did, "seq": seq, "ts_us": ts_us,
-                    "size": n, "fps": actual_fps,
-                }, room=f"view:{did}")
-
-        except Exception as exc:
-            _report_crash("on_frame_bin", exc)
-
-    @sio.on("frame_bin_relay")
-    def on_frame_bin_relay(data_pkg):
-        """Fallback relay for legacy or restricted agents."""
-        did = data_pkg.get("device_id")
-        if not did: return
-        
-        raw = None
-        if data_pkg.get("b64"):
-            raw = base64.b64decode(data_pkg["b64"])
-        elif data_pkg.get("data"):
-            raw = bytes(data_pkg["data"])
-        
-        if not raw: return
-        on_frame_bin(raw)
-
-    # v13: cursor position cache for delta suppression
-    _cursor_prev: dict = {}  # device_id → (x, y)
-
-    @sio.on("cursor_bin_norm")
-    def on_cursor_bin_norm(data):
-        """v16: Relay normalized cursor binary packets."""
-        sid = request.sid
-        did = _sid_to_device.get(sid) or _adv_sid_to_agent.get(sid)
-        if did:
-            sio.emit("cursor_bin_norm", data, room=f"view:{did}")
-            sio.emit("cursor_bin_norm", data, room=f"adv_viewers_{did}")
-
-    @sio.on("cursor_bin")
-    def on_cursor_bin(data):
         sid = request.sid
         did = _adv_sid_to_agent.get(sid)
         if not did:
             with _sid_lock:
                 did = _sid_to_device.get(sid)
+        if not did or not data:
+            return
+        raw = bytes(data) if not isinstance(data, (bytes, bytearray)) else data
+        # Agent v16 prepends a 24-byte FRAME_HDR (">IIQII") before the payload.
+        # Strip it for both JPEG (0xFF 0xD8) and H.264 (0x00 0x00 0x00 0x01).
+        _HDR = 24
+        if len(raw) > _HDR and (
+            raw[_HDR:_HDR+2] == b"\xff\xd8" or          # JPEG SOI
+            raw[_HDR:_HDR+4] == b"\x00\x00\x00\x01" or  # H.264 annex-B 4-byte start
+            raw[_HDR:_HDR+3] == b"\x00\x00\x01"          # H.264 annex-B 3-byte start
+        ):
+            raw = raw[_HDR:]
+        # Track frame stats for FPS/bandwidth monitoring
+        with _frame_stats_lock:
+            _frame_stats[did].append((time.time(), len(raw)))
+        with _dev_lock:
+            if did in _devices:
+                _devices[did]["frame_count"] = _devices[did].get("frame_count", 0) + 1
+                _devices[did]["last_frame_ts"] = utcnow()
+        if AIORTC_OK:
+            rtc_push_frame(did, raw)
+        else:
+            import base64 as _b64
+            b64 = _b64.b64encode(raw).decode()
+            sio.emit("frame_jpeg", {"d": b64}, room=f"view:{did}")
+
+    @sio.on("frame_bin_relay")
+    def on_frame_bin_relay(data_pkg):
+        # B7 fix: frame_bin_relay must also strip the 24-byte FRAME_HDR before relaying
+        sid = request.sid
+        did = _adv_sid_to_agent.get(sid)
         if not did:
+            with _sid_lock:
+                did = _sid_to_device.get(sid)
+        if not did or not data_pkg:
             return
-        try:
-            raw = bytes(data)
-        except Exception:
-            return
-        # v13: delta suppression — skip relay if cursor moved <2px (reduces jitter events)
-        if len(raw) >= 8:
-            try:
-                cx, cy = struct.unpack_from(">ii", raw, 0)
-                prev = _cursor_prev.get(did)
-                if prev:
-                    dx, dy = abs(cx - prev[0]), abs(cy - prev[1])
-                    if dx < 2 and dy < 2:
-                        return  # sub-pixel movement — skip
-                _cursor_prev[did] = (cx, cy)
-            except Exception:
-                pass
-        _adv_cursor_latest[did] = raw
-        sio.emit("cursor_bin", raw, room=f"adv_viewers_{did}")
-        sio.emit("cursor_bin", raw, room=f"view:{did}")
+        raw = bytes(data_pkg) if not isinstance(data_pkg, (bytes, bytearray)) else data_pkg
+        # Agent v16 prepends a 24-byte FRAME_HDR (">IIQII") before the JPEG payload.
+        # Strip it so the mjpeg decoder receives a valid JPEG starting with 0xFF 0xD8.
+        _HDR = 24
+        if len(raw) > _HDR and raw[_HDR:_HDR+2] == b"\xff\xd8":
+            raw = raw[_HDR:]
+        # Track frame stats
+        did_str = str(did)
+        with _frame_stats_lock:
+            _frame_stats[did_str].append((time.time(), len(raw)))
+        with _dev_lock:
+            if did_str in _devices:
+                _devices[did_str]["frame_count"] = _devices[did_str].get("frame_count", 0) + 1
+                _devices[did_str]["last_frame_ts"] = utcnow()
+        if AIORTC_OK:
+            rtc_push_frame(did, raw)
+        else:
+            import base64 as _b64
+            b64 = _b64.b64encode(raw).decode()
+            sio.emit("frame_jpeg", {"d": b64}, room=f"view:{did}")
+
+    @sio.on("cursor_bin_norm")
+    def on_cursor_bin_norm(data):
+        pass  # cursor delivered via WebRTC DataChannel or ignored
+
+    @sio.on("cursor_bin")
+    def on_cursor_bin(data):
+        pass  # cursor delivered via WebRTC DataChannel or ignored
 
     @sio.on("agent_info")
     def on_agent_info(data):
@@ -2255,40 +2419,76 @@ if SOCKETIO_OK and sio:
         if dev:
             sio.emit("request_action", {"tab": "key_event", **data}, room=did)
 
-    # ── WebRTC signaling ──────────────────────────────────────────────────────
+    # ── WebRTC signaling — server-side aiortc bridge ──────────────────────────
     @sio.on("webrtc_offer")
     def on_webrtc_offer(data):
         sid = request.sid
         with _adv_viewer_lock:
             did = _adv_viewer_rooms.get(sid)
-        if not did: return
-        agent_sid = _adv_agent_sids.get(did)
-        if agent_sid:
-            sio.emit("webrtc_offer", {"viewer_sid": sid, "sdp": data.get("sdp")}, room=agent_sid)
+        # Fallback: accept device_id from payload if viewer isn't in _adv_viewer_rooms yet
+        # (race condition: offer arrives before watch_device is fully processed)
+        if not did:
+            did = data.get("device_id", "")
+        if not did:
+            log.warning(f"[RTC] webrtc_offer from {sid} has no device_id — dropping")
+            return
+        sdp_offer = data.get("sdp", {})
+        if not sdp_offer:
+            return
+        if not AIORTC_OK:
+            sio.emit("webrtc_error", {"msg": "Server WebRTC bridge unavailable"}, room=sid)
+            return
+
+        def _emit_to(event, payload, to=None):
+            # emit_fn is called from the asyncio OS thread — must schedule
+            # sio.emit back onto the gevent main thread via gevent.spawn
+            import gevent as _gevent
+            _room = to or sid
+            _gevent.spawn(sio.emit, event, payload, room=_room)
+
+        log.info(f"[RTC] Offer from viewer={sid} for device={did}")
+        _rtc_run(_handle_webrtc_offer(did, sid, sdp_offer, _emit_to))
 
     @sio.on("webrtc_answer")
     def on_webrtc_answer(data):
-        vsid = data.get("viewer_sid")
-        if vsid: sio.emit("webrtc_answer", {"sdp": data.get("sdp")}, room=vsid)
+        # In server-bridge mode the server IS the answerer — agents don't send answers
+        pass
 
     @sio.on("webrtc_ice_agent")
     def on_webrtc_ice_agent(data):
-        vsid = data.get("viewer_sid")
-        if vsid: sio.emit("webrtc_ice", {"candidate": data.get("candidate")}, room=vsid)
+        # Agents don't participate in WebRTC ICE — server handles it
+        pass
 
     @sio.on("webrtc_ice_viewer")
     def on_webrtc_ice_viewer(data):
         sid = request.sid
+        candidate = data.get("candidate")
+        if not candidate or not AIORTC_OK:
+            return
         with _adv_viewer_lock:
             did = _adv_viewer_rooms.get(sid)
-        if not did: return
-        agent_sid = _adv_agent_sids.get(did)
-        if agent_sid:
-            sio.emit("webrtc_ice", {"viewer_sid": sid, "candidate": data.get("candidate")}, room=agent_sid)
+        if not did:
+            return
+        key = (did, sid)
+        with _rtc_peers_lock:
+            pc = _rtc_peers.get(key)
+        if pc:
+            async def _add_ice():
+                try:
+                    from aiortc import RTCIceCandidate
+                    c = RTCIceCandidate(
+                        sdpMid=candidate.get("sdpMid", ""),
+                        sdpMLineIndex=candidate.get("sdpMLineIndex", 0),
+                        candidate=candidate.get("candidate", ""),
+                    )
+                    await pc.addIceCandidate(c)
+                except Exception as e:
+                    log.debug(f"[RTC] ICE candidate error: {e}")
+            _rtc_run(_add_ice())
 
     @sio.on("webrtc_connected")
     def on_webrtc_connected(data):
-        log.info(f"WebRTC DataChannel active: viewer={request.sid}")
+        log.info(f"[RTC] Browser confirmed connection: viewer={request.sid}")
 
     # ── Result relay events ───────────────────────────────────────────────────
     def _relay(event_in, event_out, rooms=("view",), also_dashboards=False):
@@ -2305,17 +2505,6 @@ if SOCKETIO_OK and sio:
                     sio.emit(_ev_out, data, room="dashboards")
         _make_handler()
 
-    @sio.on("screenshot_result")
-    def on_screenshot_result(data):
-        did = data.get("device_id", "")
-        out = dict(data)
-        if "image" in out and "frame" not in out:
-            out["frame"] = out.pop("image")
-        if "frame" in out and "image" not in out:
-            out["image"] = out["frame"]
-        sio.emit("screenshot",        out, room=f"view:{did}")
-        sio.emit("screenshot_result", out, room=f"view:{did}")
-
     @sio.on("ping_result")
     def on_ping_result(data):
         did = data.get("device_id", "")
@@ -2329,6 +2518,10 @@ if SOCKETIO_OK and sio:
     @sio.on("system_stats_report")
     def on_sys(data):
         did = data.get("device_id", "")
+        # Also refresh last_beat — system_stats proves the agent is alive
+        with _dev_lock:
+            if did in _devices:
+                _devices[did]["last_beat"] = utcnow()
         log.info(f"Relay: system_stats_report from {did}")
         # v15.7: Relay as both system_stats_report (new) and update_system_tab (legacy)
         for ev in ["system_stats_report", "update_system_tab"]:
@@ -2431,8 +2624,8 @@ if SOCKETIO_OK and sio:
             with _dash_lock: _dashboard_device[request.sid] = did
             sio.emit("request_action", {
                 "tab": "monitor", "action": "start", "device_id": did,
-                "fps": data.get("fps", 20), "quality": data.get("quality", 55),
-                "scale": data.get("scale", 0.8), "mode": data.get("mode", "video"),
+                "fps": data.get("fps", 60), "quality": data.get("quality", 92),
+                "scale": data.get("scale", 1.0), "mode": "video",
                 "monitor": data.get("monitor", 1),
             }, room=did)
         else:
@@ -2463,15 +2656,6 @@ if SOCKETIO_OK and sio:
         if dev:
             sio.emit("request_action", {"tab": "monitor", "action": "set_mode",
                                         "mode": data.get("mode", "video"), "device_id": did}, room=did)
-
-    @sio.on("request_screenshot")
-    def on_screenshot(data):
-        did = data.get("device_id", "")
-        with _dev_lock:
-            dev = _devices.get(did)
-        if dev:
-            sio.emit("request_action", {"tab": "screenshot", "quality": data.get("quality", 60),
-                                        "scale": data.get("scale", 0.75), "device_id": did}, room=did)
 
     @sio.on("ping_agent")
     def on_ping(data):
@@ -2548,7 +2732,7 @@ if SOCKETIO_OK and sio:
         while True:
             try:
                 _sleep(15)
-                now_dt   = datetime.datetime.utcnow()
+                now_dt   = datetime.datetime.now(datetime.timezone.utc)
                 now_mono = time.monotonic()
 
                 # ── 1. Heartbeat timeout ──────────────────────────────────
@@ -2559,7 +2743,9 @@ if SOCKETIO_OK and sio:
                         if not lb:
                             continue
                         try:
-                            last_dt = datetime.datetime.fromisoformat(lb.replace("Z", ""))
+                            last_dt = datetime.datetime.fromisoformat(lb.replace("Z", "+00:00"))
+                            if last_dt.tzinfo is None:
+                                last_dt = last_dt.replace(tzinfo=datetime.timezone.utc)
                             if (now_dt - last_dt).total_seconds() > HEARTBEAT_TIMEOUT:
                                 stale.append((did, dev.get("label", did), dev.get("sid", "")))
                         except Exception:
@@ -2581,7 +2767,7 @@ if SOCKETIO_OK and sio:
                     sio.emit("agent_offline",  {"device_id": did, "label": label, "ts": utcnow()})
                     sio.emit("device_offline", {"device_id": did, "label": label, "ts": utcnow()})
                     _audit("watchdog_offline", device_id=did, label=label)
-                    _bg(db_update, did, {"status": "offline", "disconnected_at": utcnow()})
+                    # db_update removed — no Supabase calls in hot watchdog path
                     _fire_webhook("watchdog_offline", {"device_id": did, "label": label})
                 if stale:
                     _bg(broadcast_device_update)
@@ -2609,7 +2795,9 @@ if SOCKETIO_OK and sio:
                         stuck = True
                     elif last_frame:
                         try:
-                            lf_dt = datetime.datetime.fromisoformat(last_frame.replace("Z", ""))
+                            lf_dt = datetime.datetime.fromisoformat(last_frame.replace("Z", "+00:00"))
+                            if lf_dt.tzinfo is None:
+                                lf_dt = lf_dt.replace(tzinfo=datetime.timezone.utc)
                             if (now_dt - lf_dt).total_seconds() > 20:
                                 stuck = True
                         except Exception:
@@ -2989,8 +3177,10 @@ def api_latency():
         lft = dev.get("last_frame_ts")
         if lft:
             try:
-                lf_dt = datetime.datetime.fromisoformat(lft.replace("Z",""))
-                age_ms = (datetime.datetime.utcnow() - lf_dt).total_seconds() * 1000
+                lf_dt = datetime.datetime.fromisoformat(lft.replace("Z", "+00:00"))
+                if lf_dt.tzinfo is None:
+                    lf_dt = lf_dt.replace(tzinfo=datetime.timezone.utc)
+                age_ms = (datetime.datetime.now(datetime.timezone.utc) - lf_dt).total_seconds() * 1000
                 result[did] = round(age_ms, 1)
             except Exception:
                 result[did] = -1
@@ -3731,7 +3921,10 @@ def _compute_health_score(did: str) -> dict:
     lb = dev.get("last_beat")
     if lb:
         try:
-            age = (datetime.datetime.utcnow() - datetime.datetime.fromisoformat(lb.replace("Z",""))).total_seconds()
+            lb_dt = datetime.datetime.fromisoformat(lb.replace("Z", "+00:00"))
+            if lb_dt.tzinfo is None:
+                lb_dt = lb_dt.replace(tzinfo=datetime.timezone.utc)
+            age = (datetime.datetime.now(datetime.timezone.utc) - lb_dt).total_seconds()
             if age > 30:
                 score -= 20
                 issues.append(f"heartbeat_stale_{int(age)}s")
@@ -3795,7 +3988,7 @@ def _fire_org_webhook(org_id: str, event: str, payload: dict):
             body = json.dumps({"event": event, "org_id": org_id, "ts": utcnow(), **payload})
             headers = {"Content-Type": "application/json", "User-Agent": "MViewServer/14.0"}
             if WEBHOOK_SECRET:
-                sig = hmac.new(WEBHOOK_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+                sig = hmac.new(WEBHOOK_SECRET.encode(), body.encode(), "sha256").hexdigest()
                 headers["X-MView-Signature"] = f"sha256={sig}"
             _requests.post(url, data=body, timeout=8, headers=headers)
         except Exception:
@@ -3955,7 +4148,7 @@ def api_guest_token():
     if not did:
         return jsonify({"error": "device_id required"}), 400
     token = "GUEST-" + secrets.token_hex(12)
-    exp   = (datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl)).isoformat()
+    exp   = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=ttl)).isoformat()
     with _guest_lock:
         _guest_tokens[token] = {"device_id": did, "expires_at": exp,
                                  "created_at": utcnow(), "uses": 0}
@@ -3973,7 +4166,9 @@ def api_guest_redeem(token):
         return jsonify({"error": "Invalid guest token"}), 404
     try:
         exp = datetime.datetime.fromisoformat(gt["expires_at"])
-        if datetime.datetime.utcnow() > exp:
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=datetime.timezone.utc)
+        if datetime.datetime.now(datetime.timezone.utc) > exp:
             return jsonify({"error": "Token expired"}), 410
     except Exception:
         pass
@@ -4158,14 +4353,10 @@ def api_device_quality(device_id):
         "ts":           utcnow(),
     })
 
-# ── Fingerprint storm detector hook — wire into _handle_agent_connect ─────────
-_original_agent_connect_bg = _agent_connect_bg
-def _agent_connect_bg(did, label, data):
-    _register_fingerprint(did, data)
-    if _is_reconnect_storm(did):
-        log.warning(f"Blocking reconnect storm from {did}")
-    else:
-        _original_agent_connect_bg(did, label, data)
+# ── Fingerprint storm detector hook — integrated into broadcast_device_update ─
+# NOTE: _agent_connect_bg is defined inside the `if SOCKETIO_OK and sio` block,
+# so it cannot be wrapped at module level. Storm detection is applied inside
+# _handle_agent_connect via _register_fingerprint / _is_reconnect_storm directly.
 
 def startup():
     log.info("=" * 72)
@@ -4227,6 +4418,7 @@ def startup():
     log.info(f"  Orgs/Groups:           /api/orgs  /api/groups")
     log.info(f"  Plugin hooks:          on_agent_connect / on_frame / on_command")
     log.info(f"  Agent caps:            {list(AGENT_CAPS.keys())}")
+    log.info(f"  WebRTC bridge (aiortc):{AIORTC_OK!r:>8}  (False = JPEG canvas fallback)")
     log.info("=" * 72)
     log.info("  RENDER start command (REQUIRED):")
     log.info("    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \\")
