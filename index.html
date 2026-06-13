@@ -1292,9 +1292,805 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
   .cw-hero-left h1{font-size:22px}
   .cw-hero-right{display:none}
 }
+
+/* UPGRADE INJECTED */
+/* ═══════════════════════════════════════════════════════════
+   MASSIVE UI UPGRADE — Animations, 3D Characters, Effects
+   SAME COLOR THEME: --accent:#0066cc, --green:#30d158, etc.
+═══════════════════════════════════════════════════════════ */
+
+/* ── PARTICLE CANVAS ─────────────────────────────────────── */
+#particle-canvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;opacity:0.35;
+}
+
+/* ── CURSOR GLOW ─────────────────────────────────────────── */
+.cursor-glow{
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,102,204,0.08),transparent 70%);
+  position:fixed;pointer-events:none;z-index:1;
+  transform:translate(-50%,-50%);transition:opacity 0.3s;
+}
+
+/* ── AURORA BACKGROUND ──────────────────────────────────── */
+.aurora-bg{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;
+}
+.aurora-layer{
+  position:absolute;border-radius:50%;filter:blur(80px);
+  animation:auroraFloat 18s ease-in-out infinite alternate;
+}
+.aurora-layer:nth-child(1){
+  width:700px;height:700px;top:-200px;right:-100px;
+  background:radial-gradient(circle,rgba(0,102,204,0.07),transparent);
+  animation-duration:20s;
+}
+.aurora-layer:nth-child(2){
+  width:500px;height:500px;bottom:-100px;left:-150px;
+  background:radial-gradient(circle,rgba(48,209,88,0.05),transparent);
+  animation-duration:15s;animation-delay:-5s;
+}
+.aurora-layer:nth-child(3){
+  width:400px;height:400px;top:40%;left:30%;
+  background:radial-gradient(circle,rgba(0,102,204,0.04),transparent);
+  animation-duration:25s;animation-delay:-10s;
+}
+@keyframes auroraFloat{
+  0%{transform:translate(0,0) scale(1)}
+  100%{transform:translate(30px,40px) scale(1.1)}
+}
+
+/* ── MORPHING HERO BG ───────────────────────────────────── */
+.hero{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,102,204,0.08),transparent),
+    var(--bg) !important;
+  position:relative;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230066cc' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+
+/* ── UPGRADED HERO CARD ─────────────────────────────────── */
+.hero-card{
+  animation:float3D 7s ease-in-out infinite !important;
+  box-shadow:0 30px 80px rgba(0,102,204,0.15),0 10px 30px rgba(0,0,0,0.08) !important;
+  transform-style:preserve-3d;
+}
+@keyframes float3D{
+  0%,100%{transform:translateY(0) rotateX(0deg) rotateY(-2deg)}
+  25%{transform:translateY(-8px) rotateX(1deg) rotateY(1deg)}
+  50%{transform:translateY(-14px) rotateX(0deg) rotateY(2deg)}
+  75%{transform:translateY(-6px) rotateX(-1deg) rotateY(-1deg)}
+}
+.mockup-dots i:nth-child(1){background:#ff5f57 !important}
+.mockup-dots i:nth-child(2){background:#ffbd2e !important}
+.mockup-dots i:nth-child(3){background:#28c840 !important}
+
+/* ── ANIMATED CHART BARS ────────────────────────────────── */
+.chart-bar{
+  transition:height 0.6s var(--ease) !important;
+  animation:barGrow 1s var(--ease) both !important;
+  position:relative;overflow:hidden;
+}
+.chart-bar.active::after{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:3px;background:rgba(255,255,255,0.4);border-radius:99px;
+  animation:shimmerBar 2s ease-in-out infinite;
+}
+@keyframes barGrow{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1)}}
+@keyframes shimmerBar{0%,100%{opacity:0}50%{opacity:1}}
+.chart-bar:nth-child(1){animation-delay:0.1s}
+.chart-bar:nth-child(2){animation-delay:0.2s}
+.chart-bar:nth-child(3){animation-delay:0.3s}
+.chart-bar:nth-child(4){animation-delay:0.4s}
+.chart-bar:nth-child(5){animation-delay:0.5s}
+.chart-bar:nth-child(6){animation-delay:0.6s}
+.chart-bar:nth-child(7){animation-delay:0.7s}
+
+/* ── CARTOON CHARACTER SVG CONTAINER ────────────────────── */
+.cartoon-character{
+  position:absolute;bottom:0;right:20px;
+  width:90px;pointer-events:none;z-index:2;
+}
+.cartoon-character-hero{
+  position:absolute;bottom:-10px;right:-20px;
+  width:120px;pointer-events:none;z-index:2;
+  animation:characterBob 3s ease-in-out infinite;
+}
+@keyframes characterBob{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-8px) rotate(2deg)}
+}
+.cartoon-small{
+  width:60px;height:60px;
+  animation:characterBob 2.5s ease-in-out infinite;
+}
+
+/* ── STAT COUNTER ANIMATION ─────────────────────────────── */
+.stat-num{
+  animation:countUp 0.8s var(--ease) both;
+}
+@keyframes countUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.stat-item:nth-child(1) .stat-num{animation-delay:0.1s}
+.stat-item:nth-child(2) .stat-num{animation-delay:0.2s}
+.stat-item:nth-child(3) .stat-num{animation-delay:0.3s}
+.stat-item:nth-child(4) .stat-num{animation-delay:0.4s}
+
+/* ── BENTO CARD UPGRADED ────────────────────────────────── */
+.bento-card{
+  transition:transform 0.3s var(--ease-spring),box-shadow 0.3s var(--ease) !important;
+  overflow:hidden;position:relative;
+}
+.bento-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.05),transparent);
+  opacity:0;transition:opacity 0.3s;z-index:0;pointer-events:none;
+}
+.bento-card:hover::before{opacity:1}
+.bento-card:hover{transform:translateY(-6px) scale(1.01) !important;box-shadow:0 20px 60px rgba(0,102,204,0.12) !important}
+.bento-card *{position:relative;z-index:1}
+
+/* BENTO ICON ANIMATIONS */
+.bento-icon{
+  animation:iconPulse 3s ease-in-out infinite;
+  display:block !important;
+  font-size:2.5rem !important;
+}
+@keyframes iconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15) rotate(5deg)}}
+.bento-card:nth-child(1) .bento-icon{animation-delay:0s}
+.bento-card:nth-child(2) .bento-icon{animation-delay:0.5s}
+.bento-card:nth-child(3) .bento-icon{animation-delay:1s}
+.bento-card:nth-child(4) .bento-icon{animation-delay:1.5s}
+
+/* Encryption visual upgrade */
+.enc-ring{
+  border:1.5px solid rgba(0,102,204,0.3) !important;
+  box-shadow:0 0 10px rgba(0,102,204,0.1);
+}
+.enc-ring:nth-child(1){animation:spin 6s linear infinite !important}
+.enc-ring:nth-child(2){animation:spin 4s linear infinite reverse !important}
+.enc-lock{animation:encGlow 2s ease-in-out infinite}
+@keyframes encGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(0,102,204,0.4))}50%{filter:drop-shadow(0 0 12px rgba(0,102,204,0.8))}}
+
+/* ── NAV UPGRADE ─────────────────────────────────────────── */
+.nav-item{
+  position:relative;overflow:hidden;
+}
+.nav-item::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:2px;background:var(--accent);border-radius:0 99px 99px 0;
+  transform:scaleX(0);transform-origin:left;transition:transform 0.2s var(--ease-spring);
+}
+.nav-item.active::after{transform:scaleX(1)}
+.nav-item .material-symbols-outlined{
+  transition:transform 0.2s var(--ease-spring);
+}
+.nav-item:hover .material-symbols-outlined{transform:scale(1.2)}
+
+/* ── BUTTON EFFECTS ──────────────────────────────────────── */
+.btn-device{
+  position:relative;overflow:hidden;
+  animation:btnGlow 3s ease-in-out infinite;
+}
+@keyframes btnGlow{
+  0%,100%{box-shadow:0 2px 8px rgba(0,102,204,0.25)}
+  50%{box-shadow:0 4px 20px rgba(0,102,204,0.45),0 0 0 4px rgba(0,102,204,0.08)}
+}
+.btn-device::before{
+  content:'';position:absolute;top:50%;left:50%;
+  width:0;height:0;border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  transform:translate(-50%,-50%);
+  transition:width 0.5s,height 0.5s,opacity 0.5s;opacity:0;
+}
+.btn-device:active::before{width:200px;height:200px;opacity:0}
+
+/* ── KPI CARDS UPGRADE ───────────────────────────────────── */
+.kpi-card{
+  position:relative;overflow:hidden;
+  transition:transform 0.25s var(--ease-spring),box-shadow 0.25s !important;
+}
+.kpi-card::before{
+  content:'';position:absolute;top:-50%;right:-50%;
+  width:100%;height:100%;
+  background:radial-gradient(circle,rgba(0,102,204,0.06),transparent);
+  transition:transform 0.4s;pointer-events:none;
+}
+.kpi-card:hover{transform:translateY(-4px) scale(1.02) !important;box-shadow:0 8px 32px rgba(0,0,0,0.1) !important}
+.kpi-card:hover::before{transform:scale(1.5)}
+.kpi-val{
+  animation:countUp 0.7s var(--ease) both;
+  background:linear-gradient(135deg,var(--text-1),var(--text-2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* ── DASHBOARD HERO BANNER UPGRADE ──────────────────────── */
+.cw-hero{
+  background:
+    linear-gradient(135deg,#0a1628 0%,#1a2848 50%,#0d1f3a 100%) !important;
+  position:relative;overflow:hidden;
+}
+.cw-hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 80% 50%,rgba(0,102,204,0.15),transparent),
+    radial-gradient(ellipse 40% 40% at 10% 90%,rgba(48,209,88,0.05),transparent);
+  pointer-events:none;
+}
+.cw-hero-dots{
+  background-image:
+    radial-gradient(rgba(0,102,204,0.3) 1.5px, transparent 1.5px) !important;
+  animation:dotsShift 20s linear infinite;
+}
+@keyframes dotsShift{from{background-position:0 0}to{background-position:20px 20px}}
+.cw-hero::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:28px;
+  background:linear-gradient(to top,var(--bg),transparent);
+  pointer-events:none;
+}
+.cw-hero-left h1{
+  background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.75) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:fadeUp 0.6s var(--ease) both;
+}
+
+/* ── ANIMATED DONUT CHART ───────────────────────────────── */
+.donut-svg circle{
+  transition:stroke-dasharray 1.2s var(--ease) !important;
+}
+.donut-wrap{
+  position:relative;
+}
+.donut-wrap::before{
+  content:'';position:absolute;inset:-10px;border-radius:50%;
+  background:conic-gradient(rgba(0,102,204,0.05),transparent,rgba(48,209,88,0.05));
+  animation:spin 15s linear infinite;
+  pointer-events:none;
+}
+
+/* ── TABLE ROW ANIMATIONS ───────────────────────────────── */
+.data-table tbody tr{
+  animation:rowSlide 0.4s var(--ease) both;
+}
+.data-table tbody tr:nth-child(1){animation-delay:0.05s}
+.data-table tbody tr:nth-child(2){animation-delay:0.1s}
+.data-table tbody tr:nth-child(3){animation-delay:0.15s}
+.data-table tbody tr:nth-child(4){animation-delay:0.2s}
+.data-table tbody tr:nth-child(5){animation-delay:0.25s}
+@keyframes rowSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.data-table tr{transition:background 0.15s,transform 0.15s}
+.data-table tbody tr:hover td{
+  background:var(--accent-soft) !important;
+}
+
+/* ── STATUS PILL ANIMATIONS ─────────────────────────────── */
+.status-pill.online i{
+  animation:onlinePulse 1.5s ease-in-out infinite !important;
+  box-shadow:0 0 0 0 rgba(48,209,88,0.4);
+}
+@keyframes onlinePulse{
+  0%{box-shadow:0 0 0 0 rgba(48,209,88,0.4)}
+  70%{box-shadow:0 0 0 6px rgba(48,209,88,0)}
+  100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}
+}
+.status-pill.warning i{
+  animation:warnPulse 1.5s ease-in-out infinite;
+  box-shadow:0 0 0 0 rgba(255,159,10,0.4);
+}
+@keyframes warnPulse{
+  0%{box-shadow:0 0 0 0 rgba(255,159,10,0.4)}
+  70%{box-shadow:0 0 0 6px rgba(255,159,10,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,159,10,0)}
+}
+
+/* ── SIDEBAR BRAND GLOW ──────────────────────────────────── */
+.sidebar-brand .logo{
+  background:linear-gradient(135deg,var(--accent),#33aaff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:logoPulse 4s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+
+/* ── TOPBAR SECURE BADGE ─────────────────────────────────── */
+.secure-badge{
+  animation:securePulse 3s ease-in-out infinite;
+}
+@keyframes securePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}
+  50%{box-shadow:0 0 0 4px rgba(48,209,88,0.15)}
+}
+
+/* ── REMOTE CARD 3D HOVER ────────────────────────────────── */
+.remote-card{
+  transform-style:preserve-3d;
+  transition:transform 0.3s var(--ease-spring),box-shadow 0.3s !important;
+}
+.remote-card:hover{
+  transform:perspective(600px) rotateX(-3deg) rotateY(3deg) translateY(-4px) !important;
+  box-shadow:0 20px 50px rgba(0,102,204,0.12) !important;
+}
+.remote-screen{
+  background:
+    linear-gradient(135deg,var(--bg-4) 0%,var(--bg-3) 100%) !important;
+  position:relative;overflow:hidden;
+}
+.remote-screen::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 40%,rgba(0,102,204,0.05));
+  animation:screenShimmer 4s ease-in-out infinite;
+}
+@keyframes screenShimmer{
+  0%,100%{opacity:0}
+  50%{opacity:1}
+}
+
+/* ── TOAST UPGRADE ───────────────────────────────────────── */
+.toast{
+  backdrop-filter:blur(12px) !important;
+  background:rgba(29,29,31,0.95) !important;
+  border:1px solid rgba(255,255,255,0.08) !important;
+  border-radius:12px !important;
+  box-shadow:0 16px 40px rgba(0,0,0,0.3) !important;
+  animation:toastPop 0.3s var(--ease-spring) !important;
+}
+@keyframes toastPop{from{opacity:0;transform:translateX(30px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+
+/* ── MODAL UPGRADE ───────────────────────────────────────── */
+.modal{
+  animation:modalBounce 0.3s var(--ease-spring) !important;
+}
+@keyframes modalBounce{
+  from{opacity:0;transform:scale(0.85) translateY(20px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.modal-overlay{
+  backdrop-filter:blur(12px) !important;
+  background:rgba(0,0,0,0.5) !important;
+}
+
+/* ── FAQ CHAT UPGRADE ────────────────────────────────────── */
+.faq-chat-trigger{
+  animation:chatBob 3s ease-in-out infinite;
+  background:linear-gradient(135deg,#1d1d1f,#2a2a2c) !important;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 0 rgba(0,102,204,0.4) !important;
+}
+@keyframes chatBob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+
+/* ── LOADING SPINNER UPGRADE ─────────────────────────────── */
+.spinner-ring{
+  border:3px solid var(--border-2) !important;
+  border-top-color:var(--accent) !important;
+  box-shadow:0 0 20px rgba(0,102,204,0.2) !important;
+}
+
+/* ── SECTION TRANSITION ──────────────────────────────────── */
+.dash-section.active{
+  animation:sectionFade 0.4s var(--ease) both;
+}
+@keyframes sectionFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BADGE UPGRADE ───────────────────────────────────────── */
+.badge{
+  animation:badgeFloat 3s ease-in-out infinite, fadeUp 0.6s var(--ease) both !important;
+}
+@keyframes badgeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.badge-dot{
+  box-shadow:0 0 0 4px rgba(48,209,88,0.2);
+  animation:pulse-dot 2s infinite,greenGlow 2s ease-in-out infinite !important;
+}
+@keyframes greenGlow{0%,100%{box-shadow:0 0 0 2px rgba(48,209,88,0.2)}50%{box-shadow:0 0 0 6px rgba(48,209,88,0.1)}}
+
+/* ── CW HERO ANIMATED METRICS ────────────────────────────── */
+.cw-hero #kpi-total-screens,.cw-hero #kpi-online-now,.cw-hero #kpi-alerts,.cw-hero #kpi-storage-used{
+  background:linear-gradient(135deg,#fff,rgba(255,255,255,0.8));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* ── SUPPORT CARD UPGRADE ────────────────────────────────── */
+.support-card{
+  transition:transform 0.25s var(--ease-spring),box-shadow 0.25s !important;
+  position:relative;overflow:hidden;
+}
+.support-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),#33aaff);
+  transform:scaleX(0);transform-origin:left;transition:transform 0.3s var(--ease);
+}
+.support-card:hover::after{transform:scaleX(1)}
+.support-card:hover{transform:translateY(-6px) !important;box-shadow:0 16px 40px rgba(0,102,204,0.1) !important}
+
+/* ── CONNECTION BANNER UPGRADE ───────────────────────────── */
+.connection-banner{
+  animation:bannerPulse 2s ease-in-out infinite;
+  transition:all 0.4s var(--ease-spring) !important;
+}
+@keyframes bannerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+.connection-banner.online{
+  animation:onlineBanner 3s ease-in-out infinite !important;
+}
+@keyframes onlineBanner{
+  0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}
+  50%{box-shadow:0 0 12px rgba(48,209,88,0.3)}
+}
+
+/* ── PRICING CARD UPGRADE ────────────────────────────────── */
+#section-pricing > div > div{
+  transition:transform 0.3s var(--ease-spring),box-shadow 0.3s !important;
+}
+#section-pricing > div > div:hover{
+  transform:translateY(-8px) !important;
+  box-shadow:0 24px 60px rgba(0,102,204,0.12) !important;
+}
+
+/* ── ANIMATED GRID LINES (HERO) ──────────────────────────── */
+.hero-grid-overlay{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,102,204,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,102,204,0.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  animation:gridShift 20s linear infinite;
+  mask-image:radial-gradient(ellipse 80% 80% at 80% 50%,black,transparent);
+}
+@keyframes gridShift{from{background-position:0 0}to{background-position:60px 60px}}
+
+/* ── SCROLL REVEAL ───────────────────────────────────────── */
+.scroll-reveal{
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.7s var(--ease),transform 0.7s var(--ease);
+}
+.scroll-reveal.visible{opacity:1;transform:translateY(0)}
+.scroll-reveal:nth-child(2){transition-delay:0.1s}
+.scroll-reveal:nth-child(3){transition-delay:0.2s}
+.scroll-reveal:nth-child(4){transition-delay:0.3s}
+
+/* ── HERO TITLE GRADIENT UPGRADE ────────────────────────── */
+.accent-text{
+  background:linear-gradient(135deg,var(--accent),#0099ff,#33bbff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 200%;
+  animation:gradientShift 4s ease-in-out infinite;
+}
+@keyframes gradientShift{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+
+/* ── APP USAGE BAR ANIMATED ──────────────────────────────── */
+.usage-fill{
+  background:linear-gradient(90deg,var(--accent),#33aaff) !important;
+  animation:fillGrow 1.2s var(--ease) both;
+  position:relative;overflow:hidden;
+}
+.usage-fill::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+  animation:shimmer 2.5s ease-in-out infinite 1.2s;
+}
+@keyframes fillGrow{from{width:0!important}to{width:var(--target-w)}}
+@keyframes shimmer{from{left:-100%}to{left:100%}}
+
+/* ── CTA BOX UPGRADE ─────────────────────────────────────── */
+.cta-box{
+  background:linear-gradient(135deg,#0a1628,#1a2848,#0d1f3a) !important;
+  position:relative;overflow:hidden;
+}
+.cta-box::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(0,102,204,0.15),transparent);
+  animation:ctaGlow 4s ease-in-out infinite alternate;
+}
+@keyframes ctaGlow{from{transform:scale(0.9);opacity:0.5}to{transform:scale(1.1);opacity:1}}
+.cta-box .cta-content{position:relative;z-index:1}
+
+/* ── LOGIN PAGE UPGRADE ──────────────────────────────────── */
+.login-card{
+  animation:loginCard 0.5s var(--ease-spring) both !important;
+  box-shadow:0 40px 100px rgba(0,85,215,0.12),0 4px 20px rgba(0,0,0,0.08) !important;
+}
+@keyframes loginCard{from{opacity:0;transform:scale(0.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.login-btn-submit{
+  background:linear-gradient(135deg,#3a3a3c,#2a2a2e) !important;
+  position:relative;overflow:hidden;
+}
+.login-btn-submit::after{
+  content:'';position:absolute;top:50%;left:50%;
+  width:0;height:0;border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  transform:translate(-50%,-50%);
+  transition:width 0.6s,height 0.6s,opacity 0.6s;opacity:0;
+}
+.login-btn-submit:active::after{width:400px;height:400px;opacity:0}
+
+/* ── NOTIFICATION PANEL UPGRADE ──────────────────────────── */
+.notif-panel{
+  border-radius:0 0 var(--r3) var(--r3) !important;
+  box-shadow:0 24px 60px rgba(0,0,0,0.15) !important;
+  transition:transform 0.3s var(--ease-spring) !important;
+}
+.notif-item{
+  transition:transform 0.2s var(--ease-spring),background 0.12s !important;
+}
+.notif-item:hover{transform:translateX(4px) !important}
+
+/* ── SIDEBAR FOOTER USER CHIP ────────────────────────────── */
+.user-chip{
+  transition:all 0.2s var(--ease-spring) !important;
+}
+.user-chip:hover{
+  background:var(--accent-soft) !important;
+  transform:scale(1.02);
+}
+.user-avatar{
+  background:linear-gradient(135deg,var(--accent),#0088ee) !important;
+  box-shadow:0 2px 8px rgba(0,102,204,0.3);
+  animation:avatarGlow 4s ease-in-out infinite;
+}
+@keyframes avatarGlow{0%,100%{box-shadow:0 2px 8px rgba(0,102,204,0.3)}50%{box-shadow:0 4px 16px rgba(0,102,204,0.5)}}
+
+/* ── LIVE GRAPH CANVAS ───────────────────────────────────── */
+#live-graph-canvas{
+  border-radius:var(--r3);
+  display:block;width:100%;height:120px;
+}
+.live-graph-card{
+  background:var(--bg-2);border-radius:var(--r3);border:1px solid var(--border);
+  padding:16px;box-shadow:var(--shadow-xs);overflow:hidden;
+}
+.live-graph-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.live-graph-title{font-size:12px;font-weight:700}
+.live-graph-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;
+  background:var(--green-soft);color:var(--green-text);
+}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite}
+
+/* ── 3D CARTOON CHARACTER CSS ────────────────────────────── */
+.robot-char{
+  display:inline-block;
+  animation:robotWalk 1s linear infinite;
+  filter:drop-shadow(0 4px 8px rgba(0,102,204,0.3));
+}
+@keyframes robotWalk{
+  0%,100%{transform:translateY(0) rotate(-1deg)}
+  25%{transform:translateY(-4px) rotate(1deg)}
+  50%{transform:translateY(-6px) rotate(-1deg)}
+  75%{transform:translateY(-2px) rotate(2deg)}
+}
+
+/* ── WAVE ANIMATION FOR CTA SECTION ─────────────────────── */
+.stats-section{
+  position:relative;overflow:hidden;
+}
+.stats-section::before{
+  content:'';position:absolute;bottom:0;left:-50%;width:200%;height:4px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:waveLine 4s linear infinite;
+}
+@keyframes waveLine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+/* ── SCREEN DETAIL PANEL ─────────────────────────────────── */
+.screen-detail-panel.open{
+  animation:panelSlide 0.35s var(--ease-spring) !important;
+}
+@keyframes panelSlide{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.sdp-action-btn{
+  transition:all 0.2s var(--ease-spring) !important;
+  position:relative;overflow:hidden;
+}
+.sdp-action-btn:hover{transform:translateX(4px) !important}
+
+/* ── MINI SPARKLINE ──────────────────────────────────────── */
+.sparkline-wrap{
+  height:32px;display:flex;align-items:flex-end;gap:2px;overflow:hidden;
+}
+.sparkline-bar{
+  flex:1;background:var(--accent-soft);border-radius:2px 2px 0 0;
+  transition:height 0.4s var(--ease);min-height:2px;
+  animation:sparkleGrow 0.6s var(--ease) both;
+}
+.sparkline-bar:nth-child(odd){background:var(--accent);opacity:0.7}
+@keyframes sparkleGrow{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1)}}
+
+/* ── FEATURE SECTION SCROLL INDICATOR ───────────────────── */
+.scroll-indicator{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--text-3);font-size:10px;font-weight:600;
+  animation:scrollIndicator 2s ease-in-out infinite;
+}
+@keyframes scrollIndicator{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.scroll-indicator .material-symbols-outlined{font-size:18px!important}
+
+/* ── GLOW LINE DIVIDER ───────────────────────────────────── */
+.glow-divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  margin:8px 0;opacity:0.4;
+  animation:glowDivider 3s ease-in-out infinite alternate;
+}
+@keyframes glowDivider{from{opacity:0.2}to{opacity:0.6}}
+
+/* ── TRUST LOGOS ANIMATION ───────────────────────────────── */
+.trust-logos{
+  animation:fadeUp 0.7s 0.32s var(--ease) both;
+  position:relative;
+}
+.trust-logos span{
+  transition:opacity 0.3s;
+  cursor:default;
+}
+.trust-logos span:hover{opacity:0.7 !important;filter:grayscale(0) !important;color:var(--accent) !important}
+
+/* ── DATA TABLE COUNT BADGE ──────────────────────────────── */
+.table-header .chart-title::after{
+  content:attr(data-count);
+  display:inline-block;margin-left:8px;
+  padding:1px 7px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);
+  font-size:10px;font-weight:700;vertical-align:middle;
+}
+
+/* ── LIVE PULSE RING (for connected devices) ─────────────── */
+.live-ring{
+  position:relative;display:inline-block;
+}
+.live-ring::before{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--green);opacity:0;
+  animation:liveRing 2s ease-out infinite;
+}
+@keyframes liveRing{
+  0%{transform:scale(0.8);opacity:0.8}
+  100%{transform:scale(1.6);opacity:0}
+}
+
+/* ── TYPEWRITER TEXT (hero sub) ─────────────────────────── */
+.typewriter{
+  overflow:hidden;
+  border-right:2px solid var(--accent);
+  white-space:nowrap;
+  animation:typeIn 2s steps(60,end) 0.5s both,blinkCursor 0.7s step-end infinite 2.5s;
+  max-width:100%;
+}
+@keyframes typeIn{from{max-width:0}to{max-width:100%}}
+@keyframes blinkCursor{0%,100%{border-color:var(--accent)}50%{border-color:transparent}}
+
+/* ── HERO STATS MINI CARDS ──────────────────────────────── */
+.mstat{
+  animation:cardPop 0.5s var(--ease-spring) both;
+  transition:transform 0.2s var(--ease-spring),box-shadow 0.2s !important;
+}
+.mstat:hover{transform:scale(1.05) !important;box-shadow:var(--shadow-sm) !important}
+.mstat:nth-child(1){animation-delay:0.3s}
+.mstat:nth-child(2){animation-delay:0.45s}
+.mstat:nth-child(3){animation-delay:0.6s}
+@keyframes cardPop{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+
+/* ── SETTINGS CARD HOVER ─────────────────────────────────── */
+.settings-card{
+  transition:transform 0.2s var(--ease-spring),box-shadow 0.2s !important;
+  position:relative;overflow:hidden;
+}
+.settings-card:hover{transform:translateY(-3px) !important;box-shadow:var(--shadow-md) !important}
+
+/* ── FILE TABLE ICONS ────────────────────────────────────── */
+.file-icon{
+  transition:transform 0.2s var(--ease-spring) !important;
+}
+.file-icon:hover,.data-table tr:hover .file-icon{transform:scale(1.15) rotate(5deg) !important}
+
+/* ── SIDEBAR NAV GLOW ON HOVER ───────────────────────────── */
+.nav-item:hover{
+  background:var(--accent-soft) !important;
+  box-shadow:inset 0 0 12px rgba(0,102,204,0.08) !important;
+}
+
+/* ── FOOTER UPGRADE ──────────────────────────────────────── */
+.site-footer{
+  position:relative;overflow:hidden;
+}
+.site-footer::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0.3;
+}
+
+/* ── 3D CARD PERSPECTIVE ON MOUSE MOVE ───────────────────── */
+.perspective-card{
+  transition:transform 0.1s ease-out !important;
+  transform-style:preserve-3d;
+}
+
+/* ── RIPPLE EFFECT ───────────────────────────────────────── */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(0,102,204,0.15);
+  transform:scale(0);
+  animation:rippleAnim 0.6s linear;
+  pointer-events:none;
+}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+
+/* ── ICON BADGE BOUNCE ───────────────────────────────────── */
+.notif-dot{
+  animation:badgeBounce 1s var(--ease-spring) infinite !important;
+}
+@keyframes badgeBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+
+/* ── CHART BAR CHART (dashboard) ────────────────────────── */
+.bc-bar{
+  animation:bcGrow 0.8s var(--ease) both;
+  position:relative;overflow:hidden;
+}
+.bc-bar::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:rgba(255,255,255,0.3);
+}
+@keyframes bcGrow{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1)}}
+.bc-col:nth-child(1) .bc-bar{animation-delay:0.1s}
+.bc-col:nth-child(2) .bc-bar{animation-delay:0.15s}
+.bc-col:nth-child(3) .bc-bar{animation-delay:0.2s}
+.bc-col:nth-child(4) .bc-bar{animation-delay:0.25s}
+.bc-col:nth-child(5) .bc-bar{animation-delay:0.3s}
+.bc-col:nth-child(6) .bc-bar{animation-delay:0.35s}
+.bc-col:nth-child(7) .bc-bar{animation-delay:0.4s}
+
+/* ── LOCKED OVERLAY UPGRADE ──────────────────────────────── */
+.locked-overlay{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(0,102,204,0.04),transparent),
+    var(--bg-2) !important;
+  animation:overlayIn 0.4s var(--ease) both;
+}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.locked-overlay .lo-icon{
+  animation:loIconFloat 3s ease-in-out infinite,iconPulse 3s ease-in-out infinite !important;
+}
+@keyframes loIconFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.locked-overlay h3{
+  background:linear-gradient(135deg,var(--text-2),var(--text-3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* ── MINI AREA GRAPH ──────────────────────────────────────── */
+.mini-area-svg{width:100%;height:60px;overflow:visible}
+.mini-area-path{
+  fill:none;stroke:var(--accent);stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1000;stroke-dashoffset:1000;
+  animation:drawLine 2s var(--ease) forwards 0.5s;
+}
+.mini-area-fill{
+  fill:url(#areaGrad);
+  opacity:0;animation:areaFade 0.5s ease forwards 2.3s;
+}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+@keyframes areaFade{to{opacity:1}}
+
+
 </style>
 </head>
 <body>
+
+<!-- AURORA & PARTICLES -->
+<div class="aurora-bg">
+  <div class="aurora-layer"></div>
+  <div class="aurora-layer"></div>
+  <div class="aurora-layer"></div>
+</div>
+<canvas id="particle-canvas"></canvas>
+<div class="cursor-glow" id="cursor-glow"></div>
+<div class="toast-container"></div>
+
 
 <!-- ═══════════════════════════════════════════
      LANDING PAGE
@@ -1324,6 +2120,7 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
 
   <section class="hero">
     <div class="hero-bg-orb orb-1"></div>
+    <div class="hero-grid-overlay"></div>
     <div class="hero-bg-orb orb-2"></div>
     <div class="hero-inner">
       <div class="hero-content">
@@ -1379,6 +2176,10 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
         </div>
       </div>
     </div>
+    <div class="scroll-indicator">
+      <span class="material-symbols-outlined">keyboard_arrow_down</span>
+      Scroll
+    </div>
   </section>
 
   <section class="features">
@@ -1388,7 +2189,7 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
         <p>From real-time remote access to enterprise-grade security, ScreenConnect covers your entire display infrastructure.</p>
       </div>
       <div class="bento-grid">
-        <div class="bento-card bento-wide bento-dark">
+        <div class="bento-card bento-wide bento-dark scroll-reveal">
           <span class="material-symbols-outlined bento-icon">videocam</span>
           <h3>Live Remote View</h3>
           <p>See every connected screen in real time. Instant preview, no delay.</p>
@@ -1397,17 +2198,17 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
             <span class="material-symbols-outlined enc-lock">visibility</span>
           </div>
         </div>
-        <div class="bento-card">
+        <div class="bento-card scroll-reveal">
           <span class="material-symbols-outlined bento-icon">security</span>
           <h3>Encrypted Channels</h3>
           <p>End-to-end encrypted agent connections.</p>
         </div>
-        <div class="bento-card">
+        <div class="bento-card scroll-reveal">
           <span class="material-symbols-outlined bento-icon">speed</span>
           <h3>Sub-second Updates</h3>
           <p>Live status polling every 15 seconds with instant change events.</p>
         </div>
-        <div class="bento-card">
+        <div class="bento-card scroll-reveal">
           <span class="material-symbols-outlined bento-icon">devices</span>
           <h3>Multi-Screen Control</h3>
           <p>Manage unlimited screens from one dashboard with expandable grid.</p>
@@ -1419,10 +2220,10 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
   <section class="stats-section">
     <div class="section-inner">
       <div class="stats-grid">
-        <div class="stat-item"><div class="stat-num">10K+</div><div class="stat-label">Screens Managed</div></div>
-        <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
-        <div class="stat-item"><div class="stat-num">500+</div><div class="stat-label">Enterprise Customers</div></div>
-        <div class="stat-item"><div class="stat-num">&lt;1s</div><div class="stat-label">Status Latency</div></div>
+        <div class="stat-item scroll-reveal"><div class="stat-num">10K+</div><div class="stat-label">Screens Managed</div></div>
+        <div class="stat-item scroll-reveal"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+        <div class="stat-item scroll-reveal"><div class="stat-num">500+</div><div class="stat-label">Enterprise Customers</div></div>
+        <div class="stat-item scroll-reveal"><div class="stat-num">&lt;1s</div><div class="stat-label">Status Latency</div></div>
       </div>
     </div>
   </section>
@@ -1675,7 +2476,50 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
             <span class="cw-cart">🛒</span>
           </div>
           <button class="cw-contact-btn">Contact My ScreenConnect Team</button>
-          <button class="btn-ghost btn-sm" onclick="refreshDashboardFromSupabase()" style="align-self:flex-end">
+  
+        <!-- Mini Robot in Dashboard Hero -->
+        <div style="position:absolute;bottom:0;right:32px;width:80px;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:3">
+          <svg viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg" style="width:80px;animation:robotWalk 0.8s linear infinite">
+            <rect x="20" y="42" width="40" height="38" rx="8" fill="rgba(0,102,204,0.8)" stroke="rgba(51,170,255,0.6)" stroke-width="1"/>
+            <rect x="26" y="49" width="28" height="16" rx="3" fill="rgba(0,0,0,0.4)"/>
+            <rect x="28" y="52" width="14" height="2" rx="1" fill="#33aaff" opacity="0.9">
+              <animate attributeName="width" values="14;22;14" dur="1.5s" repeatCount="indefinite"/>
+            </rect>
+            <rect x="28" y="57" width="20" height="2" rx="1" fill="#0066cc" opacity="0.7">
+              <animate attributeName="width" values="20;12;20" dur="2s" repeatCount="indefinite"/>
+            </rect>
+            <rect x="18" y="12" width="44" height="30" rx="10" fill="rgba(0,80,180,0.9)" stroke="rgba(51,170,255,0.5)" stroke-width="1"/>
+            <circle cx="32" cy="26" r="7" fill="#001433"/>
+            <circle cx="48" cy="26" r="7" fill="#001433"/>
+            <circle cx="32" cy="26" r="4" fill="#33ddff">
+              <animate attributeName="cx" values="30;34;30" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="48" cy="26" r="4" fill="#33ddff">
+              <animate attributeName="cx" values="46;50;46" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <line x1="40" y1="12" x2="40" y2="4" stroke="rgba(51,170,255,0.8)" stroke-width="1.5"/>
+            <circle cx="40" cy="3" r="3" fill="#33aaff">
+              <animate attributeName="r" values="2.5;4;2.5" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <rect x="34" y="35" width="12" height="5" rx="2" fill="rgba(0,50,150,0.8)"/>
+            <rect x="4" y="44" width="13" height="8" rx="4" fill="rgba(0,102,204,0.8)" stroke="rgba(51,170,255,0.4)" stroke-width="1">
+              <animateTransform attributeName="transform" type="rotate" values="0 10 48;-12 10 48;0 10 48" dur="0.8s" repeatCount="indefinite"/>
+            </rect>
+            <rect x="63" y="44" width="13" height="8" rx="4" fill="rgba(0,102,204,0.8)" stroke="rgba(51,170,255,0.4)" stroke-width="1">
+              <animateTransform attributeName="transform" type="rotate" values="0 70 48;12 70 48;0 70 48" dur="0.8s" repeatCount="indefinite"/>
+            </rect>
+            <rect x="24" y="78" width="13" height="18" rx="5" fill="rgba(0,60,140,0.9)">
+              <animateTransform attributeName="transform" type="rotate" values="0 30 78;6 30 78;0 30 78" dur="0.4s" repeatCount="indefinite"/>
+            </rect>
+            <rect x="43" y="78" width="13" height="18" rx="5" fill="rgba(0,60,140,0.9)">
+              <animateTransform attributeName="transform" type="rotate" values="0 50 78;-6 50 78;0 50 78" dur="0.4s" repeatCount="indefinite"/>
+            </rect>
+            <ellipse cx="30" cy="97" rx="8" ry="4" fill="rgba(0,30,100,0.8)"/>
+            <ellipse cx="50" cy="97" rx="8" ry="4" fill="rgba(0,30,100,0.8)"/>
+          </svg>
+        </div>
+
+        <button class="btn-ghost btn-sm" onclick="refreshDashboardFromSupabase()" style="align-self:flex-end">
             <span class="material-symbols-outlined">refresh</span>
             Refresh
           </button>
@@ -1750,6 +2594,40 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
               <div style="font-size:10px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Storage Used</div>
             </div>
           </div>
+        </div>
+      </div>
+
+
+      <!-- Live Realtime Graph Card -->
+      <div class="live-graph-card animate-in delay-2" style="margin-top:0">
+        <div class="live-graph-header">
+          <div>
+            <div class="live-graph-title">Live Connection Activity</div>
+            <div style="font-size:10px;color:var(--text-2);margin-top:2px">Real-time signal from all screens</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="live-graph-badge"><div class="live-dot"></div>LIVE</div>
+            <canvas id="live-graph-canvas" width="300" height="80"></canvas>
+          </div>
+
+          <!-- Mini SVG Area Chart -->
+          <div style="padding:0 20px 16px">
+            <svg class="mini-area-svg" viewBox="0 0 280 60" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path class="mini-area-fill" d="M0,50 L40,40 L80,30 L120,20 L160,35 L200,15 L240,25 L280,10 L280,60 L0,60 Z"/>
+              <path class="mini-area-path" d="M0,50 L40,40 L80,30 L120,20 L160,35 L200,15 L240,25 L280,10"/>
+              <!-- Dots on path -->
+              <circle cx="280" cy="10" r="4" fill="var(--accent)">
+                <animate attributeName="r" values="3;5;3" dur="1.5s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+          </div>
+
         </div>
       </div>
 
@@ -2042,25 +2920,25 @@ body.has-connection .mbn-item.locked-tab{opacity:1;pointer-events:auto}
         </div>
       </div>
       <div class="support-grid">
-        <div class="support-card">
+        <div class="support-card scroll-reveal">
           <span class="material-symbols-outlined support-icon blue">menu_book</span>
           <h3>Documentation</h3>
           <p>Browse comprehensive guides, tutorials, and API reference for ScreenConnect.</p>
           <button class="btn-ghost btn-sm">Open Docs</button>
         </div>
-        <div class="support-card">
+        <div class="support-card scroll-reveal">
           <span class="material-symbols-outlined support-icon">chat</span>
           <h3>Live Chat</h3>
           <p>Connect with our support team in real time. Average response under 2 minutes.</p>
           <button class="btn-primary btn-sm">Start Chat</button>
         </div>
-        <div class="support-card">
+        <div class="support-card scroll-reveal">
           <span class="material-symbols-outlined support-icon warn">bug_report</span>
           <h3>Report an Issue</h3>
           <p>Found a bug or unexpected behavior? Let us know and we'll investigate immediately.</p>
           <button class="btn-ghost btn-sm">Submit Ticket</button>
         </div>
-        <div class="support-card">
+        <div class="support-card scroll-reveal">
           <span class="material-symbols-outlined support-icon green">school</span>
           <h3>Training</h3>
           <p>Schedule a personalized onboarding or advanced training session with our experts.</p>
@@ -3183,6 +4061,327 @@ document.addEventListener('DOMContentLoaded', async () => {
   localStorage.removeItem('mview-auth-user');
   showPage('landing');
 });
+
+
+/* ═══════════════════════════════════════════════════════════
+   UPGRADE JS — Particles, Cursor, Scroll, Live Graph, 3D
+═══════════════════════════════════════════════════════════ */
+
+/* ── CURSOR GLOW ─────────────────────────────────────────── */
+(function() {
+  const glow = document.getElementById('cursor-glow');
+  if (!glow) return;
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+  });
+  document.addEventListener('mouseleave', () => glow.style.opacity = '0');
+  document.addEventListener('mouseenter', () => glow.style.opacity = '1');
+})();
+
+/* ── PARTICLE SYSTEM ─────────────────────────────────────── */
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+  const particles = Array.from({length: 60}, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+    r: Math.random() * 2 + 0.5,
+    opacity: Math.random() * 0.5 + 0.1,
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,102,204,${p.opacity})`;
+      ctx.fill();
+    });
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0,102,204,${0.06 * (1 - dist/120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── SCROLL REVEAL ───────────────────────────────────────── */
+(function() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  
+  function initReveal() {
+    document.querySelectorAll('.scroll-reveal').forEach(el => obs.observe(el));
+  }
+  
+  document.addEventListener('DOMContentLoaded', initReveal);
+  // Re-run on page changes
+  const origShowPage = window.showPage;
+  if (origShowPage) {
+    window.showPage = function(p) {
+      origShowPage(p);
+      setTimeout(initReveal, 50);
+    };
+  }
+})();
+
+/* ── 3D CARD TILT ────────────────────────────────────────── */
+(function() {
+  function addTilt(card) {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `perspective(600px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  }
+  
+  function initTilts() {
+    document.querySelectorAll('.kpi-card, .support-card, .settings-card').forEach(addTilt);
+  }
+  document.addEventListener('DOMContentLoaded', initTilts);
+  setTimeout(initTilts, 1000);
+})();
+
+/* ── RIPPLE EFFECT ON BUTTONS ────────────────────────────── */
+(function() {
+  function addRipple(e) {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+    btn.style.position = 'relative';
+    btn.style.overflow = 'hidden';
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+  }
+  function initRipples() {
+    document.querySelectorAll('.btn-primary, .btn-ghost, .btn-device, .nav-item').forEach(btn => {
+      if (!btn._hasRipple) { btn.addEventListener('click', addRipple); btn._hasRipple = true; }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', initRipples);
+  setTimeout(initRipples, 1000);
+})();
+
+/* ── LIVE GRAPH CANVAS ───────────────────────────────────── */
+(function() {
+  const data = Array.from({length: 60}, () => Math.random() * 60 + 20);
+  
+  function drawLiveGraph() {
+    const canvas = document.getElementById('live-graph-canvas');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth || 300;
+    const H = 80;
+    canvas.width = W; canvas.height = H;
+    
+    ctx.clearRect(0, 0, W, H);
+    
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, 'rgba(0,102,204,0.25)');
+    grad.addColorStop(1, 'rgba(0,102,204,0)');
+    
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * W;
+      const y = H - (v / 100) * H;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(W, H); ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    
+    // Line
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * W;
+      const y = H - (v / 100) * H;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = 'rgba(0,102,204,0.8)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    
+    // Live dot
+    const lastX = W;
+    const lastY = H - (data[data.length - 1] / 100) * H;
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#0066cc';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,102,204,0.2)';
+    ctx.fill();
+  }
+  
+  function updateLiveGraph() {
+    data.shift();
+    data.push(Math.random() * 60 + 20);
+    drawLiveGraph();
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    drawLiveGraph();
+    setInterval(updateLiveGraph, 300);
+    window.addEventListener('resize', drawLiveGraph);
+  });
+})();
+
+/* ── COUNTER ANIMATION ───────────────────────────────────── */
+function animateCounter(el, target, suffix = '') {
+  const start = 0;
+  const duration = 1500;
+  const startTime = performance.now();
+  function update(t) {
+    const elapsed = t - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + (target - start) * eased);
+    el.textContent = current.toLocaleString() + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+/* ── STAT COUNTER TRIGGER ON SCROLL ─────────────────────── */
+(function() {
+  const statObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const numEl = e.target.querySelector('.stat-num');
+        if (numEl && !numEl._counted) {
+          numEl._counted = true;
+          const text = numEl.textContent;
+          const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+          const suffix = text.replace(/[0-9.]/g, '');
+          if (!isNaN(num)) animateCounter(numEl, num, suffix);
+        }
+        statObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.stat-item').forEach(el => statObs.observe(el));
+  });
+})();
+
+/* ── TYPEWRITER FOR HERO SUB (first load) ────────────────── */
+(function() {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add scroll-reveal to features/stats/cta
+    document.querySelectorAll('.bento-card, .stat-item, .support-card').forEach(el => {
+      el.classList.add('scroll-reveal');
+    });
+    // Init all reveals
+    setTimeout(() => {
+      document.querySelectorAll('.scroll-reveal').forEach(el => {
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }});
+        }, {threshold:0.1});
+        obs.observe(el);
+      });
+    }, 100);
+  });
+})();
+
+/* ── DYNAMIC BAR CHART ANIMATION ON DASHBOARD ───────────── */
+(function() {
+  const origRenderKpis = window.renderKpis;
+  window.renderKpis = function(rows) {
+    if (origRenderKpis) origRenderKpis(rows);
+    // Animate kpi vals
+    document.querySelectorAll('.kpi-val').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = 'countUp 0.7s var(--ease) both';
+    });
+  };
+})();
+
+/* ── HERO CARD INTERACTIVE MOUSE-FOLLOW ──────────────────── */
+(function() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const card = document.querySelector('.hero-card');
+    if (!card) return;
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
+    hero.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      card.style.transform = `perspective(800px) rotateX(${-y * 6}deg) rotateY(${x * 6}deg) translateY(${-8 - Math.abs(y) * 4}px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+})();
+
+/* ── MOCKUP BAR DOTS COLOR ───────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const dots = document.querySelectorAll('.mockup-dots i');
+  const colors = ['#ff5f57','#ffbd2e','#28c840'];
+  dots.forEach((d, i) => d.style.background = colors[i] || '#ccc');
+});
+
+/* ── ANIMATED BAR CHART BARS (mockup-chart) ──────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const bars = document.querySelectorAll('.mockup-chart .chart-bar');
+  setInterval(() => {
+    bars.forEach(bar => {
+      bar.style.height = (Math.random() * 70 + 20) + '%';
+    });
+  }, 2000);
+});
+
+/* ── SECTION BREADCRUMB UPDATE ───────────────────────────── */
+const origShowSection = window.showSection;
+window.showSection = function(s) {
+  if (origShowSection) origShowSection(s);
+  // Reset and retrigger animations
+  document.querySelectorAll('.dash-section.active .kpi-card, .dash-section.active .chart-card').forEach(el => {
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = '';
+  });
+};
+
+
 </script>
 </body>
-</html>

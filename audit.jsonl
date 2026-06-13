@@ -667,3 +667,8 @@
 {"ts": "2026-06-13T12:10:25.560941+00:00", "event": "socket_connect", "sid": "7n2nai1LYmd2VKdnAAAD", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
 {"ts": "2026-06-13T12:27:30.741277+00:00", "event": "agent_offline", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7"}
 {"ts": "2026-06-13T12:28:15.077818+00:00", "event": "socket_connect", "sid": "3XaECp3kZ1_voVCYAAAB", "ip": "127.0.0.1", "query": {"EIO": "4", "transport": "websocket"}}
+{"ts": "2026-06-13T17:32:17.838921+00:00", "event": "socket_connect", "sid": "2TJSfRKlbitYSb_QAAAD", "ip": "192.168.100.20", "query": {"transport": "websocket", "EIO": "4", "t": "1781371938.3633194"}}
+{"ts": "2026-06-13T17:32:17.936019+00:00", "event": "agent_online", "device_id": "MV-A5ABD3848FA805741C1B", "label": "DESKTOP-UQT5UQ7", "ip": "192.168.100.20"}
+{"ts": "2026-06-13T17:32:17.950710+00:00", "event": "agent_auth_ok", "device_id": "MV-A5ABD3848FA805741C1B", "viewers": 1}
+{"ts": "2026-06-13T17:32:20.227481+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "cpu", "value": 100.0}
+{"ts": "2026-06-13T17:32:20.228204+00:00", "event": "agent_alert", "device_id": "MV-A5ABD3848FA805741C1B", "type": "ram", "value": 93.3}
