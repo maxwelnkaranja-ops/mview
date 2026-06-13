@@ -31106,3 +31106,342 @@ OSError: [WinError 10048] Only one usage of each socket address (protocol/networ
 2026-06-13 20:53:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:06] "GET /api/devices HTTP/1.1" 200 739 0.000741
 2026-06-13 20:53:07  INFO      [Dummy-457]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
 2026-06-13 20:53:10  INFO      [Dummy-458]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:13  INFO      [Dummy-459]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:16] "GET /status HTTP/1.1" 200 645 0.002512
+2026-06-13 20:53:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:16] "GET /api/devices HTTP/1.1" 200 739 0.000693
+2026-06-13 20:53:16  INFO      [Dummy-460]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:20  INFO      [Dummy-461]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:23  INFO      [Dummy-462]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:26  INFO      [Dummy-463]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:26] "GET /status HTTP/1.1" 200 645 0.002144
+2026-06-13 20:53:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:26] "GET /api/devices HTTP/1.1" 200 739 0.000673
+2026-06-13 20:53:29  INFO      [Dummy-464]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:33  INFO      [Dummy-465]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:36] "GET /status HTTP/1.1" 200 645 0.001904
+2026-06-13 20:53:36  INFO      [Dummy-466]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:36] "GET /api/devices HTTP/1.1" 200 739 0.001254
+2026-06-13 20:53:39  INFO      [Dummy-467]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:41  INFO      [Dummy-468]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:46  INFO      [Dummy-469]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:46] "GET /status HTTP/1.1" 200 645 0.001381
+2026-06-13 20:53:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:46] "GET /api/devices HTTP/1.1" 200 739 0.000915
+2026-06-13 20:53:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:53:49  INFO      [Dummy-470]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:52  INFO      [Dummy-471]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:56] "GET /status HTTP/1.1" 200 645 0.001431
+2026-06-13 20:53:56  INFO      [Dummy-472]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:53:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:53:56] "GET /api/devices HTTP/1.1" 200 739 0.000647
+2026-06-13 20:54:00  INFO      [Dummy-473]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:03  INFO      [Dummy-474]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:06] "GET /status HTTP/1.1" 200 645 0.001761
+2026-06-13 20:54:06  INFO      [Dummy-475]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:06] "GET /api/devices HTTP/1.1" 200 739 0.001218
+2026-06-13 20:54:09  INFO      [Dummy-476]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:11  INFO      [Dummy-477]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:14  INFO      [Dummy-478]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:16] "GET /status HTTP/1.1" 200 645 0.001375
+2026-06-13 20:54:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:16] "GET /api/devices HTTP/1.1" 200 739 0.001207
+2026-06-13 20:54:17  INFO      [Dummy-479]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:21  INFO      [Dummy-480]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:25  INFO      [Dummy-481]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:26] "GET /status HTTP/1.1" 200 645 0.001412
+2026-06-13 20:54:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:26] "GET /api/devices HTTP/1.1" 200 739 0.000839
+2026-06-13 20:54:29  INFO      [Dummy-482]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:33  INFO      [Dummy-483]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:36  INFO      [Dummy-484]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:36] "GET /status HTTP/1.1" 200 645 0.002509
+2026-06-13 20:54:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:36] "GET /api/devices HTTP/1.1" 200 739 0.001144
+2026-06-13 20:54:39  INFO      [Dummy-485]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:43  INFO      [Dummy-486]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:46] "GET /status HTTP/1.1" 200 645 0.002513
+2026-06-13 20:54:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:46] "GET /api/devices HTTP/1.1" 200 739 0.001201
+2026-06-13 20:54:47  INFO      [Dummy-487]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:54:49  INFO      [Dummy-488]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:52  INFO      [Dummy-489]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:55  INFO      [Dummy-490]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:54:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:56] "GET /status HTTP/1.1" 200 645 0.001442
+2026-06-13 20:54:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:54:56] "GET /api/devices HTTP/1.1" 200 739 0.001015
+2026-06-13 20:54:58  INFO      [Dummy-491]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:02  INFO      [Dummy-492]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:05  INFO      [Dummy-493]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:06] "GET /status HTTP/1.1" 200 645 0.002420
+2026-06-13 20:55:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:06] "GET /api/devices HTTP/1.1" 200 739 0.001153
+2026-06-13 20:55:09  INFO      [Dummy-494]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:12  INFO      [Dummy-495]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:14  INFO      [Dummy-496]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:16] "GET /status HTTP/1.1" 200 645 0.001391
+2026-06-13 20:55:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:16] "GET /api/devices HTTP/1.1" 200 739 0.000988
+2026-06-13 20:55:16  INFO      [Dummy-497]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:19  INFO      [Dummy-498]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:24  INFO      [Dummy-499]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:26] "GET /status HTTP/1.1" 200 645 0.001703
+2026-06-13 20:55:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:26] "GET /api/devices HTTP/1.1" 200 739 0.000741
+2026-06-13 20:55:28  INFO      [Dummy-500]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:31  INFO      [Dummy-501]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:34  INFO      [Dummy-502]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:36] "GET /status HTTP/1.1" 200 645 0.002515
+2026-06-13 20:55:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:36] "GET /api/devices HTTP/1.1" 200 739 0.001216
+2026-06-13 20:55:38  INFO      [Dummy-503]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:41  INFO      [Dummy-504]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:45  INFO      [Dummy-505]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:46] "GET /status HTTP/1.1" 200 645 0.001431
+2026-06-13 20:55:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:46] "GET /api/devices HTTP/1.1" 200 739 0.001020
+2026-06-13 20:55:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:55:49  INFO      [Dummy-506]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:52  INFO      [Dummy-507]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:55  INFO      [Dummy-508]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:55:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:56] "GET /status HTTP/1.1" 200 645 0.002656
+2026-06-13 20:55:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:55:56] "GET /api/devices HTTP/1.1" 200 739 0.001173
+2026-06-13 20:55:59  INFO      [Dummy-509]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:03  INFO      [Dummy-510]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:06  INFO      [Dummy-511]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:06] "GET /status HTTP/1.1" 200 645 0.002436
+2026-06-13 20:56:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:06] "GET /api/devices HTTP/1.1" 200 739 0.001243
+2026-06-13 20:56:09  INFO      [Dummy-512]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:12  INFO      [Dummy-513]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:15  INFO      [Dummy-514]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:16] "GET /status HTTP/1.1" 200 645 0.002347
+2026-06-13 20:56:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:16] "GET /api/devices HTTP/1.1" 200 739 0.000743
+2026-06-13 20:56:19  INFO      [Dummy-515]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:22  INFO      [Dummy-516]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:25  INFO      [Dummy-517]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:26] "GET /status HTTP/1.1" 200 645 0.002453
+2026-06-13 20:56:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:26] "GET /api/devices HTTP/1.1" 200 739 0.001189
+2026-06-13 20:56:28  INFO      [Dummy-518]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:31  INFO      [Dummy-519]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:33  INFO      [Dummy-520]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:36] "GET /status HTTP/1.1" 200 645 0.001479
+2026-06-13 20:56:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:36] "GET /api/devices HTTP/1.1" 200 739 0.000717
+2026-06-13 20:56:36  INFO      [Dummy-521]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:39  INFO      [Dummy-522]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:42  INFO      [Dummy-523]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:45  INFO      [Dummy-524]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:46] "GET /status HTTP/1.1" 200 645 0.002655
+2026-06-13 20:56:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:46] "GET /api/devices HTTP/1.1" 200 739 0.000574
+2026-06-13 20:56:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:56:48  INFO      [Dummy-525]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:51  INFO      [Dummy-526]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:53  INFO      [Dummy-527]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:56] "GET /status HTTP/1.1" 200 645 0.002388
+2026-06-13 20:56:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:56:56] "GET /api/devices HTTP/1.1" 200 739 0.001529
+2026-06-13 20:56:56  INFO      [Dummy-528]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:56:59  INFO      [Dummy-529]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:01  INFO      [Dummy-530]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:04  INFO      [Dummy-531]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:06] "GET /status HTTP/1.1" 200 645 0.002451
+2026-06-13 20:57:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:06] "GET /api/devices HTTP/1.1" 200 739 0.001275
+2026-06-13 20:57:06  INFO      [Dummy-532]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:08  INFO      [Dummy-533]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:11  INFO      [Dummy-534]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:13  INFO      [Dummy-535]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:15  INFO      [Dummy-536]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:16] "GET /status HTTP/1.1" 200 645 0.001496
+2026-06-13 20:57:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:16] "GET /api/devices HTTP/1.1" 200 739 0.000770
+2026-06-13 20:57:18  INFO      [Dummy-537]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:21  INFO      [Dummy-538]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:24  INFO      [Dummy-539]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:26] "GET /status HTTP/1.1" 200 645 0.001413
+2026-06-13 20:57:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:26] "GET /api/devices HTTP/1.1" 200 739 0.000623
+2026-06-13 20:57:27  INFO      [Dummy-540]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:29  INFO      [Dummy-541]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:32  INFO      [Dummy-542]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:35  INFO      [Dummy-543]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:36] "GET /status HTTP/1.1" 200 645 0.001916
+2026-06-13 20:57:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:36] "GET /api/devices HTTP/1.1" 200 739 0.000854
+2026-06-13 20:57:38  INFO      [Dummy-544]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:41  INFO      [Dummy-545]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:44  INFO      [Dummy-546]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:46] "GET /status HTTP/1.1" 200 645 0.001718
+2026-06-13 20:57:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:46] "GET /api/devices HTTP/1.1" 200 739 0.001033
+2026-06-13 20:57:47  INFO      [Dummy-547]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:57:49  INFO      [Dummy-548]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:52  INFO      [Dummy-549]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:55  INFO      [Dummy-550]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:57:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:56] "GET /status HTTP/1.1" 200 645 0.001671
+2026-06-13 20:57:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:57:56] "GET /api/devices HTTP/1.1" 200 739 0.004613
+2026-06-13 20:57:57  INFO      [Dummy-551]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:01  INFO      [Dummy-552]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:04  INFO      [Dummy-553]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:06  INFO      [Dummy-554]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:06] "GET /status HTTP/1.1" 200 645 0.001354
+2026-06-13 20:58:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:06] "GET /api/devices HTTP/1.1" 200 739 0.000772
+2026-06-13 20:58:08  INFO      [Dummy-555]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:10  INFO      [Dummy-556]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:12  INFO      [Dummy-557]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:14  INFO      [Dummy-558]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:16] "GET /status HTTP/1.1" 200 645 0.001566
+2026-06-13 20:58:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:16] "GET /api/devices HTTP/1.1" 200 739 0.000680
+2026-06-13 20:58:17  INFO      [Dummy-559]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:20  INFO      [Dummy-560]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:23  INFO      [Dummy-561]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:25  INFO      [Dummy-562]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:26] "GET /status HTTP/1.1" 200 645 0.002487
+2026-06-13 20:58:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:26] "GET /api/devices HTTP/1.1" 200 739 0.000811
+2026-06-13 20:58:28  INFO      [Dummy-563]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:31  INFO      [Dummy-564]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:33  INFO      [Dummy-565]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:36] "GET /status HTTP/1.1" 200 645 0.002197
+2026-06-13 20:58:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:36] "GET /api/devices HTTP/1.1" 200 739 0.001540
+2026-06-13 20:58:36  INFO      [Dummy-566]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:40  INFO      [Dummy-567]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:43  INFO      [Dummy-568]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:46] "GET /status HTTP/1.1" 200 645 0.002472
+2026-06-13 20:58:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:46] "GET /api/devices HTTP/1.1" 200 739 0.001814
+2026-06-13 20:58:47  INFO      [Dummy-569]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:58:50  INFO      [Dummy-570]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:54  INFO      [Dummy-571]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:58:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:56] "GET /status HTTP/1.1" 200 645 0.001630
+2026-06-13 20:58:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:58:56] "GET /api/devices HTTP/1.1" 200 739 0.000678
+2026-06-13 20:58:57  INFO      [Dummy-572]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:00  INFO      [Dummy-573]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:04  INFO      [Dummy-574]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:06] "GET /status HTTP/1.1" 200 645 0.001486
+2026-06-13 20:59:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:06] "GET /api/devices HTTP/1.1" 200 739 0.000885
+2026-06-13 20:59:07  INFO      [Dummy-575]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:10  INFO      [Dummy-576]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:13  INFO      [Dummy-577]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:16] "GET /status HTTP/1.1" 200 645 0.001504
+2026-06-13 20:59:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:16] "GET /api/devices HTTP/1.1" 200 739 0.000678
+2026-06-13 20:59:16  INFO      [Dummy-578]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:20  INFO      [Dummy-579]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:23  INFO      [Dummy-580]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:26] "GET /status HTTP/1.1" 200 645 0.001734
+2026-06-13 20:59:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:26] "GET /api/devices HTTP/1.1" 200 739 0.001436
+2026-06-13 20:59:27  INFO      [Dummy-581]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:30  INFO      [Dummy-582]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:33  INFO      [Dummy-583]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:36] "GET /status HTTP/1.1" 200 645 0.001712
+2026-06-13 20:59:36  INFO      [Dummy-584]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:36] "GET /api/devices HTTP/1.1" 200 739 0.001453
+2026-06-13 20:59:39  INFO      [Dummy-585]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:42  INFO      [Dummy-586]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:46  INFO      [Dummy-587]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:46] "GET /status HTTP/1.1" 200 645 0.001884
+2026-06-13 20:59:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:46] "GET /api/devices HTTP/1.1" 200 739 0.001214
+2026-06-13 20:59:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 20:59:49  INFO      [Dummy-588]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:52  INFO      [Dummy-589]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:55  INFO      [Dummy-590]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 20:59:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:56] "GET /status HTTP/1.1" 200 645 0.001511
+2026-06-13 20:59:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 20:59:56] "GET /api/devices HTTP/1.1" 200 739 0.001188
+2026-06-13 20:59:58  INFO      [Dummy-591]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:02  INFO      [Dummy-592]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:05  INFO      [Dummy-593]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:06] "GET /status HTTP/1.1" 200 645 0.001655
+2026-06-13 21:00:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:06] "GET /api/devices HTTP/1.1" 200 739 0.001365
+2026-06-13 21:00:08  INFO      [Dummy-594]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:11  INFO      [Dummy-595]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:14  INFO      [Dummy-596]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:16] "GET /status HTTP/1.1" 200 645 0.001427
+2026-06-13 21:00:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:16] "GET /api/devices HTTP/1.1" 200 739 0.001523
+2026-06-13 21:00:18  INFO      [Dummy-597]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:21  INFO      [Dummy-598]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:25  INFO      [Dummy-599]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:26] "GET /status HTTP/1.1" 200 645 0.003528
+2026-06-13 21:00:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:26] "GET /api/devices HTTP/1.1" 200 739 0.000947
+2026-06-13 21:00:29  INFO      [Dummy-600]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:33  INFO      [Dummy-601]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:36] "GET /status HTTP/1.1" 200 645 0.003529
+2026-06-13 21:00:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:36] "GET /api/devices HTTP/1.1" 200 739 0.000743
+2026-06-13 21:00:37  INFO      [Dummy-602]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:40  INFO      [Dummy-603]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:43  INFO      [Dummy-604]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:46] "GET /status HTTP/1.1" 200 645 0.003626
+2026-06-13 21:00:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:46] "GET /api/devices HTTP/1.1" 200 739 0.000789
+2026-06-13 21:00:47  INFO      [Dummy-605]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 21:00:50  INFO      [Dummy-606]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:54  INFO      [Dummy-607]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:00:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:56] "GET /status HTTP/1.1" 200 645 0.003309
+2026-06-13 21:00:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:00:56] "GET /api/devices HTTP/1.1" 200 739 0.000680
+2026-06-13 21:00:57  INFO      [Dummy-608]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:00  INFO      [Dummy-609]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:03  INFO      [Dummy-610]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:06] "GET /status HTTP/1.1" 200 645 0.005475
+2026-06-13 21:01:06  INFO      [Dummy-611]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:06] "GET /api/devices HTTP/1.1" 200 739 0.000989
+2026-06-13 21:01:09  INFO      [Dummy-612]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:12  INFO      [Dummy-613]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:15  INFO      [Dummy-614]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:16] "GET /status HTTP/1.1" 200 645 0.005525
+2026-06-13 21:01:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:16] "GET /api/devices HTTP/1.1" 200 739 0.001035
+2026-06-13 21:01:18  INFO      [Dummy-615]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:21  INFO      [Dummy-616]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:25  INFO      [Dummy-617]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:26] "GET /status HTTP/1.1" 200 645 0.005352
+2026-06-13 21:01:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:26] "GET /api/devices HTTP/1.1" 200 739 0.005462
+2026-06-13 21:01:28  INFO      [Dummy-618]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:31  INFO      [Dummy-619]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:34  INFO      [Dummy-620]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:37  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:37] "GET /status HTTP/1.1" 200 645 0.002205
+2026-06-13 21:01:37  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:37] "GET /api/devices HTTP/1.1" 200 739 0.002236
+2026-06-13 21:01:37  INFO      [Dummy-621]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:41  INFO      [Dummy-622]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:43  INFO      [Dummy-623]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:46] "GET /status HTTP/1.1" 200 645 0.003968
+2026-06-13 21:01:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:46] "GET /api/devices HTTP/1.1" 200 739 0.000663
+2026-06-13 21:01:46  INFO      [Dummy-624]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 21:01:49  INFO      [Dummy-625]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:52  INFO      [Dummy-626]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:55  INFO      [Dummy-627]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:01:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:56] "GET /status HTTP/1.1" 200 645 0.020166
+2026-06-13 21:01:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:01:56] "GET /api/devices HTTP/1.1" 200 739 0.000662
+2026-06-13 21:01:58  INFO      [Dummy-628]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:01  INFO      [Dummy-629]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:04  INFO      [Dummy-630]  192.168.100.20 - - [2026-06-13 21:02:04] "GET /status HTTP/1.1" 200 645 0.054535
+2026-06-13 21:02:04  INFO      [Dummy-631]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:07  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:07] "GET /status HTTP/1.1" 200 645 0.004004
+2026-06-13 21:02:07  INFO      [Dummy-632]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:08  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:08] "GET /api/devices HTTP/1.1" 200 739 0.000979
+2026-06-13 21:02:10  INFO      [Dummy-633]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:13  INFO      [Dummy-634]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:15  INFO      [Dummy-635]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:16] "GET /status HTTP/1.1" 200 645 0.015648
+2026-06-13 21:02:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:16] "GET /api/devices HTTP/1.1" 200 739 0.000803
+2026-06-13 21:02:18  INFO      [Dummy-636]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:22  INFO      [Dummy-637]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:25  INFO      [Dummy-638]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:26] "GET /status HTTP/1.1" 200 645 0.001605
+2026-06-13 21:02:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:26] "GET /api/devices HTTP/1.1" 200 739 0.000568
+2026-06-13 21:02:29  INFO      [Dummy-639]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:32  INFO      [Dummy-640]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:35  INFO      [Dummy-641]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:36] "GET /status HTTP/1.1" 200 645 0.002780
+2026-06-13 21:02:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:36] "GET /api/devices HTTP/1.1" 200 739 0.000760
+2026-06-13 21:02:38  INFO      [Dummy-642]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:41  INFO      [Dummy-643]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:45  INFO      [Dummy-644]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:46] "GET /status HTTP/1.1" 200 645 0.002043
+2026-06-13 21:02:46  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:46] "GET /api/devices HTTP/1.1" 200 739 0.001036
+2026-06-13 21:02:47  INFO      [Dummy-6]  STABILITY: devs=1 viewers=1 threads=8 mem=103MB cpu=0.0%
+2026-06-13 21:02:48  INFO      [Dummy-645]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:50  INFO      [Dummy-646]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:53  INFO      [Dummy-647]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:56] "GET /status HTTP/1.1" 200 645 0.003249
+2026-06-13 21:02:56  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:02:56] "GET /api/devices HTTP/1.1" 200 739 0.001217
+2026-06-13 21:02:56  INFO      [Dummy-648]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:02:59  INFO      [Dummy-649]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:03  INFO      [Dummy-650]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:06  INFO      [Dummy-651]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:06] "GET /status HTTP/1.1" 200 645 0.036533
+2026-06-13 21:03:06  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:06] "GET /api/devices HTTP/1.1" 200 739 0.000894
+2026-06-13 21:03:09  INFO      [Dummy-652]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:11  INFO      [Dummy-653]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:15  INFO      [Dummy-654]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:16] "GET /status HTTP/1.1" 200 645 0.001415
+2026-06-13 21:03:16  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:16] "GET /api/devices HTTP/1.1" 200 739 0.000663
+2026-06-13 21:03:17  INFO      [Dummy-655]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:21  INFO      [Dummy-656]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:25  INFO      [Dummy-657]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:26] "GET /status HTTP/1.1" 200 645 0.001513
+2026-06-13 21:03:26  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:26] "GET /api/devices HTTP/1.1" 200 739 0.000764
+2026-06-13 21:03:28  INFO      [Dummy-658]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:32  INFO      [Dummy-659]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:36  INFO      [Dummy-660]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B
+2026-06-13 21:03:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:36] "GET /status HTTP/1.1" 200 645 0.001622
+2026-06-13 21:03:36  INFO      [Dummy-10]  127.0.0.1 - - [2026-06-13 21:03:36] "GET /api/devices HTTP/1.1" 200 739 0.000782
+2026-06-13 21:03:40  INFO      [Dummy-661]  Relay: system_stats_report from MV-A5ABD3848FA805741C1B

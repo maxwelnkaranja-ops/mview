@@ -7491,12 +7491,93 @@
                 Run on the target machine as Administrator
               </div>
             </div>
+            <!-- ── AGENT DOWNLOAD SECTION ── -->
+            <div class="fg" style="margin-top:4px">
+              <label class="flbl">Agent Download</label>
+              <div style="
+                background: linear-gradient(135deg, rgba(0,212,170,0.06), rgba(0,212,170,0.02));
+                border: 1px solid rgba(0,212,170,0.25);
+                border-radius: 12px;
+                padding: 14px 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              ">
+                <!-- Download button -->
+                <a
+                  href="https://github.com/maxwelnkaranja-ops/mview/releases/download/v4.0/master_agent.exe"
+                  download="master_agent.exe"
+                  target="_blank"
+                  rel="noopener"
+                  id="agent-dl-btn"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    padding: 11px 18px;
+                    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-2));
+                    color: #000;
+                    font-size: 12px;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    letter-spacing: -0.01em;
+                    transition: all 0.2s;
+                    box-shadow: 0 0 20px rgba(0,212,170,0.25), 0 2px 8px rgba(0,0,0,0.4);
+                  "
+                  onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 32px rgba(0,212,170,0.4), 0 4px 16px rgba(0,0,0,0.5)'"
+                  onmouseout="this.style.transform='';this.style.boxShadow='0 0 20px rgba(0,212,170,0.25), 0 2px 8px rgba(0,0,0,0.4)'"
+                >
+                  <span class="mi fill" style="font-size:18px">download</span>
+                  Download Agent (master_agent.exe)
+                </a>
+                <!-- Copyable link row -->
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input
+                    type="text"
+                    readonly
+                    id="agent-dl-link"
+                    value="https://github.com/maxwelnkaranja-ops/mview/releases/download/v4.0/master_agent.exe"
+                    style="
+                      flex:1;
+                      background: rgba(0,0,0,0.35);
+                      border: 1px solid var(--border-2);
+                      border-radius: 7px;
+                      color: var(--c-brand);
+                      font-family: var(--mono);
+                      font-size: 9.5px;
+                      padding: 7px 10px;
+                      outline: none;
+                      cursor: text;
+                      white-space: nowrap;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                    "
+                    onclick="this.select()"
+                  />
+                  <button
+                    class="btn btn-s"
+                    onclick="copyAgentLink()"
+                    title="Copy download link"
+                    style="flex-shrink:0;padding:7px 11px;"
+                  >
+                    <span class="mi" id="agent-copy-icon">content_copy</span>
+                  </button>
+                </div>
+                <div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:5px;">
+                  <span class="mi sm" style="font-size:12px;color:var(--c-brand);opacity:0.7">info</span>
+                  Run as Administrator on the target machine · v4.0 release
+                </div>
+              </div>
+            </div>
+
             <div class="conn-steps" style="padding: 0">
               <div class="conn-step">
                 <div class="step-icon active">
                   <span class="mi">download</span>
                 </div>
-                <span>Agent download &amp; install on remote machine</span>
+                <span>Download &amp; run <strong>master_agent.exe</strong> as Administrator</span>
               </div>
               <div class="conn-step">
                 <div class="step-icon wait"><span class="mi">wifi</span></div>
@@ -11905,6 +11986,24 @@
           navigator.clipboard?.writeText(el.value);
           showToast("Command copied!", "success");
         }
+      }
+
+      function copyAgentLink() {
+        const url = "https://github.com/maxwelnkaranja-ops/mview/releases/download/v4.0/master_agent.exe";
+        navigator.clipboard?.writeText(url).then(() => {
+          showToast("Agent download link copied!", "success");
+          const icon = document.getElementById("agent-copy-icon");
+          if (icon) {
+            icon.textContent = "check";
+            icon.style.color = "var(--c-brand)";
+            setTimeout(() => { icon.textContent = "content_copy"; icon.style.color = ""; }, 2000);
+          }
+        }).catch(() => {
+          // fallback for browsers without clipboard API
+          const el = document.getElementById("agent-dl-link");
+          if (el) { el.select(); document.execCommand("copy"); }
+          showToast("Agent download link copied!", "success");
+        });
       }
 
       /* ══════════════════════════════════════════════════════════════════
